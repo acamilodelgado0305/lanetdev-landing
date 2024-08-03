@@ -10,7 +10,7 @@
 
 .landing-header {
   width: 100%;
-position: fixed;
+  position: fixed;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -18,13 +18,12 @@ position: fixed;
   background: transparent;
 }
 
-
 .impresion-1 {
-    height: 45em;
-    background: url("images/newback..jpg") no-repeat center center fixed;
-    background-size: cover;
-    position: relative;
-  }
+  height: 45em;
+  background: url("images/newback..jpg") no-repeat center center fixed;
+  background-size: cover;
+  position: relative;
+}
 
 .header-content {
   display: flex;
@@ -63,8 +62,8 @@ nav a {
 }
 
 .btn-primary {
-  background-color: #0056b3;
-  color: #ffffff;
+  background-color: #ffffff;
+  color: #000000;
 }
 
 .btn-secondary {
@@ -74,6 +73,7 @@ nav a {
 }
 
 .btn-large {
+  margin-top: 11em;
   font-size: 1.2rem;
   padding: 15px 30px;
 }
@@ -87,7 +87,6 @@ nav a {
   flex-direction: column;
   align-items: center;
 }
-
 
 .hero {
   width: 100%;
@@ -105,14 +104,30 @@ nav a {
   margin-bottom: 30px;
 }
 
-.info-section {
+.info-section-planes {
+  flex-direction: column;
   display: flex;
   justify-content: center;
   align-items: center;
   background-color: black;
   padding: 30px;
   margin-bottom: 30px;
-height: 40em;
+  height: 40em;
+  width: 100%;
+}
+
+.h3 {
+  font-size: 25px;
+}
+.info-section {
+  display: flex;
+
+  justify-content: center;
+  align-items: center;
+  background-color: black;
+  padding: 30px;
+  margin-bottom: 30px;
+  height: 40em;
   width: 100%;
 }
 
@@ -197,4 +212,32 @@ height: 40em;
   .hero p {
     font-size: 1.2rem;
   }
+}
+
+.card {
+  background-color: #000;
+  color: #fff;
+  border: 2px solid white;
+  border-radius: 10px;
+  padding: 20px;
+  width: 300px;
+  text-align: center;
+}
+.title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+.subtitle {
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+.price {
+  font-size: 36px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+.details {
+  font-size: 14px;
+  margin-top: 20px;
 }
