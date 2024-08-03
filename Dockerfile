@@ -20,7 +20,7 @@ RUN npm run build
 FROM nginx:stable-alpine
 
 # Copia los archivos construidos a la ubicación donde nginx los servirá
-COPY --from=build /app/dist /usr/share/nginx/html
+COPY --from=build /main/dist /usr/share/nginx/html
 
 # Copia el archivo de configuración de nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
