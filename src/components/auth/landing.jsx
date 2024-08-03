@@ -18,6 +18,7 @@ function Landing() {
 
       <div className="content">
         <PlansSection />
+        <div className="image1">hola banda</div>
         <ServicesSection />
         <CoverageSection />
         <ContactSection />
@@ -65,20 +66,20 @@ const HeroSection = () => (
 
 const PlansSection = () => (
   <section id="about" className="info-section-planes">
-    <h3 className="h3">
-      VEA PELÍCULAS, HAGA VIDEOLLAMADAS, JUEGUE Y MÁS
-    </h3>
+    <h3 className="h3">VEA PELÍCULAS, HAGA VIDEOLLAMADAS, JUEGUE Y MÁS</h3>
     <div className="card">
       <div className="title">HOGAR</div>
-      <div className="subtitle">
-        Ideal para familias pequeñas
-      </div>
+      <div className="subtitle">Ideal para familias pequeñas</div>
       <div className="price">
         $ 65.000<span style={{ fontSize: "16px" }}>/MES</span>
       </div>
       <div className="details">
-       Radioenlace
+        Datos móviles ilimitados en territorio continental
       </div>
+    </div>
+    <div>
+      <button className="btn btn-primary">Ver mas planes</button>
+      <button className="btn btn-primary btn-large">Cotizar</button>
     </div>
   </section>
 );

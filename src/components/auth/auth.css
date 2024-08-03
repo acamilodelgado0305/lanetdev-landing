@@ -20,9 +20,16 @@
 
 .impresion-1 {
   height: 45em;
-  background: url("images/newback..jpg") no-repeat center center fixed;
+  background: url("images/newback..jpg") ;
   background-size: cover;
   position: relative;
+}
+
+.image1 {
+  background-image: url("images/image1.jpg");
+  background-size: cover;
+  height: 40em;
+  color: #000;
 }
 
 .header-content {
@@ -111,7 +118,6 @@ nav a {
   align-items: center;
   background-color: black;
   padding: 30px;
-  margin-bottom: 30px;
   height: 40em;
   width: 100%;
 }
