@@ -20,13 +20,30 @@
 
 .impresion-1 {
   height: 45em;
-  background: url("images/newback..jpg") ;
+  background: url("images/newback..jpg");
   background-size: cover;
   position: relative;
 }
 
 .image1 {
   background-image: url("images/image1.jpg");
+  background-size: cover;
+  height: 40em;
+  color: #000;
+}
+.image2 {
+  background-image: url("images/image2.jpg");
+  background-size: cover;
+  height: 40em;
+  color: #000;
+}
+
+.back1 {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: -2em;
+  background: url("images/block.jpg");
   background-size: cover;
   height: 40em;
   color: #000;
@@ -80,9 +97,17 @@ nav a {
 }
 
 .btn-large {
-  margin-top: 11em;
   font-size: 1.2rem;
   padding: 15px 30px;
+}
+
+.contentback {
+  justify-content: center;
+  align-items: center;
+  height: 30em;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 }
 
 .landing-main {
@@ -123,7 +148,8 @@ nav a {
 }
 
 .h3 {
-  font-size: 25px;
+  color: #ffffff;
+  font-size: 38px;
 }
 .info-section {
   display: flex;
@@ -246,4 +272,41 @@ nav a {
 .details {
   font-size: 14px;
   margin-top: 20px;
+}
+
+/* sidebar.css */
+/* auth.css */
+
+/* Estilos para el menú lateral */
+.sidebar {
+  height: 100%;
+  width: 0;
+  position: fixed;
+  top: 0;
+  right: 0;
+  background-color: #111;
+  overflow-x: hidden;
+  transition: 0.5s;
+  padding-top: 60px;
+  z-index: 1000; /* Asegura que el menú lateral esté encima del contenido */
+}
+
+.sidebar a {
+  padding: 10px 15px;
+  text-decoration: none;
+  font-size: 25px;
+  color: #818181;
+  display: block;
+  transition: 0.3s;
+}
+
+.sidebar a:hover {
+  color: #f1f1f1;
+}
+
+.sidebar .closebtn {
+  position: absolute;
+  top: 0;
+  right: 25px;
+  font-size: 36px;
 }

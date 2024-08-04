@@ -4,33 +4,70 @@ import { GiHamburgerMenu } from "react-icons/gi";
 import "./auth.css";
 
 function Landing() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const openModal = () => setIsModalOpen(true);
-  const closeModal = () => setIsModalOpen(false);
+  const openSidebar = () => setIsSidebarOpen(true);
+  const closeSidebar = () => setIsSidebarOpen(false);
 
   return (
     <div className="landing-container">
+      <div
+        className={`sidebar ${isSidebarOpen ? "open" : ""}`}
+        style={{ width: isSidebarOpen ? "250px" : "0" }}
+      >
+        <a
+          href="javascript:void(0)"
+          className="closebtn"
+          onClick={closeSidebar}
+        >
+          &times;
+        </a>
+        <a href="http://clientes.la-net.co/saldo/level9/">Consulta Pagos</a>
+        <a href="#services">Test Velocidad</a>
+        <a href="#coverage">Cobertura</a>
+        <a href="#contact">Contacto</a>
+      </div>
+
       <div className="impresion-1">
-        <Header openModal={openModal} />
+        <Header openSidebar={openSidebar} />
         <HeroSection />
       </div>
 
       <div className="content">
-        <PlansSection />
-        <div className="image1">hola banda</div>
+        <div className="back1">
+          <div className="contentback">
+            <h3 className="h3">
+              VEA PELÍCULAS, HAGA VIDEOLLAMADAS, JUEGUE Y MÁS
+            </h3>
+            <div className="card">
+              <div className="title">HOGAR</div>
+              <div className="subtitle">Ideal para familias pequeñas</div>
+              <div className="price">
+                $ 65.000<span style={{ fontSize: "16px" }}>/MES</span>
+              </div>
+              <div className="details">
+                Datos móviles ilimitados en territorio continental
+              </div>
+            </div>
+
+            <button className="btn btn-primary">Ver más planes</button>
+            <button className="btn btn-primary btn-large">Cotizar</button>
+          </div>
+        </div>
+        <div className="image1"></div>
         <ServicesSection />
+        <div className="image1"></div>
+
         <CoverageSection />
+        <div className="image1"></div>
         <ContactSection />
         <Footer />
       </div>
-
-      {isModalOpen && <Modal closeModal={closeModal} />}
     </div>
   );
 }
 
-const Header = ({ openModal }) => (
+const Header = ({ openSidebar }) => (
   <header className="landing-header">
     <div className="header-content">
       <h1>LANET</h1>
@@ -41,12 +78,20 @@ const Header = ({ openModal }) => (
     </div>
     <div className="button-container">
       <Link to="/signin">
-        <button className="btn btn-secondary">Sign In</button>
+        <button className="btn btn-secondary">Iniciar Sesión</button>
       </Link>
-      <button className="btn btn-primary" onClick={openModal}>
-        Get Started
+      <button
+        onClick={() => (window.location.href = "https://app.la-net.co")}
+        className="btn btn-primary"
+      >
+        Comenzar
       </button>
-      <GiHamburgerMenu size={30} style={{ paddingTop: "1em" }} />
+
+      <GiHamburgerMenu
+        size={30}
+        style={{ paddingTop: "1em" }}
+        onClick={openSidebar}
+      />
     </div>
   </header>
 );
@@ -57,82 +102,63 @@ const HeroSection = () => (
       <h2>LANET PARA EL HOGAR</h2>
       <p>
         Si necesitas internet para tu hogar, en LANET tenemos la solución
-        perfecta para ti
+        perfecta para ti.
       </p>
-      <button className="btn btn-primary btn-large">Cotizar</button>
+      <button
+        onClick={() =>
+          (window.location.href = "https://wa.me/message/HPOPXUYQANINN1")
+        }
+        className="btn btn-primary btn-large"
+      >
+        Cotizar
+      </button>
     </section>
   </main>
 );
 
-const PlansSection = () => (
-  <section id="about" className="info-section-planes">
-    <h3 className="h3">VEA PELÍCULAS, HAGA VIDEOLLAMADAS, JUEGUE Y MÁS</h3>
-    <div className="card">
-      <div className="title">HOGAR</div>
-      <div className="subtitle">Ideal para familias pequeñas</div>
-      <div className="price">
-        $ 65.000<span style={{ fontSize: "16px" }}>/MES</span>
-      </div>
-      <div className="details">
-        Datos móviles ilimitados en territorio continental
-      </div>
-    </div>
-    <div>
-      <button className="btn btn-primary">Ver mas planes</button>
-      <button className="btn btn-primary btn-large">Cotizar</button>
-    </div>
-  </section>
-);
-
 const ServicesSection = () => (
   <section id="services" className="info-section">
-    <h3>Our Services</h3>
-    <ul>
-      <li>High-speed broadband</li>
-      <li>Low latency connections</li>
-      <li>Reliable uptime</li>
-      <li>24/7 customer support</li>
-    </ul>
+    <div className="contentback">
+      <h3>Nuestros Servicios</h3>
+      <ul>
+        <li>Internet de alta velocidad</li>
+        <li>Conexiones de baja latencia</li>
+        <li>Alta fiabilidad</li>
+        <li>Soporte al cliente 24/7</li>
+      </ul>
+    </div>
   </section>
 );
 
 const CoverageSection = () => (
   <section id="coverage" className="info-section">
-    <h3>Coverage Map</h3>
-    <div className="coverage-map">
-      {/* Add a map or image here */}
-      <p>
-        Our network covers over 90% of the country. Check if service is
-        available in your area.
-      </p>
+    <div className="contentback">
+      <h3>Mapa de Cobertura</h3>
+      <div className="coverage-map">
+        {/* Añadir un mapa o imagen aquí */}
+        <p>
+          Nuestra red cubre más del 90% de la región. Verifica si el servicio
+          está disponible en tu área.
+        </p>
+      </div>
     </div>
   </section>
 );
 
 const ContactSection = () => (
   <section id="contact" className="info-section">
-    <h3>Contact Us</h3>
-    <p>Get in touch for more information or support.</p>
-    <button className="btn btn-secondary">Contact Support</button>
+    <div className="contentback">
+      <h3>Contáctanos</h3>
+      <p>Ponte en contacto para más información o soporte.</p>
+      <button className="btn btn-secondary">Soporte</button>
+    </div>
   </section>
 );
 
 const Footer = () => (
   <footer className="landing-footer">
-    <p>&copy; 2024 LANET. All rights reserved.</p>
+    <p>&copy; 2024 LANET. Todos los derechos reservados.</p>
   </footer>
-);
-
-const Modal = ({ closeModal }) => (
-  <div className="modal-overlay" onClick={closeModal}>
-    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-      <button className="modal-close" onClick={closeModal}>
-        &times;
-      </button>
-      <h2>Get Started with LANET</h2>
-      {/* Add a form or content for getting started */}
-    </div>
-  </div>
 );
 
 export default Landing;
