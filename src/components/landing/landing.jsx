@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { GiHamburgerMenu } from "react-icons/gi";
-import "./auth.css";
+import "./landing.css";
 
 function Landing() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -22,6 +22,7 @@ function Landing() {
         >
           &times;
         </a>
+        <Link>Administración</Link>
         <a href="http://clientes.la-net.co/saldo/level9/">Consulta Pagos</a>
         <a href="#services">Test Velocidad</a>
         <a href="#coverage">Cobertura</a>

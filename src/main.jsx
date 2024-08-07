@@ -8,7 +8,7 @@ import ErrorPage from "./error-page";
 import Sigin from "./components/auth/register";
 import Login from "./components/auth/login";
 
-import Landing from "./components/auth/landing";
+import Landing from "./components/landing/landing";
 
 const router = createBrowserRouter([
   {
