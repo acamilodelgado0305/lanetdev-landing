@@ -4,51 +4,52 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./index.css";
 
 import ErrorPage from "./error-page";
-
-import Sigin from "./components/auth/register";
-import Login from "./components/auth/login";
-import Root from "./components/root";
-import Home from "./components/home";
-import Index from "./components/MoneyManager";
-
+import LoginForm from "./components/auth/LoginForm";
+import SignUpForm from "./components/auth/SignUpForm";
 import Landing from "./components/landing/landing";
+import Documentation from "./components/documentation/documentation";
+import Index from "./components/";
+import FormNodes from "./components/documentation/formnodes";
+import Clients from "./components/clientes/clientes";
+import Root from "./components/root";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <Landing />,
     errorElement: <ErrorPage />,
-    children: [
-      {
-        index: true,
-        element: <Landing />,
-      },
-      {
-        path: "sigin",
-        element: <Sigin />,
-      },
-      {
-        path: "sigin",
-        element: <Login />,
-      },
-    ],
   },
   {
-    path: "/inicio",
+    path: "/login",
+    element: <LoginForm />,
+  },
+  {
+    path: "/signup",
+    element: <SignUpForm />,
+  },
+  {
+    path: "/index",
     element: <Root />,
-    errorElement: <ErrorPage />,
     children: [
       {
         index: true,
-        element: <Home />,
-      },
-      {
-        path: "dashboard",
-        element: <Home />,
-      },
-      {
-        path: "/inicio/moneymanager",
         element: <Index />,
+      },
+      {
+        path: "/index",
+        element: <Index />,
+      },
+      {
+        path: "clientes", // Ruta relativa
+        element: <Clients />,
+      },
+      {
+        path: "doc", // Ruta relativa
+        element: <Documentation />,
+      },
+      {
+        path: "doc/new", // Ruta relativa
+        element: <FormNodes />,
       },
     ],
   },

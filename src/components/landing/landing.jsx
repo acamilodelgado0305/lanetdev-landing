@@ -22,7 +22,7 @@ function Landing() {
         >
           &times;
         </a>
-        <Link>Administración</Link>
+        <Link to="/login">Administración</Link>
         <a href="http://clientes.la-net.co/saldo/level9/">Consulta Pagos</a>
         <a href="#services">Test Velocidad</a>
         <a href="#coverage">Cobertura</a>
