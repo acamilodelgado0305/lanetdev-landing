@@ -1,0 +1,184 @@
+import React, { useState, useEffect } from "react";
+import { IoClose } from "react-icons/io5";
+
+const AddEntryModal = ({ isOpen, onClose }) => {
+  const [transactionType, setTransactionType] = useState("Gasto");
+  const [amount, setAmount] = useState("");
+  const [category, setCategory] = useState("");
+  const [account, setAccount] = useState("");
+  const [note, setNote] = useState("");
+  const [description, setDescription] = useState("");
+  const [categories, setCategories] = useState([]);
+
+  const currentDate = new Date().toISOString().split("T")[0]; // Fecha actual en formato YYYY-MM-DD
+
+  useEffect(() => {
+    // Fetch categories from the API
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(`http://ms-finanzas.app.la-net.co/api/categories`);
+        const data = await response.json();
+        setCategories(data);
+      } catch (error) {
+        console.error("Error al obtener las categorías:", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  const handleSave = async () => {
+    const transactionData = {
+      userId: 6, // ID del usuario
+      accountId: parseInt(account, 10),
+      categoryId: parseInt(category, 10),
+      amount: parseFloat(amount),
+      type: transactionType.toLowerCase(),
+      date: new Date().toISOString(),
+      note: note,
+      description: description,
+    };
+
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(transactionData),
+      });
+
+      if (response.ok) {
+        console.log("Transacción guardada con éxito");
+        onClose();
+      } else {
+        console.error("Error al guardar la transacción");
+      }
+    } catch (error) {
+      console.error("Error al conectar con la API:", error);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-800">Nueva Transacción</h2>
+          <button onClick={onClose} className="text-gray-600 hover:text-gray-800">
+            <IoClose size={24} />
+          </button>
+        </div>
+        
+        <div className="p-4 space-y-4">
+          <div className="flex justify-between space-x-2">
+            <button 
+              className={`flex-1 py-2 rounded-full ${transactionType === "Ingreso" ? "bg-green-500 text-white" : "bg-gray-200 text-gray-800"}`}
+              onClick={() => setTransactionType("Ingreso")}
+            >
+              Ingreso
+            </button>
+            <button 
+              className={`flex-1 py-2 rounded-full ${transactionType === "Gasto" ? "bg-red-500 text-white" : "bg-gray-200 text-gray-800"}`}
+              onClick={() => setTransactionType("Gasto")}
+            >
+              Gasto
+            </button>
+            <button 
+              className={`flex-1 py-2 rounded-full ${transactionType === "Transferencia" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-800"}`}
+              onClick={() => setTransactionType("Transferencia")}
+            >
+              Transferencia
+            </button>
+          </div>
+
+          <div>
+            <label htmlFor="date" className="block mb-1 text-sm font-medium text-gray-700">Fecha</label>
+            <input
+              type="date"
+              id="date"
+              value={currentDate}
+              className="w-full p-2 bg-gray-100 rounded border border-gray-300"
+              readOnly
+            />
+          </div>
+          <div>
+            <label htmlFor="amount" className="block mb-1 text-sm font-medium text-gray-700">Importe</label>
+            <input
+              type="number"
+              id="amount"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="w-full p-2 bg-gray-100 rounded border border-gray-300"
+              placeholder="0.00"
+            />
+          </div>
+          <div>
+            <label htmlFor="category" className="block mb-1 text-sm font-medium text-gray-700">Categoría</label>
+            <select
+              id="category"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full p-2 bg-gray-100 rounded border border-gray-300"
+            >
+              <option value="">Selecciona una categoría</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="account" className="block mb-1 text-sm font-medium text-gray-700">Cuenta</label>
+            <input
+              type="text"
+              id="account"
+              value={account}
+              onChange={(e) => setAccount(e.target.value)}
+              className="w-full p-2 bg-gray-100 rounded border border-gray-300"
+            />
+          </div>
+          <div>
+            <label htmlFor="note" className="block mb-1 text-sm font-medium text-gray-700">Nota</label>
+            <textarea
+              id="note"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              className="w-full p-2 bg-gray-100 rounded border border-gray-300"
+              rows="2"
+            ></textarea>
+          </div>
+          <div>
+            <label htmlFor="description" className="block mb-1 text-sm font-medium text-gray-700">Descripción</label>
+            <textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full p-2 bg-gray-100 rounded border border-gray-300"
+              rows="2"
+            ></textarea>
+          </div>
+        </div>
+
+        <div className="flex p-4 border-t border-gray-200">
+          <button 
+            className="flex-1 py-2 bg-blue-500 text-white rounded-lg mr-2 hover:bg-blue-600"
+            onClick={handleSave}
+          >
+            Guardar
+          </button>
+          <button 
+            className="flex-1 py-2 bg-gray-300 text-gray-800 rounded-lg ml-2 hover:bg-gray-400"
+            onClick={onClose}
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AddEntryModal;

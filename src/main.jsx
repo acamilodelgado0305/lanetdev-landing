@@ -7,6 +7,9 @@ import ErrorPage from "./error-page";
 
 import Sigin from "./components/auth/register";
 import Login from "./components/auth/login";
+import Root from "./components/root";
+import Home from "./components/home";
+import Index from "./components/MoneyManager";
 
 import Landing from "./components/landing/landing";
 
@@ -27,6 +30,25 @@ const router = createBrowserRouter([
       {
         path: "sigin",
         element: <Login />,
+      },
+    ],
+  },
+  {
+    path: "/inicio",
+    element: <Root />,
+    errorElement: <ErrorPage />,
+    children: [
+      {
+        index: true,
+        element: <Home />,
+      },
+      {
+        path: "dashboard",
+        element: <Home />,
+      },
+      {
+        path: "/inicio/moneymanager",
+        element: <Index />,
       },
     ],
   },
