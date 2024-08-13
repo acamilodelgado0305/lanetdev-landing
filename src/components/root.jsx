@@ -137,6 +137,14 @@ export default function Root() {
 
               </Link>
             </li>
+
+            <li>
+              <Link to="/index/moneymanager" className="flex items-center p-4 text-white hover:bg-gray-700 rounded-lg text-lg">
+                <BsBox className="text-2xl mr-3" />
+                <span>Money Manager</span>
+
+              </Link>
+            </li>
           </ul>
         </nav>
       </aside>

@@ -12,6 +12,7 @@ import Index from "./components/";
 import FormNodes from "./components/documentation/formnodes";
 import Clients from "./components/clientes/clientes";
 import Root from "./components/root";
+import FinanceTable from "./components/MoneyManager";
 
 const router = createBrowserRouter([
   {
@@ -40,17 +41,9 @@ const router = createBrowserRouter([
         element: <Index />,
       },
       {
-        path: "clientes", // Ruta relativa
-        element: <Clients />,
-      },
-      {
-        path: "doc", // Ruta relativa
-        element: <Documentation />,
-      },
-      {
-        path: "doc/new", // Ruta relativa
-        element: <FormNodes />,
-      },
+        path: "/index/moneymanager",
+        element: <FinanceTable />,
+      }
     ],
   },
 ]);
