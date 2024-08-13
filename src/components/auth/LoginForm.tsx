@@ -2,7 +2,6 @@ import React from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
-import './index.css';
 
 interface LoginFormInputs {
     email: string;
@@ -24,7 +23,7 @@ const LoginForm: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="ml-[40%] flex items-center justify-center bg-gray-100">
             <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
                 <h2 className="text-2xl font-bold mb-6 text-center">Iniciar Sesión</h2>
                 <form onSubmit={handleSubmit(handleLogin)}>
