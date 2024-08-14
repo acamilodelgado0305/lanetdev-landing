@@ -1,7 +1,9 @@
+// src/components/LoginForm.jsx
 import React from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import { loginUser } from '../../services/apiService';
 
 interface LoginFormInputs {
     email: string;
@@ -13,11 +15,11 @@ const LoginForm: React.FC = () => {
     const navigate = useNavigate();
 
     const handleLogin: SubmitHandler<LoginFormInputs> = async (data) => {
-        const { email, password } = data;
-        // Simular autenticación
-        if (email === "test@test.com" && password === "password") {
+        try {
+            const response = await loginUser(data);
+            // Manejar la respuesta del inicio de sesión, por ejemplo, redirigir al dashboard
             navigate('/index');
-        } else {
+        } catch (error) {
             Swal.fire('Error', 'Usuario o contraseña incorrectos', 'error');
         }
     };
