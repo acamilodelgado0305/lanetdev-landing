@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import { ChevronDown, Menu, X } from "lucide-react";
 
+// Componente SidebarLink
 const SidebarLink = ({ to, icon: Icon, children }) => (
   <Link
     to={to}
@@ -12,6 +13,7 @@ const SidebarLink = ({ to, icon: Icon, children }) => (
   </Link>
 );
 
+// Componente SidebarSection
 const SidebarSection = ({ title, children }) => (
   <div className="mb-4">
     <h3 className="px-3 mb-2 text-xs font-semibold text-gray-500 uppercase">{title}</h3>
@@ -24,6 +26,7 @@ export default function Root() {
   const [name, setName] = useState("");
   const navigate = useNavigate();
 
+  // Función de logout
   const logout = async () => {
     try {
       await fetch(`${import.meta.env.VITE_BACKEND_URL}/logout`, {
@@ -37,6 +40,7 @@ export default function Root() {
     }
   };
 
+  // Obtener nombre de usuario
   useEffect(() => {
     const fetchUserName = async () => {
       try {
@@ -58,13 +62,25 @@ export default function Root() {
     fetchUserName();
   }, []);
 
+  // Sidebar links (usando useMemo para evitar renders innecesarios)
+  const sidebarLinks = useMemo(
+    () => [
+      { to: "/index", label: "Dashboard" },
+      { to: "/index/new", label: "Finanzas" },
+      { to: "/index/clientes", label: "Clientes" },
+      { to: "/productos", label: "Productos" },
+      { to: "/index/doc", label: "Documentación" },
+      { to: "/index/moneymanager", label: "Money Manager" },
+    ],
+    []
+  );
+
   return (
     <div className="flex h-screen bg-white">
       {/* Sidebar */}
       <aside
-        className={`${
-          isOpen ? "translate-x-0" : "-translate-x-full"
-        } fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}
+        className={`${isOpen ? "translate-x-0" : "-translate-x-full"
+          } fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}
       >
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
           <span className="text-xl font-semibold text-gray-800">Mi App</span>
@@ -77,14 +93,18 @@ export default function Root() {
         </div>
         <nav className="px-4 py-4">
           <SidebarSection title="Menú principal">
-            <SidebarLink to="/index" icon={Menu}>Dashboard</SidebarLink>
-            <SidebarLink to="/index/new" icon={Menu}>Finanzas</SidebarLink>
-            <SidebarLink to="/index/clientes" icon={Menu}>Clientes</SidebarLink>
-            <SidebarLink to="/productos" icon={Menu}>Productos</SidebarLink>
+            {sidebarLinks.slice(0, 4).map((link) => (
+              <SidebarLink key={link.to} to={link.to} icon={Menu}>
+                {link.label}
+              </SidebarLink>
+            ))}
           </SidebarSection>
           <SidebarSection title="Recursos">
-            <SidebarLink to="/index/doc" icon={Menu}>Documentación</SidebarLink>
-            <SidebarLink to="/index/moneymanager" icon={Menu}>Money Manager</SidebarLink>
+            {sidebarLinks.slice(4).map((link) => (
+              <SidebarLink key={link.to} to={link.to} icon={Menu}>
+                {link.label}
+              </SidebarLink>
+            ))}
           </SidebarSection>
         </nav>
       </aside>
@@ -103,12 +123,12 @@ export default function Root() {
             <div className="relative">
               <button
                 className="flex items-center text-sm text-gray-700 focus:outline-none"
-                onClick={() => {}}
+                onClick={() => { }}
               >
                 <span className="mr-2">{name}</span>
                 <ChevronDown className="w-4 h-4" />
               </button>
-              {/* Dropdown menu for user options */}
+              {/* Aquí se puede agregar un menú desplegable para las opciones del usuario */}
             </div>
           </div>
         </header>
