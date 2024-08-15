@@ -6,6 +6,7 @@ import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { createUser } from '../../services/apiService';
 
 interface SignUpFormInputs {
+    username: string;
     email: string;
     password: string;
     confirmPassword: string;
@@ -18,11 +19,11 @@ const SignUpForm: React.FC = () => {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const handleSignUp: SubmitHandler<SignUpFormInputs> = async (data) => {
-        const { email, password } = data;
+        const { username, email, password } = data;
 
         try {
             // Llama a la función createUser para registrar el nuevo usuario
-            const userData = { email, password };
+            const userData = { username, email, password };
             await createUser(userData);
 
             Swal.fire('¡Usuario registrado!', 'Se ha registrado correctamente.', 'success').then(() => {
@@ -43,10 +44,20 @@ const SignUpForm: React.FC = () => {
     };
 
     return (
-        <div className="ml-[10%] md:ml-[40%] flex items-center justify-center bg-gray-100">
+        <div className="flex items-center justify-center mt-8 bg-gray-100">
             <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
                 <h2 className="text-2xl font-bold mb-7 text-center">Regístrate</h2>
                 <form onSubmit={handleSubmit(handleSignUp)}>
+                    <div className="mb-4">
+                        <label htmlFor="username" className="block text-sm font-medium text-gray-700">Nombre de Usuario</label>
+                        <input
+                            id="username"
+                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            {...register('username', { required: 'El nombre de usuario es requerido' })}
+                        />
+                        {errors.username && <p className="text-red-500 text-xs mt-2">{errors.username.message}</p>}
+                    </div>
+
                     <div className="mb-4">
                         <label htmlFor="email" className="block text-sm font-medium text-gray-700">Correo Electrónico</label>
                         <input

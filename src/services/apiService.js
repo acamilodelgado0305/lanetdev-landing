@@ -43,6 +43,16 @@ export const createUser = async (userData) => {
     }
 };
 
+// Función para actualizar la información adicional de un usuario
+export const updateUserInfo = async (userId, userInfo) => {
+    try {
+        const response = await authApi.put(`/update-info/${userId}`, userInfo);
+        return response.data;
+    } catch (error) {
+        console.error('Error al actualizar la información del usuario:', error);
+        throw error;
+    }
+};
 // Función para iniciar sesión
 export const loginUser = async (email, password) => {
     try {
