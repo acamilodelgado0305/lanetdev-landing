@@ -13,7 +13,6 @@ import FormNodes from "./components/documentation/formnodes";
 import Clients from "./components/clientes/clientes";
 import Root from "./components/root";
 import FinanceTable from "./components/MoneyManager";
-import PrivateRoute from "./components/PrivateRoute"; // Importa el componente PrivateRoute
 
 const router = createBrowserRouter([
   {
@@ -48,7 +47,7 @@ const router = createBrowserRouter([
       {
         path: "/index/moneymanager",
         element: <FinanceTable />,
-      },
+      }
     ],
   },
 ]);
