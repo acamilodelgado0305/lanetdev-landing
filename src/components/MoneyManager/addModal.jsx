@@ -2,13 +2,16 @@ import React, { useState, useEffect } from "react";
 import { IoClose } from "react-icons/io5";
 
 const AddEntryModal = ({ isOpen, onClose }) => {
-  const [transactionType, setTransactionType] = useState("Gasto");
+  const apiUrl = import.meta.env.VITE_API_FINANZAS;
+
+  const [transactionType, setTransactionType] = useState("expense");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("");
   const [account, setAccount] = useState("");
   const [note, setNote] = useState("");
   const [description, setDescription] = useState("");
   const [categories, setCategories] = useState([]);
+  const [accounts, setAccounts] = useState([]);
 
   const currentDate = new Date().toISOString().split("T")[0]; // Fecha actual en formato YYYY-MM-DD
 
@@ -16,7 +19,7 @@ const AddEntryModal = ({ isOpen, onClose }) => {
     // Fetch categories from the API
     const fetchCategories = async () => {
       try {
-        const response = await fetch(`http://ms-finanzas.app.la-net.co/api/categories`);
+        const response = await fetch(`${apiUrl}/categories`);
         const data = await response.json();
         setCategories(data);
       } catch (error) {
@@ -24,12 +27,23 @@ const AddEntryModal = ({ isOpen, onClose }) => {
       }
     };
 
+    const fetchAccounts = async () => {
+      try {
+        const response = await fetch(`${apiUrl}/accounts`);
+        const data = await response.json();
+        setAccounts(data);
+      } catch (error) {
+        console.error("Error al obtener las cuentas:", error);
+      }
+    };
+
     fetchCategories();
+    fetchAccounts();
   }, []);
 
   const handleSave = async () => {
     const transactionData = {
-      userId: 6, // ID del usuario
+      userId: 1, 
       accountId: parseInt(account, 10),
       categoryId: parseInt(category, 10),
       amount: parseFloat(amount),
@@ -38,13 +52,14 @@ const AddEntryModal = ({ isOpen, onClose }) => {
       note: note,
       description: description,
     };
-
+    console.log(transactionData);
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}`, {
+        const response = await fetch(`${apiUrl}/categories`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+
         body: JSON.stringify(transactionData),
       });
 
@@ -65,28 +80,45 @@ const AddEntryModal = ({ isOpen, onClose }) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800">Nueva Transacción</h2>
-          <button onClick={onClose} className="text-gray-600 hover:text-gray-800">
+          <h2 className="text-xl font-semibold text-gray-800">
+            Nueva Transacción
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-600 hover:text-gray-800"
+          >
             <IoClose size={24} />
           </button>
         </div>
-        
+
         <div className="p-4 space-y-4">
           <div className="flex justify-between space-x-2">
-            <button 
-              className={`flex-1 py-2 rounded-full ${transactionType === "Ingreso" ? "bg-green-500 text-white" : "bg-gray-200 text-gray-800"}`}
-              onClick={() => setTransactionType("Ingreso")}
+            <button
+              className={`flex-1 py-2 rounded-full ${
+                transactionType === "income"
+                  ? "bg-green-500 text-white"
+                  : "bg-gray-200 text-gray-800"
+              }`}
+              onClick={() => setTransactionType("income")}
             >
               Ingreso
             </button>
-            <button 
-              className={`flex-1 py-2 rounded-full ${transactionType === "Gasto" ? "bg-red-500 text-white" : "bg-gray-200 text-gray-800"}`}
-              onClick={() => setTransactionType("Gasto")}
+            <button
+              className={`flex-1 py-2 rounded-full ${
+                transactionType === "expense"
+                  ? "bg-red-500 text-white"
+                  : "bg-gray-200 text-gray-800"
+              }`}
+              onClick={() => setTransactionType("expense")}
             >
               Gasto
             </button>
-            <button 
-              className={`flex-1 py-2 rounded-full ${transactionType === "Transferencia" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-800"}`}
+            <button
+              className={`flex-1 py-2 rounded-full ${
+                transactionType === "Transferencia"
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200 text-gray-800"
+              }`}
               onClick={() => setTransactionType("Transferencia")}
             >
               Transferencia
@@ -94,7 +126,12 @@ const AddEntryModal = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <label htmlFor="date" className="block mb-1 text-sm font-medium text-gray-700">Fecha</label>
+            <label
+              htmlFor="date"
+              className="block mb-1 text-sm font-medium text-gray-700"
+            >
+              Fecha
+            </label>
             <input
               type="date"
               id="date"
@@ -104,7 +141,12 @@ const AddEntryModal = ({ isOpen, onClose }) => {
             />
           </div>
           <div>
-            <label htmlFor="amount" className="block mb-1 text-sm font-medium text-gray-700">Importe</label>
+            <label
+              htmlFor="amount"
+              className="block mb-1 text-sm font-medium text-gray-700"
+            >
+              Importe
+            </label>
             <input
               type="number"
               id="amount"
@@ -115,7 +157,12 @@ const AddEntryModal = ({ isOpen, onClose }) => {
             />
           </div>
           <div>
-            <label htmlFor="category" className="block mb-1 text-sm font-medium text-gray-700">Categoría</label>
+            <label
+              htmlFor="category"
+              className="block mb-1 text-sm font-medium text-gray-700"
+            >
+              Categoría
+            </label>
             <select
               id="category"
               value={category}
@@ -131,17 +178,33 @@ const AddEntryModal = ({ isOpen, onClose }) => {
             </select>
           </div>
           <div>
-            <label htmlFor="account" className="block mb-1 text-sm font-medium text-gray-700">Cuenta</label>
-            <input
-              type="text"
+            <label
+              htmlFor="account"
+              className="block mb-1 text-sm font-medium text-gray-700"
+            >
+              Cuenta
+            </label>
+            <select
               id="account"
               value={account}
               onChange={(e) => setAccount(e.target.value)}
               className="w-full p-2 bg-gray-100 rounded border border-gray-300"
-            />
+            >
+              <option value="">Selecciona una cuenta</option>
+              {accounts.map((act) => (
+                <option key={act.id} value={act.id}>
+                  {act.name}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
-            <label htmlFor="note" className="block mb-1 text-sm font-medium text-gray-700">Nota</label>
+            <label
+              htmlFor="note"
+              className="block mb-1 text-sm font-medium text-gray-700"
+            >
+              Nota
+            </label>
             <textarea
               id="note"
               value={note}
@@ -151,7 +214,12 @@ const AddEntryModal = ({ isOpen, onClose }) => {
             ></textarea>
           </div>
           <div>
-            <label htmlFor="description" className="block mb-1 text-sm font-medium text-gray-700">Descripción</label>
+            <label
+              htmlFor="description"
+              className="block mb-1 text-sm font-medium text-gray-700"
+            >
+              Descripción
+            </label>
             <textarea
               id="description"
               value={description}
@@ -163,13 +231,13 @@ const AddEntryModal = ({ isOpen, onClose }) => {
         </div>
 
         <div className="flex p-4 border-t border-gray-200">
-          <button 
+          <button
             className="flex-1 py-2 bg-blue-500 text-white rounded-lg mr-2 hover:bg-blue-600"
             onClick={handleSave}
           >
             Guardar
           </button>
-          <button 
+          <button
             className="flex-1 py-2 bg-gray-300 text-gray-800 rounded-lg ml-2 hover:bg-gray-400"
             onClick={onClose}
           >
