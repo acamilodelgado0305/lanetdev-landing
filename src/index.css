@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Stilos Generales */
 
 html {
   box-sizing: border-box;
@@ -37,7 +38,10 @@ body {
 
 /*==========================Sidebar==========================================*/
 
-
+#root {
+  height: 100%;
+  width: 100%;
+}
 
 #sidebar {
   width: 200px;
