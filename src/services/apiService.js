@@ -1,18 +1,14 @@
-
 import axios from 'axios';
 
+const AUTH_URL = 'http://server-auth.app.la-net.co/api';
 
-const AUTH_URL = import.meta.env.VITE_API_URL;
-
+// Instancia de axios personalizada
 const authApi = axios.create({
     baseURL: AUTH_URL,
     headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
     },
-    withCredentials: true,
 });
-
 
 // Función para obtener todos los usuarios
 export const getUsers = async () => {
@@ -52,13 +48,14 @@ export const loginUser = async (email, password) => {
     try {
         const response = await authApi.post('/login', { email, password });
         const { token } = response.data;
+
         if (token) {
-            // Guarda el token en localStorage o en algún lugar seguro
-            localStorage.setItem('token', token);
+            localStorage.setItem('token', token); // Guarda el token en localStorage
         }
+
         return response.data;
     } catch (error) {
-        console.error('Error during login:', error);
+        console.error('Error durante el inicio de sesión:', error.response ? error.response.data : error.message);
         throw error;
     }
 };
