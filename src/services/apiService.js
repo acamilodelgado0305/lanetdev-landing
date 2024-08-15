@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const AUTH_URL = 'https://server-auth.app.la-net.co/api';
+const AUTH_URL = 'http://server-auth.app.la-net.co/api';
 
 // Instancia de axios personalizada
 const authApi = axios.create({
@@ -43,6 +43,16 @@ export const createUser = async (userData) => {
     }
 };
 
+// Función para actualizar la información adicional de un usuario
+export const updateUserInfo = async (userId, userInfo) => {
+    try {
+        const response = await authApi.put(`/update-info/${userId}`, userInfo);
+        return response.data;
+    } catch (error) {
+        console.error('Error al actualizar la información del usuario:', error);
+        throw error;
+    }
+};
 // Función para iniciar sesión
 export const loginUser = async (email, password) => {
     try {
