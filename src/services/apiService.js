@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const AUTH_URL = 'http://server-auth.app.la-net.co/api';
+const AUTH_URL = 'https://server-auth.app.la-net.co/api';
 
 // Instancia de axios personalizada
 const authApi = axios.create({
