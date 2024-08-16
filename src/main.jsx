@@ -7,13 +7,12 @@ import ErrorPage from "./error-page";
 import LoginForm from "./components/auth/LoginForm";
 import SignUpForm from "./components/auth/SignUpForm";
 import Landing from "./components/landing/landing";
-import Documentation from "./components/documentation/documentation";
 import Index from "./components/";
-import FormNodes from "./components/documentation/formnodes";
-import Clients from "./components/clientes/clientes";
 import Root from "./components/root";
-import FinanceTable from "./components/MoneyManager";
 import PrivateRoute from "./components/PrivateRoute";
+import IndexMoneyManager from "./components/MoneyManager";
+import AccountContent from "./components/MoneyManager/accounts/accounts";
+import Transactions from "./components/MoneyManager/transactions/transactions";
 
 const router = createBrowserRouter([
   {
@@ -42,13 +41,19 @@ const router = createBrowserRouter([
         element: <Index />,
       },
       {
-        path: "/index",
-        element: <Index />,
+        path: "moneymanager", // Se omite /index ya que estás en un children de /index
+        element: <IndexMoneyManager />,
+        children: [
+          {
+            path: "accounts", // Anidada dentro de moneymanager
+            element: <AccountContent />,
+          },
+          {
+            path: "transactions", // Anidada dentro de moneymanager
+            element: <Transactions />,
+          }
+        ],
       },
-      {
-        path: "/index/moneymanager",
-        element: <FinanceTable />,
-      }
     ],
   },
 ]);
