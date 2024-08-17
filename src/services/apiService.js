@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const AUTH_URL = 'https://server-auth.app.la-net.co/api';
+
+const AUTH_URL = import.meta.env.VITE_API_AUTH;
 
 // Instancia de axios personalizada
 const authApi = axios.create({

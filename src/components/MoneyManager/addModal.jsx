@@ -43,7 +43,7 @@ const AddEntryModal = ({ isOpen, onClose }) => {
 
   const handleSave = async () => {
     const transactionData = {
-      userId: 1, 
+      userId: 1,
       accountId: parseInt(account, 10),
       categoryId: parseInt(category, 10),
       amount: parseFloat(amount),
@@ -54,7 +54,7 @@ const AddEntryModal = ({ isOpen, onClose }) => {
     };
     console.log(transactionData);
     try {
-        const response = await fetch(`${apiUrl}/transactions`, {
+      const response = await fetch(`${apiUrl}/transactions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -94,31 +94,28 @@ const AddEntryModal = ({ isOpen, onClose }) => {
         <div className="p-4 space-y-4">
           <div className="flex justify-between space-x-2">
             <button
-              className={`flex-1 py-2 rounded-full ${
-                transactionType === "income"
-                  ? "bg-green-500 text-white"
-                  : "bg-gray-200 text-gray-800"
-              }`}
+              className={`flex-1 py-2 rounded-full ${transactionType === "income"
+                ? "bg-green-500 text-white"
+                : "bg-gray-200 text-gray-800"
+                }`}
               onClick={() => setTransactionType("income")}
             >
               Ingreso
             </button>
             <button
-              className={`flex-1 py-2 rounded-full ${
-                transactionType === "expense"
-                  ? "bg-red-500 text-white"
-                  : "bg-gray-200 text-gray-800"
-              }`}
+              className={`flex-1 py-2 rounded-full ${transactionType === "expense"
+                ? "bg-red-500 text-white"
+                : "bg-gray-200 text-gray-800"
+                }`}
               onClick={() => setTransactionType("expense")}
             >
               Gasto
             </button>
             <button
-              className={`flex-1 py-2 rounded-full ${
-                transactionType === "Transferencia"
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 text-gray-800"
-              }`}
+              className={`flex-1 py-2 rounded-full ${transactionType === "Transferencia"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200 text-gray-800"
+                }`}
               onClick={() => setTransactionType("Transferencia")}
             >
               Transferencia
