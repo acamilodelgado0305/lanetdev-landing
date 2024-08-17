@@ -1,6 +1,19 @@
 import React from 'react';
 import { BsFillArchiveFill, BsFillGrid3X3GapFill, BsPeopleFill, BsFillBellFill } from 'react-icons/bs';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { Bar, Line } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
+
+// Registra los componentes necesarios de Chart.js
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 export default function Index() {
   const data = [
@@ -13,12 +26,47 @@ export default function Index() {
     { name: 'Page G', uv: 3490, pv: 4300, amt: 2100 },
   ];
 
+  const barData = {
+    labels: data.map((d) => d.name),
+    datasets: [
+      {
+        label: 'PV',
+        data: data.map((d) => d.pv),
+        backgroundColor: '#8884d8',
+      },
+      {
+        label: 'UV',
+        data: data.map((d) => d.uv),
+        backgroundColor: '#82ca9d',
+      },
+    ],
+  };
+
+  const lineData = {
+    labels: data.map((d) => d.name),
+    datasets: [
+      {
+        label: 'PV',
+        data: data.map((d) => d.pv),
+        borderColor: '#8884d8',
+        backgroundColor: 'rgba(136, 132, 216, 0.2)',
+        fill: true,
+      },
+      {
+        label: 'UV',
+        data: data.map((d) => d.uv),
+        borderColor: '#82ca9d',
+        backgroundColor: 'rgba(130, 202, 157, 0.2)',
+        fill: true,
+      },
+    ],
+  };
+
   return (
     <main className="flex flex-col items-center justify-center p-4 bg-gray-50 min-h-screen">
       <div className="text-center mb-6">
         <h3 className="text-xl font-semibold text-gray-800">Dashboard</h3>
       </div>
-
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {[
           { label: 'Productos', icon: <BsFillArchiveFill />, value: 300 },
@@ -26,43 +74,36 @@ export default function Index() {
           { label: 'Clientes Activos', icon: <BsPeopleFill />, value: 33 },
           { label: 'Alertas', icon: <BsFillBellFill />, value: 42 },
         ].map((item, index) => (
-          <div key={index} className="bg-white rounded-lg shadow-sm p-4 flex flex-col items-center">
-            <div className="text-blue-500 text-3xl mb-2">{item.icon}</div>
-            <h3 className="text-sm font-medium text-gray-700">{item.label}</h3>
-            <h1 className="text-2xl font-bold text-gray-700">{item.value}</h1>
-          </div>
+          <div key={index} className="bg-white rounded-lg shadow-sm p-4 flex flex-col items-center"><div className="text-blue-500 text-3xl mb-2">{item.icon}</div><h3 className="text-sm font-medium text-gray-700">{item.label}</h3><h1 className="text-2xl font-bold text-gray-700">{item.value}</h1></div>
         ))}
-      </div>
-
-      <div className="w-full max-w-2xl">
-        <div className="mb-6">
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={data} margin={{ top: 10, right: 20, left: 10, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="pv" fill="#8884d8" />
-              <Bar dataKey="uv" fill="#82ca9d" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={data} margin={{ top: 10, right: 20, left: 10, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="pv" stroke="#8884d8" activeDot={{ r: 6 }} />
-              <Line type="monotone" dataKey="uv" stroke="#82ca9d" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-    </main>
+      </div><div className="w-full max-w-2xl"><div className="mb-6"><Bar
+        data={barData}
+        options={{
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+            title: {
+              display: true,
+              text: 'Bar Chart',
+            },
+          },
+        }}
+      /></div><div><Line
+        data={lineData}
+        options={{
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+            title: {
+              display: true,
+              text: 'Line Chart',
+            },
+          },
+        }}
+      /></div></div></main>
   );
 }
