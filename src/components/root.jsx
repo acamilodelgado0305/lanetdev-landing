@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import { ChevronDown, Menu, X } from "lucide-react";
+import UserProfileHeader from './user/UserProfileHeader';
+
 
 // Componente SidebarLink
 const SidebarLink = ({ to, icon: Icon, children }) => (
@@ -12,6 +14,7 @@ const SidebarLink = ({ to, icon: Icon, children }) => (
     <span>{children}</span>
   </Link>
 );
+
 
 // Componente SidebarSection
 const SidebarSection = ({ title, children }) => (
@@ -26,6 +29,9 @@ export default function Root() {
   const [name, setName] = useState("");
   const navigate = useNavigate();
 
+
+  const userName = 'Juan Pérez';
+  const profilePicUrl = 'https://i.pinimg.com/736x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg'; // Aquí deberías colocar la URL real de la imagen
   // Función de logout
   const logout = async () => {
     try {
@@ -76,21 +82,20 @@ export default function Root() {
   );
 
   return (
-    <div className="flex h-screen bg-white">
+    <div className="flex h-screen ">
       {/* Sidebar */}
       <aside
         className={`${isOpen ? "translate-x-0" : "-translate-x-full"
           } fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}
       >
-        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
-          <span className="text-xl font-semibold text-gray-800">Mi App</span>
-          <button
-            onClick={() => setIsOpen(false)}
-            className="p-1 text-gray-600 rounded-md lg:hidden hover:bg-gray-100"
-          >
-            <X className="w-6 h-6" />
-          </button>
+        <div>
+          <UserProfileHeader
+            name={userName}
+            profilePictureUrl={profilePicUrl}
+            onToggle={() => setIsOpen(false)}
+          />
         </div>
+
         <nav className="px-4 py-4">
           <SidebarSection title="Menú principal">
             {sidebarLinks.slice(0, 4).map((link) => (
@@ -112,25 +117,14 @@ export default function Root() {
       {/* Main content */}
       <div className="flex flex-1 overflow-hidden w-full">
         {/* Header */}
-        <header className="flex items-center justify-between h-16 px-4 bg-white border-b border-gray-200">
+        <header className="flex items-center justify-between h-16 px-4  border-b border-gray-200">
           <button
             onClick={() => setIsOpen(true)}
             className="p-1 text-gray-600 rounded-md lg:hidden hover:bg-gray-100"
           >
             <Menu className="w-6 h-6" />
           </button>
-          <div className="flex items-center ml-auto">
-            <div className="relative">
-              <button
-                className="flex items-center text-sm text-gray-700 focus:outline-none"
-                onClick={() => { }}
-              >
-                <span className="mr-2">{name}</span>
-                <ChevronDown className="w-4 h-4" />
-              </button>
-              {/* Aquí se puede agregar un menú desplegable para las opciones del usuario */}
-            </div>
-          </div>
+
         </header>
 
         {/* Page content */}
