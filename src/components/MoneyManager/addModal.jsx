@@ -54,7 +54,7 @@ const AddEntryModal = ({ isOpen, onClose }) => {
     };
     console.log(transactionData);
     try {
-        const response = await fetch(`${apiUrl}/categories`, {
+        const response = await fetch(`${apiUrl}/transactions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
