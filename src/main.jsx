@@ -13,6 +13,7 @@ import PrivateRoute from "./components/PrivateRoute";
 import IndexMoneyManager from "./components/MoneyManager";
 import AccountContent from "./components/MoneyManager/accounts/accounts";
 import Transactions from "./components/MoneyManager/transactions/transactions";
+import { AuthProvider } from './components/Context/AuthProvider';
 
 const router = createBrowserRouter([
   {
@@ -41,15 +42,15 @@ const router = createBrowserRouter([
         element: <Index />,
       },
       {
-        path: "moneymanager", // Se omite /index ya que estás en un children de /index
+        path: "moneymanager",
         element: <IndexMoneyManager />,
         children: [
           {
-            path: "accounts", // Anidada dentro de moneymanager
+            path: "accounts",
             element: <AccountContent />,
           },
           {
-            path: "transactions", // Anidada dentro de moneymanager
+            path: "transactions",
             element: <Transactions />,
           }
         ],
@@ -60,6 +61,8 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
   </React.StrictMode>
 );

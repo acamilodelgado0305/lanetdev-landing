@@ -11,6 +11,18 @@ const authApi = axios.create({
     },
 });
 
+// Interceptor para agregar el token a las solicitudes
+authApi.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
+
 // Función para obtener todos los usuarios
 export const getUsers = async () => {
     try {

@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, X } from "lucide-react";
+import { useAuth } from '../../components/Context/AuthProvider';
 
-const UserProfileHeader = ({ name, profilePictureUrl, onToggle }) => {
+const UserProfileHeader = ({ onToggle }) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const { user } = useAuth();
+    const userName = user ? user.username : 'Loading...';
+    const profilePictureUrl = user?.profilePictureUrl || 'https://i.pinimg.com/736x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg'; // Cambia la URL si es necesario
 
     const handleDropdownToggle = () => {
         setIsDropdownOpen(!isDropdownOpen);
@@ -24,7 +28,7 @@ const UserProfileHeader = ({ name, profilePictureUrl, onToggle }) => {
                             className="flex items-center text-sm text-gray-700 focus:outline-none"
                             onClick={handleDropdownToggle}
                         >
-                            <span className="mr-2">{name}</span>
+                            <span className="mr-2">{userName}</span>
                             {isDropdownOpen ? (
                                 <ChevronUp className="w-4 h-4" />
                             ) : (
@@ -36,21 +40,22 @@ const UserProfileHeader = ({ name, profilePictureUrl, onToggle }) => {
             </div>
 
             {/* Información del usuario que se despliega debajo del nombre */}
-            {isDropdownOpen && (
+            {isDropdownOpen && user && (
                 <div className="px-4 py-2 bg-gray-100">
-                    <div className="flex items-center">
+                    <div className="flex flex-col items-center mb-4">
                         <img
                             src={profilePictureUrl}
-                            alt={`${name}'s profile`}
-                            className="w-12 h-12 rounded-full mr-4"
+                            alt={`${userName}'s profile`}
+                            className="w-24 h-24 rounded-full mb-2"
                         />
-                        <div>
-                            <p className="text-sm font-semibold text-gray-700">{name}</p>
-                            <p className="text-sm text-gray-500">Email: user@example.com</p>
-                            <p className="text-sm text-gray-500">Role: Admin</p>
-                        </div>
+                        <p className="text-lg font-semibold text-gray-700">{userName}</p>
                     </div>
-                    {/* Aquí puedes añadir más información del usuario */}
+                    <div>
+                        {user.email && <p className="text-sm text-gray-500">Email: {user.email}</p>}
+                        {user.address && <p className="text-sm text-gray-500">Address: {user.address}</p>}
+                        {user.phone && <p className="text-sm text-gray-500">Phone: {user.phone}</p>}
+                        <p className="text-sm text-gray-500">Role: Admin</p>
+                    </div>
                 </div>
             )}
         </div>
