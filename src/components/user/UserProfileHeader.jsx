@@ -41,12 +41,12 @@ const UserProfileHeader = ({ onToggle }) => {
 
             {/* Información del usuario que se despliega debajo del nombre */}
             {isDropdownOpen && user && (
-                <div className="px-4 py-2 bg-gray-100">
+                <div className="px-4 py-1 bg-gray-100">
                     <div className="flex flex-col items-center mb-4">
                         <img
                             src={profilePictureUrl}
                             alt={`${userName}'s profile`}
-                            className="w-24 h-24 rounded-full mb-2"
+                            className="w-20 h-20 rounded-full mb-1"
                         />
                         <p className="text-lg font-semibold text-gray-700">{userName}</p>
                     </div>
