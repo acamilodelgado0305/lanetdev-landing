@@ -50,6 +50,11 @@ const IndexMoneyManager = () => {
     fetchUserName();
   }, []);
 
+  useEffect(() => {
+    // Redirigir automáticamente a la ruta de transacciones cuando se monte el componente
+    navigate("/index/moneymanager/transactions");
+  }, [navigate]);
+
   return (
     <div className="flex flex-col h-screen bg-gray-100">
       {/* Header with navigation */}
