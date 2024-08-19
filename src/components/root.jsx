@@ -26,47 +26,6 @@ const SidebarSection = ({ title, children }) => (
 
 export default function Root() {
   const [isOpen, setIsOpen] = useState(false);
-  const [name, setName] = useState("");
-  const navigate = useNavigate();
-
-
-  const userName = 'Juan Pérez';
-  const profilePicUrl = 'https://i.pinimg.com/736x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg'; // Aquí deberías colocar la URL real de la imagen
-  // Función de logout
-  const logout = async () => {
-    try {
-      await fetch(`${import.meta.env.VITE_BACKEND_URL}/logout`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-      });
-      navigate("/");
-    } catch (error) {
-      console.error("Error al cerrar sesión:", error);
-    }
-  };
-
-  // Obtener nombre de usuario
-  useEffect(() => {
-    const fetchUserName = async () => {
-      try {
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/auth/user`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-        });
-        if (response.ok) {
-          const { name } = await response.json();
-          setName(name);
-        } else {
-          console.error("Error al obtener el nombre del usuario");
-        }
-      } catch (error) {
-        console.error("Error en la solicitud:", error);
-      }
-    };
-    fetchUserName();
-  }, []);
 
   // Sidebar links (usando useMemo para evitar renders innecesarios)
   const sidebarLinks = useMemo(
@@ -90,8 +49,6 @@ export default function Root() {
       >
         <div>
           <UserProfileHeader
-            name={userName}
-            profilePictureUrl={profilePicUrl}
             onToggle={() => setIsOpen(false)}
           />
         </div>
