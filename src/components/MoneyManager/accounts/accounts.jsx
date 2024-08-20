@@ -15,7 +15,7 @@ const AccountContent = () => {
   useEffect(() => {
     const fetchCuentas = async () => {
       try {
-        const response = await axios.get('http://ms-finanzas.app.la-net.co/api/accounts');
+        const response = await axios.get('https://ms-finanzas.app.la-net.co/api/accounts');
         setCuentas(response.data);
       } catch (err) {
         setError('Error al cargar las cuentas');

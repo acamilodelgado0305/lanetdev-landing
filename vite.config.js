@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: ['http://server-auth.app.la-net.co','http://ms-finanzas.app.la-net.co'],
+        target: ['http://server-auth.app.la-net.co','https://ms-finanzas.app.la-net.co'],
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, ''),
