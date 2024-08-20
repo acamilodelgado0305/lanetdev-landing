@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { Outlet, Link, useNavigate } from "react-router-dom";
-import { ChevronDown, Menu, X } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { Outlet, Link } from "react-router-dom";
+import { ChevronDown, Menu, X, Home, FileText, Users, ShoppingCart, Book, DollarSign } from "lucide-react";
 import UserProfileHeader from './user/UserProfileHeader';
-
 
 // Componente SidebarLink
 const SidebarLink = ({ to, icon: Icon, children }) => (
@@ -10,16 +9,15 @@ const SidebarLink = ({ to, icon: Icon, children }) => (
     to={to}
     className="flex items-center p-2 text-sm text-gray-600 rounded-md hover:bg-gray-100 transition-colors duration-200"
   >
-    <Icon className="w-5 h-5 mr-3 text-gray-500" />
+    <Icon className="w-5 h-5 mr-3 text-white" />
     <span>{children}</span>
   </Link>
 );
 
-
 // Componente SidebarSection
 const SidebarSection = ({ title, children }) => (
   <div className="mb-4">
-    <h3 className="px-3 mb-2 text-xs font-semibold text-gray-500 uppercase">{title}</h3>
+    <h3 className="px-3 mb-2 text-xs font-semibold text-white uppercase">{title}</h3>
     {children}
   </div>
 );
@@ -30,12 +28,12 @@ export default function Root() {
   // Sidebar links (usando useMemo para evitar renders innecesarios)
   const sidebarLinks = useMemo(
     () => [
-      { to: "/index", label: "Dashboard" },
-      { to: "/index/new", label: "Finanzas" },
-      { to: "/index/clientes", label: "Clientes" },
-      { to: "/productos", label: "Productos" },
-      { to: "/index/doc", label: "Documentación" },
-      { to: "/index/moneymanager", label: "Money Manager" },
+      { to: "/index", label: "Dashboard", icon: Home },
+      { to: "/index/new", label: "Finanzas", icon: DollarSign },
+      { to: "/index/clientes", label: "Clientes", icon: Users },
+      { to: "/productos", label: "Productos", icon: ShoppingCart },
+      { to: "/index/doc", label: "Documentación", icon: FileText },
+      { to: "/index/moneymanager", label: "Money Manager", icon: Book },
     ],
     []
   );
@@ -45,7 +43,7 @@ export default function Root() {
       {/* Sidebar */}
       <aside
         className={`${isOpen ? "translate-x-0" : "-translate-x-full"
-          } fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}
+          } fixed inset-y-0 left-0 z-50 w-64 bg-black border-r border-gray-200 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}
       >
         <div>
           <UserProfileHeader
@@ -56,14 +54,14 @@ export default function Root() {
         <nav className="px-4 py-4">
           <SidebarSection title="Menú principal">
             {sidebarLinks.slice(0, 4).map((link) => (
-              <SidebarLink key={link.to} to={link.to} icon={Menu}>
+              <SidebarLink key={link.to} to={link.to} icon={link.icon}>
                 {link.label}
               </SidebarLink>
             ))}
           </SidebarSection>
           <SidebarSection title="Recursos">
             {sidebarLinks.slice(4).map((link) => (
-              <SidebarLink key={link.to} to={link.to} icon={Menu}>
+              <SidebarLink key={link.to} to={link.to} icon={link.icon}>
                 {link.label}
               </SidebarLink>
             ))}
@@ -81,7 +79,6 @@ export default function Root() {
           >
             <Menu className="w-6 h-6" />
           </button>
-
         </header>
 
         {/* Page content */}
