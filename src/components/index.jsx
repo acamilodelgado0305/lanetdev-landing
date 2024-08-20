@@ -76,34 +76,35 @@ export default function Index() {
         ].map((item, index) => (
           <div key={index} className="bg-white rounded-lg shadow-sm p-4 flex flex-col items-center"><div className="text-blue-500 text-3xl mb-2">{item.icon}</div><h3 className="text-sm font-medium text-gray-700">{item.label}</h3><h1 className="text-2xl font-bold text-gray-700">{item.value}</h1></div>
         ))}
-      </div><div className="w-full max-w-2xl"><div className="mb-6"><Bar
-        data={barData}
-        options={{
-          responsive: true,
-          plugins: {
-            legend: {
-              position: 'top',
+      </div><div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-5xl">
+        <div className="mb-6"><Bar
+          data={barData}
+          options={{
+            responsive: true,
+            plugins: {
+              legend: {
+                position: 'top',
+              },
+              title: {
+                display: true,
+                text: 'Bar Chart',
+              },
             },
-            title: {
-              display: true,
-              text: 'Bar Chart',
+          }}
+        /></div><div><Line
+          data={lineData}
+          options={{
+            responsive: true,
+            plugins: {
+              legend: {
+                position: 'top',
+              },
+              title: {
+                display: true,
+                text: 'Line Chart',
+              },
             },
-          },
-        }}
-      /></div><div><Line
-        data={lineData}
-        options={{
-          responsive: true,
-          plugins: {
-            legend: {
-              position: 'top',
-            },
-            title: {
-              display: true,
-              text: 'Line Chart',
-            },
-          },
-        }}
-      /></div></div></main>
+          }}
+        /></div></div></main>
   );
 }

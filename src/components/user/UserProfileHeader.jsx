@@ -15,7 +15,7 @@ const UserProfileHeader = ({ onToggle }) => {
     return (
         <div className="border-b border-gray-200">
             <div className="flex items-center justify-between h-16 px-4">
-                <span className="text-xl font-semibold text-gray-800">Lanet</span>
+                <img src="../../../public/LOGO.png" alt="Logo Lanet" className=" ml-4 h-10 rounded-full" />
                 <button
                     onClick={onToggle}
                     className="p-1 text-gray-600 rounded-md lg:hidden hover:bg-gray-100"
@@ -25,7 +25,7 @@ const UserProfileHeader = ({ onToggle }) => {
                 <div className="hidden lg:flex items-center ml-auto">
                     <div className="relative">
                         <button
-                            className="flex items-center text-sm text-gray-700 focus:outline-none"
+                            className="flex items-center text-sm text-white focus:outline-none"
                             onClick={handleDropdownToggle}
                         >
                             <span className="mr-2">{userName}</span>
@@ -41,20 +41,34 @@ const UserProfileHeader = ({ onToggle }) => {
 
             {/* Información del usuario que se despliega debajo del nombre */}
             {isDropdownOpen && user && (
-                <div className="px-4 py-1 bg-gray-100">
+                <div className=" border-y-2 px-4 py-1 bg-black text-gray-300">
                     <div className="flex flex-col items-center mb-4">
                         <img
                             src={profilePictureUrl}
                             alt={`${userName}'s profile`}
                             className="w-20 h-20 rounded-full mb-1"
                         />
-                        <p className="text-lg font-semibold text-gray-700">{userName}</p>
+                        <p className="text-lg font-semibold text-white">{userName}</p>
                     </div>
-                    <div>
-                        {user.email && <p className="text-sm text-gray-500">Email: {user.email}</p>}
-                        {user.address && <p className="text-sm text-gray-500">Address: {user.address}</p>}
-                        {user.phone && <p className="text-sm text-gray-500">Phone: {user.phone}</p>}
-                        <p className="text-sm text-gray-500">Role: Admin</p>
+                    <div className="text-gray-300">
+                        {user.email && (
+                            <p className="text-sm">
+                                <span className="font-bold text-white">Email:</span> {user.email}
+                            </p>
+                        )}
+                        {user.address && (
+                            <p className="text-sm">
+                                <span className="font-bold text-white">Address:</span> {user.address}
+                            </p>
+                        )}
+                        {user.phone && (
+                            <p className="text-sm">
+                                <span className="font-bold text-white">Phone:</span> {user.phone}
+                            </p>
+                        )}
+                        <p className="text-sm">
+                            <span className="font-bold text-white">Role:</span> Admin
+                        </p>
                     </div>
                 </div>
             )}
