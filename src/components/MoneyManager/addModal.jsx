@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { IoClose } from "react-icons/io5";
 
-const AddEntryModal = ({ isOpen, onClose }) => {
+const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
   const apiUrl = import.meta.env.VITE_API_FINANZAS;
 
   const [transactionType, setTransactionType] = useState("expense");
@@ -52,20 +52,20 @@ const AddEntryModal = ({ isOpen, onClose }) => {
       note: note,
       description: description,
     };
-    console.log(transactionData);
+
     try {
       const response = await fetch(`${apiUrl}/transactions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-
         body: JSON.stringify(transactionData),
       });
 
       if (response.ok) {
         console.log("Transacción guardada con éxito");
         onClose();
+        onTransactionAdded(); // Llamar a la función de actualización
       } else {
         console.error("Error al guardar la transacción");
       }
@@ -94,28 +94,31 @@ const AddEntryModal = ({ isOpen, onClose }) => {
         <div className="p-4 space-y-4">
           <div className="flex justify-between space-x-2">
             <button
-              className={`flex-1 py-2 rounded-full ${transactionType === "income"
-                ? "bg-green-500 text-white"
-                : "bg-gray-200 text-gray-800"
-                }`}
+              className={`flex-1 py-2 rounded-full ${
+                transactionType === "income"
+                  ? "bg-green-500 text-white"
+                  : "bg-gray-200 text-gray-800"
+              }`}
               onClick={() => setTransactionType("income")}
             >
               Ingreso
             </button>
             <button
-              className={`flex-1 py-2 rounded-full ${transactionType === "expense"
-                ? "bg-red-500 text-white"
-                : "bg-gray-200 text-gray-800"
-                }`}
+              className={`flex-1 py-2 rounded-full ${
+                transactionType === "expense"
+                  ? "bg-red-500 text-white"
+                  : "bg-gray-200 text-gray-800"
+              }`}
               onClick={() => setTransactionType("expense")}
             >
               Gasto
             </button>
             <button
-              className={`flex-1 py-2 rounded-full ${transactionType === "Transferencia"
-                ? "bg-blue-500 text-white"
-                : "bg-gray-200 text-gray-800"
-                }`}
+              className={`flex-1 py-2 rounded-full ${
+                transactionType === "Transferencia"
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200 text-gray-800"
+              }`}
               onClick={() => setTransactionType("Transferencia")}
             >
               Transferencia

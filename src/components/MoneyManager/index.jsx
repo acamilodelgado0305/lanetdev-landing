@@ -98,7 +98,7 @@ const IndexMoneyManager = () => {
 
       {/* Main content */}
       <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="-w-full py-4">
           {/* El componente Outlet renderizará el contenido de la ruta hija activa */}
           <Outlet />
         </div>

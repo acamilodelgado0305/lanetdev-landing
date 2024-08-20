@@ -72,7 +72,7 @@ export default function Root() {
       </aside>
 
       {/* Main content */}
-      <div className="flex flex-1 overflow-hidden w-full">
+      <div className="flex  overflow-hidden w-full">
         {/* Header */}
         <header className="flex items-center justify-between h-16 px-4  border-b border-gray-200">
           <button

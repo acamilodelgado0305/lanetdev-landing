@@ -1,21 +1,59 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   IoSearchOutline,
   IoStarOutline,
   IoMenuOutline,
-  IoAddCircleOutline,
 } from "react-icons/io5";
 import { BsPlusCircleFill } from "react-icons/bs";
+import { format as formatDate, subDays, addDays } from "date-fns";
 import AddEntryModal from "../addModal";
+import { getTransactions } from "../../../services/moneymanager/moneyService";
 
+const formatCOP = (amount) => {
+  return amount.toLocaleString("es-CO", {
+    style: "currency",
+    currency: "COP",
+  });
+};
 
-const Transactions = () => {
+const TransactionsDashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [error, setError] = useState(null);
+  const [transactions, setTransactions] = useState([]);
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
 
+  const fetchTransactions = async () => {
+    try {
+      const data = await getTransactions();
+      // Ordenar las transacciones por fecha en orden descendente
+      setTransactions(
+        data
+          .filter(
+            (tx) =>
+              new Date(tx.date).toDateString() === currentDate.toDateString()
+          )
+          .sort((a, b) => new Date(b.date) - new Date(a.date))
+      );
+    } catch (err) {
+      setError("Error al cargar las transacciones");
+      console.error("Error fetching transactions:", err);
+    }
+  };
 
+  const handleTransactionAdded = () => {
+    fetchTransactions(); // Llamar a la función de actualización
+  };
+
+  useEffect(() => {
+    fetchTransactions();
+  }, [currentDate]);
+
+  if (error) {
+    return <div className="text-center text-red-500 p-4">{error}</div>;
+  }
 
   return (
     <div className="bg-gray-100 min-h-screen w-full">
@@ -33,76 +71,71 @@ const Transactions = () => {
       <main className="mx-auto pt-6">
         <div className="h-[39em] bg-white rounded-lg shadow-sm p-4">
           <div className="flex justify-between items-center mb-4">
-            <button className="text-blue-500">&lt;</button>
-            <h2 className="text-lg font-semibold">ago 2024</h2>
-            <button className="text-blue-500">&gt;</button>
-          </div>
-
-          <div className="flex items-center justify-center space-x-4 mb-6">
-            {["Diario", "Calendario", "Mensual", "Resumen", "Descripción"].map(
-              (tab, index) => (
-                <button
-                  key={tab}
-                  className={`text-sm font-medium ${
-                    index === 0
-                      ? "text-blue-500 border-b-2 border-blue-500"
-                      : "text-gray-500"
-                  }`}
-                >
-                  {tab}
-                </button>
-              )
-            )}
+            <button
+              className="text-blue-500"
+              onClick={() => setCurrentDate(subDays(currentDate, 1))}
+            >
+              &lt;
+            </button>
+            <h2 className="text-lg font-semibold">
+              {formatDate(currentDate, "d MMM yyyy")}
+            </h2>
+            <button
+              className="text-blue-500"
+              onClick={() => setCurrentDate(addDays(currentDate, 1))}
+            >
+              &gt;
+            </button>
           </div>
 
           <div className="grid grid-cols-3 gap-4 mb-6 text-center">
             <div>
               <p className="text-sm text-gray-500">Ingreso</p>
-              <p className="text-lg font-semibold text-blue-500">860,500.00</p>
+              <p className="text-lg font-semibold text-blue-500">
+                {formatCOP(
+                  transactions
+                    .filter((tx) => tx.type === "income")
+                    .reduce((total, tx) => total + tx.amount, 0)
+                )}
+              </p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Gastos</p>
-              <p className="text-lg font-semibold text-red-500">418,000.00</p>
+              <p className="text-lg font-semibold text-red-500">
+                {formatCOP(
+                  transactions
+                    .filter((tx) => tx.type === "expense")
+                    .reduce((total, tx) => total + tx.amount, 0)
+                )}
+              </p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Balance</p>
-              <p className="text-lg font-semibold text-green-500">442,500.00</p>
+              <p className="text-lg font-semibold text-green-500">
+                {formatCOP(
+                  transactions.reduce(
+                    (total, tx) =>
+                      tx.type === "income"
+                        ? total + tx.amount
+                        : total - tx.amount,
+                    0
+                  )
+                )}
+              </p>
             </div>
           </div>
 
           <div className="space-y-4">
-            <DayTransactions
-              date="13"
-              day="mar"
-              income="110,000.00"
-              expense="180,000.00"
-              transactions={[
-                {
-                  category: "Educación",
-                  description: "Universidad",
-                  account: "RAPPYPAY",
-                  amount: -180000,
-                  type: "expense",
-                },
-               
-               
-              ]}
-            />
-
-            <DayTransactions
-              date="12"
-              day="lun"
-              income="139,000.00"
-              expense="12,000.00"
-              transactions={[
-                {
-                  category: "FEVA",
-                  description: "NEQUI",
-                  amount: 130000,
-                  type: "income",
-                },
-              ]}
-            />
+            {transactions.map((transaction, index) => (
+              <Transaction
+                key={index}
+                date={transaction.date}
+                description={transaction.description}
+                note={transaction.note}
+                amount={transaction.amount}
+                type={transaction.type}
+              />
+            ))}
           </div>
           <div className="w-[90%] flex justify-end items-end">
             <button
@@ -112,7 +145,11 @@ const Transactions = () => {
             >
               <BsPlusCircleFill color="red" size={50} />
             </button>
-            <AddEntryModal isOpen={isModalOpen} onClose={closeModal} />
+            <AddEntryModal
+              isOpen={isModalOpen}
+              onClose={closeModal}
+              onTransactionAdded={handleTransactionAdded}
+            />
           </div>
         </div>
       </main>
@@ -120,54 +157,35 @@ const Transactions = () => {
   );
 };
 
-const DayTransactions = ({ date, day, income, expense, transactions }) => (
+const Transaction = ({ date, description, note, amount, type }) => (
   <div className="border-t pt-4">
     <div className="flex justify-between items-center mb-2">
       <div className="flex items-center">
-        <span className="text-lg font-semibold mr-2">{date}</span>
-        <span className="text-sm text-gray-500">{day}</span>
+        <span className="text-lg font-semibold mr-2">
+          {formatDate(new Date(date), "d MMM")}
+        </span>
       </div>
       <div className="flex justify-center space-x-4">
-        <span className="text-blue-500">${income}</span>
-        <span className="text-red-500">${expense}</span>
+        <span className={type === "expense" ? "text-red-500" : "text-blue-500"}>
+          {type === "expense" ? "-" : ""}
+          {formatCOP(amount)}
+        </span>
       </div>
     </div>
     <div className="space-y-2">
-      {transactions.map((transaction, index) => (
-        <div key={index} className="flex justify-between items-center">
-          <div className="flex items-center">
-            <span className="text-2xl mr-2">
-              {transaction.category === "Educación"
-                ? "📚"
-                : transaction.category === "Transferencia"
-                ? "🔄"
-                : transaction.category === "Dinero"
-                ? "💰"
-                : transaction.category === "CLASES"
-                ? "📚"
-                : transaction.category === "FEVA"
-                ? "📚"
-                : transaction.category === "Comida"
-                ? "🍽️"
-                : "💼"}
-            </span>
-            <div>
-              <p className="font-medium">{transaction.description}</p>
-              <p className="text-sm text-gray-500">{transaction.account}</p>
-            </div>
-          </div>
-          <span
-            className={
-              transaction.type === "expense" ? "text-red-500" : "text-blue-500"
-            }
-          >
-            {transaction.type === "expense" ? "-" : ""}$
-            {Math.abs(transaction.amount).toLocaleString()}
+      <div className="flex justify-between items-center">
+        <div className="flex items-center">
+          <span className="text-2xl mr-2">
+            {type === "expense" ? "💸" : "💰"}
           </span>
+          <div>
+            <p className="font-medium">{description}</p>
+            <p className="text-sm text-gray-500">{note}</p>
+          </div>
         </div>
-      ))}
+      </div>
     </div>
   </div>
 );
 
-export default Transactions;
+export default TransactionsDashboard;

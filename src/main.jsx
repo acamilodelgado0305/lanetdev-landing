@@ -12,7 +12,7 @@ import Root from "./components/root";
 import PrivateRoute from "./components/PrivateRoute";
 import IndexMoneyManager from "./components/MoneyManager";
 import AccountContent from "./components/MoneyManager/accounts/accounts";
-import Transactions from "./components/MoneyManager/transactions/transactions";
+import TransactionsDashboard from "./components/MoneyManager/transactions/transactions";
 import { AuthProvider } from './components/Context/AuthProvider';
 
 const router = createBrowserRouter([
@@ -51,7 +51,7 @@ const router = createBrowserRouter([
           },
           {
             path: "transactions",
-            element: <Transactions />,
+            element: <TransactionsDashboard />,
           }
         ],
       },
