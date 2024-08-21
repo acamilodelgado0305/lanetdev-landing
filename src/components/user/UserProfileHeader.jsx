@@ -15,7 +15,7 @@ const UserProfileHeader = ({ onToggle }) => {
     return (
         <div className="border-b border-gray-200">
             <div className="flex items-center justify-between h-16 px-4">
-                <img src="../../../public/LOGO.png" alt="Logo Lanet" className=" ml-4 h-10 rounded-full" />
+                <img src="https://res.cloudinary.com/dybws2ubw/image/upload/v1724197589/LOGO_qgczyj.png" alt="Logo Lanet" className=" ml-4 h-10 rounded-full" />
                 <button
                     onClick={onToggle}
                     className="p-1 text-gray-600 rounded-md lg:hidden hover:bg-gray-100"
