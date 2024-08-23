@@ -1,19 +1,16 @@
 import React, { useEffect, useState } from "react";
-import {
-  IoSearchOutline,
-  IoStarOutline,
-  IoMenuOutline,
-} from "react-icons/io5";
-import { BsPlusCircleFill } from "react-icons/bs";
+import { PlusCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { format as formatDate, subDays, addDays } from "date-fns";
 import AddEntryModal from "../addModal";
 import { getTransactions } from "../../../services/moneymanager/moneyService";
 
-const formatCOP = (amount) => {
-  return amount.toLocaleString("es-CO", {
-    style: "currency",
-    currency: "COP",
-  });
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(amount);
 };
 
 const TransactionsDashboard = () => {
@@ -21,6 +18,8 @@ const TransactionsDashboard = () => {
   const [error, setError] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [totalIncome, setTotalIncome] = useState(0);
+  const [totalExpenses, setTotalExpenses] = useState(0);
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
@@ -28,15 +27,28 @@ const TransactionsDashboard = () => {
   const fetchTransactions = async () => {
     try {
       const data = await getTransactions();
-      // Ordenar las transacciones por fecha en orden descendente
-      setTransactions(
-        data
-          .filter(
-            (tx) =>
-              new Date(tx.date).toDateString() === currentDate.toDateString()
-          )
-          .sort((a, b) => new Date(b.date) - new Date(a.date))
-      );
+      const filteredTransactions = data
+        .filter(
+          (tx) =>
+            new Date(tx.date).toDateString() === currentDate.toDateString()
+        )
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      setTransactions(filteredTransactions);
+
+      let income = 0;
+      let expenses = 0;
+      filteredTransactions.forEach(tx => {
+        if (tx.type === "income") {
+          income += tx.amount;
+        } else if (tx.type === "expense") {
+          expenses += tx.amount;
+        }
+      });
+
+      setTotalIncome(income);
+      setTotalExpenses(expenses);
+
     } catch (err) {
       setError("Error al cargar las transacciones");
       console.error("Error fetching transactions:", err);
@@ -44,7 +56,7 @@ const TransactionsDashboard = () => {
   };
 
   const handleTransactionAdded = () => {
-    fetchTransactions(); // Llamar a la función de actualización
+    fetchTransactions();
   };
 
   useEffect(() => {
@@ -55,77 +67,52 @@ const TransactionsDashboard = () => {
     return <div className="text-center text-red-500 p-4">{error}</div>;
   }
 
-  return (
-    <div className="bg-gray-100 min-h-screen w-full">
-      <header className="bg-white shadow-sm p-4">
-        <div className="max-w-full mx-auto flex justify-between items-center">
-          <IoSearchOutline className="text-gray-600 text-xl" />
-          <h1 className="text-xl font-semibold text-gray-800">Trans.</h1>
-          <div className="flex space-x-4">
-            <IoStarOutline className="text-gray-600 text-xl" />
-            <IoMenuOutline className="text-gray-600 text-xl" />
-          </div>
-        </div>
-      </header>
+  const balance = totalIncome - totalExpenses;
 
-      <main className="mx-auto pt-6">
-        <div className="h-[39em] bg-white rounded-lg shadow-sm p-4">
-          <div className="flex justify-between items-center mb-4">
+  return (
+    <div className="bg-gray-100 min-h-screen w-full p-4">
+      <main className="max-full mx-auto">
+        <div className="bg-white rounded-lg shadow-lg p-6 relative">
+          <div className="flex justify-between items-center mb-6">
             <button
-              className="text-blue-500"
+              className="text-blue-500 hover:text-blue-600 transition-colors"
               onClick={() => setCurrentDate(subDays(currentDate, 1))}
             >
-              &lt;
+              <ChevronLeft size={24} />
             </button>
-            <h2 className="text-lg font-semibold">
+            <h2 className="text-2xl font-semibold">
               {formatDate(currentDate, "d MMM yyyy")}
             </h2>
             <button
-              className="text-blue-500"
+              className="text-blue-500 hover:text-blue-600 transition-colors"
               onClick={() => setCurrentDate(addDays(currentDate, 1))}
             >
-              &gt;
+              <ChevronRight size={24} />
             </button>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 mb-6 text-center">
-            <div>
-              <p className="text-sm text-gray-500">Ingreso</p>
-              <p className="text-lg font-semibold text-blue-500">
-                {formatCOP(
-                  transactions
-                    .filter((tx) => tx.type === "income")
-                    .reduce((total, tx) => total + tx.amount, 0)
-                )}
+          <div className="grid grid-cols-3 gap-6 mb-8">
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600 mb-1">Ingreso</p>
+              <p className="text-2xl font-bold text-blue-600">
+                {formatCurrency(totalIncome)}
               </p>
             </div>
-            <div>
-              <p className="text-sm text-gray-500">Gastos</p>
-              <p className="text-lg font-semibold text-red-500">
-                {formatCOP(
-                  transactions
-                    .filter((tx) => tx.type === "expense")
-                    .reduce((total, tx) => total + tx.amount, 0)
-                )}
+            <div className="bg-red-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600 mb-1">Gastos</p>
+              <p className="text-2xl font-bold text-red-600">
+                {formatCurrency(totalExpenses)}
               </p>
             </div>
-            <div>
-              <p className="text-sm text-gray-500">Balance</p>
-              <p className="text-lg font-semibold text-green-500">
-                {formatCOP(
-                  transactions.reduce(
-                    (total, tx) =>
-                      tx.type === "income"
-                        ? total + tx.amount
-                        : total - tx.amount,
-                    0
-                  )
-                )}
+            <div className="bg-green-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600 mb-1">Balance</p>
+              <p className="text-2xl font-bold text-green-600">
+                {formatCurrency(balance)}
               </p>
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-[24rem] overflow-y-auto">
             {transactions.map((transaction, index) => (
               <Transaction
                 key={index}
@@ -137,20 +124,19 @@ const TransactionsDashboard = () => {
               />
             ))}
           </div>
-          <div className="w-[90%] flex justify-end items-end">
-            <button
-              onClick={openModal}
-              className="text-blue-500 hover:text-blue-600 focus:outline-none"
-              aria-label="Añadir entrada"
-            >
-              <BsPlusCircleFill color="red" size={50} />
-            </button>
-            <AddEntryModal
-              isOpen={isModalOpen}
-              onClose={closeModal}
-              onTransactionAdded={handleTransactionAdded}
-            />
-          </div>
+          
+          <button
+            onClick={openModal}
+            className="fixed bottom-8 right-8 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-4 shadow-lg transition-colors duration-300"
+            aria-label="Añadir transacción"
+          >
+            <PlusCircle size={24} />
+          </button>
+          <AddEntryModal
+            isOpen={isModalOpen}
+            onClose={closeModal}
+            onTransactionAdded={handleTransactionAdded}
+          />
         </div>
       </main>
     </div>
@@ -166,23 +152,19 @@ const Transaction = ({ date, description, note, amount, type }) => (
         </span>
       </div>
       <div className="flex justify-center space-x-4">
-        <span className={type === "expense" ? "text-red-500" : "text-blue-500"}>
-          {type === "expense" ? "-" : ""}
-          {formatCOP(amount)}
+        <span className={`font-semibold ${type === "expense" ? "text-red-500" : "text-blue-500"}`}>
+          {type === "expense" ? "-" : "+"}
+          {formatCurrency(amount)}
         </span>
       </div>
     </div>
-    <div className="space-y-2">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center">
-          <span className="text-2xl mr-2">
-            {type === "expense" ? "💸" : "💰"}
-          </span>
-          <div>
-            <p className="font-medium">{description}</p>
-            <p className="text-sm text-gray-500">{note}</p>
-          </div>
-        </div>
+    <div className="flex items-center">
+      <span className="text-2xl mr-3">
+        {type === "expense" ? "💸" : "💰"}
+      </span>
+      <div>
+        <p className="font-medium">{description}</p>
+        {note && <p className="text-sm text-gray-500">{note}</p>}
       </div>
     </div>
   </div>

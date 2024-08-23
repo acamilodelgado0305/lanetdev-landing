@@ -72,7 +72,7 @@ export default function Root() {
       {/* Main content */}
       <div className="flex  overflow-hidden w-full">
         {/* Header */}
-        <header className="flex items-center justify-between h-16 px-4  border-b border-gray-200">
+        <header className="flex items-center justify-between h-16 border-b border-gray-200">
           <button
             onClick={() => setIsOpen(true)}
             className="p-1 text-gray-600 rounded-md lg:hidden hover:bg-gray-100"
