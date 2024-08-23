@@ -34,6 +34,9 @@ export const getAccounts = async () => {
     }
 };
 
+
+
+
 export const getCategories = async () => {
     try {
         const response = await moneyApi.get('/categories');
