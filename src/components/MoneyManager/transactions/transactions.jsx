@@ -9,11 +9,14 @@ import { format as formatDate, subDays, addDays } from "date-fns";
 import AddEntryModal from "../addModal";
 import { getTransactions } from "../../../services/moneymanager/moneyService";
 
-const formatCOP = (amount) => {
-  return amount.toLocaleString("es-CO", {
-    style: "currency",
-    currency: "COP",
-  });
+// Currency formatter
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(amount);
 };
 
 const TransactionsDashboard = () => {
@@ -21,6 +24,8 @@ const TransactionsDashboard = () => {
   const [error, setError] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [totalIncome, setTotalIncome] = useState(0);
+  const [totalExpenses, setTotalExpenses] = useState(0);
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
@@ -28,15 +33,29 @@ const TransactionsDashboard = () => {
   const fetchTransactions = async () => {
     try {
       const data = await getTransactions();
-      // Ordenar las transacciones por fecha en orden descendente
-      setTransactions(
-        data
-          .filter(
-            (tx) =>
-              new Date(tx.date).toDateString() === currentDate.toDateString()
-          )
-          .sort((a, b) => new Date(b.date) - new Date(a.date))
-      );
+      const filteredTransactions = data
+        .filter(
+          (tx) =>
+            new Date(tx.date).toDateString() === currentDate.toDateString()
+        )
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      setTransactions(filteredTransactions);
+
+      // Calculate totals
+      let income = 0;
+      let expenses = 0;
+      filteredTransactions.forEach(tx => {
+        if (tx.type === "income") {
+          income += tx.amount;
+        } else if (tx.type === "expense") {
+          expenses += tx.amount;
+        }
+      });
+
+      setTotalIncome(income);
+      setTotalExpenses(expenses);
+
     } catch (err) {
       setError("Error al cargar las transacciones");
       console.error("Error fetching transactions:", err);
@@ -44,7 +63,7 @@ const TransactionsDashboard = () => {
   };
 
   const handleTransactionAdded = () => {
-    fetchTransactions(); // Llamar a la función de actualización
+    fetchTransactions();
   };
 
   useEffect(() => {
@@ -54,6 +73,8 @@ const TransactionsDashboard = () => {
   if (error) {
     return <div className="text-center text-red-500 p-4">{error}</div>;
   }
+
+  const balance = totalIncome - totalExpenses;
 
   return (
     <div className="bg-gray-100 min-h-screen w-full">
@@ -92,35 +113,19 @@ const TransactionsDashboard = () => {
             <div>
               <p className="text-sm text-gray-500">Ingreso</p>
               <p className="text-lg font-semibold text-blue-500">
-                {formatCOP(
-                  transactions
-                    .filter((tx) => tx.type === "income")
-                    .reduce((total, tx) => total + tx.amount, 0)
-                )}
+                {formatCurrency(totalIncome)}
               </p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Gastos</p>
               <p className="text-lg font-semibold text-red-500">
-                {formatCOP(
-                  transactions
-                    .filter((tx) => tx.type === "expense")
-                    .reduce((total, tx) => total + tx.amount, 0)
-                )}
+                {formatCurrency(totalExpenses)}
               </p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Balance</p>
               <p className="text-lg font-semibold text-green-500">
-                {formatCOP(
-                  transactions.reduce(
-                    (total, tx) =>
-                      tx.type === "income"
-                        ? total + tx.amount
-                        : total - tx.amount,
-                    0
-                  )
-                )}
+                {formatCurrency(balance)}
               </p>
             </div>
           </div>
@@ -168,7 +173,7 @@ const Transaction = ({ date, description, note, amount, type }) => (
       <div className="flex justify-center space-x-4">
         <span className={type === "expense" ? "text-red-500" : "text-blue-500"}>
           {type === "expense" ? "-" : ""}
-          {formatCOP(amount)}
+          {formatCurrency(amount)}
         </span>
       </div>
     </div>

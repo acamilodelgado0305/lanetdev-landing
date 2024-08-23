@@ -1,17 +1,25 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { BsPlusCircleFill } from "react-icons/bs";
 import AddAccountModal from "./addAccount";
 import { getAccounts } from "../../../services/moneymanager/moneyService";
 
+// Currency formatter
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(amount);
+};
+
 const AccountContent = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [cuentas, setCuentas] = useState([]);
+  const [error, setError] = useState(null);
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
-
-  const [cuentas, setCuentas] = useState([]);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchCuentas = async () => {
@@ -26,6 +34,7 @@ const AccountContent = () => {
 
     fetchCuentas();
   }, []);
+
   if (error) {
     return <div className="text-center text-red-500 p-4">{error}</div>;
   }
@@ -48,11 +57,11 @@ const AccountContent = () => {
             </div>
             <div
               className={`text-right ${
-                cuenta.balance ? "text-green-600" : "text-red-500"
+                parseFloat(cuenta.balance) >= 0 ? "text-green-600" : "text-red-500"
               } font-bold text-xl`}
             >
-              {cuenta.balance
-                ? `$${parseFloat(cuenta.balance).toFixed(2)}`
+              {cuenta.balance !== null && cuenta.balance !== undefined
+                ? formatCurrency(parseFloat(cuenta.balance))
                 : "No disponible"}
             </div>
           </div>
