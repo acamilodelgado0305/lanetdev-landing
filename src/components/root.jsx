@@ -7,7 +7,7 @@ import UserProfileHeader from './user/UserProfileHeader';
 const SidebarLink = ({ to, icon: Icon, children }) => (
   <Link
     to={to}
-    className="flex items-center p-2 text-sm text-gray-600 rounded-md hover:bg-gray-100 transition-colors duration-200"
+    className="flex items-center p-2 text-sm text-white rounded-md hover:bg-slate-700 transition-colors duration-200"
   >
     <Icon className="w-5 h-5 mr-3 text-white" />
     <span>{children}</span>
@@ -43,7 +43,7 @@ export default function Root() {
       {/* Sidebar */}
       <aside
         className={`${isOpen ? "translate-x-0" : "-translate-x-full"
-          } fixed inset-y-0 left-0 z-50 w-64 bg-black border-r border-gray-200 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}
+          } fixed inset-y-0 left-0 z-50 w-64 bg-primary border-r border-gray-200 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}
       >
         <div>
           <UserProfileHeader
@@ -75,7 +75,7 @@ export default function Root() {
         <header className="flex items-center justify-between h-16 border-b border-gray-200">
           <button
             onClick={() => setIsOpen(true)}
-            className="p-1 text-gray-600 rounded-md lg:hidden hover:bg-gray-100"
+            className="p-1 text-white rounded-md lg:hidden hover:bg-gray-100"
           >
             <Menu className="w-6 h-6" />
           </button>

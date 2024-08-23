@@ -63,9 +63,9 @@ export default function Index() {
   };
 
   return (
-    <main className="flex flex-col items-center justify-center p-1 bg-gray-50 min-h-screen">
+    <main className="flex flex-col items-center justify-start bg-gray-50 min-h-screen">
       {/* Barra superior con buscador e iconos */}
-      <div className="flex items-center justify-between w-full bg-black p-4 shadow-md mb-6">
+      <div className="flex items-center justify-between w-full bg-primary p-4 shadow-md">
         <input
           type="text"
           placeholder="Buscar..."
