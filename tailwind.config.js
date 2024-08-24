@@ -8,8 +8,8 @@ const config = {
   theme: {
     extend: {
       colors: {
-        primary: '#1a73e8',
-        'azul-rey': '#0033a0',
+        primary: '#007566',
+        'azul-rey': '#007566',
       },
     },
   },
