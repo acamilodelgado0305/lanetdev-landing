@@ -37,7 +37,7 @@ export default function Header() {
                 <div className="relative">
                     <BsFillBellFill className="text-2xl cursor-pointer hover:text-gray-800" />
                     {notifications > 0 && (
-                        <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
+                        <span className="absolute -top-4 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
                             {notifications}
                         </span>
                     )}
@@ -47,7 +47,7 @@ export default function Header() {
                 <div className="relative">
                     <BsEnvelopeFill className="text-2xl cursor-pointer hover:text-gray-800" />
                     {emails > 0 && (
-                        <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
+                        <span className="absolute -top-4 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
                             {emails}
                         </span>
                     )}
