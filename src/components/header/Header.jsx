@@ -65,7 +65,7 @@ export default function Header() {
                                 selected={startDate}
                                 onChange={(date) => {
                                     setStartDate(date);
-                                    setShowDatePicker(false); // Ocultar el DatePicker después de seleccionar una fecha
+                                    setShowDatePicker(false);
                                 }}
                                 inline
                                 className="bg-white p-2 shadow-md rounded"
