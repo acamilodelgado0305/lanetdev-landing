@@ -2,16 +2,33 @@ import React, { useState } from "react";
 import { IoClose } from "react-icons/io5";
 
 const AddAccountModal = ({ isOpen, onClose }) => {
-  const apiUrl = import.meta.env.VITE_API_FINANZAS;
+  const apiUrl = import.meta.env.VITE_API_FINANZAS; // Asegúrate de que esta variable de entorno esté correctamente configurada
 
   const [name, setName] = useState("");
   const [balance, setBalance] = useState("");
-  const [type, setType] = useState("");
+  const [type, setType] = useState("Dinero en Efectivo");
 
   const handleSave = async () => {
+    // Validación básica
+    if (!name.trim()) {
+      console.error("El nombre de la cuenta es requerido.");
+      return;
+    }
+
+    if (!type) {
+      console.error("El tipo de cuenta es requerido.");
+      return;
+    }
+
+    const parsedBalance = parseFloat(balance);
+    if (isNaN(parsedBalance)) {
+      console.error("El saldo inicial debe ser un número válido.");
+      return;
+    }
+
     const accountData = {
-      name: name,
-      balance: parseFloat(balance),
+      name: name.trim(),
+      balance: parsedBalance,
       type: type
     };
 
@@ -26,12 +43,13 @@ const AddAccountModal = ({ isOpen, onClose }) => {
 
       if (response.ok) {
         console.log("Cuenta creada con éxito");
-        onClose();
+        onClose(); // Cierra el modal después de guardar
       } else {
-        console.error("Error al crear la cuenta");
+        const errorData = await response.json(); // Obtener detalles del error de la respuesta
+        console.error("Error al crear la cuenta:", errorData.message || "Error desconocido");
       }
     } catch (error) {
-      console.error("Error al conectar con la API:", error);
+      console.error("Error al conectar con la API:", error.message);
     }
   };
 
@@ -66,10 +84,10 @@ const AddAccountModal = ({ isOpen, onClose }) => {
               onChange={(e) => setType(e.target.value)}
               className="w-full p-2 bg-gray-100 rounded border border-gray-300"
             >
-              <option value="">Selecciona un tipo</option>
-              <option value="Banco">Banco</option>
               <option value="Dinero en Efectivo">Dinero en Efectivo</option>
-              <option value="Cajeros">Cajeros</option>
+              <option value="Banco">Banco</option>
+             
+            
             </select>
           </div>
           <div>

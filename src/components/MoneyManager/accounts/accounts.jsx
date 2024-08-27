@@ -42,7 +42,7 @@ const AccountContent = () => {
   }
 
   return (
-    <div className="bg-gray-100 min-h-screen w-full p-4">
+    <div className="h-[50em] bg-gray-100 min-h-screen w-full p-4">
       <main className="max-full mx-auto">
         <div className="bg-white rounded-lg shadow-lg p-6 relative">
           <h1 className="text-3xl font-bold mb-6 text-indigo-600">
@@ -56,7 +56,7 @@ const AccountContent = () => {
             </p>
           </div>
 
-          <div className="space-y-4 max-h-[24rem] overflow-y-auto">
+          <div className="space-y-4 max-h-[40rem] overflow-y-auto">
             {cuentas.map((cuenta) => (
               <div
                 key={cuenta.id}

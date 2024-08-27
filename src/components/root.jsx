@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Outlet, Link } from "react-router-dom";
 import { ChevronDown, Menu, X, Home, FileText, Users, ShoppingCart, Book, DollarSign } from "lucide-react";
 import UserProfileHeader from './user/UserProfileHeader';
+import { useGridRootProps } from "@mui/x-data-grid";
 
 // Componente SidebarLink
 const SidebarLink = ({ to, icon: Icon, children }) => (
