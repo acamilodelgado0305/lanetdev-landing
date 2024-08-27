@@ -1,15 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { PlusCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { format as formatDate, subDays, addDays } from "date-fns";
+import axios from "axios";
 import AddEntryModal from "../addModal";
 import { getTransactions } from "../../../services/moneymanager/moneyService";
+const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
 
 const formatCurrency = (amount) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
+  if (isNaN(amount)) {
+    return "$0.00";
+  }
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2
+    maximumFractionDigits: 2,
   }).format(amount);
 };
 
@@ -20,6 +25,7 @@ const TransactionsDashboard = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [totalIncome, setTotalIncome] = useState(0);
   const [totalExpenses, setTotalExpenses] = useState(0);
+  const [balance, setBalance] = useState(0);
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
@@ -35,31 +41,43 @@ const TransactionsDashboard = () => {
         .sort((a, b) => new Date(b.date) - new Date(a.date));
 
       setTransactions(filteredTransactions);
-
-      let income = 0;
-      let expenses = 0;
-      filteredTransactions.forEach(tx => {
-        if (tx.type === "income") {
-          income += tx.amount;
-        } else if (tx.type === "expense") {
-          expenses += tx.amount;
-        }
-      });
-
-      setTotalIncome(income);
-      setTotalExpenses(expenses);
-
     } catch (err) {
       setError("Error al cargar las transacciones");
       console.error("Error fetching transactions:", err);
     }
   };
 
+  const fetchDailyData = async () => {
+    const formattedDate = formatDate(currentDate, "yyyy-MM-dd");
+    try {
+      const [balanceResponse, incomeResponse, expensesResponse] =
+        await Promise.all([
+          axios.get(`${API_BASE_URL}/transactions/balance/${formattedDate}`),
+          axios.get(`${API_BASE_URL}/transactions/income/${formattedDate}`),
+          axios.get(`${API_BASE_URL}/transactions/expenses/${formattedDate}`),
+        ]);
+
+      const balanceValue = parseFloat(balanceResponse.data.balance) || 0;
+      const incomeValue = parseFloat(incomeResponse.data.totalIncome) || 0;
+      const expensesValue =
+        parseFloat(expensesResponse.data.totalExpenses) || 0;
+
+      setBalance(balanceValue);
+      setTotalIncome(incomeValue);
+      setTotalExpenses(expensesValue);
+    } catch (err) {
+      setError("Error al cargar los datos diarios");
+      console.error("Error fetching daily data:", err);
+    }
+  };
+
   const handleTransactionAdded = () => {
     fetchTransactions();
+    fetchDailyData();
   };
 
   useEffect(() => {
+    fetchDailyData();
     fetchTransactions();
   }, [currentDate]);
 
@@ -67,12 +85,10 @@ const TransactionsDashboard = () => {
     return <div className="text-center text-red-500 p-4">{error}</div>;
   }
 
-  const balance = totalIncome - totalExpenses;
-
   return (
     <div className="bg-gray-100 min-h-screen w-full p-4">
       <main className="max-full mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-6 relative">
+        <div className="h-[50em] bg-white rounded-lg shadow-lg p-6 relative">
           <div className="flex justify-between items-center mb-6">
             <button
               className="text-blue-500 hover:text-blue-600 transition-colors"
@@ -112,7 +128,7 @@ const TransactionsDashboard = () => {
             </div>
           </div>
 
-          <div className="space-y-4 max-h-[24rem] overflow-y-auto">
+          <div className="space-y-4 max-h-[40rem] overflow-y-auto">
             {transactions.map((transaction, index) => (
               <Transaction
                 key={index}
@@ -124,7 +140,7 @@ const TransactionsDashboard = () => {
               />
             ))}
           </div>
-          
+
           <button
             onClick={openModal}
             className="fixed bottom-8 right-8 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-4 shadow-lg transition-colors duration-300"
@@ -152,16 +168,18 @@ const Transaction = ({ date, description, note, amount, type }) => (
         </span>
       </div>
       <div className="flex justify-center space-x-4">
-        <span className={`font-semibold ${type === "expense" ? "text-red-500" : "text-blue-500"}`}>
+        <span
+          className={`font-semibold ${
+            type === "expense" ? "text-red-500" : "text-blue-500"
+          }`}
+        >
           {type === "expense" ? "-" : "+"}
           {formatCurrency(amount)}
         </span>
       </div>
     </div>
     <div className="flex items-center">
-      <span className="text-2xl mr-3">
-        {type === "expense" ? "💸" : "💰"}
-      </span>
+      <span className="text-2xl mr-3">{type === "expense" ? "💸" : "💰"}</span>
       <div>
         <p className="font-medium">{description}</p>
         {note && <p className="text-sm text-gray-500">{note}</p>}
