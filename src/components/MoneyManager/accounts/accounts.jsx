@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { PlusCircle, Wallet } from "lucide-react";
+import { PlusCircle, Wallet, Trash2 } from "lucide-react";
 import AddAccountModal from "./addAccount";
-import { getAccounts } from "../../../services/moneymanager/moneyService";
+import { getAccounts, deleteAccount } from "../../../services/moneymanager/moneyService";
+import Swal from 'sweetalert2';
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('en-US', {
@@ -21,21 +22,57 @@ const AccountContent = () => {
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
 
-  useEffect(() => {
-    const fetchCuentas = async () => {
-      try {
-        const data = await getAccounts();
-        setCuentas(data);
-        const total = data.reduce((sum, cuenta) => sum + parseFloat(cuenta.balance || 0), 0);
-        setTotalBalance(total);
-      } catch (err) {
-        setError("Error al cargar las cuentas");
-        console.error("Error fetching accounts:", err);
-      }
-    };
+  const fetchCuentas = async () => {
+    try {
+      const data = await getAccounts();
+      setCuentas(data);
+      const total = data.reduce((sum, cuenta) => sum + parseFloat(cuenta.balance || 0), 0);
+      setTotalBalance(total);
+    } catch (err) {
+      setError("Error al cargar las cuentas");
+      console.error("Error fetching accounts:", err);
+    }
+  };
 
+  useEffect(() => {
     fetchCuentas();
   }, []);
+
+  const handleAccountAdded = () => {
+    fetchCuentas();
+  };
+
+  const handleDeleteAccount = async (accountId) => {
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: "No podrás revertir esta acción!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, eliminar!',
+      cancelButtonText: 'Cancelar'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await deleteAccount(accountId);
+          await fetchCuentas();
+          Swal.fire(
+            'Eliminada!',
+            'La cuenta ha sido eliminada.',
+            'success'
+          );
+        } catch (error) {
+          console.error("Error deleting account:", error);
+          Swal.fire(
+            'Error!',
+            'No se pudo eliminar la cuenta.',
+            'error'
+          );
+        }
+      }
+    });
+  };
 
   if (error) {
     return <div className="text-center text-red-500 p-4">{error}</div>;
@@ -73,14 +110,23 @@ const AccountContent = () => {
                     </p>
                   </div>
                 </div>
-                <div
-                  className={`text-right ${
-                    parseFloat(cuenta.balance) >= 0 ? "text-green-600" : "text-red-500"
-                  } font-bold text-xl`}
-                >
-                  {cuenta.balance !== null && cuenta.balance !== undefined
-                    ? formatCurrency(parseFloat(cuenta.balance))
-                    : "No disponible"}
+                <div className="flex items-center">
+                  <div
+                    className={`text-right ${
+                      parseFloat(cuenta.balance) >= 0 ? "text-green-600" : "text-red-500"
+                    } font-bold text-xl mr-4`}
+                  >
+                    {cuenta.balance !== null && cuenta.balance !== undefined
+                      ? formatCurrency(parseFloat(cuenta.balance))
+                      : "No disponible"}
+                  </div>
+                  <button
+                    onClick={() => handleDeleteAccount(cuenta.id)}
+                    className="text-red-500 hover:text-red-700 transition-colors duration-300"
+                    aria-label="Eliminar cuenta"
+                  >
+                    <Trash2 size={20} />
+                  </button>
                 </div>
               </div>
             ))}
@@ -93,7 +139,7 @@ const AccountContent = () => {
           >
             <PlusCircle size={24} />
           </button>
-          <AddAccountModal isOpen={isModalOpen} onClose={closeModal} />
+          <AddAccountModal isOpen={isModalOpen} onClose={closeModal} onAccountAdded={handleAccountAdded} />
         </div>
       </main>
     </div>

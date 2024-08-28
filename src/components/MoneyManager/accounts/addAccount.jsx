@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { IoClose } from "react-icons/io5";
+import Swal from 'sweetalert2';
 
-const AddAccountModal = ({ isOpen, onClose }) => {
-  const apiUrl = import.meta.env.VITE_API_FINANZAS; // Asegúrate de que esta variable de entorno esté correctamente configurada
+const AddAccountModal = ({ isOpen, onClose, onAccountAdded }) => {
+  const apiUrl = import.meta.env.VITE_API_FINANZAS;
 
   const [name, setName] = useState("");
   const [balance, setBalance] = useState("");
@@ -11,18 +12,30 @@ const AddAccountModal = ({ isOpen, onClose }) => {
   const handleSave = async () => {
     // Validación básica
     if (!name.trim()) {
-      console.error("El nombre de la cuenta es requerido.");
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'El nombre de la cuenta es requerido.',
+      });
       return;
     }
 
     if (!type) {
-      console.error("El tipo de cuenta es requerido.");
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'El tipo de cuenta es requerido.',
+      });
       return;
     }
 
     const parsedBalance = parseFloat(balance);
     if (isNaN(parsedBalance)) {
-      console.error("El saldo inicial debe ser un número válido.");
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'El saldo inicial debe ser un número válido.',
+      });
       return;
     }
 
@@ -42,14 +55,28 @@ const AddAccountModal = ({ isOpen, onClose }) => {
       });
 
       if (response.ok) {
-        console.log("Cuenta creada con éxito");
-        onClose(); // Cierra el modal después de guardar
+        Swal.fire({
+          icon: 'success',
+          title: '¡Éxito!',
+          text: 'Cuenta creada correctamente',
+        }).then(() => {
+          onClose();
+          onAccountAdded();
+        });
       } else {
-        const errorData = await response.json(); // Obtener detalles del error de la respuesta
-        console.error("Error al crear la cuenta:", errorData.message || "Error desconocido");
+        const errorData = await response.json();
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: errorData.message || 'Error desconocido al crear la cuenta',
+        });
       }
     } catch (error) {
-      console.error("Error al conectar con la API:", error.message);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: `Error al conectar con la API: ${error.message}`,
+      });
     }
   };
 
@@ -86,8 +113,6 @@ const AddAccountModal = ({ isOpen, onClose }) => {
             >
               <option value="Dinero en Efectivo">Dinero en Efectivo</option>
               <option value="Banco">Banco</option>
-             
-            
             </select>
           </div>
           <div>
