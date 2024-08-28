@@ -104,3 +104,19 @@ export const deleteUser = async (id) => {
         throw error;
     }
 };
+// Función para subir una imagen
+export const uploadImage = async (file) => {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+        const response = await authApi.post('/upload-image', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        console.log('URL de la imagen subida:', response.data.url);
+        return response.data.url;
+    } catch (error) {
+        console.error('Error al subir la imagen:', error);
+        throw error;
+    }
+};
