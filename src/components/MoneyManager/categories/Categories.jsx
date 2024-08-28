@@ -1,29 +1,69 @@
 import React, { useState, useEffect } from "react";
-import { PlusCircle, Tag } from "lucide-react";
+import { PlusCircle, Tag, Trash2 } from "lucide-react";
 import AddCategoriesModal from "./addCategories";
-import { getCategories } from "../../../services/moneymanager/moneyService";
+import { getCategories, deleteCategory } from "../../../services/moneymanager/moneyService";
+import Swal from 'sweetalert2';
 
 const Categories = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [categories, setCategories] = useState([]);
-  const [error, setError] = useState(null);
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const data = await getCategories();
-        setCategories(data);
-      } catch (err) {
-        setError("Error al cargar las categorias");
-        console.error("Error fetching categories:", err);
-      }
-    };
+  const fetchCategories = async () => {
+    try {
+      const data = await getCategories();
+      setCategories(data);
+    } catch (err) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Error al cargar las categorías',
+      });
+      console.error("Error fetching categories:", err);
+    }
+  };
 
+  useEffect(() => {
     fetchCategories();
   }, []);
+
+  const handleCategorieAdded = () => {
+    fetchCategories(); 
+  };
+
+  const handleDeleteCategory = async (id, name) => {
+    try {
+      const result = await Swal.fire({
+        title: '¿Estás seguro?',
+        text: `¿Quieres eliminar la categoría "${name}"?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+      });
+
+      if (result.isConfirmed) {
+        await deleteCategory(id);
+        await fetchCategories();
+        Swal.fire(
+          '¡Eliminada!',
+          'La categoría ha sido eliminada.',
+          'success'
+        );
+      }
+    } catch (err) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Error al eliminar la categoría',
+      });
+      console.error("Error deleting category:", err);
+    }
+  };
 
   const groupedCategories = categories.reduce((acc, category) => {
     if (!acc[category.type]) {
@@ -32,10 +72,6 @@ const Categories = () => {
     acc[category.type].push(category);
     return acc;
   }, {});
-
-  if (error) {
-    return <div className="text-center text-red-500 p-4">{error}</div>;
-  }
 
   return (
     <div className="bg-gray-100 min-h-screen w-full p-4">
@@ -57,12 +93,21 @@ const Categories = () => {
                   {groupedCategories[type].map((category) => (
                     <div
                       key={category.id}
-                      className="p-4 hover:bg-gray-50 transition duration-300 flex items-center"
+                      className="p-4 hover:bg-gray-50 transition duration-300 flex items-center justify-between"
                     >
-                      <Tag className={`mr-3 ${type === "income" ? "text-green-500" : "text-red-500"}`} size={20} />
-                      <h3 className="text-lg font-semibold text-gray-800">
-                        {category.name}
-                      </h3>
+                      <div className="flex items-center">
+                        <Tag className={`mr-3 ${type === "income" ? "text-green-500" : "text-red-500"}`} size={20} />
+                        <h3 className="text-lg font-semibold text-gray-800">
+                          {category.name}
+                        </h3>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteCategory(category.id, category.name)}
+                        className="text-red-500 hover:text-red-700 transition-colors duration-300"
+                        aria-label="Eliminar categoría"
+                      >
+                        <Trash2 size={20} />
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -77,7 +122,7 @@ const Categories = () => {
           >
             <PlusCircle size={24} />
           </button>
-          <AddCategoriesModal isOpen={isModalOpen} onClose={closeModal} />
+          <AddCategoriesModal isOpen={isModalOpen} onClose={closeModal} onCategorieAdded={handleCategorieAdded}/>
         </div>
       </main>
     </div>

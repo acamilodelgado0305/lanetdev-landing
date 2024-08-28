@@ -1,37 +1,58 @@
 import React, { useState } from "react";
 import { IoClose } from "react-icons/io5";
+import Swal from 'sweetalert2';
 
-const AddCategoriesModal = ({ isOpen, onClose }) => {
+const AddCategoriesModal = ({ isOpen, onClose, onCategorieAdded }) => {
   const apiUrl = import.meta.env.VITE_API_FINANZAS;
 
   const [name, setName] = useState("");
-  const [balance, setBalance] = useState("");
-  const [type, setType] = useState("");
+  const [type, setType] = useState("expense");
 
   const handleSave = async () => {
-    const accountData = {
-      name: name,
-      balance: parseFloat(balance),
+    if (!name.trim()) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'El nombre de la categoría es requerido.',
+      });
+      return;
+    }
+
+    const categoryData = {
+      name: name.trim(),
       type: type
     };
 
     try {
-      const response = await fetch(`${apiUrl}/accounts`, {
+      const response = await fetch(`${apiUrl}/categories`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(accountData),
+        body: JSON.stringify(categoryData),
       });
 
       if (response.ok) {
-        console.log("Cuenta creada con éxito");
+        Swal.fire({
+          icon: 'success',
+          title: '¡Éxito!',
+          text: 'Categoría creada con éxito',
+        });
         onClose();
+        onCategorieAdded();
       } else {
-        console.error("Error al crear la cuenta");
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Error al crear la categoría',
+        });
       }
     } catch (error) {
-      console.error("Error al conectar con la API:", error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: `Error al conectar con la API: ${error.message}`,
+      });
     }
   };
 
@@ -42,7 +63,7 @@ const AddCategoriesModal = ({ isOpen, onClose }) => {
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-800">
-            Nueva Cuenta
+            Nueva Categoría
           </h2>
           <button
             onClick={onClose}
@@ -58,7 +79,7 @@ const AddCategoriesModal = ({ isOpen, onClose }) => {
               htmlFor="type"
               className="block mb-1 text-sm font-medium text-gray-700"
             >
-              Tipo de Cuenta
+              Tipo de Categoría
             </label>
             <select
               id="type"
@@ -66,10 +87,8 @@ const AddCategoriesModal = ({ isOpen, onClose }) => {
               onChange={(e) => setType(e.target.value)}
               className="w-full p-2 bg-gray-100 rounded border border-gray-300"
             >
-              <option value="">Selecciona un tipo</option>
-              <option value="Banco">Banco</option>
-              <option value="Dinero en Efectivo">Dinero en Efectivo</option>
-              <option value="Cajeros">Cajeros</option>
+              <option value="expense">Gasto</option>
+              <option value="income">Ingreso</option>
             </select>
           </div>
           <div>
@@ -77,7 +96,7 @@ const AddCategoriesModal = ({ isOpen, onClose }) => {
               htmlFor="name"
               className="block mb-1 text-sm font-medium text-gray-700"
             >
-              Nombre de la Cuenta
+              Nombre de la Categoría
             </label>
             <input
               type="text"
@@ -85,23 +104,7 @@ const AddCategoriesModal = ({ isOpen, onClose }) => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full p-2 bg-gray-100 rounded border border-gray-300"
-              placeholder="Ej: Cuenta de Ahorros"
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="balance"
-              className="block mb-1 text-sm font-medium text-gray-700"
-            >
-              Saldo Inicial
-            </label>
-            <input
-              type="number"
-              id="balance"
-              value={balance}
-              onChange={(e) => setBalance(e.target.value)}
-              className="w-full p-2 bg-gray-100 rounded border border-gray-300"
-              placeholder="0.00"
+              placeholder="Ej: Alimentación"
             />
           </div>
         </div>

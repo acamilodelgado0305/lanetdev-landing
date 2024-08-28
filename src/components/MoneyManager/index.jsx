@@ -90,11 +90,12 @@ const IndexMoneyManager = () => {
             <NavLink to="/index/moneymanager/accounts" icon={CreditCard}>
               Cuentas
             </NavLink>
-            <NavLink to="/index/moneymanager/estadisticas" icon={BarChart2}>
-              Estadísticas
-            </NavLink>
+            
             <NavLink to="/index/moneymanager/categorias" icon={User}>
               Categorias
+            </NavLink>
+            <NavLink to="/index/moneymanager/estadisticas" icon={BarChart2}>
+              Estadísticas
             </NavLink>
             <NavLink to="/index/moneymanager/option2" icon={CiSettings}>
               Configuración

@@ -44,6 +44,15 @@ export const createAccount = async (userData) => {
     }
 };
 
+export const deleteAccount = async (accountId) => {
+    try {
+        const response = await moneyApi.delete(`/accounts/${accountId}`);
+        return response.data;
+    } catch (error) {
+        console.error('Error al eliminar la cuenta:', error);
+        throw error;
+    }
+};
 
 
 //--------------------------------------CATEGORIES--------------------------------------------------------------
@@ -54,6 +63,16 @@ export const getCategories = async () => {
         return response.data;
     } catch (error) {
         console.error('Error al obtener las categorias:', error);
+        throw error;
+    }
+};
+
+export const deleteCategory = async (categorieId) => {
+    try {
+        const response = await moneyApi.delete(`/categories/${categorieId}`);
+        return response.data;
+    } catch (error) {
+        console.error('Error al eliminar la categoria:', error);
         throw error;
     }
 };
