@@ -1,6 +1,6 @@
 import React from 'react';
-import { Bar, Line } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
+import { Bar, Line, Doughnut, Pie } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import Header from '../components/header/Header';
 import { BsFillArchiveFill, BsFillGrid3X3GapFill, BsPeopleFill, BsFillBellFill } from 'react-icons/bs';
 
@@ -11,54 +11,61 @@ ChartJS.register(
   BarElement,
   PointElement,
   LineElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend
 );
 
 export default function Index() {
-  const data = [
-    { name: 'Page A', uv: 4000, pv: 2400, amt: 2400 },
-    { name: 'Page B', uv: 3000, pv: 1398, amt: 2210 },
-    { name: 'Page C', uv: 2000, pv: 9800, amt: 2290 },
-    { name: 'Page D', uv: 2780, pv: 3908, amt: 2000 },
-    { name: 'Page E', uv: 1890, pv: 4800, amt: 2181 },
-    { name: 'Page F', uv: 2390, pv: 3800, amt: 2500 },
-    { name: 'Page G', uv: 3490, pv: 4300, amt: 2100 },
-  ];
-
-  const barData = {
-    labels: data.map((d) => d.name),
+  // Datos simulados de clientes por mes (gráfico de líneas)
+  const monthlyData = {
+    labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto'],
     datasets: [
       {
-        label: 'PV',
-        data: data.map((d) => d.pv),
-        backgroundColor: '#8884d8',
-      },
-      {
-        label: 'UV',
-        data: data.map((d) => d.uv),
-        backgroundColor: '#82ca9d',
+        label: 'Clientes',
+        data: [50, 70, 60, 90, 80, 100, 120, 110],
+        borderColor: '#4bc0c0',
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        fill: true,
       },
     ],
   };
 
-  const lineData = {
-    labels: data.map((d) => d.name),
+  // Datos simulados de clientes por municipio (gráfico de doughnut)
+  const municipalityData = {
+    labels: ['Bucaramanga', 'Cúcuta', 'Floridablanca', 'Girón', 'Pamplona', 'Piedecuesta'],
     datasets: [
       {
-        label: 'PV',
-        data: data.map((d) => d.pv),
-        borderColor: '#8884d8',
-        backgroundColor: 'rgba(136, 132, 216, 0.2)',
-        fill: true,
+        label: 'Clientes',
+        data: [200, 150, 100, 80, 50, 60],
+        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'],
+        hoverBackgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'],
       },
+    ],
+  };
+
+  // Datos simulados para un gráfico de barras (Ventas por Producto)
+  const barData = {
+    labels: ['Producto A', 'Producto B', 'Producto C', 'Producto D', 'Producto E'],
+    datasets: [
       {
-        label: 'UV',
-        data: data.map((d) => d.uv),
-        borderColor: '#82ca9d',
-        backgroundColor: 'rgba(130, 202, 157, 0.2)',
-        fill: true,
+        label: 'Ventas',
+        data: [65, 59, 80, 81, 56],
+        backgroundColor: '#007566',
+      },
+    ],
+  };
+
+  // Datos simulados para un gráfico de pastel (Distribución de Clientes por Región)
+  const regionData = {
+    labels: ['Santander', 'Norte de Santander', 'Otras Regiones'],
+    datasets: [
+      {
+        label: 'Clientes',
+        data: [300, 200, 100],
+        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
+        hoverBackgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
       },
     ],
   };
@@ -67,27 +74,63 @@ export default function Index() {
     <main className="flex flex-col items-center justify-start bg-gray-50 min-h-screen">
       <Header />
 
-      <div className="text-center mb-6">
+      <div className="text-center mb-2">
         <h3 className="text-xl font-semibold text-gray-800">Dashboard</h3>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-2">
         {[
           { label: 'Productos', icon: <BsFillArchiveFill />, value: 300 },
           { label: 'Tráfico', icon: <BsFillGrid3X3GapFill />, value: 12 },
           { label: 'Clientes Activos', icon: <BsPeopleFill />, value: 33 },
           { label: 'Alertas', icon: <BsFillBellFill />, value: 42 },
         ].map((item, index) => (
-          <div key={index} className="bg-white rounded-lg shadow-sm p-4 flex flex-col items-center">
-            <div className="text-blue-500 text-3xl mb-2">{item.icon}</div>
+          <div key={index} className="bg-white rounded-lg shadow-sm p-2 flex flex-col items-center">
+            <div className="text-blue-500 text-2xl mb-2">{item.icon}</div>
             <h3 className="text-sm font-medium text-gray-700">{item.label}</h3>
-            <h1 className="text-2xl font-bold text-gray-700">{item.value}</h1>
+            <h1 className="text-1xl font-bold text-gray-700">{item.value}</h1>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-5xl">
         <div className="mb-6">
+          <Line
+            data={monthlyData}
+            options={{
+              responsive: true,
+              plugins: {
+                legend: {
+                  position: 'top',
+                },
+                title: {
+                  display: true,
+                  text: 'Clientes por Mes',
+                },
+              },
+            }}
+          />
+        </div>
+        <div>
+          <Doughnut
+            data={municipalityData}
+            options={{
+              responsive: true,
+              plugins: {
+                legend: {
+                  position: 'top',
+                },
+                title: {
+                  display: true,
+                  text: 'Clientes por Municipio',
+                },
+              },
+              maintainAspectRatio: false,
+            }}
+            height={200}
+          />
+        </div>
+        <div className="mt-6">
           <Bar
             data={barData}
             options={{
@@ -98,15 +141,15 @@ export default function Index() {
                 },
                 title: {
                   display: true,
-                  text: 'Bar Chart',
+                  text: 'Ventas por Producto',
                 },
               },
             }}
           />
         </div>
-        <div>
-          <Line
-            data={lineData}
+        <div className="mt-6">
+          <Pie
+            data={regionData}
             options={{
               responsive: true,
               plugins: {
@@ -115,10 +158,13 @@ export default function Index() {
                 },
                 title: {
                   display: true,
-                  text: 'Line Chart',
+                  text: 'Distribución de Clientes por Región',
                 },
               },
+              maintainAspectRatio: false,
             }}
+            height={150}
+
           />
         </div>
       </div>
