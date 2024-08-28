@@ -1,37 +1,46 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState, useRef } from 'react';
+import { uploadImage, updateUserInfo } from '../../services/apiService';
 
-const ImageUploader = ({ onUploadSuccess }) => {
+const ImageUploader = ({ userId, userInfo, onUploadSuccess }) => {
     const [selectedFile, setSelectedFile] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
+    const fileInputRef = useRef(null); // Usar referencia para el input de archivo
 
     // Manejar la selección de la imagen
     const handleFileChange = (event) => {
         const file = event.target.files[0];
         if (file) {
-            setSelectedFile(file); // Guardar el archivo seleccionado
+            setSelectedFile(file);
         }
     };
 
-    // Subir la imagen al backend
+    // Subir la imagen al backend y actualizar la información del usuario
     const handleUpload = async () => {
         if (!selectedFile) return;
 
         setIsUploading(true);
-        const formData = new FormData();
-        formData.append('image', selectedFile);
 
         try {
-            const response = await axios.post('http://localhost:3000/api/upload-image', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            });
-            const imageUrl = response.data.url; // Obtener la URL de la imagen subida
-            onUploadSuccess(imageUrl); // Notificar al componente padre con la nueva URL
+            // Subir la imagen
+            const imageUrl = await uploadImage(selectedFile);
+            console.log("URL de la imagen subida:", imageUrl);
+
+            // Actualizar la información del usuario con la nueva URL de la imagen
+            const updatedUserInfo = { ...userInfo, profilepictureurl: imageUrl };
+            await updateUserInfo(userId, updatedUserInfo);
+
+            // Notificar al componente padre con la nueva URL de la imagen
+            onUploadSuccess(imageUrl);
+
+            // Limpiar el archivo seleccionado después de subir
+            setSelectedFile(null);
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
         } catch (error) {
-            console.error('Error al subir la imagen:', error);
+            console.error('Error al subir la imagen y actualizar la información del usuario:', error);
         } finally {
             setIsUploading(false);
-            setSelectedFile(null); // Limpiar el archivo seleccionado después de subir
         }
     };
 
@@ -42,14 +51,16 @@ const ImageUploader = ({ onUploadSuccess }) => {
                 type="file"
                 onChange={handleFileChange}
                 className="hidden"
-                id="file-input"
+                ref={fileInputRef}
+                aria-label="Seleccionar imagen para subir"
             />
 
             {/* Botón para seleccionar la imagen */}
             {!isUploading && !selectedFile && (
                 <button
-                    onClick={() => document.getElementById('file-input').click()}
+                    onClick={() => fileInputRef.current.click()}
                     className="mt-4 px-4 py-2 rounded-full bg-blue-500 text-white font-semibold hover:bg-blue-600 focus:outline-none transition duration-200"
+                    aria-label="Seleccionar imagen"
                 >
                     Actualizar Imagen
                 </button>
@@ -61,9 +72,10 @@ const ImageUploader = ({ onUploadSuccess }) => {
                     onClick={handleUpload}
                     disabled={isUploading}
                     className={`mt-4 px-4 py-2 rounded-full text-white font-semibold focus:outline-none transition duration-200 ${isUploading
-                            ? 'bg-gray-400 cursor-not-allowed'
-                            : 'bg-blue-500 hover:bg-blue-600'
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-blue-500 hover:bg-blue-600'
                         }`}
+                    aria-label="Subir imagen seleccionada"
                 >
                     {isUploading ? 'Subiendo...' : 'Subir Imagen'}
                 </button>

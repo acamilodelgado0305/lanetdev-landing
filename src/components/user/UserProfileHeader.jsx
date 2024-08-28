@@ -9,8 +9,7 @@ const UserProfileHeader = ({ onToggle }) => {
     const { user } = useAuth();
     const userName = user ? user.username : 'Loading...';
 
-    // Usamos la imagen de perfil del usuario o una por defecto si no hay una imagen subida
-    const defaultProfilePictureUrl = user?.profilePictureUrl || 'https://i.pinimg.com/736x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg';
+    const defaultProfilePictureUrl = user?.profilepictureurl || 'https://i.pinimg.com/736x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg';
 
     // Función que se ejecuta cuando la imagen se carga con éxito
     const handleUploadSuccess = (url) => {
@@ -58,7 +57,7 @@ const UserProfileHeader = ({ onToggle }) => {
                 <div className="border-y-2 px-4 py-1 bg-primary text-gray-300">
                     <div className="flex items-center mb-4">
                         <img
-                            src={profilePictureUrl || defaultProfilePictureUrl} // Usa la URL de la imagen subida o la por defecto
+                            src={profilePictureUrl || defaultProfilePictureUrl}
                             alt={`${userName}'s profile`}
                             className="w-20 h-20 rounded-full mb-1"
                         />
@@ -69,7 +68,11 @@ const UserProfileHeader = ({ onToggle }) => {
 
                     {/* Componente de carga de imágenes */}
                     <div>
-                        <ImageUploader onUploadSuccess={handleUploadSuccess} />
+                        <ImageUploader
+                            userId={user.id}
+                            userInfo={user}
+                            onUploadSuccess={handleUploadSuccess}
+                        />
                     </div>
 
                     <div className="text-gray-300 mt-2">
