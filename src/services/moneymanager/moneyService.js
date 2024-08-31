@@ -89,3 +89,17 @@ export const getTransactions = async () => {
         throw error;
     }
 };
+
+
+//--------------------------------------TRANSFERS----------------------------------------------------------------------------
+
+
+export const getTransfers = async () => {
+    try {
+        const response = await moneyApi.get('/transfers');
+        return response.data;
+    } catch (error) {
+        console.error('Error al obtener las trasferencias:', error);
+        throw error;
+    }
+};
