@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { IoClose } from "react-icons/io5";
+import Swal from 'sweetalert2';
 
 const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
   const apiUrl = import.meta.env.VITE_API_FINANZAS;
@@ -8,17 +9,16 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("");
   const [account, setAccount] = useState("");
-  const [fromAccount, setFromAccount] = useState(""); // Nueva cuenta de origen para transferencias
-  const [toAccount, setToAccount] = useState(""); // Nueva cuenta de destino para transferencias
+  const [fromAccount, setFromAccount] = useState("");
+  const [toAccount, setToAccount] = useState("");
   const [note, setNote] = useState("");
   const [description, setDescription] = useState("");
   const [categories, setCategories] = useState([]);
   const [accounts, setAccounts] = useState([]);
 
-  const currentDate = new Date().toISOString().split("T")[0]; // Fecha actual en formato YYYY-MM-DD
+  const currentDate = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
-    // Fetch categories and accounts from the API
     const fetchCategories = async () => {
       try {
         const response = await fetch(`${apiUrl}/categories`);
@@ -44,47 +44,62 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
   }, []);
 
   const handleSave = async () => {
-    let transactionData = {
-      userId: 1,
-      amount: parseFloat(amount),
-      type: transactionType.toLowerCase(),
-      date: new Date().toISOString(),
-      note: note,
-      description: description,
-    };
+    let data;
+    let endpoint;
 
     if (transactionType === "Transferencia") {
-      transactionData = {
-        ...transactionData,
+      data = {
+        userId: 1,
         fromAccountId: parseInt(fromAccount, 10),
         toAccountId: parseInt(toAccount, 10),
+        amount: parseFloat(amount),
+        date: new Date().toISOString(),
+        note: note,
+        description: description,
       };
+      endpoint = `${apiUrl}/transfers`;
     } else {
-      transactionData = {
-        ...transactionData,
+      data = {
+        userId: 1,
+        amount: parseFloat(amount),
+        type: transactionType.toLowerCase(),
+        date: new Date().toISOString(),
+        note: note,
+        description: description,
         accountId: parseInt(account, 10),
         categoryId: parseInt(category, 10),
       };
+      endpoint = `${apiUrl}/transactions`;
     }
 
     try {
-      const response = await fetch(`${apiUrl}/transactions`, {
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(transactionData),
+        body: JSON.stringify(data),
       });
 
       if (response.ok) {
-        console.log("Transacción guardada con éxito");
+        Swal.fire({
+          icon: 'success',
+          title: transactionType === "Transferencia" ? "Transferencia realizada" : "Transacción guardada",
+          text: transactionType === "Transferencia" ? "La transferencia se ha realizado correctamente." : "La transacción se ha guardado correctamente.",
+          confirmButtonColor: '#3085d6',
+        });
         onClose();
-        onTransactionAdded(); // Llamar a la función de actualización
+        onTransactionAdded();
       } else {
-        console.error("Error al guardar la transacción");
+        throw new Error(transactionType === "Transferencia" ? "Error al realizar la transferencia" : "Error al guardar la transacción");
       }
     } catch (error) {
-      console.error("Error al conectar con la API:", error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.message,
+        confirmButtonColor: '#d33',
+      });
     }
   };
 
@@ -95,7 +110,7 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-800">
-            Nueva Transacción
+            {transactionType === "Transferencia" ? "Nueva Transferencia" : "Nueva Transacción"}
           </h2>
           <button
             onClick={onClose}
@@ -140,10 +155,7 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
           </div>
 
           <div>
-            <label
-              htmlFor="date"
-              className="block mb-1 text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="date" className="block mb-1 text-sm font-medium text-gray-700">
               Fecha
             </label>
             <input
@@ -155,10 +167,7 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
             />
           </div>
           <div>
-            <label
-              htmlFor="amount"
-              className="block mb-1 text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="amount" className="block mb-1 text-sm font-medium text-gray-700">
               Importe
             </label>
             <input
@@ -174,10 +183,7 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
           {transactionType === "Transferencia" ? (
             <>
               <div>
-                <label
-                  htmlFor="fromAccount"
-                  className="block mb-1 text-sm font-medium text-gray-700"
-                >
+                <label htmlFor="fromAccount" className="block mb-1 text-sm font-medium text-gray-700">
                   Cuenta de Origen
                 </label>
                 <select
@@ -195,10 +201,7 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
                 </select>
               </div>
               <div>
-                <label
-                  htmlFor="toAccount"
-                  className="block mb-1 text-sm font-medium text-gray-700"
-                >
+                <label htmlFor="toAccount" className="block mb-1 text-sm font-medium text-gray-700">
                   Cuenta de Destino
                 </label>
                 <select
@@ -219,10 +222,7 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
           ) : (
             <>
               <div>
-                <label
-                  htmlFor="category"
-                  className="block mb-1 text-sm font-medium text-gray-700"
-                >
+                <label htmlFor="category" className="block mb-1 text-sm font-medium text-gray-700">
                   Categoría
                 </label>
                 <select
@@ -240,10 +240,7 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
                 </select>
               </div>
               <div>
-                <label
-                  htmlFor="account"
-                  className="block mb-1 text-sm font-medium text-gray-700"
-                >
+                <label htmlFor="account" className="block mb-1 text-sm font-medium text-gray-700">
                   Cuenta
                 </label>
                 <select
@@ -264,10 +261,7 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
           )}
 
           <div>
-            <label
-              htmlFor="note"
-              className="block mb-1 text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="note" className="block mb-1 text-sm font-medium text-gray-700">
               Nota
             </label>
             <textarea
@@ -280,10 +274,7 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
           </div>
 
           <div>
-            <label
-              htmlFor="description"
-              className="block mb-1 text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="description" className="block mb-1 text-sm font-medium text-gray-700">
               Descripción
             </label>
             <textarea
@@ -299,7 +290,7 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
             onClick={handleSave}
             className="w-full py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
-            Guardar
+            Guardar {transactionType === "Transferencia" ? "Transferencia" : "Transacción"}
           </button>
         </div>
       </div>

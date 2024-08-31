@@ -3,7 +3,10 @@ import { PlusCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { format as formatDate, subDays, addDays } from "date-fns";
 import axios from "axios";
 import AddEntryModal from "../addModal";
-import { getTransactions } from "../../../services/moneymanager/moneyService";
+import {
+  getTransactions,
+  getTransfers,
+} from "../../../services/moneymanager/moneyService";
 const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
 
 const formatCurrency = (amount) => {
@@ -21,7 +24,7 @@ const formatCurrency = (amount) => {
 const TransactionsDashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [error, setError] = useState(null);
-  const [transactions, setTransactions] = useState([]);
+  const [entries, setEntries] = useState([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [totalIncome, setTotalIncome] = useState(0);
   const [totalExpenses, setTotalExpenses] = useState(0);
@@ -30,20 +33,29 @@ const TransactionsDashboard = () => {
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
 
-  const fetchTransactions = async () => {
+  const fetchEntries = async () => {
     try {
-      const data = await getTransactions();
-      const filteredTransactions = data
+      const [transactions, transfers] = await Promise.all([
+        getTransactions(),
+        getTransfers(),
+      ]);
+
+      const allEntries = [
+        ...transactions.map((tx) => ({ ...tx, entryType: "transaction" })),
+        ...transfers.map((tf) => ({ ...tf, entryType: "transfer" })),
+      ];
+
+      const filteredEntries = allEntries
         .filter(
-          (tx) =>
-            new Date(tx.date).toDateString() === currentDate.toDateString()
+          (entry) =>
+            new Date(entry.date).toDateString() === currentDate.toDateString()
         )
         .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-      setTransactions(filteredTransactions);
+      setEntries(filteredEntries);
     } catch (err) {
-      setError("Error al cargar las transacciones");
-      console.error("Error fetching transactions:", err);
+      setError("Error al cargar las entradas");
+      console.error("Error fetching entries:", err);
     }
   };
 
@@ -71,14 +83,14 @@ const TransactionsDashboard = () => {
     }
   };
 
-  const handleTransactionAdded = () => {
-    fetchTransactions();
+  const handleEntryAdded = () => {
+    fetchEntries();
     fetchDailyData();
   };
 
   useEffect(() => {
     fetchDailyData();
-    fetchTransactions();
+    fetchEntries();
   }, [currentDate]);
 
   if (error) {
@@ -129,14 +141,16 @@ const TransactionsDashboard = () => {
           </div>
 
           <div className="space-y-4 max-h-[40rem] overflow-y-auto">
-            {transactions.map((transaction, index) => (
-              <Transaction
+            {entries.map((entry, index) => (
+              <Entry
                 key={index}
-                date={transaction.date}
-                description={transaction.description}
-                note={transaction.note}
-                amount={transaction.amount}
-                type={transaction.type}
+                date={entry.date}
+                description={entry.description}
+                accountId={entry.accountId}
+                note={entry.note}
+                amount={entry.amount}
+                type={entry.type}
+                entryType={entry.entryType}
               />
             ))}
           </div>
@@ -144,14 +158,14 @@ const TransactionsDashboard = () => {
           <button
             onClick={openModal}
             className="fixed bottom-8 right-8 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-4 shadow-lg transition-colors duration-300"
-            aria-label="Añadir transacción"
+            aria-label="Añadir entrada"
           >
             <PlusCircle size={24} />
           </button>
           <AddEntryModal
             isOpen={isModalOpen}
             onClose={closeModal}
-            onTransactionAdded={handleTransactionAdded}
+            onEntryAdded={handleEntryAdded}
           />
         </div>
       </main>
@@ -159,7 +173,7 @@ const TransactionsDashboard = () => {
   );
 };
 
-const Transaction = ({ date, description, note, amount, type }) => (
+const Entry = ({ date, description,accountId, note, amount, type, entryType }) => (
   <div className="border-t pt-4">
     <div className="flex justify-between items-center mb-2">
       <div className="flex items-center">
@@ -179,10 +193,17 @@ const Transaction = ({ date, description, note, amount, type }) => (
       </div>
     </div>
     <div className="flex items-center">
-      <span className="text-2xl mr-3">{type === "expense" ? "💸" : "💰"}</span>
+      <span className="text-2xl mr-3">
+        {entryType === "transfer" ? "🔄" : type === "expense" ? "💸" : "💰"}
+      </span>
       <div>
         <p className="font-medium">{description}</p>
+        <p className="font-medium">{accountId}</p>
+        
         {note && <p className="text-sm text-gray-500">{note}</p>}
+        {entryType === "transfer" && (
+          <p className="text-xs text-gray-400">Transferencia</p>
+        )}
       </div>
     </div>
   </div>
