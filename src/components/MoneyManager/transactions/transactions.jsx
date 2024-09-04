@@ -229,7 +229,7 @@ const Entry = ({
     </div>
     <div className="flex items-center">
       <span className="text-2xl mr-3">
-        {entryType === "transfer" ? "🔄" : type === "expense" ? "🔴" : "✅"}
+        {entryType === "transfer" ? "🔄" : type === "expense" ? "🟥" : "✅"}
       </span>
       <div>
         <p className="font-medium">{description}</p>
