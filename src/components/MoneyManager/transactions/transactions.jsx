@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { PlusCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { FaLongArrowAltRight } from "react-icons/fa";
 import { format as formatDate, subDays, addDays } from "date-fns";
 import axios from "axios";
 import AddEntryModal from "../addModal";
 import {
   getTransactions,
   getTransfers,
+  getAccounts,
 } from "../../../services/moneymanager/moneyService";
 const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
 
@@ -29,6 +31,7 @@ const TransactionsDashboard = () => {
   const [totalIncome, setTotalIncome] = useState(0);
   const [totalExpenses, setTotalExpenses] = useState(0);
   const [balance, setBalance] = useState(0);
+  const [accounts, setAccounts] = useState([]);
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
@@ -42,7 +45,12 @@ const TransactionsDashboard = () => {
 
       const allEntries = [
         ...transactions.map((tx) => ({ ...tx, entryType: "transaction" })),
-        ...transfers.map((tf) => ({ ...tf, entryType: "transfer" })),
+        ...transfers.map((tf) => ({
+          ...tf,
+          entryType: "transfer",
+          fromAccountName: getAccountName(tf.from_account_id),
+          toAccountName: getAccountName(tf.to_account_id),
+        })),
       ];
 
       const filteredEntries = allEntries
@@ -56,6 +64,15 @@ const TransactionsDashboard = () => {
     } catch (err) {
       setError("Error al cargar las entradas");
       console.error("Error fetching entries:", err);
+    }
+  };
+
+  const fetchAccounts = async () => {
+    try {
+      const data = await getAccounts();
+      setAccounts(data);
+    } catch (error) {
+      console.error("Error al obtener las cuentas:", error);
     }
   };
 
@@ -91,7 +108,13 @@ const TransactionsDashboard = () => {
   useEffect(() => {
     fetchDailyData();
     fetchEntries();
+    fetchAccounts();
   }, [currentDate]);
+
+  const getAccountName = (accountId) => {
+    const account = accounts.find((acc) => acc.id === accountId);
+    return account ? account.name : "Cuenta no encontrada";
+  };
 
   if (error) {
     return <div className="text-center text-red-500 p-4">{error}</div>;
@@ -100,7 +123,7 @@ const TransactionsDashboard = () => {
   return (
     <div className="bg-gray-100 min-h-screen w-full p-4">
       <main className="max-full mx-auto">
-        <div className="h-[50em] bg-white rounded-lg shadow-lg p-6 relative">
+        <div className="h-[auto] bg-white rounded-lg shadow-lg p-6 relative">
           <div className="flex justify-between items-center mb-6">
             <button
               className="text-blue-500 hover:text-blue-600 transition-colors"
@@ -146,11 +169,13 @@ const TransactionsDashboard = () => {
                 key={index}
                 date={entry.date}
                 description={entry.description}
-                accountId={entry.accountId}
+                accountName={getAccountName(entry.account_id)}
                 note={entry.note}
                 amount={entry.amount}
                 type={entry.type}
                 entryType={entry.entryType}
+                fromAccountName={entry.fromAccountName}
+                toAccountName={entry.toAccountName}
               />
             ))}
           </div>
@@ -165,7 +190,7 @@ const TransactionsDashboard = () => {
           <AddEntryModal
             isOpen={isModalOpen}
             onClose={closeModal}
-            onEntryAdded={handleEntryAdded}
+            onTransactionAdded={handleEntryAdded}
           />
         </div>
       </main>
@@ -173,7 +198,17 @@ const TransactionsDashboard = () => {
   );
 };
 
-const Entry = ({ date, description,accountId, note, amount, type, entryType }) => (
+const Entry = ({
+  date,
+  description,
+  accountName,
+  note,
+  amount,
+  type,
+  entryType,
+  fromAccountName,
+  toAccountName,
+}) => (
   <div className="border-t pt-4">
     <div className="flex justify-between items-center mb-2">
       <div className="flex items-center">
@@ -194,12 +229,20 @@ const Entry = ({ date, description,accountId, note, amount, type, entryType }) =
     </div>
     <div className="flex items-center">
       <span className="text-2xl mr-3">
-        {entryType === "transfer" ? "🔄" : type === "expense" ? "💸" : "💰"}
+        {entryType === "transfer" ? "🔄" : type === "expense" ? "🔴" : "✅"}
       </span>
       <div>
         <p className="font-medium">{description}</p>
-        <p className="font-medium">{accountId}</p>
-        
+        <p className="text-sm text-blue-500">
+          {entryType === "transfer" ? `${fromAccountName} ` : accountName}
+          {entryType === "transfer" && (
+            <>
+              <FaLongArrowAltRight className="inline-block mx-1" />
+              {toAccountName}
+            </>
+          )}
+        </p>
+
         {note && <p className="text-sm text-gray-500">{note}</p>}
         {entryType === "transfer" && (
           <p className="text-xs text-gray-400">Transferencia</p>
