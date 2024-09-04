@@ -113,6 +113,9 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
 
   if (!isOpen) return null;
 
+  // Filtrar categorías según el tipo de transacción
+  const filteredCategories = categories.filter(cat => cat.type === transactionType);
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
@@ -179,7 +182,7 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
               Importe
             </label>
             <input
-              type="text" // Cambiado de "number" a "text" para permitir formato
+              type="text"
               id="amount"
               value={amount}
               onChange={handleAmountChange}
@@ -190,6 +193,7 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
 
           {transactionType === "Transferencia" ? (
             <>
+              {/* Sección de Transferencia */}
               <div>
                 <label htmlFor="fromAccount" className="block mb-1 text-sm font-medium text-gray-700">
                   Cuenta de Origen
@@ -229,6 +233,7 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
             </>
           ) : (
             <>
+              {/* Sección de Transacción con Categorías filtradas */}
               <div>
                 <label htmlFor="category" className="block mb-1 text-sm font-medium text-gray-700">
                   Categoría
@@ -240,7 +245,7 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
                   className="w-full p-2 bg-gray-100 rounded border border-gray-300"
                 >
                   <option value="">Selecciona una categoría</option>
-                  {categories.map((cat) => (
+                  {filteredCategories.map((cat) => (
                     <option key={cat.id} value={cat.id}>
                       {cat.name}
                     </option>
@@ -267,43 +272,26 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
               </div>
             </>
           )}
+
           <div>
             <label htmlFor="note" className="block mb-1 text-sm font-medium text-gray-700">
               Nota
             </label>
-            <input
-              type="text"
+            <textarea
               id="note"
               value={note}
               onChange={(e) => setNote(e.target.value)}
               className="w-full p-2 bg-gray-100 rounded border border-gray-300"
-              placeholder="Escribe una nota"
+              rows="3"
+              placeholder="Añadir una nota"
             />
-          </div>
-          <div>
-            <label htmlFor="description" className="block mb-1 text-sm font-medium text-gray-700">
-              Descripción
-            </label>
-            <textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full p-2 bg-gray-100 rounded border border-gray-300"
-              placeholder="Descripción detallada"
-            ></textarea>
           </div>
         </div>
 
-        <div className="p-4 border-t border-gray-200 flex justify-end space-x-2">
-          <button
-            onClick={onClose}
-            className="py-2 px-4 rounded bg-gray-500 text-white hover:bg-gray-600"
-          >
-            Cancelar
-          </button>
+        <div className="flex justify-end p-4 border-t border-gray-200">
           <button
             onClick={handleSave}
-            className="py-2 px-4 rounded bg-blue-500 text-white hover:bg-blue-600"
+            className="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition"
           >
             Guardar
           </button>

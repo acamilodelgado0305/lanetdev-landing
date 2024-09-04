@@ -60,6 +60,7 @@ const TransactionsDashboard = () => {
         .sort((a, b) => new Date(b.date) - new Date(a.date));
 
       setEntries(filteredEntries);
+      console.log(filteredEntries)
     } catch (err) {
       setError("Error al cargar las entradas");
       console.error("Error fetching entries:", err);
@@ -173,8 +174,8 @@ const TransactionsDashboard = () => {
                 amount={entry.amount}
                 type={entry.type}
                 entryType={entry.entryType}
-                fromAccountName={entry.fromAccountName} // Pasa el nombre de la cuenta de origen
-                toAccountName={entry.toAccountName}     // Pasa el nombre de la cuenta de destino
+                fromAccountName={getAccountName(entry.from_account_id)} // Pasa el nombre de la cuenta de origen
+                toAccountName={getAccountName(entry.to_account_id)}     // Pasa el nombre de la cuenta de destino
               />
             ))}
           </div>

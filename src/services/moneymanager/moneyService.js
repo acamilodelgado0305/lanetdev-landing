@@ -55,6 +55,17 @@ export const deleteAccount = async (accountId) => {
 };
 
 
+export const updateAccount = async (categoryId, updatedData) => {
+    try {
+        const response = await moneyApi.put(`/categories/${categoryId}`, updatedData);
+        return response.data;
+    } catch (error) {
+        console.error('Error al actualizar la categoría:', error);
+        throw error;
+    }
+};
+
+
 //--------------------------------------CATEGORIES--------------------------------------------------------------
 
 export const getCategories = async () => {
@@ -76,6 +87,20 @@ export const deleteCategory = async (categorieId) => {
         throw error;
     }
 };
+
+
+export const updateCategory = async (categoryId, updatedData) => {
+    try {
+        const response = await moneyApi.put(`/categories/${categoryId}`, updatedData);
+        return response.data;
+    } catch (error) {
+        console.error('Error al actualizar la categoría:', error);
+        throw error;
+    }
+};
+
+
+
 
 //-------------------------------TRANSACTIONS-----------------------------------------------------------------
 
