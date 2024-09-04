@@ -7,6 +7,7 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
 
   const [transactionType, setTransactionType] = useState("expense");
   const [amount, setAmount] = useState("");
+  const [rawAmount, setRawAmount] = useState(""); // Estado para almacenar el valor sin formatear
   const [category, setCategory] = useState("");
   const [account, setAccount] = useState("");
   const [fromAccount, setFromAccount] = useState("");
@@ -43,6 +44,13 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
     fetchAccounts();
   }, []);
 
+  const handleAmountChange = (e) => {
+    const value = e.target.value.replace(/\D/g, ''); // Elimina cualquier carácter no numérico
+    setRawAmount(value);
+    const formattedAmount = new Intl.NumberFormat('es-CO').format(value);
+    setAmount(formattedAmount);
+  };
+
   const handleSave = async () => {
     let data;
     let endpoint;
@@ -52,7 +60,7 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
         userId: 1,
         fromAccountId: parseInt(fromAccount, 10),
         toAccountId: parseInt(toAccount, 10),
-        amount: parseFloat(amount),
+        amount: parseFloat(rawAmount),
         date: new Date().toISOString(),
         note: note,
         description: description,
@@ -61,7 +69,7 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
     } else {
       data = {
         userId: 1,
-        amount: parseFloat(amount),
+        amount: parseFloat(rawAmount),
         type: transactionType.toLowerCase(),
         date: new Date().toISOString(),
         note: note,
@@ -171,10 +179,10 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
               Importe
             </label>
             <input
-              type="number"
+              type="text" // Cambiado de "number" a "text" para permitir formato
               id="amount"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={handleAmountChange}
               className="w-full p-2 bg-gray-100 rounded border border-gray-300"
               placeholder="0.00"
             />
@@ -259,20 +267,19 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
               </div>
             </>
           )}
-
           <div>
             <label htmlFor="note" className="block mb-1 text-sm font-medium text-gray-700">
               Nota
             </label>
-            <textarea
+            <input
+              type="text"
               id="note"
               value={note}
               onChange={(e) => setNote(e.target.value)}
               className="w-full p-2 bg-gray-100 rounded border border-gray-300"
-              rows="2"
-            ></textarea>
+              placeholder="Escribe una nota"
+            />
           </div>
-
           <div>
             <label htmlFor="description" className="block mb-1 text-sm font-medium text-gray-700">
               Descripción
@@ -282,15 +289,23 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full p-2 bg-gray-100 rounded border border-gray-300"
-              rows="3"
+              placeholder="Descripción detallada"
             ></textarea>
           </div>
+        </div>
 
+        <div className="p-4 border-t border-gray-200 flex justify-end space-x-2">
+          <button
+            onClick={onClose}
+            className="py-2 px-4 rounded bg-gray-500 text-white hover:bg-gray-600"
+          >
+            Cancelar
+          </button>
           <button
             onClick={handleSave}
-            className="w-full py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className="py-2 px-4 rounded bg-blue-500 text-white hover:bg-blue-600"
           >
-            Guardar {transactionType === "Transferencia" ? "Transferencia" : "Transacción"}
+            Guardar
           </button>
         </div>
       </div>
