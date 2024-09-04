@@ -1,12 +1,24 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { IoClose } from "react-icons/io5";
 import Swal from 'sweetalert2';
 
-const AddCategoriesModal = ({ isOpen, onClose, onCategorieAdded }) => {
+const AddCategoriesModal = ({ isOpen, onClose, onCategorieAdded, categoryToEdit }) => {
   const apiUrl = import.meta.env.VITE_API_FINANZAS;
 
   const [name, setName] = useState("");
   const [type, setType] = useState("expense");
+
+  useEffect(() => {
+    // Si hay una categoría para editar, llenamos el formulario con sus datos
+    if (categoryToEdit) {
+      setName(categoryToEdit.name);
+      setType(categoryToEdit.type);
+    } else {
+      // Si no hay categoría, limpiamos el formulario para crear una nueva
+      setName("");
+      setType("expense");
+    }
+  }, [categoryToEdit]);
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -24,19 +36,32 @@ const AddCategoriesModal = ({ isOpen, onClose, onCategorieAdded }) => {
     };
 
     try {
-      const response = await fetch(`${apiUrl}/categories`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(categoryData),
-      });
+      let response;
+      if (categoryToEdit) {
+        // Si estamos editando, enviamos una petición PUT
+        response = await fetch(`${apiUrl}/categories/${categoryToEdit.id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(categoryData),
+        });
+      } else {
+        // Si estamos creando, enviamos una petición POST
+        response = await fetch(`${apiUrl}/categories`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(categoryData),
+        });
+      }
 
       if (response.ok) {
         Swal.fire({
           icon: 'success',
           title: '¡Éxito!',
-          text: 'Categoría creada con éxito',
+          text: categoryToEdit ? 'Categoría editada con éxito' : 'Categoría creada con éxito',
         });
         onClose();
         onCategorieAdded();
@@ -44,7 +69,7 @@ const AddCategoriesModal = ({ isOpen, onClose, onCategorieAdded }) => {
         Swal.fire({
           icon: 'error',
           title: 'Error',
-          text: 'Error al crear la categoría',
+          text: 'Error al guardar la categoría',
         });
       }
     } catch (error) {
@@ -63,7 +88,7 @@ const AddCategoriesModal = ({ isOpen, onClose, onCategorieAdded }) => {
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-800">
-            Nueva Categoría
+            {categoryToEdit ? 'Editar Categoría' : 'Nueva Categoría'}
           </h2>
           <button
             onClick={onClose}

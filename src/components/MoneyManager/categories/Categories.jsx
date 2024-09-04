@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { PlusCircle, Tag, Trash2 } from "lucide-react";
+import { PlusCircle, Tag, Trash2, Edit } from "lucide-react";
 import AddCategoriesModal from "./addCategories";
 import { getCategories, deleteCategory } from "../../../services/moneymanager/moneyService";
 import Swal from 'sweetalert2';
@@ -7,8 +7,12 @@ import Swal from 'sweetalert2';
 const Categories = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [categories, setCategories] = useState([]);
+  const [editCategory, setEditCategory] = useState(null);
 
-  const openModal = () => setIsModalOpen(true);
+  const openModal = () => {
+    setEditCategory(null);
+    setIsModalOpen(true);
+  };
   const closeModal = () => setIsModalOpen(false);
 
   const fetchCategories = async () => {
@@ -65,6 +69,11 @@ const Categories = () => {
     }
   };
 
+  const openEditModal = (category) => {
+    setEditCategory(category);
+    setIsModalOpen(true);
+  };
+
   const groupedCategories = categories.reduce((acc, category) => {
     if (!acc[category.type]) {
       acc[category.type] = [];
@@ -75,7 +84,7 @@ const Categories = () => {
 
   return (
     <div className="bg-gray-100 min-h-screen w-full p-4">
-      <main className="max-w-4xl mx-auto">
+      <main className="max-full mx-auto">
         <div className="bg-white rounded-lg shadow-lg p-6 relative">
           <h1 className="text-3xl font-bold mb-6 text-green-600">
             Dashboard de Categorías
@@ -101,13 +110,22 @@ const Categories = () => {
                           {category.name}
                         </h3>
                       </div>
-                      <button
-                        onClick={() => handleDeleteCategory(category.id, category.name)}
-                        className="text-red-500 hover:text-red-700 transition-colors duration-300"
-                        aria-label="Eliminar categoría"
-                      >
-                        <Trash2 size={20} />
-                      </button>
+                      <div className="flex space-x-4">
+                        <button
+                          onClick={() => openEditModal(category)}
+                          className="text-blue-500 hover:text-blue-700 transition-colors duration-300"
+                          aria-label="Editar categoría"
+                        >
+                          <Edit size={20} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteCategory(category.id, category.name)}
+                          className="text-red-500 hover:text-red-700 transition-colors duration-300"
+                          aria-label="Eliminar categoría"
+                        >
+                          <Trash2 size={20} />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -122,7 +140,7 @@ const Categories = () => {
           >
             <PlusCircle size={24} />
           </button>
-          <AddCategoriesModal isOpen={isModalOpen} onClose={closeModal} onCategorieAdded={handleCategorieAdded}/>
+          <AddCategoriesModal isOpen={isModalOpen} onClose={closeModal} onCategorieAdded={handleCategorieAdded} categoryToEdit={editCategory} />
         </div>
       </main>
     </div>

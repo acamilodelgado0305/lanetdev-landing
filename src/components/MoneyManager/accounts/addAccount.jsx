@@ -1,13 +1,28 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { IoClose } from "react-icons/io5";
 import Swal from 'sweetalert2';
 
-const AddAccountModal = ({ isOpen, onClose, onAccountAdded }) => {
+const AddAccountModal = ({ isOpen, onClose, onAccountAdded,accountToEdit }) => {
   const apiUrl = import.meta.env.VITE_API_FINANZAS;
 
   const [name, setName] = useState("");
   const [balance, setBalance] = useState("");
   const [type, setType] = useState("Dinero en Efectivo");
+
+
+  useEffect(() => {
+    // Si hay una cuenta para editar, llenamos el formulario con sus datos
+    if (accountToEdit) {
+      setName(accountToEdit.name);
+      setBalance(accountToEdit.balance)
+      setType(accountToEdit.type);
+    } else {
+      // Si no hay cuenta, limpiamos el formulario para crear una nueva
+      setName("");
+      setBalance("0,00")
+      setType("notype");
+    }
+  }, [accountToEdit]);
 
   const handleSave = async () => {
     // Validación básica
@@ -46,29 +61,40 @@ const AddAccountModal = ({ isOpen, onClose, onAccountAdded }) => {
     };
 
     try {
-      const response = await fetch(`${apiUrl}/accounts`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(accountData),
-      });
+      let response;
+      if (accountToEdit) {
+        // Si estamos editando, enviamos una petición PUT
+        response = await fetch(`${apiUrl}/accounts/${accountToEdit.id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(accountData),
+        });
+      } else {
+        // Si estamos creando, enviamos una petición POST
+        response = await fetch(`${apiUrl}/accounts`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(accountData),
+        });
+      }
 
       if (response.ok) {
         Swal.fire({
           icon: 'success',
           title: '¡Éxito!',
-          text: 'Cuenta creada correctamente',
-        }).then(() => {
-          onClose();
-          onAccountAdded();
+          text: accountToEdit ? 'Cuenta editada con éxito' : 'Cuenta creada con éxito',
         });
+        onClose();
+        onAccountAdded();
       } else {
-        const errorData = await response.json();
         Swal.fire({
           icon: 'error',
           title: 'Error',
-          text: errorData.message || 'Error desconocido al crear la cuenta',
+          text: 'Error al guardar la cuenta',
         });
       }
     } catch (error) {
