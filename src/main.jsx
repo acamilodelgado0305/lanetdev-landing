@@ -15,6 +15,7 @@ import AccountContent from "./components/MoneyManager/accounts/accounts";
 import TransactionsDashboard from "./components/MoneyManager/transactions/transactions";
 import Categories from "./components/MoneyManager/categories/Categories";
 import { AuthProvider } from './components/Context/AuthProvider';
+import EmailManagement from './components/email/EmailManagement';
 
 const router = createBrowserRouter([
   {
@@ -43,6 +44,10 @@ const router = createBrowserRouter([
         element: <Index />,
       },
       {
+        path: "emails",
+        element: <EmailManagement />,
+      },
+      {
         path: "moneymanager",
         element: <IndexMoneyManager />,
         children: [
@@ -57,7 +62,7 @@ const router = createBrowserRouter([
           {
             path: "categorias",
             element: <Categories />,
-          }
+          },
         ],
       },
     ],

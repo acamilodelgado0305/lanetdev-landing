@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { BsFillBellFill, BsEnvelopeFill, BsCalendarFill, BsGearFill } from 'react-icons/bs';
 import ReactDatePicker from 'react-datepicker';
+import { useNavigate } from 'react-router-dom';
 import 'react-datepicker/dist/react-datepicker.css';
 
 export default function Header() {
@@ -9,6 +10,7 @@ export default function Header() {
     const [emails, setEmails] = useState(5);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const datePickerRef = useRef(null);
+    const navigate = useNavigate(); // Inicializa useNavigate
 
     // Oculta el DatePicker al hacer clic fuera de él
     const handleClickOutside = (event) => {
@@ -23,6 +25,11 @@ export default function Header() {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, []);
+
+    // Función para manejar el clic en el ícono de correos
+    const handleEmailClick = () => {
+        navigate('/index/emails');
+    };
 
     return (
         <div className="flex items-center justify-between w-full bg-primary p-4 shadow-md">
@@ -44,7 +51,7 @@ export default function Header() {
                 </div>
 
                 {/* Icono de correos con contador */}
-                <div className="relative">
+                <div className="relative" onClick={handleEmailClick}>
                     <BsEnvelopeFill className="text-2xl cursor-pointer hover:text-gray-800" />
                     {emails > 0 && (
                         <span className="absolute -top-4 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
