@@ -13,9 +13,11 @@ import PrivateRoute from "./components/PrivateRoute";
 import IndexMoneyManager from "./components/MoneyManager";
 import AccountContent from "./components/MoneyManager/accounts/accounts";
 import TransactionsDashboard from "./components/MoneyManager/transactions/transactions";
+import TransactionsDashboard2 from "./components/MoneyManager/transactions/vistadia";
 import Categories from "./components/MoneyManager/categories/Categories";
 import { AuthProvider } from './components/Context/AuthProvider';
 import EmailManagement from './components/email/EmailManagement';
+import Estadisticas from "./components/MoneyManager/estadisticas/Estadisticas";
 
 const router = createBrowserRouter([
   {
@@ -63,6 +65,15 @@ const router = createBrowserRouter([
             path: "categorias",
             element: <Categories />,
           },
+          {
+            path: "transactions2",
+            element: <TransactionsDashboard2 />,
+          },
+          {
+            path: "estadisticas",
+            element: <Estadisticas />,
+          }
+          
         ],
       },
     ],
