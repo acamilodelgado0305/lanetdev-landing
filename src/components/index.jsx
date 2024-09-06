@@ -72,7 +72,7 @@ export default function Index() {
 
   return (
     <main className="flex flex-col items-center justify-start bg-gray-50 min-h-screen">
-      <Header />
+
 
       <div className="text-center mb-2">
         <h3 className="text-xl font-semibold text-gray-800">Dashboard</h3>
