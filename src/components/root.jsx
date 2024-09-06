@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from "react";
-import { Outlet, Link } from "react-router-dom";
-import { ChevronDown, Menu, X, Home, FileText, Users, ShoppingCart, Book, DollarSign } from "lucide-react";
+import { Outlet, Link, useNavigate } from "react-router-dom";
+import { Menu, X, Home, FileText, Users, ShoppingCart, Book, DollarSign } from "lucide-react";
+import Header from '../components/header/Header';  // Importa el componente Header
 import UserProfileHeader from './user/UserProfileHeader';
-import { useGridRootProps } from "@mui/x-data-grid";
 
 // Componente SidebarLink
 const SidebarLink = ({ to, icon: Icon, children }) => (
@@ -40,7 +40,7 @@ export default function Root() {
   );
 
   return (
-    <div className="flex h-screen ">
+    <div className="flex h-screen">
       {/* Sidebar */}
       <aside
         className={`${isOpen ? "translate-x-0" : "-translate-x-full"
@@ -71,22 +71,13 @@ export default function Root() {
       </aside>
 
       {/* Main content */}
-      <div className="flex  overflow-hidden w-full">
-        {/* Header */}
-        <header className="flex items-center justify-between h-16 border-b border-gray-200">
-          <button
-            onClick={() => setIsOpen(true)}
-            className="p-1 text-white rounded-md lg:hidden hover:bg-gray-100"
-          >
-            <Menu className="w-6 h-6" />
-          </button>
-        </header>
+      <div className="flex flex-col w-full">
+        {/* Aquí se renderiza el header para todas las páginas */}
+        <Header /> {/* Header global */}
 
         {/* Page content */}
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 w-full">
-          <div className="">
-            <Outlet />
-          </div>
+          <Outlet /> {/* Aquí se renderizan las páginas correspondientes a las rutas */}
         </main>
       </div>
     </div>
