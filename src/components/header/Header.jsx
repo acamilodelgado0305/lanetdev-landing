@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { BsFillBellFill, BsEnvelopeFill, BsCalendarFill, BsGearFill } from 'react-icons/bs';
+import { BsFillBellFill, BsEnvelopeFill, BsCalendarFill, BsGearFill, BsBoxArrowRight } from 'react-icons/bs';
 import ReactDatePicker from 'react-datepicker';
 import { useNavigate } from 'react-router-dom';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -31,20 +31,26 @@ export default function Header() {
         navigate('/index/emails');
     };
 
+    // Función para manejar el cierre de sesión
+    const handleLogout = () => {
+        localStorage.removeItem('authToken'); // O cualquier método que uses para la autenticación
+        navigate('/login'); // Redirige a la página de inicio de sesión
+    };
+
     return (
-        <div className="flex items-center justify-between w-full bg-primary p-4 shadow-md">
+        <div className="flex items-center justify-between w-full bg-white p-2 shadow-sm">
             <input
                 type="text"
                 placeholder="Buscar..."
-                className="border rounded-md p-2 w-1/3 mx-8"
+                className="border rounded-md p-1 w-1/4 text-sm mx-4"
             />
 
-            <div className="flex space-x-6 text-white items-center relative">
+            <div className="flex space-x-4 text-gray-700 items-center relative">
                 {/* Icono de notificaciones con contador */}
                 <div className="relative">
-                    <BsFillBellFill className="text-2xl cursor-pointer hover:text-gray-800" />
+                    <BsFillBellFill className="text-xl cursor-pointer hover:text-gray-500" />
                     {notifications > 0 && (
-                        <span className="absolute -top-4 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
+                        <span className="absolute -top-3 right-0 inline-flex items-center justify-center px-2 py-1 text-[9px] font-bold leading-none text-red-100 bg-primary rounded-full">
                             {notifications}
                         </span>
                     )}
@@ -52,9 +58,9 @@ export default function Header() {
 
                 {/* Icono de correos con contador */}
                 <div className="relative" onClick={handleEmailClick}>
-                    <BsEnvelopeFill className="text-2xl cursor-pointer hover:text-gray-800" />
+                    <BsEnvelopeFill className="text-xl cursor-pointer hover:text-gray-500" />
                     {emails > 0 && (
-                        <span className="absolute -top-4 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
+                        <span className="absolute -top-3 right-0 inline-flex items-center justify-center px-2 py-1 text-[9px] font-bold leading-none text-red-100 bg-primary rounded-full">
                             {emails}
                         </span>
                     )}
@@ -63,7 +69,7 @@ export default function Header() {
                 {/* Icono del calendario */}
                 <div className="relative">
                     <BsCalendarFill
-                        className="text-2xl cursor-pointer hover:text-gray-800"
+                        className="text-xl cursor-pointer hover:text-gray-500"
                         onClick={() => setShowDatePicker(!showDatePicker)}
                     />
                     {showDatePicker && (
@@ -81,7 +87,14 @@ export default function Header() {
                     )}
                 </div>
 
-                <BsGearFill className="text-2xl cursor-pointer hover:text-gray-800" />
+                {/* Icono de configuración */}
+                <BsGearFill className="text-xl cursor-pointer hover:text-gray-500" />
+
+                {/* Botón de cerrar sesión */}
+                <div onClick={handleLogout} className="px-6 cursor-pointer flex items-center text-primary hover:text-red-800">
+                    <BsBoxArrowRight className="text-xl" />
+                    <span className="ml-2 text-sm">Logout</span>
+                </div>
             </div>
         </div>
     );
