@@ -1,20 +1,13 @@
-import React, { useEffect, useState, useMemo } from "react";
-import { Outlet, Link, useNavigate } from "react-router-dom";
-import {
-  format as formatDate,
-  subDays,
-  parseISO,
-  startOfWeek,
-  endOfWeek,
-  startOfMonth,
-  endOfMonth,
-} from "date-fns";
+import React, { useEffect, useState } from "react";
+import { PlusCircle, ChevronLeft, ChevronRight, Search, Filter } from "lucide-react";
+import { format as formatDate, startOfMonth, endOfMonth, subMonths, addMonths } from "date-fns";
+import axios from "axios";
+import AddEntryModal from "./addModal";
 import {
   getTransactions,
   getTransfers,
   getAccounts,
 } from "../../../services/moneymanager/moneyService";
-import AddEntryModal from "./addModal";
 
 const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
 
@@ -34,23 +27,14 @@ const TransactionsDashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [error, setError] = useState(null);
   const [entries, setEntries] = useState([]);
-  const [accounts, setAccounts] = useState([]);
+  const [filteredEntries, setFilteredEntries] = useState([]);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   const [totalIncome, setTotalIncome] = useState(0);
   const [totalExpenses, setTotalExpenses] = useState(0);
   const [balance, setBalance] = useState(0);
-
-  // Enhanced filters
-  const [dateRange, setDateRange] = useState({
-    start: subDays(new Date(), 30),
-    end: new Date(),
-  });
-  const [accountFilter, setAccountFilter] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("all");
+  const [accounts, setAccounts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [dateFilterType, setDateFilterType] = useState("custom");
-  const [amountRange, setAmountRange] = useState({ min: "", max: "" });
-
-  // Pagination
+  const [filterType, setFilterType] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage] = useState(10);
 
@@ -74,8 +58,9 @@ const TransactionsDashboard = () => {
         })),
       ];
 
-      setEntries(allEntries);
-      updateFinancialSummary(allEntries);
+      const sortedEntries = allEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
+      setEntries(sortedEntries);
+      applyFilters(sortedEntries);
     } catch (err) {
       setError("Error al cargar las entradas");
       console.error("Error fetching entries:", err);
@@ -84,99 +69,93 @@ const TransactionsDashboard = () => {
 
   const fetchAccounts = async () => {
     try {
-      const data = await getAccounts();
+      const data = await getAccounts(); 
       setAccounts(data);
     } catch (error) {
       console.error("Error al obtener las cuentas:", error);
     }
   };
 
-  const updateFinancialSummary = (entries) => {
-    const income = entries
-      .filter((e) => e.type === "income")
-      .reduce((sum, e) => sum + e.amount, 0);
-    const expenses = entries
-      .filter((e) => e.type === "expense")
-      .reduce((sum, e) => sum + e.amount, 0);
-    setTotalIncome(income);
-    setTotalExpenses(expenses);
-    setBalance(income - expenses);
+  const fetchMonthlyData = async () => {
+    const monthYear = formatDate(currentMonth, "yyyy-MM");
+    try {
+      const [balanceResponse, incomeResponse, expensesResponse] =
+        await Promise.all([
+          axios.get(`${API_BASE_URL}/transactions/balance/month/${monthYear}`),
+          axios.get(`${API_BASE_URL}/transactions/income/month/${monthYear}`),
+          axios.get(`${API_BASE_URL}/transactions/expenses/month/${monthYear}`),
+        ]);
+
+      const balanceValue = parseFloat(balanceResponse.data.balance) || 0;
+      const incomeValue = parseFloat(incomeResponse.data.totalIncome) || 0;
+      const expensesValue = parseFloat(expensesResponse.data.totalExpenses) || 0;
+
+      setBalance(balanceValue);
+      setTotalIncome(incomeValue);
+      setTotalExpenses(expensesValue);
+    } catch (err) {
+      setError("Error al cargar los datos mensuales");
+      console.error("Error fetching monthly data:", err);
+    }
   };
 
   const handleEntryAdded = () => {
     fetchEntries();
+    fetchMonthlyData();
   };
 
   useEffect(() => {
+    fetchMonthlyData();
     fetchEntries();
-    fetchAccounts();
-  }, []);
+    fetchAccounts(); 
+  }, [currentMonth]);
 
   const getAccountName = (accountId) => {
     const account = accounts.find((acc) => acc.id === accountId);
     return account ? account.name : "Cuenta no encontrada";
   };
 
-  const handleDateFilterChange = (filterType) => {
-    const today = new Date();
-    let start, end;
+  const applyFilters = (entriesToFilter = entries) => {
+    let filtered = entriesToFilter;
 
-    switch (filterType) {
-      case "week":
-        start = startOfWeek(today);
-        end = endOfWeek(today);
-        break;
-      case "month":
-        start = startOfMonth(today);
-        end = endOfMonth(today);
-        break;
-      case "custom":
-        return;
-      default:
-        start = subDays(today, 30);
-        end = today;
+    // Apply month filter
+    filtered = filtered.filter(
+      (entry) => {
+        const entryDate = new Date(entry.date);
+        return entryDate >= startOfMonth(currentMonth) && entryDate <= endOfMonth(currentMonth);
+      }
+    );
+
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter((entry) =>
+        entry.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (entry.note && entry.note.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (entry.category && entry.category.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
     }
 
-    setDateFilterType(filterType);
-    setDateRange({ start, end });
+    // Apply type filter
+    if (filterType !== "all") {
+      filtered = filtered.filter((entry) => 
+        filterType === "transfer" ? entry.entryType === "transfer" : entry.type === filterType
+      );
+    }
+
+    setFilteredEntries(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
   };
 
-  const filteredEntries = useMemo(() => {
-    return entries.filter((entry) => {
-      const entryDate = parseISO(entry.date);
-      const matchesDateRange =
-        entryDate >= dateRange.start && entryDate <= dateRange.end;
-      const matchesAccount =
-        accountFilter === "all" || entry.account_id === accountFilter;
-      const matchesType = typeFilter === "all" || entry.type === typeFilter;
-      const matchesSearch = entry.description
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-      const matchesAmount =
-        (amountRange.min === "" || entry.amount >= Number(amountRange.min)) &&
-        (amountRange.max === "" || entry.amount <= Number(amountRange.max));
+  useEffect(() => {
+    applyFilters();
+  }, [searchTerm, filterType, entries, currentMonth]);
 
-      return (
-        matchesDateRange &&
-        matchesAccount &&
-        matchesType &&
-        matchesSearch &&
-        matchesAmount
-      );
-    });
-  }, [entries, dateRange, accountFilter, typeFilter, searchTerm, amountRange]);
-
-  // Pagination logic
+  // Pagination
   const indexOfLastEntry = currentPage * entriesPerPage;
   const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
-  const currentEntries = filteredEntries.slice(
-    indexOfFirstEntry,
-    indexOfLastEntry
-  );
+  const currentEntries = filteredEntries.slice(indexOfFirstEntry, indexOfLastEntry);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
-  // Prepare data for the chart
 
   if (error) {
     return <div className="text-center text-red-500 p-4">{error}</div>;
@@ -185,223 +164,150 @@ const TransactionsDashboard = () => {
   return (
     <div className="bg-gray-100 min-h-screen w-full p-4">
       <main className="max-full mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <h1 className="text-3xl font-bold mb-6 text-gray-800">
-            Panel de Control Financiero
-          </h1>
+        <div className="bg-white rounded-lg shadow-lg p-6 relative">
+          <div className="flex justify-between items-center mb-6">
+            <button
+              className="text-blue-500 hover:text-blue-600 transition-colors"
+              onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+            >
+              <ChevronLeft size={24} />
+            </button>
+            <h2 className="text-2xl font-semibold">
+              {formatDate(currentMonth, "MMMM yyyy")}
+            </h2>
+            <button
+              className="text-blue-500 hover:text-blue-600 transition-colors"
+              onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+            >
+              <ChevronRight size={24} />
+            </button>
+          </div>
 
-          {/* Financial Summary */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-blue-50 p-6 rounded-lg shadow">
-              <h2 className="text-lg font-semibold text-blue-800 mb-2">
-                Ingreso Total
-              </h2>
-              <p className="text-3xl font-bold text-blue-600">
+          <div className="grid grid-cols-3 gap-6 mb-8">
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600 mb-1">Ingreso</p>
+              <p className="text-2xl font-bold text-blue-600">
                 {formatCurrency(totalIncome)}
               </p>
             </div>
-            <div className="bg-red-50 p-6 rounded-lg shadow">
-              <h2 className="text-lg font-semibold text-red-800 mb-2">
-                Gasto Total
-              </h2>
-              <p className="text-3xl font-bold text-red-600">
+            <div className="bg-red-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600 mb-1">Gastos</p>
+              <p className="text-2xl font-bold text-red-600">
                 {formatCurrency(totalExpenses)}
               </p>
             </div>
-            <div className="bg-green-50 p-6 rounded-lg shadow">
-              <h2 className="text-lg font-semibold text-green-800 mb-2">
-                Balance
-              </h2>
-              <p className="text-3xl font-bold text-green-600">
+            <div className="bg-green-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600 mb-1">Balance</p>
+              <p className="text-2xl font-bold text-green-600">
                 {formatCurrency(balance)}
               </p>
             </div>
           </div>
 
-          {/* Filters */}
-          <div className="bg-gray-50 p-6 rounded-lg shadow mb-8">
-            <h2 className="text-xl font-semibold mb-4 text-gray-800">
-              Filtros
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <select
-                value={dateFilterType}
-                onChange={(e) => handleDateFilterChange(e.target.value)}
-                className="p-2 border rounded w-full"
-              >
-                <option value="custom">Personalizado</option>
-                <option value="week">Esta semana</option>
-                <option value="month">Este mes</option>
-              </select>
-              {dateFilterType === "custom" && (
-                <>
-                  <input
-                    type="date"
-                    value={formatDate(dateRange.start, "yyyy-MM-dd")}
-                    onChange={(e) =>
-                      setDateRange({
-                        ...dateRange,
-                        start: parseISO(e.target.value),
-                      })
-                    }
-                    className="p-2 border rounded w-full"
-                  />
-                  <input
-                    type="date"
-                    value={formatDate(dateRange.end, "yyyy-MM-dd")}
-                    onChange={(e) =>
-                      setDateRange({
-                        ...dateRange,
-                        end: parseISO(e.target.value),
-                      })
-                    }
-                    className="p-2 border rounded w-full"
-                  />
-                </>
-              )}
-              <select
-                value={accountFilter}
-                onChange={(e) => setAccountFilter(e.target.value)}
-                className="p-2 border rounded w-full"
-              >
-                <option value="all">Todas las cuentas</option>
-                {accounts.map((account) => (
-                  <option key={account.id} value={account.id}>
-                    {account.name}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                className="p-2 border rounded w-full"
-              >
-                <option value="all">Todos los tipos</option>
-                <option value="income">Ingreso</option>
-                <option value="expense">Gasto</option>
-                <option value="transfer">Transferencia</option>
-              </select>
+          <div className="mb-6 flex justify-between items-center">
+            <div className="relative">
               <input
                 type="text"
-                placeholder="Buscar..."
+                placeholder="Buscar transacciones..."
+                className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="p-2 border rounded w-full"
               />
-              <input
-                type="number"
-                placeholder="Monto mínimo"
-                value={amountRange.min}
-                onChange={(e) =>
-                  setAmountRange({ ...amountRange, min: e.target.value })
-                }
-                className="p-2 border rounded w-full"
-              />
-              <input
-                type="number"
-                placeholder="Monto máximo"
-                value={amountRange.max}
-                onChange={(e) =>
-                  setAmountRange({ ...amountRange, max: e.target.value })
-                }
-                className="p-2 border rounded w-full"
-              />
+              <Search className="absolute left-3 top-2.5 text-gray-400" size={20} />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Filter size={20} className="text-gray-400" />
+              <select
+                className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+              >
+                <option value="all">Todos</option>
+                <option value="income">Ingresos</option>
+                <option value="expense">Gastos</option>
+                <option value="transfer">Transferencias</option>
+              </select>
             </div>
           </div>
 
-          {/* Transactions Table */}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <h2 className="text-xl font-semibold p-4 bg-gray-50 border-b text-gray-800">
-              Transacciones
-            </h2>
-            <div className="overflow-x-auto">
-              <table className="min-w-full">
-                <thead className="bg-gray-100">
-                  <tr>
-                    <th className="p-3 text-left font-semibold text-gray-600">
-                      Fecha
-                    </th>
-                    <th className="p-3 text-left font-semibold text-gray-600">
-                      Descripción
-                    </th>
-                    <th className="p-3 text-left font-semibold text-gray-600">
-                      Cuenta
-                    </th>
-                    <th className="p-3 text-left font-semibold text-gray-600">
-                      Tipo
-                    </th>
-                    <th className="p-3 text-right font-semibold text-gray-600">
-                      Monto
-                    </th>
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-white">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comprobante</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cuenta</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {currentEntries.map((entry, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatDate(new Date(entry.date), "d MMM yyyy")}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{entry.description}</div>
+                      
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">ver foto</div>
+                      
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {entry.entryType === "transfer"
+                        ? `${entry.fromAccountName} ➡️ ${entry.toAccountName}`
+                        : getAccountName(entry.account_id)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {entry.category || "Sin categoría"}
+                    </td>
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
+                      entry.type === "expense" ? "text-red-600" : "text-blue-600"
+                    }`}>
+                      {entry.type === "expense" ? "-" : "+"}
+                      {formatCurrency(entry.amount)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {entry.entryType === "transfer" ? "Transferencia" : entry.type}
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {currentEntries.map((entry, index) => (
-                    <tr key={index} className="border-b hover:bg-gray-50">
-                      <td className="p-3 text-gray-700">
-                        {formatDate(parseISO(entry.date), "dd/MM/yyyy")}
-                      </td>
-                      <td className="p-3 text-gray-700">{entry.description}</td>
-                      <td className="p-3 text-gray-700">
-                        {entry.entryType === "transfer"
-                          ? `${entry.fromAccountName} ➡️ ${entry.toAccountName}`
-                          : getAccountName(entry.account_id)}
-                      </td>
-                      <td className="p-3 text-gray-700">
-                        {entry.entryType === "transfer"
-                          ? "Transferencia"
-                          : entry.type}
-                      </td>
-                      <td
-                        className={`p-3 text-right font-semibold ${
-                          entry.type === "expense"
-                            ? "text-red-500"
-                            : "text-blue-500"
-                        }`}
-                      >
-                        {formatCurrency(entry.amount)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           </div>
 
           {/* Pagination */}
-          <div className="mt-6 flex justify-center">
-            {Array.from({
-              length: Math.ceil(filteredEntries.length / entriesPerPage),
-            }).map((_, index) => (
+          <div className="mt-4 flex justify-center">
+            {Array.from({ length: Math.ceil(filteredEntries.length / entriesPerPage) }).map((_, index) => (
               <button
                 key={index}
                 onClick={() => paginate(index + 1)}
                 className={`mx-1 px-3 py-1 rounded ${
-                  currentPage === index + 1
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-200 hover:bg-gray-300"
+                  currentPage === index + 1 ? "bg-blue-500 text-white" : "bg-gray-200"
                 }`}
               >
                 {index + 1}
               </button>
             ))}
           </div>
-        </div>
 
-        <button
-          onClick={openModal}
-          className="fixed bottom-8 right-8 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-colors duration-300"
-        >
-          + Añadir entrada
-        </button>
-
-        {isModalOpen && (
+          <button
+            onClick={openModal}
+            className="fixed bottom-8 right-8 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-4 shadow-lg transition-colors duration-300"
+            aria-label="Añadir entrada"
+          >
+            <PlusCircle size={24} />
+          </button>
           <AddEntryModal
             isOpen={isModalOpen}
             onClose={closeModal}
             onTransactionAdded={handleEntryAdded}
           />
-        )}
+        </div>
       </main>
     </div>
   );
