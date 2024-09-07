@@ -28,43 +28,6 @@ const IndexMoneyManager = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
 
-  const logout = async () => {
-    try {
-      await fetch(`${import.meta.env.VITE_BACKEND_URL}/logout`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-      });
-      navigate("/");
-    } catch (error) {
-      console.error("Error al cerrar sesión:", error);
-    }
-  };
-
-  useEffect(() => {
-    const fetchUserName = async () => {
-      try {
-        const response = await fetch(
-          `${import.meta.env.VITE_BACKEND_URL}/auth/user`,
-          {
-            method: "GET",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-          }
-        );
-        if (response.ok) {
-          const { name } = await response.json();
-          setName(name);
-        } else {
-          console.error("Error al obtener el nombre del usuario");
-        }
-      } catch (error) {
-        console.error("Error en la solicitud:", error);
-      }
-    };
-    fetchUserName();
-  }, []);
-
   useEffect(() => {
     // Redirigir automáticamente a la ruta de transacciones cuando se monte el componente
     navigate("/index/moneymanager/transactions");
@@ -87,10 +50,11 @@ const IndexMoneyManager = () => {
             <NavLink to="/index/moneymanager/transactions" icon={Send}>
               Transacciones
             </NavLink>
+
             <NavLink to="/index/moneymanager/accounts" icon={CreditCard}>
               Cuentas
             </NavLink>
-            
+
             <NavLink to="/index/moneymanager/categorias" icon={User}>
               Categorias
             </NavLink>
@@ -110,8 +74,8 @@ const IndexMoneyManager = () => {
               </button>
               {isDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-20">
-                  <NavLink to="/index/moneymanager/categorias" icon={User}>
-                    OPCIONES
+                  <NavLink to="/index/moneymanager/transactions2" icon={Send}>
+                    Diarias
                   </NavLink>
                 </div>
               )}

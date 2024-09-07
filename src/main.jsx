@@ -18,6 +18,7 @@ import TransactionsDashboard from "./components/MoneyManager/transactions/transa
 import Categories from "./components/MoneyManager/categories/Categories";
 import { AuthProvider } from './components/Context/AuthProvider';
 import EmailManagement from './components/communication/EmailManagement';
+import Estadisticas from "./components/MoneyManager/estadisticas/Estadisticas";
 
 const router = createBrowserRouter([
   {
@@ -61,6 +62,11 @@ const router = createBrowserRouter([
             path: "categorias",
             element: <Categories />,
           },
+          {
+            path: "estadisticas",
+            element: <Estadisticas />,
+          }
+
         ],
       },
       {
