@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { Outlet, Link } from "react-router-dom";
-import { Home, FileText, Users, ShoppingCart, Book, DollarSign } from "lucide-react";
+import { Home, FileText, Users, ShoppingCart, Book, DollarSign, MessageCircle } from "lucide-react";
 import Header from '../components/header/Header';
 import UserProfileHeader from './user/UserProfileHeader';
 
@@ -36,6 +36,7 @@ export default function Root() {
       { to: "/productos", label: "Productos", icon: ShoppingCart },
       { to: "/index/doc", label: "Documentación", icon: FileText },
       { to: "/index/moneymanager", label: "Money Manager", icon: Book },
+      { to: "/index/communication", label: "Comunicación", icon: MessageCircle },
     ],
     []
   );

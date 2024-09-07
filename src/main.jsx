@@ -11,11 +11,13 @@ import Index from "./components/";
 import Root from "./components/root";
 import PrivateRoute from "./components/PrivateRoute";
 import IndexMoneyManager from "./components/MoneyManager";
+import Indexcomunicacion from "./components/communication/index";
+import WhatsAppWeb from "./components/communication/WhatsAppWeb";
 import AccountContent from "./components/MoneyManager/accounts/accounts";
 import TransactionsDashboard from "./components/MoneyManager/transactions/transactions";
 import Categories from "./components/MoneyManager/categories/Categories";
 import { AuthProvider } from './components/Context/AuthProvider';
-import EmailManagement from './components/email/EmailManagement';
+import EmailManagement from './components/communication/EmailManagement';
 
 const router = createBrowserRouter([
   {
@@ -44,10 +46,6 @@ const router = createBrowserRouter([
         element: <Index />,
       },
       {
-        path: "emails",
-        element: <EmailManagement />,
-      },
-      {
         path: "moneymanager",
         element: <IndexMoneyManager />,
         children: [
@@ -58,6 +56,24 @@ const router = createBrowserRouter([
           {
             path: "transactions",
             element: <TransactionsDashboard />,
+          },
+          {
+            path: "categorias",
+            element: <Categories />,
+          },
+        ],
+      },
+      {
+        path: "communication",
+        element: <Indexcomunicacion />,
+        children: [
+          {
+            path: "emails",
+            element: <EmailManagement />,
+          },
+          {
+            path: "WhatsAppWeb",
+            element: <WhatsAppWeb />,
           },
           {
             path: "categorias",
