@@ -61,6 +61,7 @@ const TransactionsDashboard = () => {
       const sortedEntries = allEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
       setEntries(sortedEntries);
       applyFilters(sortedEntries);
+      console.log(sortedEntries)
     } catch (err) {
       setError("Error al cargar las entradas");
       console.error("Error fetching entries:", err);
