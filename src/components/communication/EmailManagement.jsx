@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion'; // Importación de framer-motion para animaciones
 
 // Simulación de correos recibidos de clientes
 const initialEmails = [
@@ -19,9 +19,12 @@ const registeredUsers = [
 const UserAvatar = ({ name }) => {
     const initial = name.charAt(0).toUpperCase();
     return (
-        <div className="w-10 h-10 bg-blue-500 text-white flex items-center justify-center rounded-full font-bold">
+        <motion.div
+            whileHover={{ scale: 1.1 }} // Animación de hover
+            className="w-10 h-10 bg-blue-500 text-white flex items-center justify-center rounded-full font-bold"
+        >
             {initial}
-        </div>
+        </motion.div>
     );
 };
 
@@ -30,13 +33,6 @@ function EmailManagement() {
     const [newEmail, setNewEmail] = useState({ subject: "", content: "", recipients: [], file: null }); // Estado del nuevo correo
     const [sentEmailsCount, setSentEmailsCount] = useState(0); // Contador de correos enviados
     const [readEmailsCount, setReadEmailsCount] = useState(0); // Contador de correos leídos
-    const { setUnreadEmailsCount } = useOutletContext(); // Obtiene setUnreadEmailsCount del contexto
-
-    // Calcula y actualiza el número de correos no leídos
-    useEffect(() => {
-        const unreadCount = emails.filter(email => !email.read).length;
-        setUnreadEmailsCount(unreadCount);  // Actualiza el estado en el componente Root
-    }, [emails, setUnreadEmailsCount]);
 
     // Maneja el clic en un correo y lo marca como leído
     const handleEmailClick = (emailId) => {
@@ -83,23 +79,35 @@ function EmailManagement() {
     };
 
     return (
-        <div className="email-management-container p-6 bg-gray-100 min-h-screen">
-            <h1 className="text-3xl font-bold mb-6 text-center text-primary">Administrar Correos</h1>
+        <motion.div
+            className="email-management-container p-6 bg-gray-100 min-h-screen"
+            initial={{ opacity: 0 }} // Animación de entrada
+            animate={{ opacity: 1 }} // Transición suave
+            transition={{ duration: 0.5 }}
+        >
+            <h1 className="text-4xl font-bold mb-6 text-center text-primary">Administrar Correos</h1>
 
             {/* Contenedor de dos columnas */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                 {/* Columna de lista de correos */}
-                <div className="email-list">
+                <motion.div
+                    className="email-list"
+                    initial={{ x: -200 }}
+                    animate={{ x: 0 }}
+                    transition={{ duration: 0.5 }}
+                >
                     <h2 className="text-2xl font-semibold mb-4 text-primary">Solicitudes de Clientes</h2>
                     <ul className="list-none space-y-4">
                         {emails.map(email => {
                             const user = getUserById(email.userId);
                             return (
-                                <li
+                                <motion.li
                                     key={email.id}
                                     className={`p-4 bg-white shadow rounded-md flex items-start space-x-4 cursor-pointer ${email.read ? 'opacity-50' : ''}`}
                                     onClick={() => handleEmailClick(email.id)}
+                                    whileHover={{ scale: 1.02 }} // Efecto de hover
+                                    whileTap={{ scale: 0.98 }}  // Efecto al hacer click
                                 >
                                     <UserAvatar name={user.name} />
                                     <div>
@@ -107,21 +115,30 @@ function EmailManagement() {
                                         <p className="text-gray-700">{email.content}</p>
                                         <small className="text-gray-500">De: {user.name} ({user.email})</small>
                                     </div>
-                                </li>
+                                </motion.li>
                             );
                         })}
                     </ul>
 
                     {/* Contador de correos leídos con animación */}
-                    <div className="mt-4 text-gray-700 text-center animate-pulse">
-                        <p className="inline-block bg-green-200 text-green-800 px-4 py-2 rounded-full shadow-lg">
+                    <div className="mt-4 text-gray-700 text-center">
+                        <motion.p
+                            className="inline-block bg-green-200 text-green-800 px-4 py-2 rounded-full shadow-lg"
+                            animate={{ scale: [1, 1.1, 1] }}
+                            transition={{ repeat: Infinity, duration: 2 }}
+                        >
                             Correos leídos: <span className="font-bold">{readEmailsCount}</span>
-                        </p>
+                        </motion.p>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Columna de formulario de envío de correos */}
-                <div className="email-form bg-white p-6 shadow rounded-md">
+                <motion.div
+                    className="email-form bg-white p-6 shadow rounded-md"
+                    initial={{ x: 200 }}
+                    animate={{ x: 0 }}
+                    transition={{ duration: 0.5 }}
+                >
                     <h2 className="text-2xl font-semibold mb-4 text-primary">Enviar Correo</h2>
                     <div className="mb-4">
                         <label className="block font-bold text-gray-700">Asunto:</label>
@@ -130,7 +147,7 @@ function EmailManagement() {
                             name="subject"
                             value={newEmail.subject}
                             onChange={handleInputChange}
-                            className="border p-2 rounded w-full mt-1"
+                            className="border p-2 rounded w-full mt-1 focus:ring-2 focus:ring-blue-500 transition-all"
                             placeholder="Asunto del correo"
                         />
                     </div>
@@ -140,7 +157,7 @@ function EmailManagement() {
                             name="content"
                             value={newEmail.content}
                             onChange={handleInputChange}
-                            className="border p-2 rounded w-full mt-1"
+                            className="border p-2 rounded w-full mt-1 focus:ring-2 focus:ring-blue-500 transition-all"
                             placeholder="Escribe tu mensaje aquí..."
                         />
                     </div>
@@ -149,7 +166,7 @@ function EmailManagement() {
                         <input
                             type="file"
                             onChange={handleFileChange}
-                            className="block w-full text-gray-700 mt-1"
+                            className="block w-full text-gray-700 mt-1 focus:ring-2 focus:ring-blue-500 transition-all"
                         />
                     </div>
                     <div className="mb-6">
@@ -158,7 +175,7 @@ function EmailManagement() {
                             multiple
                             name="recipients"
                             onChange={handleRecipientsChange}
-                            className="border p-2 rounded w-full mt-1"
+                            className="border p-2 rounded w-full mt-1 focus:ring-2 focus:ring-blue-500 transition-all"
                         >
                             {registeredUsers.map(user => (
                                 <option key={user.id} value={user.email}>
@@ -167,22 +184,28 @@ function EmailManagement() {
                             ))}
                         </select>
                     </div>
-                    <button
+                    <motion.button
                         onClick={handleSendEmail}
-                        className="bg-primary text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 transition-all focus:ring-4 focus:ring-blue-300"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                     >
                         Enviar Correo
-                    </button>
+                    </motion.button>
 
                     {/* Contador de correos enviados con animación */}
-                    <div className="mt-4 text-center animate-bounce">
+                    <motion.div
+                        className="mt-4 text-center"
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{ repeat: Infinity, duration: 2 }}
+                    >
                         <p className="inline-block bg-blue-200 text-blue-800 px-4 py-2 rounded-full shadow-lg">
                             Correos enviados: <span className="font-bold">{sentEmailsCount}</span>
                         </p>
-                    </div>
-                </div>
+                    </motion.div>
+                </motion.div>
             </div>
-        </div>
+        </motion.div>
     );
 }
 
