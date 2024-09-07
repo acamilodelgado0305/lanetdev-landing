@@ -1,13 +1,28 @@
 import React, { useEffect, useState } from "react";
-import { PlusCircle, ChevronLeft, ChevronRight, Search, Filter } from "lucide-react";
-import { format as formatDate, startOfMonth, endOfMonth, subMonths, addMonths } from "date-fns";
+import {
+  PlusCircle,
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  Filter,
+} from "lucide-react";
+import {
+  format as formatDate,
+  startOfMonth,
+  endOfMonth,
+  subMonths,
+  addMonths,
+} from "date-fns";
 import axios from "axios";
 import AddEntryModal from "./addModal";
 import {
   getTransactions,
   getTransfers,
   getAccounts,
+  getCategories,
 } from "../../../services/moneymanager/moneyService";
+
+import NoteContentModal from "./ViewImageModal";
 
 const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
 
@@ -24,6 +39,8 @@ const formatCurrency = (amount) => {
 };
 
 const TransactionsDashboard = () => {
+  const [isContentModalOpen, setIsContentModalOpen] = useState(false); // Estado para el modal de contenido
+  const [selectedNoteContent, setSelectedNoteContent] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [error, setError] = useState(null);
   const [entries, setEntries] = useState([]);
@@ -37,9 +54,20 @@ const TransactionsDashboard = () => {
   const [filterType, setFilterType] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage] = useState(10);
+  const [categories, setCategories] = useState([]);
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
+
+  const openContentModal = (noteContent) => {
+    setSelectedNoteContent(noteContent);
+    setIsContentModalOpen(true);
+  };
+
+  const closeContentModal = () => {
+    setIsContentModalOpen(false);
+    setSelectedNoteContent("");
+  };
 
   const fetchEntries = async () => {
     try {
@@ -53,24 +81,33 @@ const TransactionsDashboard = () => {
         ...transfers.map((tf) => ({
           ...tf,
           entryType: "transfer",
-          fromAccountName: getAccountName(tf.from_account_id),
-          toAccountName: getAccountName(tf.to_account_id),
         })),
       ];
 
-      const sortedEntries = allEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
+      const sortedEntries = allEntries.sort(
+        (a, b) => new Date(b.date) - new Date(a.date)
+      );
       setEntries(sortedEntries);
       applyFilters(sortedEntries);
-      console.log(sortedEntries)
+      console.log(sortedEntries);
     } catch (err) {
       setError("Error al cargar las entradas");
       console.error("Error fetching entries:", err);
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const data = await getCategories();
+      setCategories(data);
+    } catch (error) {
+      console.error("Error al obtener las categorías:", error);
+    }
+  };
+
   const fetchAccounts = async () => {
     try {
-      const data = await getAccounts(); 
+      const data = await getAccounts();
       setAccounts(data);
     } catch (error) {
       console.error("Error al obtener las cuentas:", error);
@@ -89,7 +126,8 @@ const TransactionsDashboard = () => {
 
       const balanceValue = parseFloat(balanceResponse.data.balance) || 0;
       const incomeValue = parseFloat(incomeResponse.data.totalIncome) || 0;
-      const expensesValue = parseFloat(expensesResponse.data.totalExpenses) || 0;
+      const expensesValue =
+        parseFloat(expensesResponse.data.totalExpenses) || 0;
 
       setBalance(balanceValue);
       setTotalIncome(incomeValue);
@@ -106,10 +144,16 @@ const TransactionsDashboard = () => {
   };
 
   useEffect(() => {
+    fetchCategories();
     fetchMonthlyData();
     fetchEntries();
-    fetchAccounts(); 
+    fetchAccounts();
   }, [currentMonth]);
+
+  const getCategoryName = (categoryId) => {
+    const category = categories.find((cat) => cat.id === categoryId);
+    return category ? category.name : "Categoría no encontrada";
+  };
 
   const getAccountName = (accountId) => {
     const account = accounts.find((acc) => acc.id === accountId);
@@ -120,26 +164,32 @@ const TransactionsDashboard = () => {
     let filtered = entriesToFilter;
 
     // Apply month filter
-    filtered = filtered.filter(
-      (entry) => {
-        const entryDate = new Date(entry.date);
-        return entryDate >= startOfMonth(currentMonth) && entryDate <= endOfMonth(currentMonth);
-      }
-    );
+    filtered = filtered.filter((entry) => {
+      const entryDate = new Date(entry.date);
+      return (
+        entryDate >= startOfMonth(currentMonth) &&
+        entryDate <= endOfMonth(currentMonth)
+      );
+    });
 
     // Apply search filter
     if (searchTerm) {
-      filtered = filtered.filter((entry) =>
-        entry.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (entry.note && entry.note.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (entry.category && entry.category.toLowerCase().includes(searchTerm.toLowerCase()))
+      filtered = filtered.filter(
+        (entry) =>
+          entry.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (entry.note &&
+            entry.note.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (entry.category &&
+            entry.category.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
     // Apply type filter
     if (filterType !== "all") {
-      filtered = filtered.filter((entry) => 
-        filterType === "transfer" ? entry.entryType === "transfer" : entry.type === filterType
+      filtered = filtered.filter((entry) =>
+        filterType === "transfer"
+          ? entry.entryType === "transfer"
+          : entry.type === filterType
       );
     }
 
@@ -154,7 +204,10 @@ const TransactionsDashboard = () => {
   // Pagination
   const indexOfLastEntry = currentPage * entriesPerPage;
   const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
-  const currentEntries = filteredEntries.slice(indexOfFirstEntry, indexOfLastEntry);
+  const currentEntries = filteredEntries.slice(
+    indexOfFirstEntry,
+    indexOfLastEntry
+  );
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
@@ -214,7 +267,10 @@ const TransactionsDashboard = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <Search className="absolute left-3 top-2.5 text-gray-400" size={20} />
+              <Search
+                className="absolute left-3 top-2.5 text-gray-400"
+                size={20}
+              />
             </div>
             <div className="flex items-center space-x-2">
               <Filter size={20} className="text-gray-400" />
@@ -235,13 +291,27 @@ const TransactionsDashboard = () => {
             <table className="min-w-full bg-white">
               <thead className="bg-gray-100">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comprobante</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cuenta</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Fecha
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Descripción
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Comprobante
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Cuenta
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Categoría
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Monto
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Tipo
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -251,29 +321,49 @@ const TransactionsDashboard = () => {
                       {formatDate(new Date(entry.date), "d MMM yyyy")}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{entry.description}</div>
-                      
+                      <div className="text-sm font-medium text-gray-900">
+                        {entry.description}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">ver foto</div>
-                      
+                      {entry.note ? (
+                        <button
+                          className="text-blue-500 hover:text-blue-600"
+                          onClick={() => openContentModal(entry.note)}
+                        >
+                          Ver contenido
+                        </button>
+                      ) : (
+                        "No hay contenido"
+                      )}
                     </td>
+
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {entry.entryType === "transfer"
-                        ? `${entry.fromAccountName} ➡️ ${entry.toAccountName}`
+                        ? `${getAccountName(
+                            entry.from_account_id
+                          )} ➡️ ${getAccountName(entry.to_account_id)}`
                         : getAccountName(entry.account_id)}
                     </td>
+
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {entry.category || "Sin categoría"}
+                      {getCategoryName(entry.category_id) || "Sin categoría"}
                     </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
-                      entry.type === "expense" ? "text-red-600" : "text-blue-600"
-                    }`}>
+
+                    <td
+                      className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
+                        entry.type === "expense"
+                          ? "text-red-600"
+                          : "text-blue-600"
+                      }`}
+                    >
                       {entry.type === "expense" ? "-" : "+"}
                       {formatCurrency(entry.amount)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {entry.entryType === "transfer" ? "Transferencia" : entry.type}
+                      {entry.entryType === "transfer"
+                        ? "Transferencia"
+                        : entry.type}
                     </td>
                   </tr>
                 ))}
@@ -283,12 +373,16 @@ const TransactionsDashboard = () => {
 
           {/* Pagination */}
           <div className="mt-4 flex justify-center">
-            {Array.from({ length: Math.ceil(filteredEntries.length / entriesPerPage) }).map((_, index) => (
+            {Array.from({
+              length: Math.ceil(filteredEntries.length / entriesPerPage),
+            }).map((_, index) => (
               <button
                 key={index}
                 onClick={() => paginate(index + 1)}
                 className={`mx-1 px-3 py-1 rounded ${
-                  currentPage === index + 1 ? "bg-blue-500 text-white" : "bg-gray-200"
+                  currentPage === index + 1
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200"
                 }`}
               >
                 {index + 1}
@@ -307,6 +401,12 @@ const TransactionsDashboard = () => {
             isOpen={isModalOpen}
             onClose={closeModal}
             onTransactionAdded={handleEntryAdded}
+          />
+
+          <NoteContentModal
+            isOpen={isContentModalOpen}
+            onClose={closeContentModal}
+            noteContent={selectedNoteContent}
           />
         </div>
       </main>

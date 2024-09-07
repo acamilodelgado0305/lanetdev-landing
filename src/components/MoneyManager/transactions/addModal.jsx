@@ -61,9 +61,7 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
       try {
         const uploadedImageUrl = await uploadImage(file);
         setImageUrl(uploadedImageUrl);
-        setNote(
-          (prevNote) => `${prevNote}\n[Imagen adjunta: ${uploadedImageUrl}]`
-        );
+        setNote((prevNote) => `${prevNote}\n${uploadedImageUrl}`);
       } catch (error) {
         console.error("Error al subir la imagen:", error);
         Swal.fire({
