@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
+import Picker from 'emoji-picker-react';
 
 function WhatsAppWeb() {
-    // Simulación de todos los usuarios
+    // Simulación de todos los usuarios con imágenes de perfil
     const users = [
-        { id: 1, name: "Carlos Pérez", phoneNumber: "+57 311 123 4567" },
-        { id: 2, name: "Ana Gómez", phoneNumber: "+57 312 987 6543" },
+        { id: 1, name: "Carlos Pérez", phoneNumber: "+57 311 123 4567", imgUrl: "https://res.cloudinary.com/dybws2ubw/image/upload/v1725383238/bmlszzrnu47gqdlimuud.png" },
+        { id: 2, name: "Ana Gómez", phoneNumber: "+57 312 987 6543", imgUrl: "https://res.cloudinary.com/dybws2ubw/image/upload/v1725144244/wgu6gwero5cmsm09gx5z.png" },
     ];
+
+    // Imagen por defecto para "Tú"
+    const userImg = "https://res.cloudinary.com/dybws2ubw/image/upload/v1725295051/azs8offjpdis1u4lmzyc.jpg";
 
     // Simulación de conversaciones
     const [conversations, setConversations] = useState([
@@ -29,6 +33,7 @@ function WhatsAppWeb() {
     // Estado para manejar el chat activo y el nuevo mensaje
     const [activeChat, setActiveChat] = useState(null);
     const [newMessage, setNewMessage] = useState("");  // Este es el nuevo mensaje que escribes
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);  // Controla si el selector de emojis está visible
 
     // Función para seleccionar un usuario y mostrar la conversación
     const handleSelectChat = (userId) => {
@@ -68,6 +73,47 @@ function WhatsAppWeb() {
         setNewMessage("");  // Limpiar el campo de texto
     };
 
+    // Función para obtener la imagen del cliente por su ID
+    const getUserImage = (userId) => {
+        const user = users.find(u => u.id === userId);
+        return user ? user.imgUrl : "";
+    };
+
+    // Función para agregar emoji al mensaje
+    const onEmojiClick = (emojiObject) => {
+        setNewMessage(prevMessage => prevMessage + emojiObject.emoji);
+        setShowEmojiPicker(false);  // Cierra el selector de emojis después de seleccionar uno
+    };
+
+    // Función para manejar el envío de archivos
+    const handleFileUpload = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const newMsg = {
+                text: `Envío de archivo: ${file.name}`,
+                fromUser: true,
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+
+            // Agregar el mensaje de archivo a la conversación activa
+            const updatedConversations = conversations.map(convo => {
+                if (convo.userId === activeChat.userId) {
+                    return {
+                        ...convo,
+                        messages: [...convo.messages, newMsg]
+                    };
+                }
+                return convo;
+            });
+
+            setConversations(updatedConversations);
+            setActiveChat({
+                ...activeChat,
+                messages: [...activeChat.messages, newMsg]
+            });
+        }
+    };
+
     return (
         <div className="flex h-screen">
             {/* Columna izquierda: Lista de usuarios */}
@@ -77,11 +123,18 @@ function WhatsAppWeb() {
                     {users.map((user) => (
                         <li
                             key={user.id}
-                            className="p-3 cursor-pointer bg-gray-700 hover:bg-gray-600 rounded-lg"
+                            className="p-3 cursor-pointer bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center"
                             onClick={() => handleSelectChat(user.id)}  // Llama a la función cuando haces clic en un usuario
                         >
-                            <strong>{user.name}</strong><br />
-                            <small className="text-gray-400">{user.phoneNumber}</small>
+                            <img
+                                src={user.imgUrl}
+                                alt={user.name}
+                                className="w-12 h-12 rounded-full mr-4"
+                            />
+                            <div>
+                                <strong>{user.name}</strong><br />
+                                <small className="text-gray-400">{user.phoneNumber}</small>
+                            </div>
                         </li>
                     ))}
                 </ul>
@@ -97,17 +150,52 @@ function WhatsAppWeb() {
                             {activeChat.messages.map((message, index) => (
                                 <div
                                     key={index}
-                                    className={`mb-3 p-3 rounded-lg max-w-md ${message.fromUser ? 'bg-blue-500 text-white self-end' : 'bg-gray-300 self-start'}`}
+                                    className={`mb-3 flex items-center ${message.fromUser ? 'justify-end' : 'justify-start'}`}
                                 >
-                                    <strong>{message.fromUser ? "Tú" : "Cliente"}:</strong> {message.text}
-                                    <br />
-                                    <small className="text-xs text-gray-500">{message.timestamp}</small>
+                                    {/* Imagen del usuario o cliente */}
+                                    {!message.fromUser ? (
+                                        <img
+                                            src={getUserImage(activeChat.userId)}
+                                            alt="Cliente"
+                                            className="w-8 h-8 rounded-full mr-2"
+                                        />
+                                    ) : (
+                                        <img
+                                            src={userImg}
+                                            alt="Tú"
+                                            className="w-8 h-8 rounded-full mr-2"
+                                        />
+                                    )}
+
+                                    {/* Mensaje */}
+                                    <div className={`p-3 rounded-lg max-w-md ${message.fromUser ? 'bg-primary text-white' : 'bg-gray-300'}`}>
+                                        <strong>{message.fromUser ? "Tú" : "Cliente"}:</strong> {message.text}
+                                        <br />
+                                        <small className="text-xs text-gray-900">{message.timestamp}</small>
+                                    </div>
                                 </div>
                             ))}
                         </div>
 
-                        {/* Input para escribir y enviar mensajes */}
-                        <div className="p-4 bg-gray-200 flex items-center space-x-4">
+                        {/* Barra de enviar mensaje, emojis y archivos */}
+                        <div className="p-4 bg-gray-200 flex items-center space-x-4 fixed bottom-0 w-[65%]">
+                            <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="px-2">
+                                😀
+                            </button>
+                            {showEmojiPicker && (
+                                <div className="absolute bottom-14">
+                                    <Picker onEmojiClick={onEmojiClick} />
+                                </div>
+                            )}
+                            <input
+                                type="file"
+                                onChange={handleFileUpload}
+                                className="hidden"
+                                id="fileInput"
+                            />
+                            <label htmlFor="fileInput" className="cursor-pointer">
+                                📎
+                            </label>
                             <input
                                 type="text"
                                 value={newMessage}
