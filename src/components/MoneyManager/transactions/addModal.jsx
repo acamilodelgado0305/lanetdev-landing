@@ -19,6 +19,7 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
   const [accounts, setAccounts] = useState([]);
   const [imageUrl, setImageUrl] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [isRecurring, setIsRecurring] = useState(false); // Nuevo estado para el campo recurrente
 
   const currentDate = new Date().toISOString().split("T")[0];
 
@@ -101,6 +102,7 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
         description: description,
         accountId: parseInt(account, 10),
         categoryId: parseInt(category, 10),
+        isRecurring,
       };
       endpoint = `${apiUrl}/transactions`;
     }
@@ -174,31 +176,28 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
           <div className="w-2/3 p-4 space-y-4">
             <div className="flex justify-between space-x-2">
               <button
-                className={`flex-1 py-2 rounded-full ${
-                  transactionType === "income"
-                    ? "bg-green-500 text-white"
-                    : "bg-gray-200 text-gray-800"
-                }`}
+                className={`flex-1 py-2 rounded-full ${transactionType === "income"
+                  ? "bg-green-500 text-white"
+                  : "bg-gray-200 text-gray-800"
+                  }`}
                 onClick={() => setTransactionType("income")}
               >
                 Ingreso
               </button>
               <button
-                className={`flex-1 py-2 rounded-full ${
-                  transactionType === "expense"
-                    ? "bg-red-500 text-white"
-                    : "bg-gray-200 text-gray-800"
-                }`}
+                className={`flex-1 py-2 rounded-full ${transactionType === "expense"
+                  ? "bg-red-500 text-white"
+                  : "bg-gray-200 text-gray-800"
+                  }`}
                 onClick={() => setTransactionType("expense")}
               >
                 Gasto
               </button>
               <button
-                className={`flex-1 py-2 rounded-full ${
-                  transactionType === "Transferencia"
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-200 text-gray-800"
-                }`}
+                className={`flex-1 py-2 rounded-full ${transactionType === "Transferencia"
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200 text-gray-800"
+                  }`}
                 onClick={() => setTransactionType("Transferencia")}
               >
                 Transferencia
@@ -328,6 +327,23 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
                 </div>
               </>
             )}
+            {/* Solo mostrar checkbox si no es una transferencia */}
+            {transactionType !== "Transferencia" && (
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="recurring"
+                  checked={isRecurring}
+                  onChange={(e) => setIsRecurring(e.target.checked)}
+                />
+                <label
+                  htmlFor="recurring"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Recurrente
+                </label>
+              </div>
+            )}
           </div>
 
           <div className="w-1/3 p-4 border-l border-gray-200">
@@ -374,4 +390,5 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
     </div>
   );
 };
+
 export default AddEntryModal;

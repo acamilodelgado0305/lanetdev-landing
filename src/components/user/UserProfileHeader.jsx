@@ -25,7 +25,7 @@ const UserProfileHeader = ({ onToggle }) => {
         <div className="border-b border-gray-200">
             <div className="flex items-center justify-between h-16 px-4">
                 <img
-                    src="https://res.cloudinary.com/dybws2ubw/image/upload/v1724197589/LOGO_qgczyj.png"
+                    src="https://res.cloudinary.com/djbe9agfz/image/upload/v1726013391/LOGO_i1vjvs.png"
                     alt="Logo Lanet"
                     className="ml-4 h-10 rounded-full"
                 />
