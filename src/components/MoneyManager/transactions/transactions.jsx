@@ -20,7 +20,16 @@ import {
   getTransfers,
   getAccounts,
   getCategories,
+  deleteTransaction
 } from "../../../services/moneymanager/moneyService";
+import { Table, Input, Button, Dropdown, Menu, Modal, message } from "antd";
+import {
+  FaTrashAlt,
+  FaUserEdit,
+  FaSearch,
+  FaFilter,
+  FaDownload,
+} from "react-icons/fa";
 
 import NoteContentModal from "./ViewImageModal";
 
@@ -89,7 +98,6 @@ const TransactionsDashboard = () => {
       );
       setEntries(sortedEntries);
       applyFilters(sortedEntries);
-      console.log(sortedEntries);
     } catch (err) {
       setError("Error al cargar las entradas");
       console.error("Error fetching entries:", err);
@@ -215,6 +223,24 @@ const TransactionsDashboard = () => {
     return <div className="text-center text-red-500 p-4">{error}</div>;
   }
 
+
+  const handleDelete = async (id) => {
+    Modal.confirm({
+      title: '¿Está seguro de que desea eliminar esta transaccion?',
+      content: 'Esta acción no se puede deshacer.',
+      onOk: async () => {
+        try {
+          await deleteTransaction(id);
+          setEntries(sortedEntries.filter((sortedEntries) => sortedEntries.id !== id));
+          message.success("Transaccion eliminada con éxito");
+        } catch (error) {
+          console.error("Error al eliminar la transaccion:", error);
+          message.error("Error al eliminar el transaccion");
+        }
+      },
+    });
+  };
+
   return (
     <div className="bg-gray-100 min-h-screen w-full p-4">
       <main className="max-full mx-auto">
@@ -312,6 +338,10 @@ const TransactionsDashboard = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Tipo
                   </th>
+
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Acciones
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -364,6 +394,15 @@ const TransactionsDashboard = () => {
                       {entry.entryType === "transfer"
                         ? "Transferencia"
                         : entry.type}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <Button
+                        icon={<FaTrashAlt />}
+                        onClick={() => handleDelete(entry.id)}
+                        danger
+                      />
+
+                      <Button icon={<FaUserEdit />} type="primary" />
                     </td>
                   </tr>
                 ))}

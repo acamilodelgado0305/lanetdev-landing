@@ -55,15 +55,10 @@ const IndexMoneyManager = () => {
               Cuentas
             </NavLink>
 
-            <NavLink to="/index/moneymanager/categorias" icon={User}>
-              Categorias
-            </NavLink>
             <NavLink to="/index/moneymanager/estadisticas" icon={BarChart2}>
               Estadísticas
             </NavLink>
-            <NavLink to="/index/moneymanager/option2" icon={CiSettings}>
-              Configuración
-            </NavLink>
+
             <div className="relative">
               <button
                 onClick={toggleDropdown}
@@ -74,8 +69,11 @@ const IndexMoneyManager = () => {
               </button>
               {isDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-20">
-                  <NavLink to="/index/moneymanager/transactions2" icon={Send}>
-                    Diarias
+                  <NavLink to="/index/moneymanager/categorias" icon={User}>
+                    Categorias
+                  </NavLink>
+                  <NavLink to="/index/moneymanager/option2" icon={CiSettings}>
+                    Configuración
                   </NavLink>
                 </div>
               )}
