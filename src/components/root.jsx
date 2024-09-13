@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { Outlet, Link } from "react-router-dom";
-import { Home, FileText, Users, ShoppingCart, Book, DollarSign, MessageCircle } from "lucide-react";
+import { Home, FileText, Users, ShoppingCart, Book, DollarSign, MessageCircle, Menu } from "lucide-react"; // Importamos el icono de hamburguesa
 import Header from '../components/header/Header';
 import UserProfileHeader from './user/UserProfileHeader';
 
@@ -43,10 +43,18 @@ export default function Root() {
 
   return (
     <div className="flex h-screen">
+      {/* Botón de menú hamburguesa (solo visible en pantallas pequeñas) */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="lg:hidden fixed top-4 left-1 z-50 text-white p-2 bg-primary rounded-md"
+      >
+        <Menu className="w-6 h-6" />
+      </button>
+
       {/* Sidebar */}
       <aside
         className={`${isOpen ? "translate-x-0" : "-translate-x-full"
-          } fixed inset-y-0 left-0 z-50 w-64 bg-primary border-r border-gray-200 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}
+          } fixed inset-y-0 left-0 z-40 w-64 bg-primary border-r border-gray-200 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}
       >
         <UserProfileHeader onToggle={() => setIsOpen(false)} />
 
