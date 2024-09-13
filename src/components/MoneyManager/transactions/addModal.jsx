@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { IoClose } from "react-icons/io5";
 import Swal from "sweetalert2";
 import { uploadImage } from "../../../services/apiService";
+import InputField from "../transactions/components/InputField";
+import SelectField from "../transactions/components/SelectField";
 
 const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
   const apiUrl = import.meta.env.VITE_API_FINANZAS;
@@ -19,7 +21,7 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
   const [accounts, setAccounts] = useState([]);
   const [imageUrl, setImageUrl] = useState("");
   const [isUploading, setIsUploading] = useState(false);
-  const [isRecurring, setIsRecurring] = useState(false); // Nuevo estado para el campo recurrente
+  const [isRecurring, setIsRecurring] = useState(false);
 
   const currentDate = new Date().toISOString().split("T")[0];
 
@@ -54,7 +56,6 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
     const formattedAmount = new Intl.NumberFormat("es-CO").format(value);
     setAmount(formattedAmount);
   };
-
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -154,49 +155,40 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
   const filteredCategories = categories.filter(
     (cat) => cat.type === transactionType
   );
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl">
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800">
+        <div className="flex items-center justify-between p-4 border-b">
+          <h2 className="text-xl font-semibold">
             {transactionType === "Transferencia"
               ? "Nueva Transferencia"
               : "Nueva Transacción"}
           </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-600 hover:text-gray-800"
-          >
+          <button onClick={onClose}>
             <IoClose size={24} />
           </button>
         </div>
 
         <div className="flex">
           <div className="w-2/3 p-4 space-y-4">
+            {/* Botones de tipo de transacción */}
             <div className="flex justify-between space-x-2">
               <button
-                className={`flex-1 py-2 rounded-full ${transactionType === "income"
-                  ? "bg-green-500 text-white"
-                  : "bg-gray-200 text-gray-800"
+                className={`flex-1 py-2 rounded-full ${transactionType === "income" ? "bg-green-500 text-white" : "bg-gray-200"
                   }`}
                 onClick={() => setTransactionType("income")}
               >
                 Ingreso
               </button>
               <button
-                className={`flex-1 py-2 rounded-full ${transactionType === "expense"
-                  ? "bg-red-500 text-white"
-                  : "bg-gray-200 text-gray-800"
+                className={`flex-1 py-2 rounded-full ${transactionType === "expense" ? "bg-red-500 text-white" : "bg-gray-200"
                   }`}
                 onClick={() => setTransactionType("expense")}
               >
                 Gasto
               </button>
               <button
-                className={`flex-1 py-2 rounded-full ${transactionType === "Transferencia"
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 text-gray-800"
+                className={`flex-1 py-2 rounded-full ${transactionType === "Transferencia" ? "bg-blue-500 text-white" : "bg-gray-200"
                   }`}
                 onClick={() => setTransactionType("Transferencia")}
               >
@@ -204,154 +196,66 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
               </button>
             </div>
 
-            <div>
-              <label
-                htmlFor="date"
-                className="block mb-1 text-sm font-medium text-gray-700"
-              >
-                Fecha
-              </label>
-              <input
-                type="date"
-                id="date"
-                value={currentDate}
-                className="w-full p-2 bg-gray-100 rounded border border-gray-300"
-                readOnly
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="amount"
-                className="block mb-1 text-sm font-medium text-gray-700"
-              >
-                Importe
-              </label>
-              <input
-                type="text"
-                id="amount"
-                value={amount}
-                onChange={handleAmountChange}
-                className="w-full p-2 bg-gray-100 rounded border border-gray-300"
-                placeholder="0.00"
-              />
-            </div>
+            <InputField label="Fecha" id="date" value={currentDate} readOnly />
+            <InputField
+              label="Importe"
+              id="amount"
+              value={amount}
+              onChange={handleAmountChange}
+              placeholder="0.00"
+            />
 
             {transactionType === "Transferencia" ? (
               <>
-                <div>
-                  <label
-                    htmlFor="fromAccount"
-                    className="block mb-1 text-sm font-medium text-gray-700"
-                  >
-                    Cuenta de Origen
-                  </label>
-                  <select
-                    id="fromAccount"
-                    value={fromAccount}
-                    onChange={(e) => setFromAccount(e.target.value)}
-                    className="w-full p-2 bg-gray-100 rounded border border-gray-300"
-                  >
-                    <option value="">Selecciona una cuenta de origen</option>
-                    {accounts.map((act) => (
-                      <option key={act.id} value={act.id}>
-                        {act.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label
-                    htmlFor="toAccount"
-                    className="block mb-1 text-sm font-medium text-gray-700"
-                  >
-                    Cuenta de Destino
-                  </label>
-                  <select
-                    id="toAccount"
-                    value={toAccount}
-                    onChange={(e) => setToAccount(e.target.value)}
-                    className="w-full p-2 bg-gray-100 rounded border border-gray-300"
-                  >
-                    <option value="">Selecciona una cuenta de destino</option>
-                    {accounts.map((act) => (
-                      <option key={act.id} value={act.id}>
-                        {act.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <SelectField
+                  label="Cuenta de Origen"
+                  id="fromAccount"
+                  value={fromAccount}
+                  onChange={(e) => setFromAccount(e.target.value)}
+                  options={accounts}
+                />
+                <SelectField
+                  label="Cuenta de Destino"
+                  id="toAccount"
+                  value={toAccount}
+                  onChange={(e) => setToAccount(e.target.value)}
+                  options={accounts}
+                />
               </>
             ) : (
               <>
-                <div>
-                  <label
-                    htmlFor="category"
-                    className="block mb-1 text-sm font-medium text-gray-700"
-                  >
-                    Categoría
+                <SelectField
+                  label="Categoría"
+                  id="category"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  options={filteredCategories}
+                />
+                <SelectField
+                  label="Cuenta"
+                  id="account"
+                  value={account}
+                  onChange={(e) => setAccount(e.target.value)}
+                  options={accounts}
+                />
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="recurring"
+                    checked={isRecurring}
+                    onChange={(e) => setIsRecurring(e.target.checked)}
+                  />
+                  <label htmlFor="recurring" className="text-sm font-medium">
+                    Recurrente
                   </label>
-                  <select
-                    id="category"
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full p-2 bg-gray-100 rounded border border-gray-300"
-                  >
-                    <option value="">Selecciona una categoría</option>
-                    {filteredCategories.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label
-                    htmlFor="account"
-                    className="block mb-1 text-sm font-medium text-gray-700"
-                  >
-                    Cuenta
-                  </label>
-                  <select
-                    id="account"
-                    value={account}
-                    onChange={(e) => setAccount(e.target.value)}
-                    className="w-full p-2 bg-gray-100 rounded border border-gray-300"
-                  >
-                    <option value="">Selecciona una cuenta</option>
-                    {accounts.map((act) => (
-                      <option key={act.id} value={act.id}>
-                        {act.name}
-                      </option>
-                    ))}
-                  </select>
                 </div>
               </>
             )}
-            {/* Solo mostrar checkbox si no es una transferencia */}
-            {transactionType !== "Transferencia" && (
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="recurring"
-                  checked={isRecurring}
-                  onChange={(e) => setIsRecurring(e.target.checked)}
-                />
-                <label
-                  htmlFor="recurring"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Recurrente
-                </label>
-              </div>
-            )}
           </div>
 
-          <div className="w-1/3 p-4 border-l border-gray-200">
+          <div className="w-1/3 p-4 border-l">
             <div className="mb-4">
-              <label
-                htmlFor="imageUpload"
-                className="block mb-1 text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="imageUpload" className="block mb-1">
                 Subir Imagen
               </label>
               <input
@@ -359,29 +263,21 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
                 id="imageUpload"
                 accept="image/*"
                 onChange={handleImageUpload}
-                className="w-full p-2 bg-gray-100 rounded border border-gray-300"
+                className="w-full p-2 bg-gray-100 rounded border"
                 disabled={isUploading}
               />
-              {isUploading && (
-                <p className="text-sm text-gray-500 mt-1">Subiendo imagen...</p>
-              )}
+              {isUploading && <p>Subiendo imagen...</p>}
             </div>
             {imageUrl && (
-              <div className="mt-2">
-                <img
-                  src={imageUrl}
-                  alt="Imagen adjunta"
-                  className="max-w-full h-auto rounded"
-                />
-              </div>
+              <img src={imageUrl} alt="Imagen adjunta" className="rounded" />
             )}
           </div>
         </div>
 
-        <div className="flex justify-end p-4 border-t border-gray-200">
+        <div className="flex justify-end p-4 border-t">
           <button
             onClick={handleSave}
-            className="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition"
+            className="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600"
           >
             Guardar
           </button>
