@@ -263,7 +263,7 @@ const TransactionsDashboard = () => {
             </button>
           </div>
 
-          <div className="grid grid-cols-3 gap-6 mb-8">
+          <div className="grid  grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="bg-blue-50 p-4 rounded-lg">
               <p className="text-sm text-gray-600 mb-1">Ingreso</p>
               <p className="text-2xl font-bold text-blue-600">
@@ -284,17 +284,17 @@ const TransactionsDashboard = () => {
             </div>
           </div>
 
-          <div className="mb-6 flex justify-between items-center">
+          <div className="mb-6 flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:justify-between sm:items-center">
             <div className="relative">
               <input
                 type="text"
                 placeholder="Buscar transacciones..."
-                className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="mx-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pl-10 pr-4 py-2"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
               <Search
-                className="absolute left-3 top-2.5 text-gray-400"
+                className="ml-[94%] md:ml-[245px] -mt-8 transform -translate-y-1/2 text-gray-400"
                 size={20}
               />
             </div>
@@ -371,8 +371,8 @@ const TransactionsDashboard = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {entry.entryType === "transfer"
                         ? `${getAccountName(
-                            entry.from_account_id
-                          )} ➡️ ${getAccountName(entry.to_account_id)}`
+                          entry.from_account_id
+                        )} ➡️ ${getAccountName(entry.to_account_id)}`
                         : getAccountName(entry.account_id)}
                     </td>
 
@@ -381,11 +381,10 @@ const TransactionsDashboard = () => {
                     </td>
 
                     <td
-                      className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
-                        entry.type === "expense"
-                          ? "text-red-600"
-                          : "text-blue-600"
-                      }`}
+                      className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${entry.type === "expense"
+                        ? "text-red-600"
+                        : "text-blue-600"
+                        }`}
                     >
                       {entry.type === "expense" ? "-" : "+"}
                       {formatCurrency(entry.amount)}
@@ -418,11 +417,10 @@ const TransactionsDashboard = () => {
               <button
                 key={index}
                 onClick={() => paginate(index + 1)}
-                className={`mx-1 px-3 py-1 rounded ${
-                  currentPage === index + 1
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-200"
-                }`}
+                className={`mx-1 px-3 py-1 rounded ${currentPage === index + 1
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200"
+                  }`}
               >
                 {index + 1}
               </button>

@@ -4,12 +4,12 @@ import ReactDatePicker from 'react-datepicker';
 import { useNavigate } from 'react-router-dom';
 import 'react-datepicker/dist/react-datepicker.css';
 
-export default function Header({ unreadEmailsCount }) {  // Recibe unreadEmailsCount como prop
+export default function Header({ unreadEmailsCount }) {
     const [startDate, setStartDate] = useState(new Date());
     const [notifications, setNotifications] = useState(3);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const datePickerRef = useRef(null);
-    const navigate = useNavigate(); // Inicializa useNavigate
+    const navigate = useNavigate();
 
     // Oculta el DatePicker al hacer clic fuera de él
     const handleClickOutside = (event) => {
@@ -38,13 +38,15 @@ export default function Header({ unreadEmailsCount }) {  // Recibe unreadEmailsC
 
     return (
         <div className="flex items-center justify-between w-full bg-white p-2 shadow-sm">
+            {/* Buscador, oculto en pantallas pequeñas */}
             <input
                 type="text"
                 placeholder="Buscar..."
-                className="border rounded-md p-1 w-1/4 text-sm mx-4"
+                className="hidden lg:block border rounded-md p-1 w-1/4 text-sm mx-4"
             />
 
-            <div className="flex space-x-4 text-gray-700 items-center relative">
+            {/* Iconos, alineados a la derecha en pantallas pequeñas */}
+            <div className="flex-grow flex mt-6 justify-end space-x-6 text-gray-700 items-center relative">
                 {/* Icono de notificaciones con contador */}
                 <div className="relative">
                     <BsFillBellFill className="text-xl cursor-pointer hover:text-gray-500" />
