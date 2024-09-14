@@ -115,6 +115,16 @@ export const getTransactions = async () => {
     }
 };
 
+export const deleteTransaction = async (id) => {
+    try {
+        const response = await moneyApi.delete(`/transactions/${categorieId}`);
+        return response.data;
+    } catch (error) {
+        console.error('Error al eliminar la transacciòn:', error);
+        throw error;
+    }
+};
+
 
 //--------------------------------------TRANSFERS----------------------------------------------------------------------------
 

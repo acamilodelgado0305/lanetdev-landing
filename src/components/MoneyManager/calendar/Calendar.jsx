@@ -1,32 +1,58 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Badge, Spin, ConfigProvider } from 'antd';
-import 'antd/dist/reset.css'; // Asegúrate de incluir los estilos de Ant Design
-import esES from 'antd/locale/es_ES'; // Importa la localización en español
+import 'antd/dist/reset.css';
+import esES from 'antd/locale/es_ES';
+import { getTransactions } from "../../../services/moneymanager/moneyService";
 
 const FullScreenCalendar = () => {
     const [events, setEvents] = useState({});
     const [loading, setLoading] = useState(true);
 
-    // Simulamos la obtención de datos desde una API
     useEffect(() => {
-        setTimeout(() => {
-            // Simulación de datos de eventos en español
-            const fetchedEvents = {
-                '2024-09-11': [
-                    { type: 'success', content: 'Reunión de trabajo con el equipo' },
-                    { type: 'warning', content: 'Entrega del proyecto final' },
-                ],
-                '2024-09-12': [
-                    { type: 'error', content: 'Cita médica importante' },
-                ],
-                '2024-09-14': [
-                    { type: 'success', content: 'Evento de la empresa: Día de integración' },
-                ],
-            };
-            setEvents(fetchedEvents);
-            setLoading(false);
-        }, 2000); // Simulamos una espera de 2 segundos
+        fetchTransactions();
     }, []);
+
+    const fetchTransactions = async () => {
+        try {
+            const transactions = await getTransactions();
+            const processedEvents = processRecurringTransactions(transactions);
+            setEvents(processedEvents);
+            setLoading(false);
+        } catch (error) {
+            console.error("Error fetching transactions:", error);
+            setLoading(false);
+        }
+    };
+
+    const processRecurringTransactions = (transactions) => {
+        const processedEvents = {};
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth();
+
+        transactions.forEach(transaction => {
+            if (transaction.recurrent) {
+                const date = new Date(transaction.date);
+                
+                // Generacion de los siguientes meses
+                for (let i = 0; i < 12; i++) {
+                    const nextDate = new Date(currentYear, currentMonth + i, date.getDate());
+                    const formattedDate = nextDate.toISOString().split('T')[0];
+                    
+                    if (!processedEvents[formattedDate]) {
+                        processedEvents[formattedDate] = [];
+                    }
+                    
+                    processedEvents[formattedDate].push({
+                        type: transaction.type === 'income' ? 'success' : 'error',
+                        content: `${transaction.description} - $${transaction.amount}`
+                    });
+                }
+            }
+        });
+
+        return processedEvents;
+    };
 
     const getListData = (value) => {
         const date = value.format('YYYY-MM-DD');
@@ -36,9 +62,9 @@ const FullScreenCalendar = () => {
     const dateCellRender = (value) => {
         const listData = getListData(value);
         return (
-            <ul className="events">
+            <ul className="events" style={{ listStyleType: 'none', padding: 0 }}>
                 {listData.map((item, index) => (
-                    <li key={index}>
+                    <li key={index} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         <Badge status={item.type} text={item.content} />
                     </li>
                 ))}
@@ -48,11 +74,11 @@ const FullScreenCalendar = () => {
 
     return (
         <ConfigProvider locale={esES}>
-            <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <div style={{ height: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {loading ? (
                     <Spin size="large" />
                 ) : (
-                    <Calendar dateCellRender={dateCellRender} />
+                    <Calendar dateCellRender={dateCellRender} fullscreen={true} />
                 )}
             </div>
         </ConfigProvider>
