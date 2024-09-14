@@ -6,6 +6,7 @@ import {
   Send,
   MoreHorizontal,
   User,
+  DollarSign
 } from "lucide-react";
 import { CiSettings } from "react-icons/ci";
 
@@ -51,12 +52,21 @@ const IndexMoneyManager = () => {
               Transacciones
             </NavLink>
 
-            <NavLink to="/index/moneymanager/accounts" icon={CreditCard}>
+            <NavLink to="/index/moneymanager/accounts" icon={DollarSign}>
               Cuentas
             </NavLink>
 
+            <NavLink to="/index/moneymanager/categorias" icon={User}>
+              Categorias
+            </NavLink>
+            <NavLink to="/index/moneymanager/calendario" icon={CreditCard}>
+              Calendario
+            </NavLink>
             <NavLink to="/index/moneymanager/estadisticas" icon={BarChart2}>
               Estadísticas
+            </NavLink>
+            <NavLink to="/index/moneymanager/option2" icon={CiSettings}>
+              Configuración
             </NavLink>
 
             <div className="relative">

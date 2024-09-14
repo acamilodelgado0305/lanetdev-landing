@@ -4,10 +4,9 @@ import ReactDatePicker from 'react-datepicker';
 import { useNavigate } from 'react-router-dom';
 import 'react-datepicker/dist/react-datepicker.css';
 
-export default function Header() {
+export default function Header({ unreadEmailsCount }) {  // Recibe unreadEmailsCount como prop
     const [startDate, setStartDate] = useState(new Date());
     const [notifications, setNotifications] = useState(3);
-    const [emails, setEmails] = useState(5);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const datePickerRef = useRef(null);
     const navigate = useNavigate(); // Inicializa useNavigate
@@ -56,12 +55,12 @@ export default function Header() {
                     )}
                 </div>
 
-                {/* Icono de correos con contador */}
+                {/* Icono de correos con contador dinámico */}
                 <div className="relative" onClick={handleEmailClick}>
                     <BsEnvelopeFill className="text-xl cursor-pointer hover:text-gray-500" />
-                    {emails > 0 && (
+                    {unreadEmailsCount > 0 && (
                         <span className="absolute -top-3 right-0 inline-flex items-center justify-center px-2 py-1 text-[9px] font-bold leading-none text-red-100 bg-primary rounded-full">
-                            {emails}
+                            {unreadEmailsCount}
                         </span>
                     )}
                 </div>
