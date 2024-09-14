@@ -134,38 +134,37 @@ const FullScreenCalendar = () => {
 
     return (
         <ConfigProvider locale={esES}>
-            <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                {loading ? (
-                    <Spin size="large" />
-                ) : (
-                    <>
-                        <div className="relative ">
-                            <div className="absolute top-3 right-72 z-10 flex items-center space-x-2">
-                                <Dropdown overlay={renderMenu()} trigger={['click']}>
-                                    <button className="flex items-center border border-gray-200 rounded-md px-3 py-1 cursor-pointer hover:border-blue-500 transition-colors duration-200">
-                                        <EllipsisOutlined style={{ fontSize: '24px', cursor: 'pointer' }} />
-                                        <span className="ml-2">Pagos</span>
-                                    </button>
-                                </Dropdown>
-                            </div>
-
-                            {/* Calendario */}
-                            <Calendar dateCellRender={dateCellRender} />
+            <div style={{ height: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>      {loading ? (
+                <Spin size="large" />
+            ) : (
+                <>
+                    <div className="relative ">
+                        <div className="absolute top-3 right-72 z-10 flex items-center space-x-2">
+                            <Dropdown overlay={renderMenu()} trigger={['click']}>
+                                <button className="flex items-center border border-gray-200 rounded-md px-3 py-1 cursor-pointer hover:border-blue-500 transition-colors duration-200">
+                                    <EllipsisOutlined style={{ fontSize: '24px', cursor: 'pointer' }} />
+                                    <span className="ml-2">Pagos</span>
+                                </button>
+                            </Dropdown>
                         </div>
 
-                        {/* Modal para detalles del pago */}
-                        <div>
-                            <Modal
-                                title="Detalles del Pago"
-                                visible={isModalVisible}
-                                onOk={handleModalOk}
-                                onCancel={handleModalCancel}
-                            >
-                                <p>{selectedEvent} - Aquí podrías realizar el pago</p>
-                            </Modal>
-                        </div>
-                    </>
-                )}
+                        {/* Calendario */}
+                        <Calendar dateCellRender={dateCellRender} />
+                    </div>
+
+                    {/* Modal para detalles del pago */}
+                    <div>
+                        <Modal
+                            title="Detalles del Pago"
+                            visible={isModalVisible}
+                            onOk={handleModalOk}
+                            onCancel={handleModalCancel}
+                        >
+                            <p>{selectedEvent} - Aquí podrías realizar el pago</p>
+                        </Modal>
+                    </div>
+                </>
+            )}
             </div>
         </ConfigProvider>
     );
