@@ -74,7 +74,7 @@ const FullScreenCalendar = () => {
 
     return (
         <ConfigProvider locale={esES}>
-            <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <div style={{ height: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {loading ? (
                     <Spin size="large" />
                 ) : (
