@@ -3,6 +3,7 @@ import { Calendar, Badge, Spin, ConfigProvider, Modal, Checkbox, Button, Dropdow
 import { EllipsisOutlined } from '@ant-design/icons';
 import 'antd/dist/reset.css';
 import esES from 'antd/locale/es_ES';
+import { getTransactions } from "../../../services/moneymanager/moneyService";
 
 const FullScreenCalendar = () => {
     const [events, setEvents] = useState({});
@@ -11,25 +12,53 @@ const FullScreenCalendar = () => {
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [isListVisible, setIsListVisible] = useState(false);
 
-    // Simulamos la obtención de datos desde una API
+    // Fetch real transactions from API
     useEffect(() => {
-        setTimeout(() => {
-            const fetchedEvents = {
-                '2024-09-11': [
-                    { type: 'success', content: 'Pago recibo luz', paid: true },
-                    { type: 'warning', content: 'Pago a Elvis', paid: false },
-                ],
-                '2024-09-12': [
-                    { type: 'error', content: 'Pago a Camilo', paid: false },
-                ],
-                '2024-09-14': [
-                    { type: 'success', content: 'Pago Arriendo', paid: true },
-                ],
-            };
-            setEvents(fetchedEvents);
-            setLoading(false);
-        }, 2000);
+        fetchTransactions();
     }, []);
+
+    const fetchTransactions = async () => {
+        try {
+            const transactions = await getTransactions();
+            const processedEvents = processRecurringTransactions(transactions);
+            setEvents(processedEvents);
+            setLoading(false);
+        } catch (error) {
+            console.error("Error fetching transactions:", error);
+            setLoading(false);
+        }
+    };
+
+    const processRecurringTransactions = (transactions) => {
+        const processedEvents = {};
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth();
+
+        transactions.forEach(transaction => {
+            if (transaction.recurrent) {
+                const date = new Date(transaction.date);
+
+                // Generating the next 12 months for recurring transactions
+                for (let i = 0; i < 12; i++) {
+                    const nextDate = new Date(currentYear, currentMonth + i, date.getDate());
+                    const formattedDate = nextDate.toISOString().split('T')[0];
+
+                    if (!processedEvents[formattedDate]) {
+                        processedEvents[formattedDate] = [];
+                    }
+
+                    processedEvents[formattedDate].push({
+                        type: transaction.type === 'income' ? 'success' : 'error',
+                        content: `${transaction.description} - $${transaction.amount}`,
+                        paid: transaction.paid // Add paid status
+                    });
+                }
+            }
+        });
+
+        return processedEvents;
+    };
 
     const getListData = (value) => {
         const date = value.format('YYYY-MM-DD');
@@ -67,8 +96,7 @@ const FullScreenCalendar = () => {
                                 </Button>
                             ) : (
                                 <Checkbox onChange={() => handleCheckboxClick(event.content)}>
-                                    {event.content} - Pendiente de
-
+                                    {event.content} - Pendiente de pago
                                 </Checkbox>
                             )}
                         </Menu.Item>
@@ -83,7 +111,7 @@ const FullScreenCalendar = () => {
     const dateCellRender = (value) => {
         const listData = getListData(value);
         return (
-            <ul className="events">
+            <ul className="events" style={{ listStyleType: 'none', padding: 0 }}>
                 {listData.map((item, index) => (
                     <li key={index}>
                         {item.paid ? (
@@ -111,31 +139,31 @@ const FullScreenCalendar = () => {
                     <Spin size="large" />
                 ) : (
                     <>
-                        <div>
-                            <div className='absolute ml-[70%] mt-4'>
+                        <div className="relative ">
+                            <div className="absolute top-3 right-72 z-10 flex items-center space-x-2">
                                 <Dropdown overlay={renderMenu()} trigger={['click']}>
-                                    <EllipsisOutlined style={{ fontSize: '24px', cursor: 'pointer', marginBottom: '20px' }} />
+                                    <button className="flex items-center border border-gray-200 rounded-md px-3 py-1 cursor-pointer hover:border-blue-500 transition-colors duration-200">
+                                        <EllipsisOutlined style={{ fontSize: '24px', cursor: 'pointer' }} />
+                                        <span className="ml-2">Pagos</span>
+                                    </button>
                                 </Dropdown>
-
-                            </div>
-                            <div>
-                                <Calendar dateCellRender={dateCellRender}
-
-                                />
-
-                                <Modal
-                                    title="Detalles del Pago"
-                                    visible={isModalVisible}
-                                    onOk={handleModalOk}
-                                    onCancel={handleModalCancel}
-                                >
-                                    <p>{selectedEvent} - Aquí podrías realizar el pago</p>
-                                </Modal>
                             </div>
 
-
+                            {/* Calendario */}
+                            <Calendar dateCellRender={dateCellRender} />
                         </div>
 
+                        {/* Modal para detalles del pago */}
+                        <div>
+                            <Modal
+                                title="Detalles del Pago"
+                                visible={isModalVisible}
+                                onOk={handleModalOk}
+                                onCancel={handleModalCancel}
+                            >
+                                <p>{selectedEvent} - Aquí podrías realizar el pago</p>
+                            </Modal>
+                        </div>
                     </>
                 )}
             </div>

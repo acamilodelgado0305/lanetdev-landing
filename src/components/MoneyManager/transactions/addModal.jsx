@@ -51,11 +51,12 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
   }, []);
 
   const handleAmountChange = (e) => {
-    const value = e.target.value.replace(/\D/g, ""); // Elimina cualquier carácter no numérico
+    const value = e.target.value.replace(/\D/g, "");
     setRawAmount(value);
     const formattedAmount = new Intl.NumberFormat("es-CO").format(value);
     setAmount(formattedAmount);
   };
+
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -103,7 +104,7 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
         description: description,
         accountId: parseInt(account, 10),
         categoryId: parseInt(category, 10),
-        isRecurring,
+        recurrent: isRecurring,  // Updated to use the new recurrent field
       };
       endpoint = `${apiUrl}/transactions`;
     }
@@ -151,10 +152,10 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
 
   if (!isOpen) return null;
 
-  // Filtrar categorías según el tipo de transacción
   const filteredCategories = categories.filter(
     (cat) => cat.type === transactionType
   );
+  
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl">
@@ -174,22 +175,25 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
             {/* Botones de tipo de transacción */}
             <div className="flex justify-between space-x-2">
               <button
-                className={`flex-1 py-2 rounded-full ${transactionType === "income" ? "bg-green-500 text-white" : "bg-gray-200"
-                  }`}
+                className={`flex-1 py-2 rounded-full ${
+                  transactionType === "income" ? "bg-green-500 text-white" : "bg-gray-200"
+                }`}
                 onClick={() => setTransactionType("income")}
               >
                 Ingreso
               </button>
               <button
-                className={`flex-1 py-2 rounded-full ${transactionType === "expense" ? "bg-red-500 text-white" : "bg-gray-200"
-                  }`}
+                className={`flex-1 py-2 rounded-full ${
+                  transactionType === "expense" ? "bg-red-500 text-white" : "bg-gray-200"
+                }`}
                 onClick={() => setTransactionType("expense")}
               >
                 Gasto
               </button>
               <button
-                className={`flex-1 py-2 rounded-full ${transactionType === "Transferencia" ? "bg-blue-500 text-white" : "bg-gray-200"
-                  }`}
+                className={`flex-1 py-2 rounded-full ${
+                  transactionType === "Transferencia" ? "bg-blue-500 text-white" : "bg-gray-200"
+                }`}
                 onClick={() => setTransactionType("Transferencia")}
               >
                 Transferencia
@@ -203,6 +207,15 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
               value={amount}
               onChange={handleAmountChange}
               placeholder="0.00"
+            />
+            
+            {/* New input field for description */}
+            <InputField
+              label="Descripción"
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Añade una descripción"
             />
 
             {transactionType === "Transferencia" ? (
