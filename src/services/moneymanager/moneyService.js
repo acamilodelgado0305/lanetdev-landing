@@ -117,7 +117,7 @@ export const getTransactions = async () => {
 
 export const deleteTransaction = async (id) => {
     try {
-        const response = await moneyApi.delete(`/transactions/${categorieId}`);
+        const response = await moneyApi.delete(`/transactions/${id}`);
         return response.data;
     } catch (error) {
         console.error('Error al eliminar la transacciòn:', error);
@@ -135,6 +135,16 @@ export const getTransfers = async () => {
         return response.data;
     } catch (error) {
         console.error('Error al obtener las trasferencias:', error);
+        throw error;
+    }
+};
+
+export const deleteTransfer = async (id) => {
+    try {
+        const response = await moneyApi.delete(`/transfers/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error('Error al eliminar la transacciòn:', error);
         throw error;
     }
 };

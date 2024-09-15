@@ -5,7 +5,7 @@ import { uploadImage } from "../../../services/apiService";
 import InputField from "../transactions/components/InputField";
 import SelectField from "../transactions/components/SelectField";
 
-const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
+const AddEntryModal = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) => {
   const apiUrl = import.meta.env.VITE_API_FINANZAS;
 
   const [transactionType, setTransactionType] = useState("expense");
@@ -22,33 +22,57 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
   const [imageUrl, setImageUrl] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [isRecurring, setIsRecurring] = useState(false);
-
-  const currentDate = new Date().toISOString().split("T")[0];
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch(`${apiUrl}/categories`);
-        const data = await response.json();
-        setCategories(data);
-      } catch (error) {
-        console.error("Error al obtener las categorías:", error);
+    if (transactionToEdit) {
+      setIsEditing(true);
+      if (transactionToEdit.type === "transfer") {
+        setTransactionType("Transferencia");
+        setFromAccount(transactionToEdit.fromAccountId || "");
+        setToAccount(transactionToEdit.toAccountId || "");
+      } else {
+        setTransactionType(transactionToEdit.type || "expense");
+        setAccount(transactionToEdit.account_id);
+        setCategory(transactionToEdit.category_id|| "");
       }
-    };
+      setRawAmount(transactionToEdit.amount?.toString() || "");
+      setAmount(transactionToEdit.amount ? new Intl.NumberFormat("es-CO").format(transactionToEdit.amount) : "");
+      setNote(transactionToEdit.note || "");
+      setDescription(transactionToEdit.description || "");
+      setIsRecurring(transactionToEdit.recurrent || false);
+      setDate(transactionToEdit.date ? new Date(transactionToEdit.date).toISOString().split("T")[0] : new Date().toISOString().split("T")[0]);
+    } else {
+      resetForm();
+    }
+  }, [transactionToEdit])
 
-    const fetchAccounts = async () => {
-      try {
-        const response = await fetch(`${apiUrl}/accounts`);
-        const data = await response.json();
-        setAccounts(data);
-      } catch (error) {
-        console.error("Error al obtener las cuentas:", error);
-      }
-    };
-
+  useEffect(() => {
     fetchCategories();
     fetchAccounts();
   }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch(`${apiUrl}/categories`);
+      const data = await response.json();
+      setCategories(data);
+      console.log(data)
+    } catch (error) {
+      console.error("Error al obtener las categorías:", error);
+    }
+  };
+
+  const fetchAccounts = async () => {
+    try {
+      const response = await fetch(`${apiUrl}/accounts`);
+      const data = await response.json();
+      setAccounts(data);
+    } catch (error) {
+      console.error("Error al obtener las cuentas:", error);
+    }
+  };
 
   const handleAmountChange = (e) => {
     const value = e.target.value.replace(/\D/g, "");
@@ -82,6 +106,7 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
   const handleSave = async () => {
     let data;
     let endpoint;
+    let method;
 
     if (transactionType === "Transferencia") {
       data = {
@@ -89,7 +114,7 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
         fromAccountId: parseInt(fromAccount, 10),
         toAccountId: parseInt(toAccount, 10),
         amount: parseFloat(rawAmount),
-        date: new Date().toISOString(),
+        date: new Date(date).toISOString(),
         note: note,
         description: description,
       };
@@ -99,19 +124,26 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
         userId: 1,
         amount: parseFloat(rawAmount),
         type: transactionType.toLowerCase(),
-        date: new Date().toISOString(),
+        date: new Date(date).toISOString(),
         note: note,
         description: description,
         accountId: parseInt(account, 10),
         categoryId: parseInt(category, 10),
-        recurrent: isRecurring,  // Updated to use the new recurrent field
+        recurrent: isRecurring,
       };
       endpoint = `${apiUrl}/transactions`;
     }
 
+    if (isEditing) {
+      method = "PUT";
+      endpoint += `/${transactionToEdit.id}`;
+    } else {
+      method = "POST";
+    }
+
     try {
       const response = await fetch(endpoint, {
-        method: "POST",
+        method: method,
         headers: {
           "Content-Type": "application/json",
         },
@@ -121,21 +153,25 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
       if (response.ok) {
         Swal.fire({
           icon: "success",
-          title:
-            transactionType === "Transferencia"
-              ? "Transferencia realizada"
-              : "Transacción guardada",
-          text:
-            transactionType === "Transferencia"
-              ? "La transferencia se ha realizado correctamente."
-              : "La transacción se ha guardado correctamente.",
+          title: isEditing
+            ? "Transacción actualizada"
+            : transactionType === "Transferencia"
+            ? "Transferencia realizada"
+            : "Transacción guardada",
+          text: isEditing
+            ? "La transacción se ha actualizado correctamente."
+            : transactionType === "Transferencia"
+            ? "La transferencia se ha realizado correctamente."
+            : "La transacción se ha guardado correctamente.",
           confirmButtonColor: "#3085d6",
         });
         onClose();
         onTransactionAdded();
       } else {
         throw new Error(
-          transactionType === "Transferencia"
+          isEditing
+            ? "Error al actualizar la transacción"
+            : transactionType === "Transferencia"
             ? "Error al realizar la transferencia"
             : "Error al guardar la transacción"
         );
@@ -150,6 +186,22 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
     }
   };
 
+  const resetForm = () => {
+    setTransactionType("expense");
+    setAmount("");
+    setRawAmount("");
+    setCategory("");
+    setAccount("");
+    setFromAccount("");
+    setToAccount("");
+    setNote("");
+    setDescription("");
+    setImageUrl("");
+    setIsRecurring(false);
+    setDate(new Date().toISOString().split("T")[0]);
+    setIsEditing(false);
+  };
+
   if (!isOpen) return null;
 
   const filteredCategories = categories.filter(
@@ -161,7 +213,9 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
       <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl">
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-xl font-semibold">
-            {transactionType === "Transferencia"
+            {isEditing
+              ? "Editar Transacción"
+              : transactionType === "Transferencia"
               ? "Nueva Transferencia"
               : "Nueva Transacción"}
           </h2>
@@ -200,7 +254,13 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
               </button>
             </div>
 
-            <InputField label="Fecha" id="date" value={currentDate} readOnly />
+            <InputField
+              label="Fecha"
+              id="date"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
             <InputField
               label="Importe"
               id="amount"
@@ -209,7 +269,6 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
               placeholder="0.00"
             />
             
-            {/* New input field for description */}
             <InputField
               label="Descripción"
               id="description"
@@ -292,7 +351,7 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded }) => {
             onClick={handleSave}
             className="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600"
           >
-            Guardar
+            {isEditing ? "Actualizar" : "Guardar"}
           </button>
         </div>
       </div>
