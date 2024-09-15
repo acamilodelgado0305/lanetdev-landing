@@ -1,98 +1,194 @@
-import React, { useEffect, useState, useMemo } from "react";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
+import React, { useState, useEffect } from 'react';
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  PieChart, Pie, Cell,
+  LineChart, Line
+} from 'recharts';
+import { Card, Row, Col, Statistic, List, Typography } from 'antd';
+import { getAccounts, getCategories, getTransactions, getTransfers } from '../../../services/moneymanager/moneyService.js'; // Adjust the import path as needed
 
-import {
-  getTransactions,
-  getTransfers,
-  getAccounts,
-} from "../../../services/moneymanager/moneyService";
+const { Title } = Typography;
 
-function Estadisticas() {
-  const [entries, setEntries] = useState([]);
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
 
-  const fetchEntries = async () => {
-    try {
-      const [transactions, transfers] = await Promise.all([
-        getTransactions(),
-        getTransfers(),
-      ]);
+const Estadisticas = () => {
+  const [accounts, setAccounts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [transactions, setTransactions] = useState([]);
+  const [transfers, setTransfers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-      const allEntries = [
-        ...transactions.map((tx) => ({ ...tx, entryType: "transaction" })),
-        ...transfers.map((tf) => ({
-          ...tf,
-          entryType: "transfer",
-          fromAccountName: getAccountName(tf.from_account_id),
-          toAccountName: getAccountName(tf.to_account_id),
-        })),
-      ];
-
-      setEntries(allEntries);
-      updateFinancialSummary(allEntries);
-    } catch (err) {
-      setError("Error al cargar las entradas");
-      console.error("Error fetching entries:", err);
-    }
-  };
-
-  const chartData = useMemo(() => {
-    const data = {};
-    filteredEntries.forEach((entry) => {
-      const date = formatDate(parseISO(entry.date), "yyyy-MM-dd");
-      if (!data[date]) {
-        data[date] = { date, income: 0, expense: 0 };
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [accountsData, categoriesData, transactionsData, transfersData] = await Promise.all([
+          getAccounts(),
+          getCategories(),
+          getTransactions(),
+          getTransfers()
+        ]);
+        setAccounts(accountsData);
+        setCategories(categoriesData);
+        setTransactions(transactionsData);
+        setTransfers(transfersData);
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        setError('Failed to fetch data. Please try again later.');
+        setLoading(false);
       }
-      if (entry.type === "income") {
-        data[date].income += entry.amount;
-      } else if (entry.type === "expense") {
-        data[date].expense += entry.amount;
+    };
+
+    fetchData();
+  }, []);
+
+  const getTotalBalance = () => accounts.reduce((sum, account) => sum + (Number(account.balance) || 0), 0);
+
+  const getCategoryTotals = () => {
+    const totals = {};
+    transactions.forEach(transaction => {
+      const amount = Number(transaction.amount) || 0;
+      if (totals[transaction.category]) {
+        totals[transaction.category] += amount;
+      } else {
+        totals[transaction.category] = amount;
       }
     });
-    return Object.values(data).sort(
-      (a, b) => new Date(a.date) - new Date(b.date)
-    );
-  }, [filteredEntries]);
+    return Object.entries(totals).map(([name, value]) => ({ name, value }));
+  };
+
+  const getMonthlyTransactions = () => {
+    const monthlyData = transactions.reduce((acc, transaction) => {
+      const date = new Date(transaction.date);
+      const monthYear = `${date.getMonth() + 1}/${date.getFullYear()}`;
+      if (!acc[monthYear]) {
+        acc[monthYear] = { month: monthYear, income: 0, expense: 0 };
+      }
+      const amount = Number(transaction.amount) || 0;
+      if (transaction.type === 'income') {
+        acc[monthYear].income += amount;
+      } else {
+        acc[monthYear].expense += amount;
+      }
+      return acc;
+    }, {});
+    return Object.values(monthlyData);
+  };
+
+  const formatCurrency = (value) => {
+    const num = Number(value);
+    return isNaN(num) ? '0.00' : num.toFixed(2);
+  };
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>{error}</div>;
 
   return (
-    <div>
-      {/* Chart */}
-      <div className="mb-8 bg-white p-6 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-4 text-gray-800">
-          Resumen de Ingresos y Gastos
-        </h2>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Line
-              type="monotone"
-              dataKey="income"
-              stroke="#3b82f6"
-              name="Ingresos"
-            />
-            <Line
-              type="monotone"
-              dataKey="expense"
-              stroke="#ef4444"
-              name="Gastos"
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
+    <Row gutter={[16, 16]}>
+      <Col span={24}>
+        <Card>
+          <Statistic title="Total Balance" value={getTotalBalance()} prefix="$" precision={2} />
+        </Card>
+      </Col>
+
+      <Col span={12}>
+        <Card title="Account Balances">
+          <div style={{ height: 300 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={accounts}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="balance" fill="#8884d8" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+      </Col>
+
+      <Col span={12}>
+        <Card title="Spending by Category">
+          <div style={{ height: 300 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={getCategoryTotals()}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {getCategoryTotals().map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+      </Col>
+
+      <Col span={24}>
+        <Card title="Monthly Income vs Expenses">
+          <div style={{ height: 400 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={getMonthlyTransactions()}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="income" stroke="#82ca9d" />
+                <Line type="monotone" dataKey="expense" stroke="#8884d8" />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+      </Col>
+
+      <Col span={12}>
+        <Card title="Recent Transactions">
+          <List
+            dataSource={transactions.slice(0, 5)}
+            renderItem={(transaction) => (
+              <List.Item
+                key={transaction.id}
+                extra={
+                  <span style={{ color: transaction.type === 'income' ? 'green' : 'red' }}>
+                    ${formatCurrency(transaction.amount)}
+                  </span>
+                }
+              >
+                <List.Item.Meta title={transaction.description} />
+              </List.Item>
+            )}
+          />
+        </Card>
+      </Col>
+
+      <Col span={12}>
+        <Card title="Recent Transfers">
+          <List
+            dataSource={transfers.slice(0, 5)}
+            renderItem={(transfer) => (
+              <List.Item key={transfer.id} extra={`$${formatCurrency(transfer.amount)}`}>
+                <List.Item.Meta 
+                  title={`${transfer.fromAccount} → ${transfer.toAccount}`}
+                />
+              </List.Item>
+            )}
+          />
+        </Card>
+      </Col>
+    </Row>
   );
-}
+};
 
 export default Estadisticas;

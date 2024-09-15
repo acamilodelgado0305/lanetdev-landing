@@ -20,7 +20,8 @@ import {
   getTransfers,
   getAccounts,
   getCategories,
-  deleteTransaction
+  deleteTransaction,
+  deleteTransfer
 } from "../../../services/moneymanager/moneyService";
 import { Table, Input, Button, Dropdown, Menu, Modal, message } from "antd";
 import {
@@ -48,6 +49,7 @@ const formatCurrency = (amount) => {
 };
 
 const TransactionsDashboard = () => {
+  
   const [isContentModalOpen, setIsContentModalOpen] = useState(false); // Estado para el modal de contenido
   const [selectedNoteContent, setSelectedNoteContent] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -64,13 +66,22 @@ const TransactionsDashboard = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage] = useState(10);
   const [categories, setCategories] = useState([]);
+  const [editTransaction, setEditTransaction] = useState(null);
 
-  const openModal = () => setIsModalOpen(true);
+  const openModal = () => {
+    setEditTransaction(null);
+    setIsModalOpen(true);
+  };
   const closeModal = () => setIsModalOpen(false);
 
   const openContentModal = (noteContent) => {
     setSelectedNoteContent(noteContent);
     setIsContentModalOpen(true);
+  };
+
+  const openEditModal = (entry) => {
+    setEditTransaction(entry);
+    setIsModalOpen(true);
   };
 
   const closeContentModal = () => {
@@ -224,22 +235,30 @@ const TransactionsDashboard = () => {
   }
 
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (entry) => {
     Modal.confirm({
-      title: '¿Está seguro de que desea eliminar esta transaccion?',
-      content: 'Esta acción no se puede deshacer.',
+      title: `¿Está seguro de que desea eliminar esta ${entry.entryType === "transfer" ? "transferencia" : "transacción"}?`,
+      content: "Esta acción no se puede deshacer.",
       onOk: async () => {
         try {
-          await deleteTransaction(id);
-          setEntries(sortedEntries.filter((sortedEntries) => sortedEntries.id !== id));
-          message.success("Transaccion eliminada con éxito");
+          if (entry.entryType === "transfer") {
+            await deleteTransfer(entry.id);
+          } else {
+            await deleteTransaction(entry.id);
+          }
+          setEntries(entries.filter((e) => e.id !== entry.id));
+          message.success(`${entry.entryType === "transfer" ? "Transferencia" : "Transacción"} eliminada con éxito`);
+          fetchMonthlyData(); // Actualizamos los totales después de eliminar
         } catch (error) {
-          console.error("Error al eliminar la transaccion:", error);
-          message.error("Error al eliminar el transaccion");
+          console.error(`Error al eliminar la ${entry.entryType === "transfer" ? "transferencia" : "transacción"}:`, error);
+          message.error(`Error al eliminar la ${entry.entryType === "transfer" ? "transferencia" : "transacción"}`);
         }
       },
     });
   };
+
+
+  
 
   return (
     <div className="bg-gray-100 min-h-screen w-full p-4">
@@ -371,8 +390,8 @@ const TransactionsDashboard = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {entry.entryType === "transfer"
                         ? `${getAccountName(
-                          entry.from_account_id
-                        )} ➡️ ${getAccountName(entry.to_account_id)}`
+                            entry.from_account_id
+                          )} ➡️ ${getAccountName(entry.to_account_id)}`
                         : getAccountName(entry.account_id)}
                     </td>
 
@@ -381,10 +400,11 @@ const TransactionsDashboard = () => {
                     </td>
 
                     <td
-                      className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${entry.type === "expense"
-                        ? "text-red-600"
-                        : "text-blue-600"
-                        }`}
+                      className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
+                        entry.type === "expense"
+                          ? "text-red-600"
+                          : "text-blue-600"
+                      }`}
                     >
                       {entry.type === "expense" ? "-" : "+"}
                       {formatCurrency(entry.amount)}
@@ -396,12 +416,17 @@ const TransactionsDashboard = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <Button
+                        className="mr-2"
                         icon={<FaTrashAlt />}
-                        onClick={() => handleDelete(entry.id)}
+                        onClick={() => handleDelete(entry)}
                         danger
                       />
 
-                      <Button icon={<FaUserEdit />} type="primary" />
+                      <Button
+                        onClick={() => openEditModal(entry)}
+                        icon={<FaUserEdit />}
+                        type="primary"
+                      />
                     </td>
                   </tr>
                 ))}
@@ -417,10 +442,11 @@ const TransactionsDashboard = () => {
               <button
                 key={index}
                 onClick={() => paginate(index + 1)}
-                className={`mx-1 px-3 py-1 rounded ${currentPage === index + 1
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200"
-                  }`}
+                className={`mx-1 px-3 py-1 rounded ${
+                  currentPage === index + 1
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200"
+                }`}
               >
                 {index + 1}
               </button>
@@ -438,6 +464,7 @@ const TransactionsDashboard = () => {
             isOpen={isModalOpen}
             onClose={closeModal}
             onTransactionAdded={handleEntryAdded}
+            transactionToEdit={editTransaction}
           />
 
           <NoteContentModal
