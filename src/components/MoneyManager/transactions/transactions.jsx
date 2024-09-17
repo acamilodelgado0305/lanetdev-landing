@@ -347,9 +347,6 @@ const TransactionsDashboard = () => {
                     Descripción
                   </th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Comprobante
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Cuenta
                   </th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -360,6 +357,9 @@ const TransactionsDashboard = () => {
                   </th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Tipo
+                  </th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Comprobante
                   </th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Acciones
@@ -377,37 +377,29 @@ const TransactionsDashboard = () => {
                         {entry.description}
                       </div>
                     </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-xs">
-                      {entry.note ? (
-                        <button
-                          className="text-blue-500 hover:text-blue-600"
-                          onClick={() => openContentModal(entry.note)}
-                        >
-                          Ver contenido
-                        </button>
-                      ) : (
-                        "No hay contenido"
-                      )}
-                    </td>
                     <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-500">
                       {entry.entryType === "transfer"
-                        ? `${getAccountName(
-                          entry.from_account_id
-                        )} ➡️ ${getAccountName(entry.to_account_id)}`
+                        ? `${getAccountName(entry.from_account_id)} ➡️ ${getAccountName(entry.to_account_id)}`
                         : getAccountName(entry.account_id)}
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-500">
                       {getCategoryName(entry.category_id) || "Sin categoría"}
                     </td>
-                    <td
-                      className={`px-4 py-2 whitespace-nowrap text-xs font-medium ${entry.type === "expense" ? "text-red-600" : "text-blue-600"
-                        }`}
-                    >
+                    <td className={`px-4 py-2 whitespace-nowrap text-xs font-medium ${entry.type === "expense" ? "text-red-600" : "text-blue-600"}`}>
                       {entry.type === "expense" ? "-" : "+"}
                       {formatCurrency(entry.amount)}
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-500">
                       {entry.entryType === "transfer" ? "Transferencia" : entry.type}
+                    </td>
+                    <td className="px-4 py-2 whitespace-nowrap text-xs">
+                      {entry.note ? (
+                        <button className="text-blue-500 hover:text-blue-600" onClick={() => openContentModal(entry.note)}>
+                          Ver contenido
+                        </button>
+                      ) : (
+                        "No hay contenido"
+                      )}
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-500">
                       <Button
