@@ -356,8 +356,11 @@ const TransactionsDashboard = () => {
                     Monto
                   </th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Tipo
+                    Impuestos
                   </th>
+                  {/* <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Tipo
+                  </th> */}
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Comprobante
                   </th>
@@ -390,8 +393,18 @@ const TransactionsDashboard = () => {
                       {formatCurrency(entry.amount)}
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-500">
-                      {entry.entryType === "transfer" ? "Transferencia" : entry.type}
+                      {entry.taxes ? (
+                        <div>
+                          <p>{`Retención: ${entry.taxes.retention}%`}</p>
+                          <p>{`Impuesto: ${entry.taxes.amount}`}</p>
+                        </div>
+                      ) : (
+                        "No aplica"
+                      )}
                     </td>
+                    {/* <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-500">
+                      {entry.entryType === "transfer" ? "Transferencia" : entry.type}
+                    </td> */}
                     <td className="px-4 py-2 whitespace-nowrap text-xs">
                       {entry.note ? (
                         <button className="text-blue-500 hover:text-blue-600" onClick={() => openContentModal(entry.note)}>
