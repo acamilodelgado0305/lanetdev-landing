@@ -1,26 +1,33 @@
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { IoClose } from "react-icons/io5";
-import Swal from 'sweetalert2';
+import Swal from "sweetalert2";
 
-const AddAccountModal = ({ isOpen, onClose, onAccountAdded,accountToEdit }) => {
+const AddAccountModal = ({
+  isOpen,
+  onClose,
+  onAccountAdded,
+  accountToEdit,
+}) => {
   const apiUrl = import.meta.env.VITE_API_FINANZAS;
 
   const [name, setName] = useState("");
   const [balance, setBalance] = useState("");
   const [type, setType] = useState("Dinero en Efectivo");
-
+  const [isPlus, setIsPlus] = useState(true);
 
   useEffect(() => {
     // Si hay una cuenta para editar, llenamos el formulario con sus datos
     if (accountToEdit) {
       setName(accountToEdit.name);
-      setBalance(accountToEdit.balance)
+      setBalance(accountToEdit.balance);
       setType(accountToEdit.type);
+      setIsPlus(accountToEdit.plus || true);
     } else {
       // Si no hay cuenta, limpiamos el formulario para crear una nueva
       setName("");
-      setBalance("0,00")
+      setBalance("0,00");
       setType("notype");
+     
     }
   }, [accountToEdit]);
 
@@ -28,18 +35,18 @@ const AddAccountModal = ({ isOpen, onClose, onAccountAdded,accountToEdit }) => {
     // Validación básica
     if (!name.trim()) {
       Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'El nombre de la cuenta es requerido.',
+        icon: "error",
+        title: "Error",
+        text: "El nombre de la cuenta es requerido.",
       });
       return;
     }
 
     if (!type) {
       Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'El tipo de cuenta es requerido.',
+        icon: "error",
+        title: "Error",
+        text: "El tipo de cuenta es requerido.",
       });
       return;
     }
@@ -47,9 +54,9 @@ const AddAccountModal = ({ isOpen, onClose, onAccountAdded,accountToEdit }) => {
     const parsedBalance = parseFloat(balance);
     if (isNaN(parsedBalance)) {
       Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'El saldo inicial debe ser un número válido.',
+        icon: "error",
+        title: "Error",
+        text: "El saldo inicial debe ser un número válido.",
       });
       return;
     }
@@ -57,7 +64,7 @@ const AddAccountModal = ({ isOpen, onClose, onAccountAdded,accountToEdit }) => {
     const accountData = {
       name: name.trim(),
       balance: parsedBalance,
-      type: type
+      type: type,
     };
 
     try {
@@ -84,23 +91,25 @@ const AddAccountModal = ({ isOpen, onClose, onAccountAdded,accountToEdit }) => {
 
       if (response.ok) {
         Swal.fire({
-          icon: 'success',
-          title: '¡Éxito!',
-          text: accountToEdit ? 'Cuenta editada con éxito' : 'Cuenta creada con éxito',
+          icon: "success",
+          title: "¡Éxito!",
+          text: accountToEdit
+            ? "Cuenta editada con éxito"
+            : "Cuenta creada con éxito",
         });
         onClose();
         onAccountAdded();
       } else {
         Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'Error al guardar la cuenta',
+          icon: "error",
+          title: "Error",
+          text: "Error al guardar la cuenta",
         });
       }
     } catch (error) {
       Swal.fire({
-        icon: 'error',
-        title: 'Error',
+        icon: "error",
+        title: "Error",
         text: `Error al conectar con la API: ${error.message}`,
       });
     }
@@ -112,9 +121,7 @@ const AddAccountModal = ({ isOpen, onClose, onAccountAdded,accountToEdit }) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800">
-            Nueva Cuenta
-          </h2>
+          <h2 className="text-xl font-semibold text-gray-800">Nueva Cuenta</h2>
           <button
             onClick={onClose}
             className="text-gray-600 hover:text-gray-800"
@@ -139,6 +146,7 @@ const AddAccountModal = ({ isOpen, onClose, onAccountAdded,accountToEdit }) => {
             >
               <option value="Dinero en Efectivo">Dinero en Efectivo</option>
               <option value="Banco">Banco</option>
+              <option value="Prestamos">Prestamos</option>
             </select>
           </div>
           <div>
@@ -172,6 +180,17 @@ const AddAccountModal = ({ isOpen, onClose, onAccountAdded,accountToEdit }) => {
               className="w-full p-2 bg-gray-100 rounded border border-gray-300"
               placeholder="0.00"
             />
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="plus"
+                checked={isPlus}
+                onChange={(e) => setIsPlus(e.target.checked)}
+              />
+              <label htmlFor="plus" className="text-sm font-medium">
+                Incluir en el Total
+              </label>
+            </div>
           </div>
         </div>
 
