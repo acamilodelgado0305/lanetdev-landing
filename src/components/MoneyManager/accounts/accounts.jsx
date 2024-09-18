@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { PlusCircle, Wallet, Trash2,Edit } from "lucide-react";
+import {
+  PlusCircle,
+  Wallet,
+  Trash2,
+  Edit,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import AddAccountModal from "./addAccount";
 import {
   getAccounts,
@@ -22,6 +29,12 @@ const AccountContent = () => {
   const [error, setError] = useState(null);
   const [totalBalance, setTotalBalance] = useState(0);
   const [editAccount, setEditAccount] = useState(null);
+  const [showPrestamos, setShowPrestamos] = useState(false);
+  const [categoryTotals, setCategoryTotals] = useState({
+    efectivo: 0,
+    banco: 0,
+    prestamos: 0,
+  });
 
   const openModal = () => {
     setEditAccount(null);
@@ -33,15 +46,43 @@ const AccountContent = () => {
     try {
       const data = await getAccounts();
       setCuentas(data);
-      const total = data.reduce(
-        (sum, cuenta) => sum + parseFloat(cuenta.balance || 0),
-        0
-      );
-      setTotalBalance(total);
+      calculateTotals(data);
     } catch (err) {
       setError("Error al cargar las cuentas");
       console.error("Error fetching accounts:", err);
     }
+  };
+
+  const calculateTotals = (accounts) => {
+    const totals = accounts.reduce(
+      (acc, cuenta) => {
+        const balance = parseFloat(cuenta.balance || 0);
+        if (cuenta.plus) {
+          acc.total += balance;
+          switch (cuenta.type) {
+            case "Dinero en Efectivo":
+              acc.efectivo += balance;
+              break;
+            case "Banco":
+              acc.banco += balance;
+              break;
+          }
+        }
+        // Always sum prestamos, regardless of the 'plus' flag
+        if (cuenta.type === "Prestamos") {
+          acc.prestamos += balance;
+        }
+        return acc;
+      },
+      { total: 0, efectivo: 0, banco: 0, prestamos: 0 }
+    );
+
+    setTotalBalance(totals.total);
+    setCategoryTotals({
+      efectivo: totals.efectivo,
+      banco: totals.banco,
+      prestamos: totals.prestamos,
+    });
   };
 
   useEffect(() => {
@@ -76,14 +117,85 @@ const AccountContent = () => {
     });
   };
 
-  const openEditModal = (category) => {
-    setEditAccount(category);
+  const openEditModal = (account) => {
+    setEditAccount(account);
     setIsModalOpen(true);
   };
+
+  const renderAccountSection = (title, accounts, totalAmount) => (
+    <div className="mb-8">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold text-indigo-600">{title}</h2>
+        <p className="text-lg font-semibold text-green-600">
+          {formatCurrency(totalAmount)}
+        </p>
+      </div>
+      <div className="space-y-4">
+        {accounts.map((cuenta) => (
+          <div
+            key={cuenta.id}
+            className={`bg-white shadow rounded-lg p-4 flex justify-between items-center hover:shadow-md transition duration-300 ${
+              !cuenta.plus ? "opacity-70" : ""
+            }`}
+          >
+            <div className="flex items-center">
+              <Wallet className="text-indigo-500 mr-3" size={24} />
+              <div>
+                <h3 className="text-xl font-semibold text-gray-800">
+                  {cuenta.name}
+                </h3>
+                <p className="text-sm text-gray-500">
+                  {cuenta.type || "Cuenta"}
+                </p>
+                {!cuenta.plus && (
+                  <p className="text-xs text-red-500">No se suma al total</p>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center">
+              <div
+                className={`text-right ${
+                  parseFloat(cuenta.balance) >= 0
+                    ? "text-green-600"
+                    : "text-red-500"
+                } font-bold text-xl mr-4`}
+              >
+                {cuenta.balance !== null && cuenta.balance !== undefined
+                  ? formatCurrency(parseFloat(cuenta.balance))
+                  : "No disponible"}
+              </div>
+              <button
+                onClick={() => openEditModal(cuenta)}
+                className="text-blue-500 hover:text-blue-700 transition-colors duration-300"
+                aria-label="Editar cuenta"
+              >
+                <Edit size={20} />
+              </button>
+              <button
+                onClick={() => handleDeleteAccount(cuenta.id)}
+                className="text-red-500 hover:text-red-700 transition-colors duration-300"
+                aria-label="Eliminar cuenta"
+              >
+                <Trash2 size={20} />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 
   if (error) {
     return <div className="text-center text-red-500 p-4">{error}</div>;
   }
+
+  const efectivoCuentas = cuentas.filter(
+    (cuenta) => cuenta.type === "Dinero en Efectivo"
+  );
+  const bancoCuentas = cuentas.filter((cuenta) => cuenta.type === "Banco");
+  const prestamoCuentas = cuentas.filter(
+    (cuenta) => cuenta.type === "Prestamos"
+  );
 
   return (
     <div className="h-[auto] bg-gray-100 min-h-screen w-full p-4">
@@ -100,52 +212,32 @@ const AccountContent = () => {
             </p>
           </div>
 
-          <div className="space-y-4 max-h-[40rem] overflow-y-auto">
-            {cuentas.map((cuenta) => (
-              <div
-                key={cuenta.id}
-                className="bg-white shadow rounded-lg p-4 flex justify-between items-center hover:shadow-md transition duration-300"
+          <div className="space-y-4 max-h-[auto] overflow-y-auto">
+            {renderAccountSection(
+              "Dinero en Efectivo",
+              efectivoCuentas,
+              categoryTotals.efectivo
+            )}
+            {renderAccountSection("Bancos", bancoCuentas, categoryTotals.banco)}
+
+            <div className="mb-8">
+              <button
+                onClick={() => setShowPrestamos(!showPrestamos)}
+                className="flex items-center text-2xl font-bold text-indigo-600 mb-4"
               >
-                <div className="flex items-center">
-                  <Wallet className="text-indigo-500 mr-3" size={24} />
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-800">
-                      {cuenta.name}
-                    </h2>
-                    <p className="text-sm text-gray-500">
-                      {cuenta.type || "Cuenta"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <div
-                    className={`text-right ${
-                      parseFloat(cuenta.balance) >= 0
-                        ? "text-green-600"
-                        : "text-red-500"
-                    } font-bold text-xl mr-4`}
-                  >
-                    {cuenta.balance !== null && cuenta.balance !== undefined
-                      ? formatCurrency(parseFloat(cuenta.balance))
-                      : "No disponible"}
-                  </div>
-                  <button
-                    onClick={() => openEditModal(cuenta)}
-                    className="text-blue-500 hover:text-blue-700 transition-colors duration-300"
-                    aria-label="Editar cuenta"
-                  >
-                    <Edit size={20} />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteAccount(cuenta.id)}
-                    className="text-red-500 hover:text-red-700 transition-colors duration-300"
-                    aria-label="Eliminar cuenta"
-                  >
-                    <Trash2 size={20} />
-                  </button>
-                </div>
-              </div>
-            ))}
+                Préstamos
+                {showPrestamos ? (
+                  <ChevronUp className="ml-2" />
+                ) : (
+                  <ChevronDown className="ml-2" />
+                )}
+              </button>
+              {showPrestamos && (
+                <>
+                  {renderAccountSection("", prestamoCuentas, categoryTotals.prestamos)}
+                </>
+              )}
+            </div>
           </div>
 
           <button

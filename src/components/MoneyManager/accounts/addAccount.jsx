@@ -16,23 +16,20 @@ const AddAccountModal = ({
   const [isPlus, setIsPlus] = useState(true);
 
   useEffect(() => {
-    // Si hay una cuenta para editar, llenamos el formulario con sus datos
     if (accountToEdit) {
       setName(accountToEdit.name);
-      setBalance(accountToEdit.balance);
+      setBalance(accountToEdit.balance.toString());
       setType(accountToEdit.type);
-      setIsPlus(accountToEdit.plus || true);
+      setIsPlus(accountToEdit.plus);
     } else {
-      // Si no hay cuenta, limpiamos el formulario para crear una nueva
       setName("");
-      setBalance("0,00");
-      setType("notype");
-     
+      setBalance("0.00");
+      setType("Dinero en Efectivo");
+      setIsPlus(true);
     }
   }, [accountToEdit]);
 
   const handleSave = async () => {
-    // Validación básica
     if (!name.trim()) {
       Swal.fire({
         icon: "error",
@@ -65,12 +62,12 @@ const AddAccountModal = ({
       name: name.trim(),
       balance: parsedBalance,
       type: type,
+      plus: isPlus,
     };
 
     try {
       let response;
       if (accountToEdit) {
-        // Si estamos editando, enviamos una petición PUT
         response = await fetch(`${apiUrl}/accounts/${accountToEdit.id}`, {
           method: "PUT",
           headers: {
@@ -79,7 +76,6 @@ const AddAccountModal = ({
           body: JSON.stringify(accountData),
         });
       } else {
-        // Si estamos creando, enviamos una petición POST
         response = await fetch(`${apiUrl}/accounts`, {
           method: "POST",
           headers: {
@@ -121,7 +117,9 @@ const AddAccountModal = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800">Nueva Cuenta</h2>
+          <h2 className="text-xl font-semibold text-gray-800">
+            {accountToEdit ? "Editar Cuenta" : "Nueva Cuenta"}
+          </h2>
           <button
             onClick={onClose}
             className="text-gray-600 hover:text-gray-800"
@@ -180,17 +178,17 @@ const AddAccountModal = ({
               className="w-full p-2 bg-gray-100 rounded border border-gray-300"
               placeholder="0.00"
             />
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="plus"
-                checked={isPlus}
-                onChange={(e) => setIsPlus(e.target.checked)}
-              />
-              <label htmlFor="plus" className="text-sm font-medium">
-                Incluir en el Total
-              </label>
-            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="plus"
+              checked={isPlus}
+              onChange={(e) => setIsPlus(e.target.checked)}
+            />
+            <label htmlFor="plus" className="text-sm font-medium">
+              Incluir en el Total
+            </label>
           </div>
         </div>
 
