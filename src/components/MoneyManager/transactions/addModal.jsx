@@ -4,6 +4,9 @@ import Swal from "sweetalert2";
 import { uploadImage } from "../../../services/apiService";
 import InputField from "../transactions/components/InputField";
 import SelectField from "../transactions/components/SelectField";
+import { DatePicker } from 'antd';
+import 'antd/dist/reset.css';
+import dayjs from "dayjs";
 
 const AddEntryModal = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) => {
   const apiUrl = import.meta.env.VITE_API_FINANZAS;
@@ -22,8 +25,10 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded, transactionToEdit 
   const [imageUrl, setImageUrl] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [isRecurring, setIsRecurring] = useState(false);
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [date, setDate] = useState(dayjs());
   const [isEditing, setIsEditing] = useState(false);
+  const [taxType, setTaxType] = useState("");
+
 
   useEffect(() => {
     if (transactionToEdit) {
@@ -35,7 +40,7 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded, transactionToEdit 
       } else {
         setTransactionType(transactionToEdit.type || "expense");
         setAccount(transactionToEdit.account_id);
-        setCategory(transactionToEdit.category_id|| "");
+        setCategory(transactionToEdit.category_id || "");
       }
       setRawAmount(transactionToEdit.amount?.toString() || "");
       setAmount(transactionToEdit.amount ? new Intl.NumberFormat("es-CO").format(transactionToEdit.amount) : "");
@@ -114,7 +119,7 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded, transactionToEdit 
         fromAccountId: parseInt(fromAccount, 10),
         toAccountId: parseInt(toAccount, 10),
         amount: parseFloat(rawAmount),
-        date: new Date(date).toISOString(),
+        date: date.toISOString(),
         note: note,
         description: description,
       };
@@ -124,16 +129,17 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded, transactionToEdit 
         userId: 1,
         amount: parseFloat(rawAmount),
         type: transactionType.toLowerCase(),
-        date: new Date(date).toISOString(),
+        date: date.toISOString(),
         note: note,
         description: description,
         accountId: parseInt(account, 10),
         categoryId: parseInt(category, 10),
+        tax_type: taxType,
         recurrent: isRecurring,
       };
       endpoint = `${apiUrl}/transactions`;
     }
-
+    console.log("Datos que se están enviando:", data);
     if (isEditing) {
       method = "PUT";
       endpoint += `/${transactionToEdit.id}`;
@@ -156,13 +162,13 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded, transactionToEdit 
           title: isEditing
             ? "Transacción actualizada"
             : transactionType === "Transferencia"
-            ? "Transferencia realizada"
-            : "Transacción guardada",
+              ? "Transferencia realizada"
+              : "Transacción guardada",
           text: isEditing
             ? "La transacción se ha actualizado correctamente."
             : transactionType === "Transferencia"
-            ? "La transferencia se ha realizado correctamente."
-            : "La transacción se ha guardado correctamente.",
+              ? "La transferencia se ha realizado correctamente."
+              : "La transacción se ha guardado correctamente.",
           confirmButtonColor: "#3085d6",
         });
         onClose();
@@ -172,8 +178,8 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded, transactionToEdit 
           isEditing
             ? "Error al actualizar la transacción"
             : transactionType === "Transferencia"
-            ? "Error al realizar la transferencia"
-            : "Error al guardar la transacción"
+              ? "Error al realizar la transferencia"
+              : "Error al guardar la transacción"
         );
       }
     } catch (error) {
@@ -198,16 +204,21 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded, transactionToEdit 
     setDescription("");
     setImageUrl("");
     setIsRecurring(false);
-    setDate(new Date().toISOString().split("T")[0]);
+    setDate(dayjs());
     setIsEditing(false);
+    setTaxType("");
   };
-
+  const taxOptions = [
+    { label: "IVA", value: "IVA" },
+    { label: "Retención", value: "retencion" },
+    { label: "Sin Impuesto", value: "sin_impuesto" }
+  ];
   if (!isOpen) return null;
 
   const filteredCategories = categories.filter(
     (cat) => cat.type === transactionType
   );
-  
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl">
@@ -216,8 +227,8 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded, transactionToEdit 
             {isEditing
               ? "Editar Transacción"
               : transactionType === "Transferencia"
-              ? "Nueva Transferencia"
-              : "Nueva Transacción"}
+                ? "Nueva Transferencia"
+                : "Nueva Transacción"}
           </h2>
           <button onClick={onClose}>
             <IoClose size={24} />
@@ -229,38 +240,39 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded, transactionToEdit 
             {/* Botones de tipo de transacción */}
             <div className="flex justify-between space-x-2">
               <button
-                className={`flex-1 py-2 rounded-full ${
-                  transactionType === "income" ? "bg-green-500 text-white" : "bg-gray-200"
-                }`}
+                className={`flex-1 py-2 rounded-full ${transactionType === "income" ? "bg-green-500 text-white" : "bg-gray-200"
+                  }`}
                 onClick={() => setTransactionType("income")}
               >
                 Ingreso
               </button>
               <button
-                className={`flex-1 py-2 rounded-full ${
-                  transactionType === "expense" ? "bg-red-500 text-white" : "bg-gray-200"
-                }`}
+                className={`flex-1 py-2 rounded-full ${transactionType === "expense" ? "bg-red-500 text-white" : "bg-gray-200"
+                  }`}
                 onClick={() => setTransactionType("expense")}
               >
                 Gasto
               </button>
               <button
-                className={`flex-1 py-2 rounded-full ${
-                  transactionType === "Transferencia" ? "bg-blue-500 text-white" : "bg-gray-200"
-                }`}
+                className={`flex-1 py-2 rounded-full ${transactionType === "Transferencia" ? "bg-blue-500 text-white" : "bg-gray-200"
+                  }`}
                 onClick={() => setTransactionType("Transferencia")}
               >
                 Transferencia
               </button>
             </div>
 
-            <InputField
-              label="Fecha"
-              id="date"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
+            <div>
+              <label className="block mb-1 text-sm font-medium text-gray-700">
+                Fecha
+              </label>
+              <DatePicker
+                value={date}
+                onChange={(date) => setDate(date)}
+                format="YYYY-MM-DD"
+                className="w-full"
+              />
+            </div>
             <InputField
               label="Importe"
               id="amount"
@@ -268,7 +280,7 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded, transactionToEdit 
               onChange={handleAmountChange}
               placeholder="0.00"
             />
-            
+
             <InputField
               label="Descripción"
               id="description"
@@ -286,12 +298,14 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded, transactionToEdit 
                   onChange={(e) => setFromAccount(e.target.value)}
                   options={accounts}
                 />
+
                 <SelectField
                   label="Cuenta de Destino"
                   id="toAccount"
                   value={toAccount}
                   onChange={(e) => setToAccount(e.target.value)}
                   options={accounts}
+
                 />
               </>
             ) : (
@@ -309,6 +323,13 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded, transactionToEdit 
                   value={account}
                   onChange={(e) => setAccount(e.target.value)}
                   options={accounts}
+                />
+                <SelectField
+                  label="Impuesto"
+                  id="taxType"
+                  value={taxType}
+                  onChange={(e) => setTaxType(e.target.value)}
+                  options={taxOptions}
                 />
                 <div className="flex items-center space-x-2">
                   <input
