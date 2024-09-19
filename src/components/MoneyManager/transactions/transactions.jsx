@@ -49,7 +49,7 @@ const formatCurrency = (amount) => {
 };
 
 const TransactionsDashboard = () => {
-  
+
   const [isContentModalOpen, setIsContentModalOpen] = useState(false); // Estado para el modal de contenido
   const [selectedNoteContent, setSelectedNoteContent] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -258,69 +258,72 @@ const TransactionsDashboard = () => {
   };
 
 
-  
+
 
   return (
-    <div className="bg-gray-100 min-h-screen w-full p-4">
-      <main className="max-full mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-6 relative">
-          <div className="flex justify-between items-center mb-6">
+    <div className="bg-gray-100 min-h-screen w-full p-2">
+      <main className="max-w-full mx-auto">
+        <div className="bg-white rounded-lg shadow-lg p-4 relative h-[70vh] overflow-hidden">
+          {/* Encabezado con controles de mes */}
+          <div className="flex justify-between items-center mb-4">
             <button
               className="text-blue-500 hover:text-blue-600 transition-colors"
               onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
             >
-              <ChevronLeft size={24} />
+              <ChevronLeft size={20} />
             </button>
-            <h2 className="text-2xl font-semibold">
+            <h2 className="text-xl font-semibold">
               {formatDate(currentMonth, "MMMM yyyy")}
             </h2>
             <button
               className="text-blue-500 hover:text-blue-600 transition-colors"
               onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
             >
-              <ChevronRight size={24} />
+              <ChevronRight size={20} />
             </button>
           </div>
 
-          <div className="grid  grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-600 mb-1">Ingreso</p>
-              <p className="text-2xl font-bold text-blue-600">
+          {/* Sección de estadísticas */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="bg-blue-50 p-3 rounded-lg">
+              <p className="text-xs text-gray-600 mb-1">Ingreso</p>
+              <p className="text-xl font-bold text-blue-600">
                 {formatCurrency(totalIncome)}
               </p>
             </div>
-            <div className="bg-red-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-600 mb-1">Gastos</p>
-              <p className="text-2xl font-bold text-red-600">
+            <div className="bg-red-50 p-3 rounded-lg">
+              <p className="text-xs text-gray-600 mb-1">Gastos</p>
+              <p className="text-xl font-bold text-red-600">
                 {formatCurrency(totalExpenses)}
               </p>
             </div>
-            <div className="bg-green-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-600 mb-1">Balance</p>
-              <p className="text-2xl font-bold text-green-600">
+            <div className="bg-green-50 p-3 rounded-lg">
+              <p className="text-xs text-gray-600 mb-1">Balance</p>
+              <p className="text-xl font-bold text-green-600">
                 {formatCurrency(balance)}
               </p>
             </div>
           </div>
 
-          <div className="mb-6 flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:justify-between sm:items-center">
+          {/* Controles de búsqueda y filtro */}
+          <div className="mb-4 flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:justify-between sm:items-center">
             <div className="relative">
               <input
                 type="text"
                 placeholder="Buscar transacciones..."
-                className="mx-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pl-10 pr-4 py-2"
+                className="mx-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pl-8 pr-2 py-1 text-sm"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
               <Search
-                className="ml-[94%] md:ml-[245px] -mt-8 transform -translate-y-1/2 text-gray-400"
-                size={20}
+                className="ml-[94%] md:ml-[90%] -mt-8 transform -translate-y-1/2 text-gray-400"
+                size={18}
               />
             </div>
             <div className="flex items-center space-x-2">
-              <Filter size={20} className="text-gray-400" />
+              <Filter size={18} className="text-gray-400" />
               <select
-                className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="border rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
               >
@@ -332,33 +335,33 @@ const TransactionsDashboard = () => {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white">
+          {/* Contenedor de la tabla con scroll vertical y horizontal */}
+          <div className="overflow-auto max-h-[40vh]">
+            <table className="min-w-full bg-white text-sm">
               <thead className="bg-gray-100">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Fecha
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Descripción
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Comprobante
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Cuenta
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Categoría
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Monto
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Tipo
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Impuestos
                   </th>
-
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Comprobante
+                  </th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Acciones
                   </th>
                 </tr>
@@ -366,66 +369,56 @@ const TransactionsDashboard = () => {
               <tbody className="divide-y divide-gray-200">
                 {currentEntries.map((entry, index) => (
                   <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-500">
                       {formatDate(new Date(entry.date), "d MMM yyyy")}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
+                    <td className="px-4 py-2 whitespace-nowrap">
+                      <div className="text-xs font-medium text-gray-900">
                         {entry.description}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-500">
+                      {entry.entryType === "transfer"
+                        ? `${getAccountName(entry.from_account_id)} ➡️ ${getAccountName(entry.to_account_id)}`
+                        : getAccountName(entry.account_id)}
+                    </td>
+                    <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-500">
+                      {getCategoryName(entry.category_id) || "Sin categoría"}
+                    </td>
+                    <td className={`px-4 py-2 whitespace-nowrap text-xs font-medium ${entry.type === "expense" ? "text-red-600" : "text-blue-600"}`}>
+                      {entry.type === "expense" ? "-" : "+"}
+                      {formatCurrency(entry.amount)}
+                    </td>
+                    <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-500">
+                      {entry.tax_type ? (
+                        <p>{entry.tax_type}</p>
+                      ) : (
+                        "No aplica"
+                      )}
+                    </td>
+                    <td className="px-4 py-2 whitespace-nowrap text-xs">
                       {entry.note ? (
-                        <button
-                          className="text-blue-500 hover:text-blue-600"
-                          onClick={() => openContentModal(entry.note)}
-                        >
+                        <button className="text-blue-500 hover:text-blue-600" onClick={() => openContentModal(entry.note)}>
                           Ver contenido
                         </button>
                       ) : (
                         "No hay contenido"
                       )}
                     </td>
-
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {entry.entryType === "transfer"
-                        ? `${getAccountName(
-                            entry.from_account_id
-                          )} ➡️ ${getAccountName(entry.to_account_id)}`
-                        : getAccountName(entry.account_id)}
-                    </td>
-
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {getCategoryName(entry.category_id) || "Sin categoría"}
-                    </td>
-
-                    <td
-                      className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
-                        entry.type === "expense"
-                          ? "text-red-600"
-                          : "text-blue-600"
-                      }`}
-                    >
-                      {entry.type === "expense" ? "-" : "+"}
-                      {formatCurrency(entry.amount)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {entry.entryType === "transfer"
-                        ? "Transferencia"
-                        : entry.type}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-500">
                       <Button
-                        className="mr-2"
+                        className="mr-1"
                         icon={<FaTrashAlt />}
                         onClick={() => handleDelete(entry)}
                         danger
+                        size="small"
                       />
 
                       <Button
                         onClick={() => openEditModal(entry)}
                         icon={<FaUserEdit />}
                         type="primary"
+                        size="small"
                       />
                     </td>
                   </tr>
@@ -434,19 +427,18 @@ const TransactionsDashboard = () => {
             </table>
           </div>
 
-          {/* Pagination */}
-          <div className="mt-4 flex justify-center">
+          {/* Paginación */}
+          <div className="mt-2 flex justify-center">
             {Array.from({
               length: Math.ceil(filteredEntries.length / entriesPerPage),
             }).map((_, index) => (
               <button
                 key={index}
                 onClick={() => paginate(index + 1)}
-                className={`mx-1 px-3 py-1 rounded ${
-                  currentPage === index + 1
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-200"
-                }`}
+                className={`mx-1 px-2 py-1 rounded text-xs ${currentPage === index + 1
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200"
+                  }`}
               >
                 {index + 1}
               </button>
@@ -455,10 +447,10 @@ const TransactionsDashboard = () => {
 
           <button
             onClick={openModal}
-            className="fixed bottom-8 right-8 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-4 shadow-lg transition-colors duration-300"
+            className="fixed bottom-4 right-4 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-3 shadow-lg transition-colors duration-300"
             aria-label="Añadir entrada"
           >
-            <PlusCircle size={24} />
+            <PlusCircle size={20} />
           </button>
           <AddEntryModal
             isOpen={isModalOpen}

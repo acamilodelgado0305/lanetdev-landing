@@ -14,8 +14,11 @@ const SelectField = ({ label, id, value, onChange, options, disabled = false }) 
         >
             <option value="">Selecciona una opción</option>
             {options.map((opt) => (
-                <option key={opt.id} value={opt.id}>
-                    {opt.name}
+                <option
+                    key={opt.id || opt.value}
+                    value={opt.id || opt.value}
+                >
+                    {opt.name || opt.label}
                 </option>
             ))}
         </select>
