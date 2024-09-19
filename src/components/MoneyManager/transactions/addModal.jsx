@@ -4,11 +4,16 @@ import Swal from "sweetalert2";
 import { uploadImage } from "../../../services/apiService";
 import InputField from "../transactions/components/InputField";
 import SelectField from "../transactions/components/SelectField";
-import { DatePicker } from 'antd';
-import 'antd/dist/reset.css';
+import { DatePicker } from "antd";
+import "antd/dist/reset.css";
 import dayjs from "dayjs";
 
-const AddEntryModal = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) => {
+const AddEntryModal = ({
+  isOpen,
+  onClose,
+  onTransactionAdded,
+  transactionToEdit,
+}) => {
   const apiUrl = import.meta.env.VITE_API_FINANZAS;
 
   const [transactionType, setTransactionType] = useState("expense");
@@ -29,7 +34,6 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded, transactionToEdit 
   const [isEditing, setIsEditing] = useState(false);
   const [taxType, setTaxType] = useState("");
 
-
   useEffect(() => {
     if (transactionToEdit) {
       setIsEditing(true);
@@ -43,15 +47,19 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded, transactionToEdit 
         setCategory(transactionToEdit.category_id || "");
       }
       setRawAmount(transactionToEdit.amount?.toString() || "");
-      setAmount(transactionToEdit.amount ? new Intl.NumberFormat("es-CO").format(transactionToEdit.amount) : "");
+      setAmount(
+        transactionToEdit.amount
+          ? new Intl.NumberFormat("es-CO").format(transactionToEdit.amount)
+          : ""
+      );
       setNote(transactionToEdit.note || "");
       setDescription(transactionToEdit.description || "");
       setIsRecurring(transactionToEdit.recurrent || false);
-      setDate(transactionToEdit.date ? new Date(transactionToEdit.date).toISOString().split("T")[0] : new Date().toISOString().split("T")[0]);
+      setDate(transactionToEdit.date ? dayjs(transactionToEdit.date) : dayjs());
     } else {
       resetForm();
     }
-  }, [transactionToEdit])
+  }, [transactionToEdit]);
 
   useEffect(() => {
     fetchCategories();
@@ -63,7 +71,7 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded, transactionToEdit 
       const response = await fetch(`${apiUrl}/categories`);
       const data = await response.json();
       setCategories(data);
-      console.log(data)
+      console.log(data);
     } catch (error) {
       console.error("Error al obtener las categorías:", error);
     }
@@ -162,13 +170,13 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded, transactionToEdit 
           title: isEditing
             ? "Transacción actualizada"
             : transactionType === "Transferencia"
-              ? "Transferencia realizada"
-              : "Transacción guardada",
+            ? "Transferencia realizada"
+            : "Transacción guardada",
           text: isEditing
             ? "La transacción se ha actualizado correctamente."
             : transactionType === "Transferencia"
-              ? "La transferencia se ha realizado correctamente."
-              : "La transacción se ha guardado correctamente.",
+            ? "La transferencia se ha realizado correctamente."
+            : "La transacción se ha guardado correctamente.",
           confirmButtonColor: "#3085d6",
         });
         onClose();
@@ -178,8 +186,8 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded, transactionToEdit 
           isEditing
             ? "Error al actualizar la transacción"
             : transactionType === "Transferencia"
-              ? "Error al realizar la transferencia"
-              : "Error al guardar la transacción"
+            ? "Error al realizar la transferencia"
+            : "Error al guardar la transacción"
         );
       }
     } catch (error) {
@@ -211,7 +219,7 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded, transactionToEdit 
   const taxOptions = [
     { label: "IVA", value: "IVA" },
     { label: "Retención", value: "retencion" },
-    { label: "Sin Impuesto", value: "sin_impuesto" }
+    { label: "Sin Impuesto", value: "sin_impuesto" },
   ];
   if (!isOpen) return null;
 
@@ -227,8 +235,8 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded, transactionToEdit 
             {isEditing
               ? "Editar Transacción"
               : transactionType === "Transferencia"
-                ? "Nueva Transferencia"
-                : "Nueva Transacción"}
+              ? "Nueva Transferencia"
+              : "Nueva Transacción"}
           </h2>
           <button onClick={onClose}>
             <IoClose size={24} />
@@ -240,22 +248,31 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded, transactionToEdit 
             {/* Botones de tipo de transacción */}
             <div className="flex justify-between space-x-2">
               <button
-                className={`flex-1 py-2 rounded-full ${transactionType === "income" ? "bg-green-500 text-white" : "bg-gray-200"
-                  }`}
+                className={`flex-1 py-2 rounded-full ${
+                  transactionType === "income"
+                    ? "bg-green-500 text-white"
+                    : "bg-gray-200"
+                }`}
                 onClick={() => setTransactionType("income")}
               >
                 Ingreso
               </button>
               <button
-                className={`flex-1 py-2 rounded-full ${transactionType === "expense" ? "bg-red-500 text-white" : "bg-gray-200"
-                  }`}
+                className={`flex-1 py-2 rounded-full ${
+                  transactionType === "expense"
+                    ? "bg-red-500 text-white"
+                    : "bg-gray-200"
+                }`}
                 onClick={() => setTransactionType("expense")}
               >
                 Gasto
               </button>
               <button
-                className={`flex-1 py-2 rounded-full ${transactionType === "Transferencia" ? "bg-blue-500 text-white" : "bg-gray-200"
-                  }`}
+                className={`flex-1 py-2 rounded-full ${
+                  transactionType === "Transferencia"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200"
+                }`}
                 onClick={() => setTransactionType("Transferencia")}
               >
                 Transferencia
@@ -267,8 +284,8 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded, transactionToEdit 
                 Fecha
               </label>
               <DatePicker
-                value={date}
-                onChange={(date) => setDate(date)}
+                value={date} // Asegúrate de que siempre sea un objeto dayjs
+                onChange={(date) => setDate(dayjs(date))} // Convertir a dayjs
                 format="YYYY-MM-DD"
                 className="w-full"
               />
@@ -305,7 +322,6 @@ const AddEntryModal = ({ isOpen, onClose, onTransactionAdded, transactionToEdit 
                   value={toAccount}
                   onChange={(e) => setToAccount(e.target.value)}
                   options={accounts}
-
                 />
               </>
             ) : (
