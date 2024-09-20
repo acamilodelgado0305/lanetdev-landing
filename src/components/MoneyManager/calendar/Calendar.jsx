@@ -10,9 +10,9 @@ const FullScreenCalendar = () => {
     const [loading, setLoading] = useState(true);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState(null);
-    const [isListVisible, setIsListVisible] = useState(false);
+    const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+    const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
 
-    // Fetch real transactions from API
     useEffect(() => {
         fetchTransactions();
     }, []);
@@ -51,7 +51,7 @@ const FullScreenCalendar = () => {
                     processedEvents[formattedDate].push({
                         type: transaction.type === 'income' ? 'success' : 'error',
                         content: `${transaction.description} - $${transaction.amount}`,
-                        paid: transaction.paid // Add paid status
+                        paid: transaction.paid
                     });
                 }
             }
@@ -78,31 +78,27 @@ const FullScreenCalendar = () => {
         setIsModalVisible(false);
     };
 
-    const handleToggleList = () => {
-        setIsListVisible(!isListVisible);
-    };
-
     const renderMenu = () => {
-        const allEvents = Object.keys(events).flatMap(date => events[date].map(event => ({ date, ...event })));
+        const currentMonthEvents = Object.keys(events)
+            .filter(date => {
+                const eventDate = new Date(date);
+                return eventDate.getMonth() === currentMonth && eventDate.getFullYear() === currentYear;
+            })
+            .flatMap(date => events[date].map(event => ({ date, ...event })))
+            .filter(event => !event.paid);
 
         return (
             <Menu>
-                {allEvents.length > 0 ? (
-                    allEvents.map((event, index) => (
+                {currentMonthEvents.length > 0 ? (
+                    currentMonthEvents.map((event, index) => (
                         <Menu.Item key={index}>
-                            {event.paid ? (
-                                <Button type="primary" style={{ backgroundColor: 'green', borderColor: 'green' }}>
-                                    {event.content} - Pagado
-                                </Button>
-                            ) : (
-                                <Checkbox onChange={() => handleCheckboxClick(event.content)}>
-                                    {event.content} - Pendiente de pago
-                                </Checkbox>
-                            )}
+                            <Checkbox onChange={() => handleCheckboxClick(event.content)}>
+                                {event.content} - Pendiente de pago
+                            </Checkbox>
                         </Menu.Item>
                     ))
                 ) : (
-                    <Menu.Item key="no-events">No hay eventos</Menu.Item>
+                    <Menu.Item key="no-events">No hay pagos pendientes este mes</Menu.Item>
                 )}
             </Menu>
         );
@@ -132,28 +128,34 @@ const FullScreenCalendar = () => {
         );
     };
 
+    const onPanelChange = (date) => {
+        setCurrentMonth(date.month());
+        setCurrentYear(date.year());
+    };
+
     return (
         <ConfigProvider locale={esES}>
-            <div style={{ height: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>      {loading ? (
-                <Spin size="large" />
-            ) : (
-                <>
-                    <div className="relative ">
-                        <div className="absolute top-3 right-72 z-10 flex items-center space-x-2">
-                            <Dropdown overlay={renderMenu()} trigger={['click']}>
-                                <button className="flex items-center border border-gray-200 rounded-md px-3 py-1 cursor-pointer hover:border-blue-500 transition-colors duration-200">
-                                    <EllipsisOutlined style={{ fontSize: '24px', cursor: 'pointer' }} />
-                                    <span className="ml-2">Pagos</span>
-                                </button>
-                            </Dropdown>
+            <div style={{ height: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                {loading ? (
+                    <Spin size="large" />
+                ) : (
+                    <>
+                        <div className="relative ">
+                            <div className="absolute top-3 right-72 z-10 flex items-center space-x-2">
+                                <Dropdown overlay={renderMenu()} trigger={['click']}>
+                                    <button className="flex items-center border border-gray-200 rounded-md px-3 py-1 cursor-pointer hover:border-blue-500 transition-colors duration-200">
+                                        <EllipsisOutlined style={{ fontSize: '24px', cursor: 'pointer' }} />
+                                        <span className="ml-2">Pagos</span>
+                                    </button>
+                                </Dropdown>
+                            </div>
+
+                            <Calendar 
+                                dateCellRender={dateCellRender} 
+                                onPanelChange={onPanelChange}
+                            />
                         </div>
 
-                        {/* Calendario */}
-                        <Calendar dateCellRender={dateCellRender} />
-                    </div>
-
-                    {/* Modal para detalles del pago */}
-                    <div>
                         <Modal
                             title="Detalles del Pago"
                             visible={isModalVisible}
@@ -162,9 +164,8 @@ const FullScreenCalendar = () => {
                         >
                             <p>{selectedEvent} - Aquí podrías realizar el pago</p>
                         </Modal>
-                    </div>
-                </>
-            )}
+                    </>
+                )}
             </div>
         </ConfigProvider>
     );
