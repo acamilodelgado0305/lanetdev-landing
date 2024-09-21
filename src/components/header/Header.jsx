@@ -3,6 +3,7 @@ import { BsFillBellFill, BsEnvelopeFill, BsCalendarFill, BsGearFill, BsBoxArrowR
 import ReactDatePicker from 'react-datepicker';
 import { useNavigate } from 'react-router-dom';
 import 'react-datepicker/dist/react-datepicker.css';
+import { Outlet, Link } from "react-router-dom";
 
 export default function Header({ unreadEmailsCount }) {
     const [startDate, setStartDate] = useState(new Date());
@@ -88,8 +89,10 @@ export default function Header({ unreadEmailsCount }) {
                     )}
                 </div>
 
-                {/* Icono de configuración */}
+                <Link to ="/index/config">
                 <BsGearFill className="text-xl cursor-pointer hover:text-gray-500" />
+                </Link>
+               
 
                 {/* Botón de cerrar sesión */}
                 <div onClick={handleLogout} className="px-6 cursor-pointer flex items-center text-primary hover:text-red-800">

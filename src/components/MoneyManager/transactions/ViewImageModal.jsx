@@ -1,22 +1,51 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
+import { X } from "lucide-react";
 
 const NoteContentModal = ({ isOpen, onClose, noteContent }) => {
+  const modalRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (modalRef.current && !modalRef.current.contains(event.target)) {
+        onClose();
+      }
+    };
+
+    const handleEscKey = (event) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleEscKey);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscKey);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-        <h2 className="text-xl font-semibold mb-4">Comprobante</h2>
-        
-        {/* Reemplaza el texto con una imagen */}
-        <img src={noteContent} alt="Contenido de la Nota" className="mb-4 max-w-full h-auto" />
-        
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div ref={modalRef} className="relative bg-white rounded-lg shadow-lg w-full max-w-3xl mx-4 overflow-hidden">
         <button
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
           onClick={onClose}
         >
-          Cerrar
+          <X size={24} />
         </button>
+        <div className="p-4">
+          <img
+            src={noteContent}
+            alt="Contenido de la Nota"
+            className="w-full h-auto object-contain max-h-[80vh]"
+          />
+        </div>
       </div>
     </div>
   );
