@@ -47,9 +47,6 @@ const LoginForm = () => {
                     <button type="submit" className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md shadow hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         Iniciar Sesión
                     </button>
-                    <div className="mt-4 text-center">
-                        <button type="button" className="text-indigo-600 hover:text-indigo-500" onClick={() => navigate('/signup')}>Regístrate</button>
-                    </div>
                 </form>
             </div>
         </div>
