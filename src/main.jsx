@@ -20,6 +20,7 @@ import { AuthProvider } from './components/Context/AuthProvider';
 import EmailManagement from './components/communication/EmailManagement';
 import Estadisticas from "./components/MoneyManager/estadisticas/Estadisticas";
 import Calendario from "./components/MoneyManager/calendar/Calendar";
+import Indexconfig from "./components/confgapp/indexconfig"
 
 
 const router = createBrowserRouter([
@@ -75,6 +76,7 @@ const router = createBrowserRouter([
 
         ],
       },
+
       {
         path: "communication",
         element: <Indexcomunicacion />,
@@ -91,6 +93,13 @@ const router = createBrowserRouter([
             path: "categorias",
             element: <Categories />,
           },
+        ],
+      },
+
+      {
+        path: "config",
+        element: <Indexconfig />,
+        children: [
         ],
       },
     ],
