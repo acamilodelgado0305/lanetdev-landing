@@ -12,28 +12,28 @@ const decodeToken = (token) => {
 };
 
 // Componente SidebarLink
-const SidebarLink = ({ to, icon: Icon, children }) => (
+const SidebarLink = ({ to, icon: Icon, label, isExpanded }) => (
   <Link
     to={to}
-    className="flex items-center p-2 text-sm text-white rounded-md hover:bg-slate-700 transition-colors duration-200"
+    className={`flex items-center p-2 text-sm text-white rounded-md hover:bg-slate-700 transition-colors duration-200 ${isExpanded ? 'justify-start' : 'justify-center'}`}
   >
-    <Icon className="w-5 h-5 mr-3 text-white" />
-    <span>{children}</span>
+    <Icon className="w-6 h-6 text-white" />  {/* Mostrar íconos siempre */}
+    {isExpanded && <span className="ml-3">{label}</span>}  {/* Mostrar textos solo si está expandido */}
   </Link>
 );
 
 // Componente SidebarSection
-const SidebarSection = ({ title, children }) => (
+const SidebarSection = ({ title, children, isExpanded }) => (
   <div className="mb-4">
-    <h3 className="px-3 mb-2 text-xs font-semibold text-white uppercase">{title}</h3>
+    {isExpanded && <h3 className="px-3 mb-2 text-xs font-semibold text-white uppercase">{title}</h3>} {/* Mostrar título solo si está expandido */}
     {children}
   </div>
 );
 
 export default function Root() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false); // Controla el menú en pantallas pequeñas
+  const [isExpanded, setIsExpanded] = useState(false); // Controla el estado expandido del menú en pantallas grandes
   const [unreadEmailsCount, setUnreadEmailsCount] = useState(0);
-
 
   const token = localStorage.getItem("token");
   const decodedToken = token ? decodeToken(token) : null;
@@ -64,26 +64,29 @@ export default function Root() {
         <Menu className="w-6 h-6" />
       </button>
 
-      {/* Sidebar */}
+      {/* Sidebar en pantallas grandes */}
       <aside
-        className={`${isOpen ? "translate-x-0" : "-translate-x-full"
-          } fixed inset-y-0 left-0 z-40 w-64 bg-primary border-r border-gray-200 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}
+        onMouseEnter={() => setIsExpanded(true)} // Expandir menú al hacer hover
+        onMouseLeave={() => setIsExpanded(false)} // Reducir menú al quitar hover
+        className={`${isExpanded ? "lg:w-64" : "lg:w-20"} fixed inset-y-0 left-0 z-40 bg-primary border-r border-gray-200 transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 hidden lg:flex flex-col`}
       >
         <UserProfileHeader onToggle={() => setIsOpen(false)} />
-
+        {/* Íconos siempre visibles */}
         <nav className="px-4 py-4">
-          <SidebarSection title="Menú principal">
+          <SidebarSection title="Menú principal" isExpanded={isExpanded}>
             {sidebarLinks.slice(0, 4).map(link => (
-              <SidebarLink key={link.to} to={link.to} icon={link.icon}>
-                {link.label}
-              </SidebarLink>
+              <div className="flex items-center">
+                {/* Íconos siempre visibles */}
+                <SidebarLink key={link.to} to={link.to} icon={link.icon} label={link.label} isExpanded={isExpanded} />
+              </div>
             ))}
           </SidebarSection>
-          <SidebarSection title="Recursos">
+          <SidebarSection title="Recursos" isExpanded={isExpanded}>
             {sidebarLinks.slice(4).map(link => (
-              <SidebarLink key={link.to} to={link.to} icon={link.icon}>
-                {link.label}
-              </SidebarLink>
+              <div className="flex items-center">
+                {/* Íconos siempre visibles */}
+                <SidebarLink key={link.to} to={link.to} icon={link.icon} label={link.label} isExpanded={isExpanded} />
+              </div>
             ))}
           </SidebarSection>
         </nav>
@@ -99,6 +102,27 @@ export default function Root() {
           <Outlet context={{ setUnreadEmailsCount }} />
         </main>
       </div>
+
+      {/* Menú desplegable en pantallas pequeñas */}
+      {isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 lg:hidden">
+          <aside className="fixed inset-y-0 left-0 w-64 bg-primary border-r border-gray-200 z-50">
+            <UserProfileHeader onToggle={() => setIsOpen(false)} />
+            <nav className="px-4 py-4">
+              <SidebarSection title="Menú principal" isExpanded={true}>
+                {sidebarLinks.slice(0, 4).map(link => (
+                  <SidebarLink key={link.to} to={link.to} icon={link.icon} label={link.label} isExpanded={true} />
+                ))}
+              </SidebarSection>
+              <SidebarSection title="Recursos" isExpanded={true}>
+                {sidebarLinks.slice(4).map(link => (
+                  <SidebarLink key={link.to} to={link.to} icon={link.icon} label={link.label} isExpanded={true} />
+                ))}
+              </SidebarSection>
+            </nav>
+          </aside>
+        </div>
+      )}
     </div>
   );
 }

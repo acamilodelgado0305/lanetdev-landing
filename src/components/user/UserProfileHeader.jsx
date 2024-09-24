@@ -27,7 +27,7 @@ const UserProfileHeader = ({ onToggle }) => {
                 <img
                     src="https://res.cloudinary.com/djbe9agfz/image/upload/v1726013391/LOGO_i1vjvs.png"
                     alt="Logo Lanet"
-                    className="ml-8 h-10 rounded-full"
+                    className="ml-4 h-10 rounded-full"
                 />
                 <button
                     onClick={onToggle}
@@ -41,7 +41,7 @@ const UserProfileHeader = ({ onToggle }) => {
                             className="flex items-center text-sm text-white focus:outline-none"
                             onClick={handleDropdownToggle}
                         >
-                            <span className="mr-2">{userName}</span>
+                            <span className="ml-2 mr-2">{userName}</span>
                             {isDropdownOpen ? (
                                 <ChevronUp className="w-4 h-4" />
                             ) : (
