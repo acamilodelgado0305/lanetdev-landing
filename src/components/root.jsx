@@ -1,8 +1,15 @@
 import React, { useState, useMemo } from "react";
 import { Outlet, Link } from "react-router-dom";
-import { Home, FileText, Users, ShoppingCart, Book, DollarSign, MessageCircle, Menu } from "lucide-react"; // Importamos el icono de hamburguesa
+import { Home, FileText, Users, ShoppingCart, Book, DollarSign, MessageCircle, Menu } from "lucide-react";
 import Header from '../components/header/Header';
 import UserProfileHeader from './user/UserProfileHeader';
+
+// Función para decodificar el token
+const decodeToken = (token) => {
+  if (!token) return null;
+  const payload = token.split('.')[1];
+  return JSON.parse(atob(payload));
+};
 
 // Componente SidebarLink
 const SidebarLink = ({ to, icon: Icon, children }) => (
@@ -25,7 +32,12 @@ const SidebarSection = ({ title, children }) => (
 
 export default function Root() {
   const [isOpen, setIsOpen] = useState(false);
-  const [unreadEmailsCount, setUnreadEmailsCount] = useState(0); // Estado global de correos no leídos
+  const [unreadEmailsCount, setUnreadEmailsCount] = useState(0);
+
+
+  const token = localStorage.getItem("token");
+  const decodedToken = token ? decodeToken(token) : null;
+  const userRole = decodedToken ? decodedToken.role : null;
 
   // Sidebar links (usando useMemo para evitar renders innecesarios)
   const sidebarLinks = useMemo(
@@ -35,10 +47,11 @@ export default function Root() {
       { to: "/index/clientes", label: "Clientes", icon: Users },
       { to: "/productos", label: "Productos", icon: ShoppingCart },
       { to: "/index/doc", label: "Documentación", icon: FileText },
-      { to: "/index/moneymanager", label: "Money Manager", icon: Book },
+      // Mostrar "Money Manager" solo si el rol es "superadmin"
+      userRole === "superadmin" && { to: "/index/moneymanager", label: "Money Manager", icon: Book },
       { to: "/index/communication", label: "Comunicación", icon: MessageCircle },
-    ],
-    []
+    ].filter(Boolean),  // Filtra los elementos que sean falsos (ej. undefined)
+    [userRole]
   );
 
   return (
