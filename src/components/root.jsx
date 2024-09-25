@@ -34,6 +34,7 @@ export default function Root() {
   const [isOpen, setIsOpen] = useState(false); // Controla el menú en pantallas pequeñas
   const [isExpanded, setIsExpanded] = useState(false); // Controla el estado expandido del menú en pantallas grandes
   const [unreadEmailsCount, setUnreadEmailsCount] = useState(0);
+  const [isUserProfileOpen, setIsUserProfileOpen] = useState(false); // Estado del UserProfileHeader
 
   const token = localStorage.getItem("token");
   const decodedToken = token ? decodeToken(token) : null;
@@ -47,12 +48,16 @@ export default function Root() {
       { to: "/index/clientes", label: "Clientes", icon: Users },
       { to: "/productos", label: "Productos", icon: ShoppingCart },
       { to: "/index/doc", label: "Documentación", icon: FileText },
-      // Mostrar "Money Manager" solo si el rol es "superadmin"
       userRole === "superadmin" && { to: "/index/moneymanager", label: "Money Manager", icon: Book },
       { to: "/index/communication", label: "Comunicación", icon: MessageCircle },
-    ].filter(Boolean),  // Filtra los elementos que sean falsos (ej. undefined)
+    ].filter(Boolean),
     [userRole]
   );
+
+  const handleSidebarCollapse = () => {
+    setIsExpanded(false);
+    setIsUserProfileOpen(false); // Cierra el menú de UserProfileHeader si está abierto
+  };
 
   return (
     <div className="flex h-screen">
@@ -67,16 +72,18 @@ export default function Root() {
       {/* Sidebar en pantallas grandes */}
       <aside
         onMouseEnter={() => setIsExpanded(true)} // Expandir menú al hacer hover
-        onMouseLeave={() => setIsExpanded(false)} // Reducir menú al quitar hover
+        onMouseLeave={handleSidebarCollapse} // Contraer menú y cerrar el UserProfileHeader si está abierto
         className={`${isExpanded ? "lg:w-64" : "lg:w-20"} fixed inset-y-0 left-0 z-40 bg-primary border-r border-gray-200 transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 hidden lg:flex flex-col`}
       >
-        <UserProfileHeader onToggle={() => setIsOpen(false)} />
-        {/* Íconos siempre visibles */}
+        <UserProfileHeader
+          onToggle={() => setIsOpen(false)}
+          isUserProfileOpen={isUserProfileOpen}
+          setIsUserProfileOpen={setIsUserProfileOpen} // Controlamos el estado del dropdown desde Root
+        />
         <nav className="px-4 py-4">
           <SidebarSection title="Menú principal" isExpanded={isExpanded}>
             {sidebarLinks.slice(0, 4).map(link => (
               <div className="flex items-center">
-                {/* Íconos siempre visibles */}
                 <SidebarLink key={link.to} to={link.to} icon={link.icon} label={link.label} isExpanded={isExpanded} />
               </div>
             ))}
@@ -84,7 +91,6 @@ export default function Root() {
           <SidebarSection title="Recursos" isExpanded={isExpanded}>
             {sidebarLinks.slice(4).map(link => (
               <div className="flex items-center">
-                {/* Íconos siempre visibles */}
                 <SidebarLink key={link.to} to={link.to} icon={link.icon} label={link.label} isExpanded={isExpanded} />
               </div>
             ))}

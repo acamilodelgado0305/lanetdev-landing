@@ -1,28 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, ChevronUp, X } from "lucide-react";
 import { useAuth } from '../../components/Context/AuthProvider';
 import ImageUploader from './ImageUpload';
 
-const UserProfileHeader = ({ onToggle }) => {
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [profilePictureUrl, setProfilePictureUrl] = useState(null); // Estado para la URL de la imagen
+const UserProfileHeader = ({ onToggle, isUserProfileOpen, setIsUserProfileOpen }) => {
     const { user } = useAuth();
+    const [profilePictureUrl, setProfilePictureUrl] = useState(user?.profilepictureurl || null); // Estado para la URL de la imagen
+    const [isUploading, setIsUploading] = useState(false); // Controla si se está subiendo una imagen
     const userName = user ? user.username : 'Loading...';
+    const defaultProfilePictureUrl = 'https://i.pinimg.com/736x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg';
 
-    const defaultProfilePictureUrl = user?.profilepictureurl || 'https://i.pinimg.com/736x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg';
+    const dropdownRef = useRef(null); // Ref para detectar clics fuera del menú
 
     // Función que se ejecuta cuando la imagen se carga con éxito
     const handleUploadSuccess = (url) => {
         setProfilePictureUrl(url); // Actualiza la URL de la imagen
+        setIsUploading(false); // Indica que la subida ha finalizado
         console.log('Image uploaded successfully:', url);
     };
 
-    const handleDropdownToggle = () => {
-        setIsDropdownOpen(!isDropdownOpen);
+    const handleUploadStart = () => {
+        setIsUploading(true); // Indica que la subida está en curso
+    };
+
+    // Cerrar el menú si se hace clic fuera del área del menú
+    const handleClickOutside = (event) => {
+        if (dropdownRef.current && !dropdownRef.current.contains(event.target) && !isUploading) {
+            setIsUserProfileOpen(false); // Cierra el menú solo si no se está subiendo una imagen
+        }
+    };
+
+    // Añadir y remover el evento para detectar clics fuera del menú
+    useEffect(() => {
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isUploading]); // Se asegura de que solo cierre cuando no se está subiendo
+
+    const handleDropdownToggle = (e) => {
+        e.stopPropagation(); // Evitar que el evento cierre el menú accidentalmente
+        setIsUserProfileOpen(!isUserProfileOpen);
     };
 
     return (
-        <div className="border-b border-gray-200">
+        <div className="border-b border-gray-200" ref={dropdownRef}>
             <div className="flex items-center justify-between h-16 px-4">
                 <img
                     src="https://res.cloudinary.com/djbe9agfz/image/upload/v1726013391/LOGO_i1vjvs.png"
@@ -42,7 +64,7 @@ const UserProfileHeader = ({ onToggle }) => {
                             onClick={handleDropdownToggle}
                         >
                             <span className="ml-2 mr-2">{userName}</span>
-                            {isDropdownOpen ? (
+                            {isUserProfileOpen ? (
                                 <ChevronUp className="w-4 h-4" />
                             ) : (
                                 <ChevronDown className="w-4 h-4" />
@@ -53,7 +75,7 @@ const UserProfileHeader = ({ onToggle }) => {
             </div>
 
             {/* Información del usuario que se despliega debajo del nombre */}
-            {isDropdownOpen && user && (
+            {isUserProfileOpen && user && (
                 <div className="border-y-2 px-4 py-1 bg-primary text-gray-300">
                     <div className="flex items-center mb-4">
                         <img
@@ -71,7 +93,8 @@ const UserProfileHeader = ({ onToggle }) => {
                         <ImageUploader
                             userId={user.id}
                             userInfo={user}
-                            onUploadSuccess={handleUploadSuccess}
+                            onUploadSuccess={handleUploadSuccess} // Manejo correcto de la subida de la imagen
+                            onUploadStart={handleUploadStart}    // Inicia la subida
                         />
                     </div>
 
