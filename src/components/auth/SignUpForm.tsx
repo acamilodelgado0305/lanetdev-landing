@@ -44,7 +44,7 @@ const SignUpForm: React.FC = () => {
     };
 
     return (
-        <div className="flex items-center justify-center mt-8 bg-gray-100">
+        <div className="flex items-center justify-center mt-8 bg-gray-100 h-[100vh]">
             <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
                 <h2 className="text-2xl font-bold mb-7 text-center">Regístrate</h2>
                 <form onSubmit={handleSubmit(handleSignUp)}>

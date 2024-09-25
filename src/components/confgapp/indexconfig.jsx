@@ -1,181 +1,244 @@
 import React, { useState, useEffect } from "react";
-import { Tabs, Button, List, Avatar, Input, Modal, message } from "antd";
+import {
+  Layout,
+  Menu,
+  Table,
+  Tag,
+  Space,
+  Button,
+  Modal,
+  Form,
+  Input,
+  Select,
+  message,
+  Typography,
+} from "antd";
 import {
   UserOutlined,
+  SettingOutlined,
+  TeamOutlined,
+  EditOutlined,
   DeleteOutlined,
   PlusOutlined,
-  EditOutlined,
 } from "@ant-design/icons";
 import {
   getUsers,
-  updateUserInfo,
   updateUser,
   deleteUser,
+  createUser,
 } from "../../services/apiService";
-const { TabPane } = Tabs;
+import { Outlet, Link } from "react-router-dom";
+
+const { Header, Content, Sider } = Layout;
+const { Title } = Typography;
+const { Option } = Select;
 
 const IndexConfig = () => {
   const [collaborators, setCollaborators] = useState([]);
-  const [newCollaborator, setNewCollaborator] = useState("");
+  const [loading, setLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [editingUser, setEditingUser] = useState(null);
-  const [users, setUsers] = useState([]);
-  const [error, setError] = useState(null);
+  const [form] = Form.useForm();
+  const [editingUserId, setEditingUserId] = useState(null);
 
   useEffect(() => {
     fetchUsers();
   }, []);
 
   const fetchUsers = async () => {
+    setLoading(true);
     try {
       const data = await getUsers();
-      setUsers(data);
+      setCollaborators(data);
     } catch (err) {
-      setError("Error al cargar las cuentas");
-      console.error("Error fetchig users:", err);
+      message.error("Error al cargar los colaboradores");
+      console.error("Error fetching users:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleAddCollaborator = async () => {
-    if (newCollaborator.trim() !== "") {
-      try {
-        const newUser = {
-          id: Date.now(),
-          name: newCollaborator,
-          email: `${newCollaborator.toLowerCase()}@example.com`,
-        };
-        setCollaborators([...collaborators, newUser]);
-        setNewCollaborator("");
-        setIsModalVisible(false);
+  const handleAddOrUpdateCollaborator = async (values) => {
+    try {
+      if (editingUserId) {
+        await updateUser(editingUserId, values);
+        message.success("Colaborador actualizado con éxito");
+      } else {
+        await createUser(values);
         message.success("Colaborador agregado con éxito");
-      } catch (error) {
-        message.error("Error al agregar colaborador");
       }
+      setIsModalVisible(false);
+      form.resetFields();
+      fetchUsers();
+    } catch (error) {
+      message.error("Error al procesar la operación");
     }
   };
 
   const handleDeleteCollaborator = async (id) => {
     try {
       await deleteUser(id);
-      setCollaborators(collaborators.filter((c) => c.id !== id));
       message.success("Colaborador eliminado con éxito");
+      fetchUsers();
     } catch (error) {
       message.error("Error al eliminar colaborador");
     }
   };
 
-  const handleEditCollaborator = (user) => {
-    setEditingUser(user);
+  const showUserModal = (user = null) => {
+    if (user) {
+      setEditingUserId(user.id);
+      form.setFieldsValue(user);
+    } else {
+      setEditingUserId(null);
+      form.resetFields();
+    }
     setIsModalVisible(true);
   };
 
-  const handleUpdateCollaborator = async () => {
-    if (editingUser) {
-      try {
-        await updateUser(editingUser.id, editingUser);
-        setCollaborators(
-          collaborators.map((c) => (c.id === editingUser.id ? editingUser : c))
-        );
-        setIsModalVisible(false);
-        setEditingUser(null);
-        message.success("Información del colaborador actualizada con éxito");
-      } catch (error) {
-        message.error("Error al actualizar la información del colaborador");
-      }
-    }
-  };
+  const columns = [
+    {
+      title: "Nombre",
+      dataIndex: "username",
+      key: "name",
+      render: (text) => <a>{text}</a>,
+    },
+    {
+      title: "Email",
+      dataIndex: "email",
+      key: "email",
+    },
+    {
+      title: "Rol",
+      key: "role",
+      dataIndex: "role",
+      render: (role) => {
+        if (!role) return <Tag color="default">No asignado</Tag>;
+        const color = role.toLowerCase() === "admin" ? "geekblue" : "green";
+        return <Tag color={color}>{role.toUpperCase()}</Tag>;
+      },
+    },
+    {
+      title: "Acciones",
+      key: "action",
+      render: (_, record) => (
+        <Space size="middle">
+          <Button icon={<EditOutlined />} onClick={() => showUserModal(record)}>
+            Editar
+          </Button>
+          <Button
+            icon={<DeleteOutlined />}
+            onClick={() => handleDeleteCollaborator(record.id)}
+            danger
+          >
+            Eliminar
+          </Button>
+        </Space>
+      ),
+    },
+  ];
 
   return (
-    <div className="p-4">
-      <Tabs defaultActiveKey="1">
-        <TabPane tab="Configuraciones" key="1">
-          <div className="bg-white p-4 rounded-lg shadow">
-            <h2 className="text-xl font-bold mb-4">
-              Configuraciones de la App
-            </h2>
-            <p>Configuraciones adicionales de la app irían aquí.</p>
-          </div>
-        </TabPane>
-        <TabPane tab="Colaboradores" key="2">
-          <div className="bg-white p-4 rounded-lg shadow">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Colaboradores</h2>
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => {
-                  setEditingUser(null);
-                  setIsModalVisible(true);
-                }}
-              >
-                Agregar Colaborador
-              </Button>
-            </div>
-            <List
-              itemLayout="horizontal"
-              dataSource={collaborators}
-              renderItem={(item) => (
-                <List.Item
-                  actions={[
-                    <Button
-                      icon={<EditOutlined />}
-                      onClick={() => handleEditCollaborator(item)}
-                    />,
-                    <Button
-                      icon={<DeleteOutlined />}
-                      onClick={() => handleDeleteCollaborator(item.id)}
-                      danger
-                    />,
-                  ]}
-                >
-                  <List.Item.Meta
-                    avatar={<Avatar icon={<UserOutlined />} />}
-                    title={item.name}
-                    description={item.email}
-                  />
-                </List.Item>
-              )}
-            />
-          </div>
-        </TabPane>
-      </Tabs>
+    <Layout style={{ minHeight: "100vh" }}>
+      <Sider width={200} theme="light">
+        <Menu
+          mode="inline"
+          defaultSelectedKeys={["collaborators"]}
+          style={{ height: "100%", borderRight: 0 }}
+        >
+          <Menu.Item key="settings" icon={<SettingOutlined />}>
+            Configuraciones
+          </Menu.Item>
+          <Menu.Item key="collaborators" icon={<TeamOutlined />}>
+            Colaboradores
+          </Menu.Item>
+        </Menu>
+      </Sider>
+      <Layout style={{ padding: "0 24px 24px" }}>
+        <Header style={{ background: "#fff", padding: 0 }}>
+          <Title level={2} style={{ margin: "16px 0" }}>
+            Configuracion
+          </Title>
+        </Header>
+        <Content
+          style={{
+            padding: 24,
+            margin: 0,
+            minHeight: 280,
+            background: "#fff",
+          }}
+        >
+          <Link to="/signup">
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => showUserModal()}
+              style={{ marginBottom: 16 }}
+            >
+              Agregar Colaborador
+            </Button>
+          </Link>
+
+          <Table
+            columns={columns}
+            dataSource={collaborators}
+            rowKey="id"
+            loading={loading}
+          />
+        </Content>
+      </Layout>
 
       <Modal
-        title={editingUser ? "Editar Colaborador" : "Agregar Colaborador"}
+        title={editingUserId ? "Editar Colaborador" : "Agregar Colaborador"}
         visible={isModalVisible}
-        onOk={editingUser ? handleUpdateCollaborator : handleAddCollaborator}
+        onOk={() => form.submit()}
         onCancel={() => {
           setIsModalVisible(false);
-          setEditingUser(null);
+          form.resetFields();
         }}
+        footer={[
+          <Button key="back" onClick={() => setIsModalVisible(false)}>
+            Cancelar
+          </Button>,
+          <Button key="submit" type="primary" onClick={() => form.submit()}>
+            {editingUserId ? "Actualizar" : "Agregar"}
+          </Button>,
+        ]}
       >
-        {editingUser ? (
-          <>
-            <Input
-              placeholder="Nombre del colaborador"
-              value={editingUser.name}
-              onChange={(e) =>
-                setEditingUser({ ...editingUser, name: e.target.value })
-              }
-              className="mb-2"
-            />
-            <Input
-              placeholder="Email del colaborador"
-              value={editingUser.email}
-              onChange={(e) =>
-                setEditingUser({ ...editingUser, email: e.target.value })
-              }
-            />
-          </>
-        ) : (
-          <Input
-            placeholder="Nombre del colaborador"
-            value={newCollaborator}
-            onChange={(e) => setNewCollaborator(e.target.value)}
-          />
-        )}
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleAddOrUpdateCollaborator}
+        >
+          <Form.Item
+            name="name"
+            label="Nombre"
+            rules={[{ required: true, message: "Por favor ingrese el nombre" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="email"
+            label="Email"
+            rules={[
+              { required: true, message: "Por favor ingrese el email" },
+              { type: "email", message: "Por favor ingrese un email válido" },
+            ]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="role"
+            label="Rol"
+            rules={[{ required: true, message: "Por favor seleccione un rol" }]}
+          >
+            <Select>
+              <Option value="Admin">Admin</Option>
+              <Option value="User">Usuario</Option>
+            </Select>
+          </Form.Item>
+        </Form>
       </Modal>
-    </div>
+    </Layout>
   );
 };
 
