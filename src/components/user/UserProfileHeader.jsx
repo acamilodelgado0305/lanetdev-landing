@@ -115,7 +115,7 @@ const UserProfileHeader = ({ onToggle, isUserProfileOpen, setIsUserProfileOpen }
                             </p>
                         )}
                         <p className="text-sm">
-                            <span className="font-bold text-white">Role:</span> Admin
+                            <span className="font-bold text-white">Role:</span> {user.role}
                         </p>
                     </div>
                 </div>

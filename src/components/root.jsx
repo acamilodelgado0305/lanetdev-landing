@@ -4,11 +4,15 @@ import { Home, FileText, Users, ShoppingCart, Book, DollarSign, MessageCircle, M
 import Header from '../components/header/Header';
 import UserProfileHeader from './user/UserProfileHeader';
 
-// Función para decodificar el token
 const decodeToken = (token) => {
-  if (!token) return null;
-  const payload = token.split('.')[1];
-  return JSON.parse(atob(payload));
+  try {
+    if (!token) return null;
+    const payload = token.split('.')[1];
+    return JSON.parse(atob(payload));
+  } catch (error) {
+    console.error("Error decoding token:", error);
+    return null;
+  }
 };
 
 // Componente SidebarLink
@@ -17,29 +21,28 @@ const SidebarLink = ({ to, icon: Icon, label, isExpanded }) => (
     to={to}
     className={`flex items-center p-2 text-sm text-white rounded-md hover:bg-slate-700 transition-colors duration-200 ${isExpanded ? 'justify-start' : 'justify-center'}`}
   >
-    <Icon className="w-6 h-6 text-white" />  {/* Mostrar íconos siempre */}
-    {isExpanded && <span className="ml-3">{label}</span>}  {/* Mostrar textos solo si está expandido */}
+    <Icon className="w-6 h-6 text-white" />
+    {isExpanded && <span className="ml-3">{label}</span>}
   </Link>
 );
 
 // Componente SidebarSection
 const SidebarSection = ({ title, children, isExpanded }) => (
   <div className="mb-4">
-    {isExpanded && <h3 className="px-3 mb-2 text-xs font-semibold text-white uppercase">{title}</h3>} {/* Mostrar título solo si está expandido */}
+    {isExpanded && <h3 className="px-3 mb-2 text-xs font-semibold text-white uppercase">{title}</h3>}
     {children}
   </div>
 );
 
 export default function Root() {
-  const [isOpen, setIsOpen] = useState(false); // Controla el menú en pantallas pequeñas
-  const [isExpanded, setIsExpanded] = useState(false); // Controla el estado expandido del menú en pantallas grandes
+  const [isOpen, setIsOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [unreadEmailsCount, setUnreadEmailsCount] = useState(0);
-  const [isUserProfileOpen, setIsUserProfileOpen] = useState(false); // Estado del UserProfileHeader
+  const [isUserProfileOpen, setIsUserProfileOpen] = useState(false);
 
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("authToken");
   const decodedToken = token ? decodeToken(token) : null;
   const userRole = decodedToken ? decodedToken.role : null;
-
   // Sidebar links (usando useMemo para evitar renders innecesarios)
   const sidebarLinks = useMemo(
     () => [
@@ -56,7 +59,7 @@ export default function Root() {
 
   const handleSidebarCollapse = () => {
     setIsExpanded(false);
-    setIsUserProfileOpen(false); // Cierra el menú de UserProfileHeader si está abierto
+    setIsUserProfileOpen(false);
   };
 
   return (
@@ -71,14 +74,14 @@ export default function Root() {
 
       {/* Sidebar en pantallas grandes */}
       <aside
-        onMouseEnter={() => setIsExpanded(true)} // Expandir menú al hacer hover
-        onMouseLeave={handleSidebarCollapse} // Contraer menú y cerrar el UserProfileHeader si está abierto
+        onMouseEnter={() => setIsExpanded(true)}
+        onMouseLeave={handleSidebarCollapse}
         className={`${isExpanded ? "lg:w-64" : "lg:w-20"} fixed inset-y-0 left-0 z-40 bg-primary border-r border-gray-200 transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 hidden lg:flex flex-col`}
       >
         <UserProfileHeader
           onToggle={() => setIsOpen(false)}
           isUserProfileOpen={isUserProfileOpen}
-          setIsUserProfileOpen={setIsUserProfileOpen} // Controlamos el estado del dropdown desde Root
+          setIsUserProfileOpen={setIsUserProfileOpen}
         />
         <nav className="px-4 py-4">
           <SidebarSection title="Menú principal" isExpanded={isExpanded}>
