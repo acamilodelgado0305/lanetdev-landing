@@ -3,17 +3,7 @@ import { Outlet, Link } from "react-router-dom";
 import { Home, FileText, Users, ShoppingCart, Book, DollarSign, MessageCircle, Menu } from "lucide-react";
 import Header from '../components/header/Header';
 import UserProfileHeader from './user/UserProfileHeader';
-
-const decodeToken = (token) => {
-  try {
-    if (!token) return null;
-    const payload = token.split('.')[1];
-    return JSON.parse(atob(payload));
-  } catch (error) {
-    console.error("Error decoding token:", error);
-    return null;
-  }
-};
+import { useAuth } from '../components/Context/AuthProvider';
 
 // Componente SidebarLink
 const SidebarLink = ({ to, icon: Icon, label, isExpanded }) => (
@@ -40,9 +30,8 @@ export default function Root() {
   const [unreadEmailsCount, setUnreadEmailsCount] = useState(0);
   const [isUserProfileOpen, setIsUserProfileOpen] = useState(false);
 
-  const token = localStorage.getItem("authToken");
-  const decodedToken = token ? decodeToken(token) : null;
-  const userRole = decodedToken ? decodedToken.role : null;
+  const { userRole } = useAuth();
+
   // Sidebar links (usando useMemo para evitar renders innecesarios)
   const sidebarLinks = useMemo(
     () => [
@@ -103,10 +92,7 @@ export default function Root() {
 
       {/* Main content */}
       <div className="flex flex-col w-full">
-        {/* Header global que recibe el contador de correos no leídos */}
         <Header unreadEmailsCount={unreadEmailsCount} />
-
-        {/* Outlet donde se pasa el setUnreadEmailsCount al componente EmailManagement */}
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 w-full">
           <Outlet context={{ setUnreadEmailsCount }} />
         </main>
