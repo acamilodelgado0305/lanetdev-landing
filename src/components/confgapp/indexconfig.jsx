@@ -6,10 +6,6 @@ import {
   Tag,
   Space,
   Button,
-  Modal,
-  Form,
-  Input,
-  Select,
   message,
   Typography,
 } from "antd";
@@ -25,24 +21,27 @@ import {
   getUsers,
   updateUser,
   deleteUser,
-  createUser,
 } from "../../services/apiService";
-import { Outlet, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
+import SignUpModal from "../auth/SignUpForm";
 
 const { Header, Content, Sider } = Layout;
 const { Title } = Typography;
-const { Option } = Select;
 
 const IndexConfig = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [collaborators, setCollaborators] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [form] = Form.useForm();
-  const [editingUserId, setEditingUserId] = useState(null);
 
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  const openModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => setIsModalOpen(false);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -57,23 +56,6 @@ const IndexConfig = () => {
     }
   };
 
-  const handleAddOrUpdateCollaborator = async (values) => {
-    try {
-      if (editingUserId) {
-        await updateUser(editingUserId, values);
-        message.success("Colaborador actualizado con éxito");
-      } else {
-        await createUser(values);
-        message.success("Colaborador agregado con éxito");
-      }
-      setIsModalVisible(false);
-      form.resetFields();
-      fetchUsers();
-    } catch (error) {
-      message.error("Error al procesar la operación");
-    }
-  };
-
   const handleDeleteCollaborator = async (id) => {
     try {
       await deleteUser(id);
@@ -82,17 +64,6 @@ const IndexConfig = () => {
     } catch (error) {
       message.error("Error al eliminar colaborador");
     }
-  };
-
-  const showUserModal = (user = null) => {
-    if (user) {
-      setEditingUserId(user.id);
-      form.setFieldsValue(user);
-    } else {
-      setEditingUserId(null);
-      form.resetFields();
-    }
-    setIsModalVisible(true);
   };
 
   const columns = [
@@ -122,7 +93,7 @@ const IndexConfig = () => {
       key: "action",
       render: (_, record) => (
         <Space size="middle">
-          <Button icon={<EditOutlined />} onClick={() => showUserModal(record)}>
+          <Button icon={<EditOutlined />} onClick={() => console.log('Editar', record)}>
             Editar
           </Button>
           <Button
@@ -156,7 +127,7 @@ const IndexConfig = () => {
       <Layout style={{ padding: "0 24px 24px" }}>
         <Header style={{ background: "#fff", padding: 0 }}>
           <Title level={2} style={{ margin: "16px 0" }}>
-            Configuracion
+            Configuración
           </Title>
         </Header>
         <Content
@@ -167,11 +138,11 @@ const IndexConfig = () => {
             background: "#fff",
           }}
         >
-          <Link to="/signup">
+          <Link>
             <Button
               type="primary"
               icon={<PlusOutlined />}
-              onClick={() => showUserModal()}
+              onClick={openModal}
               style={{ marginBottom: 16 }}
             >
               Agregar Colaborador
@@ -184,60 +155,13 @@ const IndexConfig = () => {
             rowKey="id"
             loading={loading}
           />
+
+          <SignUpModal
+            isOpen={isModalOpen}
+            onClose={closeModal}
+          />
         </Content>
       </Layout>
-
-      <Modal
-        title={editingUserId ? "Editar Colaborador" : "Agregar Colaborador"}
-        visible={isModalVisible}
-        onOk={() => form.submit()}
-        onCancel={() => {
-          setIsModalVisible(false);
-          form.resetFields();
-        }}
-        footer={[
-          <Button key="back" onClick={() => setIsModalVisible(false)}>
-            Cancelar
-          </Button>,
-          <Button key="submit" type="primary" onClick={() => form.submit()}>
-            {editingUserId ? "Actualizar" : "Agregar"}
-          </Button>,
-        ]}
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleAddOrUpdateCollaborator}
-        >
-          <Form.Item
-            name="name"
-            label="Nombre"
-            rules={[{ required: true, message: "Por favor ingrese el nombre" }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="email"
-            label="Email"
-            rules={[
-              { required: true, message: "Por favor ingrese el email" },
-              { type: "email", message: "Por favor ingrese un email válido" },
-            ]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="role"
-            label="Rol"
-            rules={[{ required: true, message: "Por favor seleccione un rol" }]}
-          >
-            <Select>
-              <Option value="Admin">Admin</Option>
-              <Option value="User">Usuario</Option>
-            </Select>
-          </Form.Item>
-        </Form>
-      </Modal>
     </Layout>
   );
 };

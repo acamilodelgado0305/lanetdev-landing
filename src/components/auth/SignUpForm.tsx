@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useForm, SubmitHandler } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import Swal from 'sweetalert2';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { Modal, Form, Input, Button, message } from 'antd';
+import { EyeInvisibleOutlined, EyeTwoTone } from '@ant-design/icons';
 import { createUser } from '../../services/apiService';
 
 interface SignUpFormInputs {
@@ -12,114 +12,120 @@ interface SignUpFormInputs {
     confirmPassword: string;
 }
 
-const SignUpForm: React.FC = () => {
-    const { register, handleSubmit, formState: { errors }, watch } = useForm<SignUpFormInputs>();
+interface SignUpModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+}
+
+const SignUpModal: React.FC<SignUpModalProps> = ({ isOpen, onClose }) => {
+    const { control, handleSubmit, watch, formState: { errors } } = useForm<SignUpFormInputs>();
     const navigate = useNavigate();
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-    const handleSignUp: SubmitHandler<SignUpFormInputs> = async (data) => {
-        const { username, email, password } = data;
-
+    const onSubmit = async (data: SignUpFormInputs) => {
         try {
-            // Llama a la función createUser para registrar el nuevo usuario
-            const userData = { username, email, password };
-            await createUser(userData);
-
-            Swal.fire('¡Usuario registrado!', 'Se ha registrado correctamente.', 'success').then(() => {
-                navigate('/login');
-            });
+            const { username, email, password } = data;
+            await createUser({ username, email, password });
+            message.success('Usuario registrado correctamente');
+            onClose();  // Cerrar el modal
+            navigate('/login');
         } catch (error) {
-            Swal.fire('Error', 'Hubo un problema al registrarse. Por favor, intenta nuevamente.', 'error');
+            message.error('Hubo un problema al registrarse. Por favor, intenta nuevamente.');
             console.error('Error durante el registro:', error);
         }
     };
 
-    const togglePasswordVisibility = () => {
-        setShowPassword(!showPassword);
-    };
-
-    const toggleConfirmPasswordVisibility = () => {
-        setShowConfirmPassword(!showConfirmPassword);
-    };
-
     return (
-        <div className="flex items-center justify-center mt-8 bg-gray-100 h-[100vh]">
-            <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
-                <h2 className="text-2xl font-bold mb-7 text-center">Regístrate</h2>
-                <form onSubmit={handleSubmit(handleSignUp)}>
-                    <div className="mb-4">
-                        <label htmlFor="username" className="block text-sm font-medium text-gray-700">Nombre de Usuario</label>
-                        <input
-                            id="username"
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                            {...register('username', { required: 'El nombre de usuario es requerido' })}
-                        />
-                        {errors.username && <p className="text-red-500 text-xs mt-2">{errors.username.message}</p>}
-                    </div>
+        <Modal
+            title="Regístrate"
+            visible={isOpen}
+            onCancel={onClose}
+            footer={null}
+        >
+            <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+                <Form.Item
+                    label="Nombre de Usuario"
+                    validateStatus={errors.username ? 'error' : ''}
+                    help={errors.username?.message}
+                >
+                    <Controller
+                        name="username"
+                        control={control}
+                        rules={{ required: 'El nombre de usuario es requerido' }}
+                        render={({ field }) => <Input {...field} />}
+                    />
+                </Form.Item>
 
-                    <div className="mb-4">
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700">Correo Electrónico</label>
-                        <input
-                            id="email"
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                            type="email"
-                            {...register('email', { required: 'El correo electrónico es requerido' })}
-                        />
-                        {errors.email && <p className="text-red-500 text-xs mt-2">{errors.email.message}</p>}
-                    </div>
+                <Form.Item
+                    label="Correo Electrónico"
+                    validateStatus={errors.email ? 'error' : ''}
+                    help={errors.email?.message}
+                >
+                    <Controller
+                        name="email"
+                        control={control}
+                        rules={{ 
+                            required: 'El correo electrónico es requerido',
+                            pattern: {
+                                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                                message: 'Dirección de correo inválida'
+                            }
+                        }}
+                        render={({ field }) => <Input {...field} />}
+                    />
+                </Form.Item>
 
-                    <div className="mb-4 relative">
-                        <label htmlFor="password" className="block text-sm font-medium text-gray-700">Contraseña</label>
-                        <div className="relative">
-                            <input
-                                id="password"
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                type={showPassword ? "text" : "password"}
-                                {...register('password', { required: 'La contraseña es requerida' })}
+                <Form.Item
+                    label="Contraseña"
+                    validateStatus={errors.password ? 'error' : ''}
+                    help={errors.password?.message}
+                >
+                    <Controller
+                        name="password"
+                        control={control}
+                        rules={{ required: 'La contraseña es requerida' }}
+                        render={({ field }) => (
+                            <Input.Password
+                                {...field}
+                                iconRender={(visible) => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)}
                             />
-                            <span
-                                className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
-                                onClick={togglePasswordVisibility}
-                            >
-                                {showPassword ? <FaEyeSlash /> : <FaEye />}
-                            </span>
-                        </div>
-                        {errors.password && <p className="text-red-500 text-xs mt-2">{errors.password.message}</p>}
-                    </div>
+                        )}
+                    />
+                </Form.Item>
 
-                    <div className="mb-4 relative">
-                        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">Confirmar Contraseña</label>
-                        <div className="relative">
-                            <input
-                                id="confirmPassword"
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                type={showConfirmPassword ? "text" : "password"}
-                                {...register('confirmPassword', {
-                                    required: 'Por favor, confirma tu contraseña',
-                                    validate: value => value === watch('password') || 'Las contraseñas no coinciden',
-                                })}
+                <Form.Item
+                    label="Confirmar Contraseña"
+                    validateStatus={errors.confirmPassword ? 'error' : ''}
+                    help={errors.confirmPassword?.message}
+                >
+                    <Controller
+                        name="confirmPassword"
+                        control={control}
+                        rules={{
+                            required: 'Por favor, confirma tu contraseña',
+                            validate: (value) => value === watch('password') || 'Las contraseñas no coinciden'
+                        }}
+                        render={({ field }) => (
+                            <Input.Password
+                                {...field}
+                                iconRender={(visible) => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)}
                             />
-                            <span
-                                className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
-                                onClick={toggleConfirmPasswordVisibility}
-                            >
-                                {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-                            </span>
-                        </div>
-                        {errors.confirmPassword && <p className="text-red-500 text-xs mt-2">{errors.confirmPassword.message}</p>}
-                    </div>
+                        )}
+                    />
+                </Form.Item>
 
-                    <button type="submit" className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md shadow hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <Form.Item>
+                    <Button type="primary" htmlType="submit" block>
                         Registrarse
-                    </button>
-                    <div className="mt-4 text-center">
-                        <button type="button" className="text-indigo-600 hover:text-indigo-500" onClick={() => navigate('/login')}>Iniciar Sesión</button>
-                    </div>
-                </form>
+                    </Button>
+                </Form.Item>
+            </Form>
+            <div style={{ textAlign: 'center' }}>
+                <Button type="link" onClick={() => { onClose(); navigate('/login'); }}>
+                    Iniciar Sesión
+                </Button>
             </div>
-        </div>
+        </Modal>
     );
 };
 
-export default SignUpForm;
+export default SignUpModal;
