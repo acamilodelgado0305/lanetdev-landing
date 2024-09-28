@@ -51,7 +51,11 @@ const router = createBrowserRouter([
       },
       {
         path: "moneymanager",
-        element: <IndexMoneyManager />,
+        element: (
+          <PrivateRoute allowedRoles={['superadmin']}>
+            <IndexMoneyManager />
+          </PrivateRoute>
+        ),
         children: [
           {
             path: "accounts",
@@ -73,10 +77,8 @@ const router = createBrowserRouter([
             path: "estadisticas",
             element: <Estadisticas />,
           }
-
         ],
       },
-
       {
         path: "communication",
         element: <Indexcomunicacion />,
@@ -95,7 +97,6 @@ const router = createBrowserRouter([
           },
         ],
       },
-
       {
         path: "config",
         element: <Indexconfig />,
@@ -105,7 +106,6 @@ const router = createBrowserRouter([
     ],
   },
 ]);
-
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <AuthProvider>
