@@ -67,6 +67,7 @@ const TransactionsDashboard = () => {
   const [entriesPerPage] = useState(10);
   const [categories, setCategories] = useState([]);
   const [editTransaction, setEditTransaction] = useState(null);
+  const [isSearching, setIsSearching] = useState(false);
 
   const openModal = () => {
     setEditTransaction(null);
@@ -87,6 +88,38 @@ const TransactionsDashboard = () => {
   const closeContentModal = () => {
     setIsContentModalOpen(false);
     setSelectedNoteContent("");
+  };
+
+  const handleBlur = () => {
+    if (searchTerm) {
+      setSearchTerm("");
+      setIsSearching(false);
+      fetchEntries();
+    }
+  };
+
+  const handleSearchClick = async () => {
+    setIsSearching(true);
+
+    try {
+      const [transactions, transfers] = await Promise.all([
+        getTransactions(),
+        getTransfers(),
+      ]);
+
+      const allEntries = [
+        ...transactions.map((tx) => ({ ...tx, entryType: "transaction" })),
+        ...transfers.map((tf) => ({ ...tf, entryType: "transfer" })),
+      ];
+
+      const sortedEntries = allEntries.sort(
+        (a, b) => new Date(b.date) - new Date(a.date)
+      );
+
+      setEntries(sortedEntries); // Actualiza todas las transacciones
+    } catch (error) {
+      console.error("Error fetching all transactions:", error);
+    }
   };
 
   const fetchEntries = async () => {
@@ -182,28 +215,28 @@ const TransactionsDashboard = () => {
   const applyFilters = (entriesToFilter = entries) => {
     let filtered = entriesToFilter;
 
-    // Apply month filter
-    filtered = filtered.filter((entry) => {
-      const entryDate = new Date(entry.date);
-      return (
-        entryDate >= startOfMonth(currentMonth) &&
-        entryDate <= endOfMonth(currentMonth)
-      );
-    });
+    if (!isSearching) {
+      // Aplicar filtro por mes si no estamos buscando
+      filtered = filtered.filter((entry) => {
+        const entryDate = new Date(entry.date);
+        return (
+          entryDate >= startOfMonth(currentMonth) &&
+          entryDate <= endOfMonth(currentMonth)
+        );
+      });
+    }
 
-    // Apply search filter
+    // Aplicar filtro de búsqueda si hay un término
     if (searchTerm) {
       filtered = filtered.filter(
         (entry) =>
           entry.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (entry.note &&
-            entry.note.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (entry.category &&
-            entry.category.toLowerCase().includes(searchTerm.toLowerCase()))
+          (entry.note && entry.note.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (entry.category && entry.category.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
-    // Apply type filter
+    // Filtrar por tipo (ingreso, gasto, transferencia)
     if (filterType !== "all") {
       filtered = filtered.filter((entry) =>
         filterType === "transfer"
@@ -213,12 +246,19 @@ const TransactionsDashboard = () => {
     }
 
     setFilteredEntries(filtered);
-    setCurrentPage(1); // Reset to first page when filters change
+    setCurrentPage(1);
   };
 
   useEffect(() => {
     applyFilters();
-  }, [searchTerm, filterType, entries, currentMonth]);
+  }, [searchTerm, filterType, entries, currentMonth, isSearching]);
+
+  useEffect(() => {
+    if (!searchTerm) {
+      setIsSearching(false);
+      fetchEntries();
+    }
+  }, [searchTerm]);
 
   // Pagination
   const indexOfLastEntry = currentPage * entriesPerPage;
@@ -261,9 +301,9 @@ const TransactionsDashboard = () => {
 
 
   return (
-    <div className="bg-gray-100 min-h-screen w-full p-2">
+    <div className="bg-gray-100  w-full p-2">
       <main className="max-w-full mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-4 relative h-[70vh] overflow-hidden">
+        <div className="bg-white rounded-lg shadow-lg p-4 relative h-full overflow-hidden">
           {/* Encabezado con controles de mes */}
           <div className="flex justify-between items-center mb-4">
             <button
@@ -313,7 +353,9 @@ const TransactionsDashboard = () => {
                 placeholder="Buscar transacciones..."
                 className="mx-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pl-8 pr-2 py-1 text-sm"
                 value={searchTerm}
+                onClick={handleSearchClick}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                onBlur={handleBlur}
               />
               <Search
                 className="ml-[94%] md:ml-[90%] -mt-8 transform -translate-y-1/2 text-gray-400"

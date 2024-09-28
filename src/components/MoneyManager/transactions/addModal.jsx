@@ -7,6 +7,13 @@ import SelectField from "../transactions/components/SelectField";
 import { DatePicker } from "antd";
 import "antd/dist/reset.css";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+// Extiende dayjs con los plugins
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 
 const AddEntryModal = ({
   isOpen,
@@ -120,6 +127,12 @@ const AddEntryModal = ({
     let data;
     let endpoint;
     let method;
+    // Asegúrate de que la fecha se guarde con la hora correcta
+    const localDate = dayjs(date)
+      .set('hour', dayjs().hour()) // Establece la hora actual o la hora deseada
+      .set('minute', dayjs().minute())
+      .set('second', 0) // O puedes ajustar los segundos si es necesario
+      .format("YYYY-MM-DDTHH:mm:ss"); // Formato sin UTC
 
     if (transactionType === "Transferencia") {
       data = {
@@ -127,7 +140,7 @@ const AddEntryModal = ({
         fromAccountId: parseInt(fromAccount, 10),
         toAccountId: parseInt(toAccount, 10),
         amount: parseFloat(rawAmount),
-        date: date.toISOString(),
+        date: localDate,
         note: note,
         description: description,
       };
@@ -137,7 +150,7 @@ const AddEntryModal = ({
         userId: 1,
         amount: parseFloat(rawAmount),
         type: transactionType.toLowerCase(),
-        date: date.toISOString(),
+        date: localDate,
         note: note,
         description: description,
         accountId: parseInt(account, 10),
@@ -170,13 +183,13 @@ const AddEntryModal = ({
           title: isEditing
             ? "Transacción actualizada"
             : transactionType === "Transferencia"
-            ? "Transferencia realizada"
-            : "Transacción guardada",
+              ? "Transferencia realizada"
+              : "Transacción guardada",
           text: isEditing
             ? "La transacción se ha actualizado correctamente."
             : transactionType === "Transferencia"
-            ? "La transferencia se ha realizado correctamente."
-            : "La transacción se ha guardado correctamente.",
+              ? "La transferencia se ha realizado correctamente."
+              : "La transacción se ha guardado correctamente.",
           confirmButtonColor: "#3085d6",
         });
         onClose();
@@ -186,8 +199,8 @@ const AddEntryModal = ({
           isEditing
             ? "Error al actualizar la transacción"
             : transactionType === "Transferencia"
-            ? "Error al realizar la transferencia"
-            : "Error al guardar la transacción"
+              ? "Error al realizar la transferencia"
+              : "Error al guardar la transacción"
         );
       }
     } catch (error) {
@@ -235,8 +248,8 @@ const AddEntryModal = ({
             {isEditing
               ? "Editar Transacción"
               : transactionType === "Transferencia"
-              ? "Nueva Transferencia"
-              : "Nueva Transacción"}
+                ? "Nueva Transferencia"
+                : "Nueva Transacción"}
           </h2>
           <button onClick={onClose}>
             <IoClose size={24} />
@@ -248,31 +261,28 @@ const AddEntryModal = ({
             {/* Botones de tipo de transacción */}
             <div className="flex justify-between space-x-2">
               <button
-                className={`flex-1 py-2 rounded-full ${
-                  transactionType === "income"
-                    ? "bg-green-500 text-white"
-                    : "bg-gray-200"
-                }`}
+                className={`flex-1 py-2 rounded-full ${transactionType === "income"
+                  ? "bg-green-500 text-white"
+                  : "bg-gray-200"
+                  }`}
                 onClick={() => setTransactionType("income")}
               >
                 Ingreso
               </button>
               <button
-                className={`flex-1 py-2 rounded-full ${
-                  transactionType === "expense"
-                    ? "bg-red-500 text-white"
-                    : "bg-gray-200"
-                }`}
+                className={`flex-1 py-2 rounded-full ${transactionType === "expense"
+                  ? "bg-red-500 text-white"
+                  : "bg-gray-200"
+                  }`}
                 onClick={() => setTransactionType("expense")}
               >
                 Gasto
               </button>
               <button
-                className={`flex-1 py-2 rounded-full ${
-                  transactionType === "Transferencia"
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-200"
-                }`}
+                className={`flex-1 py-2 rounded-full ${transactionType === "Transferencia"
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200"
+                  }`}
                 onClick={() => setTransactionType("Transferencia")}
               >
                 Transferencia
@@ -284,8 +294,12 @@ const AddEntryModal = ({
                 Fecha
               </label>
               <DatePicker
-                value={date} // Asegúrate de que siempre sea un objeto dayjs
-                onChange={(date) => setDate(dayjs(date))} // Convertir a dayjs
+                value={dayjs(date)} // Asegúrate de que 'date' siempre sea una instancia de dayjs
+                onChange={(date) => {
+                  if (date) {
+                    setDate(dayjs(date)); // Almacena el objeto dayjs
+                  }
+                }}
                 format="YYYY-MM-DD"
                 className="w-full"
               />

@@ -1,8 +1,8 @@
 import React from 'react';
-import { Bar, Line, Doughnut, Pie } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
+import { Bar, Line, Doughnut, Pie, Radar, PolarArea } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, RadialLinearScale } from 'chart.js';
 import Header from '../components/header/Header';
-import { BsFillArchiveFill, BsFillGrid3X3GapFill, BsPeopleFill, BsFillBellFill } from 'react-icons/bs';
+import { BsFillArchiveFill, BsFillGrid3X3GapFill, BsPeopleFill, BsFillBellFill, BsCurrencyDollar } from 'react-icons/bs';
 
 // Registra los componentes necesarios de Chart.js
 ChartJS.register(
@@ -12,6 +12,7 @@ ChartJS.register(
   PointElement,
   LineElement,
   ArcElement,
+  RadialLinearScale,
   Title,
   Tooltip,
   Legend
@@ -28,6 +29,9 @@ export default function Index() {
         borderColor: '#4bc0c0',
         backgroundColor: 'rgba(75, 192, 192, 0.2)',
         fill: true,
+        tension: 0.3, // Añade suavidad a la curva
+        pointBackgroundColor: '#36A2EB',
+        pointBorderWidth: 2,
       },
     ],
   };
@@ -52,7 +56,7 @@ export default function Index() {
       {
         label: 'Ventas',
         data: [65, 59, 80, 81, 56],
-        backgroundColor: '#007566',
+        backgroundColor: ['#007566', '#36A2EB', '#FF6384', '#FFCE56', '#FF9F40'],
       },
     ],
   };
@@ -70,29 +74,56 @@ export default function Index() {
     ],
   };
 
+  // Datos simulados para un gráfico de radar
+  const radarData = {
+    labels: ['Atención al Cliente', 'Ventas', 'Marketing', 'Innovación', 'Desarrollo de Producto'],
+    datasets: [
+      {
+        label: 'Desempeño',
+        data: [65, 59, 90, 81, 56],
+        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+        borderColor: 'rgba(255, 99, 132, 1)',
+        pointBackgroundColor: 'rgba(255, 99, 132, 1)',
+      },
+    ],
+  };
+
+  // Nuevo gráfico de área polar para mostrar datos adicionales
+  const polarAreaData = {
+    labels: ['Marketing', 'Ventas', 'Desarrollo', 'Soporte', 'Logística'],
+    datasets: [
+      {
+        label: 'Prioridades',
+        data: [10, 20, 30, 40, 50],
+        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'],
+        borderWidth: 1,
+      },
+    ],
+  };
+
   return (
     <main className="flex flex-col items-center justify-start bg-gray-50 min-h-screen">
-
-
       <div className="text-center mb-2">
-        <h3 className="text-xl font-semibold text-gray-800">Dashboard</h3>
+        <h3 className="text-2xl font-semibold text-gray-800">Dashboard</h3>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-2">
+      {/* Tarjetas de resumen */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
         {[
           { label: 'Productos', icon: <BsFillArchiveFill />, value: 300 },
-          { label: 'Tráfico', icon: <BsFillGrid3X3GapFill />, value: 12 },
+          { label: 'Ingresos', icon: <BsCurrencyDollar />, value: "$12,000" },
           { label: 'Clientes Activos', icon: <BsPeopleFill />, value: 33 },
           { label: 'Alertas', icon: <BsFillBellFill />, value: 42 },
         ].map((item, index) => (
-          <div key={index} className="bg-white rounded-lg shadow-sm p-2 flex flex-col items-center">
+          <div key={index} className="bg-white rounded-lg shadow-sm p-4 flex flex-col items-center hover:bg-blue-100 transition-all">
             <div className="text-blue-500 text-2xl mb-2">{item.icon}</div>
             <h3 className="text-sm font-medium text-gray-700">{item.label}</h3>
-            <h1 className="text-1xl font-bold text-gray-700">{item.value}</h1>
+            <h1 className="text-xl font-bold text-gray-700">{item.value}</h1>
           </div>
         ))}
       </div>
 
+      {/* Gráficos */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-5xl">
         <div className="mb-6">
           <Line
@@ -106,9 +137,12 @@ export default function Index() {
                 title: {
                   display: true,
                   text: 'Clientes por Mes',
+                  font: { size: 20 }
                 },
               },
+              maintainAspectRatio: false,
             }}
+            height={300}
           />
         </div>
         <div>
@@ -118,16 +152,17 @@ export default function Index() {
               responsive: true,
               plugins: {
                 legend: {
-                  position: 'top',
+                  position: 'right',
                 },
                 title: {
                   display: true,
                   text: 'Clientes por Municipio',
+                  font: { size: 20 }
                 },
               },
               maintainAspectRatio: false,
             }}
-            height={200}
+            height={300}
           />
         </div>
         <div className="mt-6">
@@ -142,9 +177,12 @@ export default function Index() {
                 title: {
                   display: true,
                   text: 'Ventas por Producto',
+                  font: { size: 20 }
                 },
               },
+              maintainAspectRatio: false,
             }}
+            height={300}
           />
         </div>
         <div className="mt-6">
@@ -154,17 +192,61 @@ export default function Index() {
               responsive: true,
               plugins: {
                 legend: {
-                  position: 'top',
+                  position: 'right',
                 },
                 title: {
                   display: true,
                   text: 'Distribución de Clientes por Región',
+                  font: { size: 20 }
                 },
               },
               maintainAspectRatio: false,
             }}
-            height={150}
+            height={300}
+          />
+        </div>
 
+        {/* Nuevo gráfico de radar */}
+        <div className="mt-6">
+          <Radar
+            data={radarData}
+            options={{
+              responsive: true,
+              plugins: {
+                legend: {
+                  position: 'top',
+                },
+                title: {
+                  display: true,
+                  text: 'Desempeño por Área',
+                  font: { size: 20 }
+                },
+              },
+              maintainAspectRatio: false,
+            }}
+            height={300}
+          />
+        </div>
+
+        {/* Nuevo gráfico de área polar */}
+        <div className="mt-6">
+          <PolarArea
+            data={polarAreaData}
+            options={{
+              responsive: true,
+              plugins: {
+                legend: {
+                  position: 'top',
+                },
+                title: {
+                  display: true,
+                  text: 'Prioridades por Departamento',
+                  font: { size: 20 }
+                },
+              },
+              maintainAspectRatio: false,
+            }}
+            height={300}
           />
         </div>
       </div>
