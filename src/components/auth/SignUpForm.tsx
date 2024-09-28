@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { Modal, Form, Input, Button, message } from 'antd';
+import { Modal, Form, Input, Button, message, Select } from 'antd';
 import { EyeInvisibleOutlined, EyeTwoTone } from '@ant-design/icons';
 import { createUser } from '../../services/apiService';
 
@@ -10,6 +10,7 @@ interface SignUpFormInputs {
     email: string;
     password: string;
     confirmPassword: string;
+    role: 'superadmin' | 'admin' | 'user';
 }
 
 interface SignUpModalProps {
@@ -21,12 +22,12 @@ const SignUpModal: React.FC<SignUpModalProps> = ({ isOpen, onClose }) => {
     const { control, handleSubmit, watch, formState: { errors } } = useForm<SignUpFormInputs>();
     const navigate = useNavigate();
 
-    const onSubmit = async (data: SignUpFormInputs) => {
+    const onSubmit = async (userData: SignUpFormInputs) => {
         try {
-            const { username, email, password } = data;
-            await createUser({ username, email, password });
+            const { username, email, password, role } = userData;
+            await createUser({ username, email, password, role });
             message.success('Usuario registrado correctamente');
-            onClose();  // Cerrar el modal
+            onClose();
             navigate('/login');
         } catch (error) {
             message.error('Hubo un problema al registrarse. Por favor, intenta nuevamente.');
@@ -37,7 +38,7 @@ const SignUpModal: React.FC<SignUpModalProps> = ({ isOpen, onClose }) => {
     return (
         <Modal
             title="Regístrate"
-            visible={isOpen}
+            open={isOpen}
             onCancel={onClose}
             footer={null}
         >
@@ -92,23 +93,22 @@ const SignUpModal: React.FC<SignUpModalProps> = ({ isOpen, onClose }) => {
                     />
                 </Form.Item>
 
+
                 <Form.Item
-                    label="Confirmar Contraseña"
-                    validateStatus={errors.confirmPassword ? 'error' : ''}
-                    help={errors.confirmPassword?.message}
+                    label="Rol"
+                    validateStatus={errors.role ? 'error' : ''}
+                    help={errors.role?.message}
                 >
                     <Controller
-                        name="confirmPassword"
+                        name="role"
                         control={control}
-                        rules={{
-                            required: 'Por favor, confirma tu contraseña',
-                            validate: (value) => value === watch('password') || 'Las contraseñas no coinciden'
-                        }}
+                        rules={{ required: 'El rol es requerido' }}
                         render={({ field }) => (
-                            <Input.Password
-                                {...field}
-                                iconRender={(visible) => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)}
-                            />
+                            <Select {...field} placeholder="Selecciona un rol">
+                                <Select.Option value="superadmin">Superadmin</Select.Option>
+                                <Select.Option value="admin">Admin</Select.Option>
+                                <Select.Option value="user">User</Select.Option>
+                            </Select>
                         )}
                     />
                 </Form.Item>
