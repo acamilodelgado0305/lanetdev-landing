@@ -48,6 +48,7 @@ const IndexConfig = () => {
     try {
       const data = await getUsers();
       setCollaborators(data);
+      console.log(data)
     } catch (err) {
       message.error("Error al cargar los colaboradores");
       console.error("Error fetching users:", err);

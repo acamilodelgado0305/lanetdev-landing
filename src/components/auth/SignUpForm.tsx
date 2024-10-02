@@ -119,7 +119,7 @@ const SignUpModal: React.FC<SignUpModalProps> = ({ isOpen, onClose }) => {
                     </Button>
                 </Form.Item>
             </Form>
-            <div style={{ textAlign: 'center' }}>
+            <div>
                 <Button type="link" onClick={() => { onClose(); navigate('/login'); }}>
                     Iniciar Sesión
                 </Button>
