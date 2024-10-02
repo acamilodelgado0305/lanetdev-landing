@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { jwtDecode } from 'jwt-decode';
-import { loginUser as loginUserService, getUserById } from '../../services/apiService';
+import { loginUser as loginUserService, getUserById, fetchUserToken } from '../../services/apiService';
 
 const AuthContext = createContext();
 
@@ -9,71 +9,89 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [userRole, setUserRole] = useState(null);
+    const [authToken, setAuthToken] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [restoringSession, setRestoringSession] = useState(false);
 
+    // Función de inicio de sesión
     const login = async (email, password) => {
+        setLoading(true);
         try {
             const { token } = await loginUserService(email, password);
-            localStorage.setItem('authToken', token);
+            setAuthToken(token);
 
             const decodedToken = jwtDecode(token);
-            const userId = decodedToken.id;
-            const role = decodedToken.role;
+            const id = decodedToken.id;
 
-            const userData = await getUserById(userId);
-            console.log("User data from API:", userData);
+            // Guardar el id en sessionStorage para persistencia
+            sessionStorage.setItem('userId', id);
 
-            if (Array.isArray(userData) && userData.length > 0) {
-                setUser(userData[0]);
-                setUserRole(role);
+            // Hacer la llamada a getUserById para obtener los datos completos del usuario
+            const userData = await getUserById(id, token);
+            if (userData) {
+                setUser({ id: id, ...userData });
+                setUserRole(decodedToken.role);
             } else {
-                console.error('No user data found');
+                console.error('No se encontraron datos de usuario');
                 setUser(null);
                 setUserRole(null);
             }
         } catch (error) {
-            console.error('Error al iniciar sesión:', error);
+            console.error('Error al iniciar sesión:', error.message);
             throw error;
+        } finally {
+            setLoading(false);
         }
     };
 
-    const logout = () => {
-        localStorage.removeItem('authToken');
-        setUser(null);
-        setUserRole(null);
-    };
+    // Función para restaurar el token y sesión usando la ruta /users/:id/token
+    const restoreSession = async () => {
+        setRestoringSession(true);
+        try {
 
-    useEffect(() => {
-        const token = localStorage.getItem('authToken');
-        if (token) {
-            try {
-                const decodedToken = jwtDecode(token);
-                const userId = decodedToken.id;
-                const role = decodedToken.role;
+            const storedUserId = sessionStorage.getItem('userId');
 
-                getUserById(userId).then(userData => {
-                    if (Array.isArray(userData) && userData.length > 0) {
-                        setUser(userData[0]);
-                        setUserRole(role);
+            if (storedUserId) {
+                const { token } = await fetchUserToken(storedUserId);
+                if (token) {
+                    setAuthToken(token);
+
+                    const decodedToken = jwtDecode(token);
+                    const userData = await getUserById(storedUserId, token);
+
+                    if (userData) {
+                        setUser({ id: storedUserId, ...userData });
+                        setUserRole(decodedToken.role);
                     } else {
-                        console.error('No user data found');
                         setUser(null);
                         setUserRole(null);
                     }
-                }).catch(error => {
-                    console.error('Error al obtener el usuario:', error);
-                    setUser(null);
-                    setUserRole(null);
-                });
-            } catch (error) {
-                console.error('Error al decodificar el token:', error);
-                setUser(null);
-                setUserRole(null);
+                }
             }
+        } catch (error) {
+            console.error('Error al restaurar la sesión:', error);
+        } finally {
+            setRestoringSession(false);
         }
-    }, []);
+    };
+
+    // Función para cerrar sesión
+    const logout = () => {
+        setAuthToken(null);
+        setUser(null);
+        setUserRole(null);
+        sessionStorage.removeItem('userId');
+    };
+
+    // useEffect para restaurar la sesión al recargar la página
+    useEffect(() => {
+        if (!authToken && !user && !restoringSession) {
+            restoreSession();
+        }
+    }, [authToken, user, restoringSession]);
 
     return (
-        <AuthContext.Provider value={{ user, userRole, login, logout, setUser }}>
+        <AuthContext.Provider value={{ user, userRole, login, logout, loading, authToken }}>
             {children}
         </AuthContext.Provider>
     );
