@@ -4,7 +4,7 @@ import { useAuth } from '../../components/Context/AuthProvider';
 import ImageUploader from './ImageUpload';
 
 const UserProfileHeader = ({ onToggle, isUserProfileOpen, setIsUserProfileOpen }) => {
-    const { user } = useAuth();
+    const { user, userRole } = useAuth();
     const [profilePictureUrl, setProfilePictureUrl] = useState(user?.profilepictureurl || null); // Estado para la URL de la imagen
     const [isUploading, setIsUploading] = useState(false); // Controla si se está subiendo una imagen
     const userName = user ? user.username : 'Loading...';
@@ -89,14 +89,14 @@ const UserProfileHeader = ({ onToggle, isUserProfileOpen, setIsUserProfileOpen }
                     </div>
 
                     {/* Componente de carga de imágenes */}
-                    <div>
+                    {/* <div>
                         <ImageUploader
                             userId={user.id}
                             userInfo={user}
                             onUploadSuccess={handleUploadSuccess} // Manejo correcto de la subida de la imagen
                             onUploadStart={handleUploadStart}    // Inicia la subida
                         />
-                    </div>
+                    </div> */}
 
                     <div className="text-gray-300 mt-2">
                         {user.email && (
@@ -115,7 +115,7 @@ const UserProfileHeader = ({ onToggle, isUserProfileOpen, setIsUserProfileOpen }
                             </p>
                         )}
                         <p className="text-sm">
-                            <span className="font-bold text-white">Role:</span> {user.role}
+                            <span className="font-bold text-white">Role:</span> {userRole || 'Cargando...'}
                         </p>
                     </div>
                 </div>
