@@ -8,6 +8,7 @@ import {
   Button,
   message,
   Typography,
+  Modal,
 } from "antd";
 import {
   UserOutlined,
@@ -24,6 +25,7 @@ import {
 } from "../../services/apiService";
 import { Link } from "react-router-dom";
 import SignUpModal from "../auth/SignUpForm";
+import { useAuth } from '../../components/Context/AuthProvider';
 
 const { Header, Content, Sider } = Layout;
 const { Title } = Typography;
@@ -32,12 +34,15 @@ const IndexConfig = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [collaborators, setCollaborators] = useState([]);
   const [loading, setLoading] = useState(false);
+  const { authToken } = useAuth();
+  const [editingUser, setEditingUser] = useState(null);
 
   useEffect(() => {
     fetchUsers();
   }, []);
 
   const openModal = () => {
+    setEditingUser(null);
     setIsModalOpen(true);
   };
 
@@ -46,25 +51,40 @@ const IndexConfig = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const data = await getUsers();
+      const data = await getUsers(1, 10, '', authToken);
       setCollaborators(data);
-      console.log(data)
     } catch (err) {
       message.error("Error al cargar los colaboradores");
-      console.error("Error fetching users:", err);
+      console.error("Error fetching users:", err.response ? err.response.data : err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDeleteCollaborator = async (id) => {
-    try {
-      await deleteUser(id);
-      message.success("Colaborador eliminado con éxito");
-      fetchUsers();
-    } catch (error) {
-      message.error("Error al eliminar colaborador");
-    }
+  const handleDeleteCollaborator = (id) => {
+    // Mostrar modal de confirmación antes de eliminar
+    Modal.confirm({
+      title: '¿Desea eliminar el colaborador?',
+      content: 'Esta acción no se puede deshacer.',
+      okText: 'Eliminar',
+      okType: 'danger',
+      cancelText: 'Cancelar',
+      onOk: async () => {
+        try {
+          await deleteUser(id, authToken);
+          message.success("Colaborador eliminado con éxito");
+          fetchUsers();
+        } catch (error) {
+          message.error("Error al eliminar colaborador");
+          console.error("Error deleting collaborator:", error.response ? error.response.data : error.message);
+        }
+      },
+    });
+  };
+
+  const handleEditCollaborator = (record) => {
+    setEditingUser(record);
+    setIsModalOpen(true);
   };
 
   const columns = [
@@ -94,7 +114,7 @@ const IndexConfig = () => {
       key: "action",
       render: (_, record) => (
         <Space size="middle">
-          <Button icon={<EditOutlined />} onClick={() => console.log('Editar', record)}>
+          <Button icon={<EditOutlined />} onClick={() => handleEditCollaborator(record)}>
             Editar
           </Button>
           <Button
@@ -160,6 +180,12 @@ const IndexConfig = () => {
           <SignUpModal
             isOpen={isModalOpen}
             onClose={closeModal}
+            user={editingUser}
+            onSave={async (updatedUserData) => {
+              await updateUser(editingUser.id, updatedUserData, authToken);
+              fetchUsers();
+              closeModal();
+            }}
           />
         </Content>
       </Layout>
