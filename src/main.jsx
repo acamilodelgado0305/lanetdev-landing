@@ -100,7 +100,11 @@ const router = createBrowserRouter([
       },
       {
         path: "clientes",
-        element: <Clientes />,
+        element: (
+          <PrivateRoute allowedRoles={['superadmin']}>
+            <Clientes />
+          </PrivateRoute>
+        ),
         children: [
         ],
       },
