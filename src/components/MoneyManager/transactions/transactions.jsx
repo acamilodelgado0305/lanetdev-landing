@@ -337,9 +337,9 @@ const TransactionsDashboard = () => {
                 {formatCurrency(totalExpenses)}
               </p>
             </div>
-            <div className="bg-green-50 p-3 rounded-lg">
+            <div className="bg-gray-50 p-3 rounded-lg">
               <p className="text-xs text-gray-600 mb-1">Balance</p>
-              <p className="text-xl font-bold text-green-600">
+              <p className="text-xl font-bold text-black-600">
                 {formatCurrency(balance)}
               </p>
             </div>
@@ -489,10 +489,10 @@ const TransactionsDashboard = () => {
 
           <button
             onClick={openModal}
-            className="fixed bottom-4 right-4 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-3 shadow-lg transition-colors duration-300"
+            className="fixed bottom-11 right-11 bg-[#FE6256] hover:bg-[#FFA38E] text-white rounded-full p-3 shadow-lg transition-colors duration-300"
             aria-label="Añadir entrada"
           >
-            <PlusCircle size={20} />
+            <PlusCircle size={30} />
           </button>
           <AddEntryModal
             isOpen={isModalOpen}
