@@ -8,7 +8,7 @@ const config = {
   theme: {
     extend: {
       colors: {
-        primary: '#007566',
+        primary: '#293A4C',
         'azul-rey': '#007566',
       },
     },
