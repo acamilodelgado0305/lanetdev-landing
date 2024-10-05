@@ -17,18 +17,14 @@ import AccountContent from "./components/MoneyManager/accounts/accounts";
 import TransactionsDashboard from "./components/MoneyManager/transactions/transactions";
 import Categories from "./components/MoneyManager/categories/Categories";
 import { AuthProvider } from './components/Context/AuthProvider';
+import { SocketProvider } from './components/Context/SocketContext';
 import EmailManagement from './components/communication/EmailManagement';
 import Estadisticas from "./components/MoneyManager/estadisticas/Estadisticas";
 import Calendario from "./components/MoneyManager/calendar/Calendar";
 import Indexconfig from "./components/confgapp/indexconfig";
 import Clientes from "./components/clientes/clientes"
-import socket from './services/socket';
 
-// Aquí puedes configurar un manejador de eventos para las notificaciones
-socket.on('notification', (data) => {
-  console.log('Notificación recibida:', data);
-  // Aquí puedes agregar lógica para mostrar notificaciones en tu UI
-});
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -124,8 +120,10 @@ const router = createBrowserRouter([
 ]);
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <AuthProvider>
-      <RouterProvider router={router} />
-    </AuthProvider>
+    <SocketProvider>
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
+    </SocketProvider>
   </React.StrictMode>
 );
