@@ -22,8 +22,13 @@ import Estadisticas from "./components/MoneyManager/estadisticas/Estadisticas";
 import Calendario from "./components/MoneyManager/calendar/Calendar";
 import Indexconfig from "./components/confgapp/indexconfig";
 import Clientes from "./components/clientes/clientes"
+import socket from './services/socket';
 
-
+// Aquí puedes configurar un manejador de eventos para las notificaciones
+socket.on('notification', (data) => {
+  console.log('Notificación recibida:', data);
+  // Aquí puedes agregar lógica para mostrar notificaciones en tu UI
+});
 const router = createBrowserRouter([
   {
     path: "/",
