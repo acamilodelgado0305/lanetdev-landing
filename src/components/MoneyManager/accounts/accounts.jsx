@@ -134,9 +134,8 @@ const AccountContent = () => {
         {accounts.map((cuenta) => (
           <div
             key={cuenta.id}
-            className={`bg-white shadow rounded-lg p-4 flex justify-between items-center hover:shadow-md transition duration-300 ${
-              !cuenta.plus ? "opacity-70" : ""
-            }`}
+            className={`bg-white shadow rounded-lg p-4 flex justify-between items-center hover:shadow-md transition duration-300 ${!cuenta.plus ? "opacity-70" : ""
+              }`}
           >
             <div className="flex items-center">
               <Wallet className="text-indigo-500 mr-3" size={24} />
@@ -154,11 +153,10 @@ const AccountContent = () => {
             </div>
             <div className="flex items-center">
               <div
-                className={`text-right ${
-                  parseFloat(cuenta.balance) >= 0
+                className={`text-right ${parseFloat(cuenta.balance) >= 0
                     ? "text-green-600"
                     : "text-red-500"
-                } font-bold text-xl mr-4`}
+                  } font-bold text-xl mr-4`}
               >
                 {cuenta.balance !== null && cuenta.balance !== undefined
                   ? formatCurrency(parseFloat(cuenta.balance))
@@ -242,10 +240,10 @@ const AccountContent = () => {
 
           <button
             onClick={openModal}
-            className="fixed bottom-8 right-8 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full p-4 shadow-lg transition-colors duration-300"
-            aria-label="Añadir cuenta"
+            className="fixed bottom-11 right-11 bg-[#FE6256] hover:bg-[#FFA38E] text-white rounded-full p-3 shadow-lg transition-colors duration-300"
+            aria-label="Añadir entrada"
           >
-            <PlusCircle size={24} />
+            <PlusCircle size={30} />
           </button>
           <AddAccountModal
             isOpen={isModalOpen}

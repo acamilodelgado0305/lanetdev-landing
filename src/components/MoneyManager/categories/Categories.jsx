@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { PlusOutlined, TagOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import { TagOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import { Layout, Typography, Card, Button, List, Modal, message } from "antd";
 import {
   getCategories,
   deleteCategory,
 } from "../../../services/moneymanager/moneyService";
 import AddCategoriesModal from "./addCategories";
+import {
+  PlusCircle,
+} from "lucide-react";
 
 const { Content } = Layout;
 const { Title } = Typography;
@@ -113,14 +116,13 @@ const Categories = () => {
             </Card>
           ))}
         </div>
-        <Button
-          type="primary"
-          shape="circle"
-          icon={<PlusOutlined />}
-          size="large"
-          onClick={openModal}
-          className="fixed bottom-8 right-8"
-        />
+        <button
+            onClick={openModal}
+            className="fixed bottom-11 right-11 bg-[#FE6256] hover:bg-[#FFA38E] text-white rounded-full p-3 shadow-lg transition-colors duration-300"
+            aria-label="Añadir entrada"
+          >
+            <PlusCircle size={30} />
+          </button>
         <AddCategoriesModal
           isOpen={isModalOpen}
           onClose={closeModal}

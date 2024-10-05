@@ -192,6 +192,7 @@ const AddEntryModal = ({
               : "La transacción se ha guardado correctamente.",
           confirmButtonColor: "#3085d6",
         });
+        resetForm();
         onClose();
         onTransactionAdded();
       } else {
