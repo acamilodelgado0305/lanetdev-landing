@@ -12,17 +12,19 @@ export const SocketProvider = ({ children }) => {
             withCredentials: true,
         });
         setSocket(newSocket);
-
         newSocket.on('userRegistered', (data) => {
-            setNotifications((prev) => [...prev, { username: data.username, message: 'Nuevo usuario registrado' }]);
-            console.log('Nuevo usuario registrado:', data.username);
+            console.log('Nuevo usuario registrado:', data);
+            if (data && data.message) {
+                setNotifications((prev) => [...prev, { message: data.message }]);
+            } else {
+                console.error('El mensaje de la notificación de usuario registrado está indefinido:', data);
+            }
         });
-
         newSocket.on('notification', (data) => {
-            console.log('Notificación recibida:', data);
-            if (data && (data.message || data.username)) { // Verifica si hay algún mensaje o nombre
-                const message = data.message || `${data.username} se ha registrado.`; // Fallback si no hay mensaje
-                setNotifications((prev) => [...prev, { message }]);
+            /*  console.log('Notificación recibida:', data);
+             // Asegúrate de que data tenga una propiedad message */
+            if (data && data.message) {
+                setNotifications((prev) => [...prev, { message: data.message }]);
             } else {
                 console.error('El mensaje de la notificación está indefinido:', data);
             }
