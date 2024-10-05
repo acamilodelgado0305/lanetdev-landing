@@ -7,7 +7,7 @@ export default function ErrorPage() {
 
     // Función para volver atrás
     const goBack = () => {
-        navigate(-1); // Navegar a la página anterior
+        navigate("/index"); // Navegar a la página anterior
     };
 
     useEffect(() => {

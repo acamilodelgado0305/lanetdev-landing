@@ -17,6 +17,7 @@ import AccountContent from "./components/MoneyManager/accounts/accounts";
 import TransactionsDashboard from "./components/MoneyManager/transactions/transactions";
 import Categories from "./components/MoneyManager/categories/Categories";
 import { AuthProvider } from './components/Context/AuthProvider';
+import { SocketProvider } from './components/Context/SocketContext';
 import EmailManagement from './components/communication/EmailManagement';
 import Estadisticas from "./components/MoneyManager/estadisticas/Estadisticas";
 import Calendario from "./components/MoneyManager/calendar/Calendar";
@@ -100,7 +101,11 @@ const router = createBrowserRouter([
       },
       {
         path: "clientes",
-        element: <Clientes />,
+        element: (
+          <PrivateRoute allowedRoles={['superadmin']}>
+            <Clientes />
+          </PrivateRoute>
+        ),
         children: [
         ],
       },
@@ -115,8 +120,10 @@ const router = createBrowserRouter([
 ]);
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <AuthProvider>
-      <RouterProvider router={router} />
-    </AuthProvider>
+    <SocketProvider>
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
+    </SocketProvider>
   </React.StrictMode>
 );

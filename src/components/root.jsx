@@ -29,18 +29,24 @@ export default function Root() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [unreadEmailsCount, setUnreadEmailsCount] = useState(0);
   const [isUserProfileOpen, setIsUserProfileOpen] = useState(false);
-
   const { userRole } = useAuth();
 
-  // Sidebar links (usando useMemo para evitar renders innecesarios)
-  const sidebarLinks = useMemo(
+  // Links del menú principal
+  const mainMenuLinks = useMemo(
     () => [
       { to: "/index", label: "Dashboard", icon: Home },
       { to: "/index/new", label: "Finanzas", icon: DollarSign },
-      { to: "/index/clientes", label: "Clientes", icon: Users },
+      userRole === "superadmin" && { to: "/index/clientes", label: "Clientes", icon: Users },
       { to: "/productos", label: "Productos", icon: ShoppingCart },
-      { to: "/index/doc", label: "Documentación", icon: FileText },
+    ].filter(Boolean),
+    [userRole]
+  );
+
+  // Links de recursos
+  const resourcesMenuLinks = useMemo(
+    () => [
       userRole === "superadmin" && { to: "/index/moneymanager", label: "Money Manager", icon: Book },
+      { to: "/index/doc", label: "Documentación", icon: FileText },
       { to: "/index/communication", label: "Comunicación", icon: MessageCircle },
     ].filter(Boolean),
     [userRole]
@@ -74,16 +80,16 @@ export default function Root() {
         />
         <nav className="px-4 py-4">
           <SidebarSection title="Menú principal" isExpanded={isExpanded}>
-            {sidebarLinks.slice(0, 4).map(link => (
-              <div className="flex items-center">
-                <SidebarLink key={link.to} to={link.to} icon={link.icon} label={link.label} isExpanded={isExpanded} />
+            {mainMenuLinks.map(link => (
+              <div className="flex items-center" key={link.to}>
+                <SidebarLink to={link.to} icon={link.icon} label={link.label} isExpanded={isExpanded} />
               </div>
             ))}
           </SidebarSection>
           <SidebarSection title="Recursos" isExpanded={isExpanded}>
-            {sidebarLinks.slice(4).map(link => (
-              <div className="flex items-center">
-                <SidebarLink key={link.to} to={link.to} icon={link.icon} label={link.label} isExpanded={isExpanded} />
+            {resourcesMenuLinks.map(link => (
+              <div className="flex items-center" key={link.to}>
+                <SidebarLink to={link.to} icon={link.icon} label={link.label} isExpanded={isExpanded} />
               </div>
             ))}
           </SidebarSection>
@@ -105,12 +111,12 @@ export default function Root() {
             <UserProfileHeader onToggle={() => setIsOpen(false)} />
             <nav className="px-4 py-4">
               <SidebarSection title="Menú principal" isExpanded={true}>
-                {sidebarLinks.slice(0, 4).map(link => (
+                {mainMenuLinks.map(link => (
                   <SidebarLink key={link.to} to={link.to} icon={link.icon} label={link.label} isExpanded={true} />
                 ))}
               </SidebarSection>
               <SidebarSection title="Recursos" isExpanded={true}>
-                {sidebarLinks.slice(4).map(link => (
+                {resourcesMenuLinks.map(link => (
                   <SidebarLink key={link.to} to={link.to} icon={link.icon} label={link.label} isExpanded={true} />
                 ))}
               </SidebarSection>
