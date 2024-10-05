@@ -1,16 +1,37 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { BsFillBellFill, BsEnvelopeFill, BsCalendarFill, BsGearFill, BsBoxArrowRight } from 'react-icons/bs';
 import ReactDatePicker from 'react-datepicker';
 import { useNavigate } from 'react-router-dom';
 import 'react-datepicker/dist/react-datepicker.css';
 import { Outlet, Link } from "react-router-dom";
+import socket from '../../services/socket'; // Asegúrate de importar tu instancia de Socket.io
 
 export default function Header({ unreadEmailsCount }) {
     const [startDate, setStartDate] = useState(new Date());
-    const [notifications, setNotifications] = useState(3);
+    const [notifications, setNotifications] = useState(0); // Inicializa el estado de notificaciones
     const [showDatePicker, setShowDatePicker] = useState(false);
     const datePickerRef = useRef(null);
     const navigate = useNavigate();
+
+    // Escucha las notificaciones del socket
+    useEffect(() => {
+        // Escuchar el evento de nuevo usuario registrado
+        socket.on('userRegistered', (data) => {
+            setNotifications((prev) => prev + 1); // Incrementa el contador de notificaciones
+            console.log('Nuevo usuario registrado:', data.username);
+        });
+
+        socket.on('notification', (data) => {
+            console.log('Notificación recibida:', data);
+            setNotifications((prev) => prev + 1);
+            // Aquí puedes agregar lógica para mostrar notificaciones en tu UI
+        });
+
+        // Cleanup para evitar fugas de memoria
+        return () => {
+            socket.off('userRegistered');
+        };
+    }, []);
 
     // Oculta el DatePicker al hacer clic fuera de él
     const handleClickOutside = (event) => {
@@ -19,7 +40,7 @@ export default function Header({ unreadEmailsCount }) {
         }
     };
 
-    React.useEffect(() => {
+    useEffect(() => {
         document.addEventListener('mousedown', handleClickOutside);
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
@@ -89,10 +110,9 @@ export default function Header({ unreadEmailsCount }) {
                     )}
                 </div>
 
-                <Link to ="/index/config">
-                <BsGearFill className="text-xl cursor-pointer hover:text-gray-500" />
+                <Link to="/index/config">
+                    <BsGearFill className="text-xl cursor-pointer hover:text-gray-500" />
                 </Link>
-               
 
                 {/* Botón de cerrar sesión */}
                 <div onClick={handleLogout} className="px-6 cursor-pointer flex items-center text-primary hover:text-red-800">
