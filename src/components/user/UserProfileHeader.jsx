@@ -63,11 +63,12 @@ const UserProfileHeader = ({ onToggle, isUserProfileOpen, setIsUserProfileOpen }
                             className="flex items-center text-sm text-white focus:outline-none"
                             onClick={handleDropdownToggle}
                         >
-                            <span className="ml-2 mr-2">{userName}</span>
+                            {/* Solo muestra el nombre si el menú está abierto */}
+                            {isUserProfileOpen && <span className="ml-2 mr-2">{userName}</span>}
                             {isUserProfileOpen ? (
-                                <ChevronUp className="w-4 h-4" />
+                                <ChevronUp className="ml-2 w-4 h-4" />
                             ) : (
-                                <ChevronDown className="w-4 h-4" />
+                                <ChevronDown className="ml-2 w-4 h-4" />
                             )}
                         </button>
                     </div>
