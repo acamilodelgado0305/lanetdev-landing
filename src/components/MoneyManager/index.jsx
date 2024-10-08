@@ -1,10 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import {
-  Calendar,
-  Badge,
-  Spin,
-  ConfigProvider,
   Modal,
   Checkbox,
   Button,
@@ -22,6 +18,7 @@ import {
 } from "lucide-react";
 import { CiSettings } from "react-icons/ci";
 import { getTransactions } from "../../services/moneymanager/moneyService";
+import AddEntryModal from "../MoneyManager/transactions/addModal"; // Asegúrate de importar el modal de transacciones
 
 // NavLink component
 const NavLink = ({ to, icon: Icon, children }) => (
@@ -38,11 +35,12 @@ const IndexMoneyManager = () => {
   const [events, setEvents] = useState({});
   const [loading, setLoading] = useState(true);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isPaymentsModalVisible, setIsPaymentsModalVisible] = useState(false); // Modal de pagos pendientes
+  const [isModalOpen, setIsModalOpen] = useState(false); // Modal de nueva transacción
+  const [paymentToEdit, setPaymentToEdit] = useState(null); // Datos del pago seleccionado para pasar al modal
+
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
-  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
-  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-  const [isPaymentsModalVisible, setIsPaymentsModalVisible] = useState(false);
 
   useEffect(() => {
     fetchTransactions();
@@ -67,29 +65,31 @@ const IndexMoneyManager = () => {
     const currentMonth = currentDate.getMonth();
 
     transactions.forEach(transaction => {
-        if (transaction.recurrent) {
-            const date = new Date(transaction.date);
+      if (transaction.recurrent) {
+        const date = new Date(transaction.date);
 
-            // Generating the next 12 months for recurring transactions
-            for (let i = 0; i < 12; i++) {
-                const nextDate = new Date(currentYear, currentMonth + i, date.getDate());
-                const formattedDate = nextDate.toISOString().split('T')[0];
+        // Generating the next 12 months for recurring transactions
+        for (let i = 0; i < 12; i++) {
+          const nextDate = new Date(currentYear, currentMonth + i, date.getDate());
+          const formattedDate = nextDate.toISOString().split('T')[0];
 
-                if (!processedEvents[formattedDate]) {
-                    processedEvents[formattedDate] = [];
-                }
+          if (!processedEvents[formattedDate]) {
+            processedEvents[formattedDate] = [];
+          }
 
-                processedEvents[formattedDate].push({
-                    type: transaction.type === 'income' ? 'success' : 'error',
-                    content: `${transaction.description} - $${transaction.amount}`,
-                    paid: transaction.paid
-                });
-            }
+          processedEvents[formattedDate].push({
+            type: transaction.type === 'income' ? 'success' : 'error',
+            content: `${transaction.description} - $${transaction.amount}`,
+            amount: transaction.amount,
+            description: transaction.description,
+            paid: transaction.paid
+          });
         }
+      }
     });
 
     return processedEvents;
-};
+  };
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -129,12 +129,20 @@ const IndexMoneyManager = () => {
         {currentMonthEvents.length > 0 ? (
           <ul className="space-y-2">
             {currentMonthEvents.map((event, index) => (
-              <li key={index} className="flex items-center space-x-2">
-                <Checkbox
-                  onChange={() => handleCheckboxClick(event.content)}
-                  className="text-blue-500"
-                />
-                <span className="text-gray-700">{event.content}</span>
+              <li key={index} className="flex items-center space-x-2 justify-between">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    onChange={() => handleCheckboxClick(event.content)}
+                    className="text-blue-500"
+                  />
+                  <span className="text-gray-700">{event.content}</span>
+                </div>
+                <Button
+                  type="primary"
+                  onClick={() => handlePayment(event)} // Pasar los datos del pago seleccionado al modal
+                >
+                  Pagar
+                </Button>
               </li>
             ))}
           </ul>
@@ -145,6 +153,22 @@ const IndexMoneyManager = () => {
     );
   };
 
+  // Manejo del pago pendiente y abrir el modal de "Nueva Transacción"
+  const handlePayment = (payment) => {
+    setPaymentToEdit({
+      amount: payment.amount || "", // Pasa el monto del pago
+      description: payment.description || "", // Pasa la descripción
+      type: "expense", // Configura como gasto, puedes cambiar si es necesario
+      isEditing: false, // Asegúrate de que es una nueva transacción, no edición
+    });
+    setIsPaymentsModalVisible(false); // Cerrar modal de "Pagos Pendientes"
+    setIsModalOpen(true); // Abrir modal de nueva transacción
+  };
+
+  const handleEntryAdded = (newTransaction) => {
+    console.log("Transacción añadida:", newTransaction);
+    fetchTransactions(); // Refrescar los datos después de añadir la transacción
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -240,6 +264,7 @@ const IndexMoneyManager = () => {
         </div>
       </main>
 
+      {/* Modal de pagos pendientes */}
       <Modal
         title="Pagos Pendientes"
         visible={isPaymentsModalVisible}
@@ -249,6 +274,14 @@ const IndexMoneyManager = () => {
       >
         {renderPaymentsList()}
       </Modal>
+
+      {/* Modal de hacer el pago */}
+      <AddEntryModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onTransactionAdded={handleEntryAdded}
+        transactionToEdit={paymentToEdit}
+      />
     </div>
   );
 };
