@@ -54,7 +54,8 @@ const IndexMoneyManager = () => {
       if (transaction.recurrent) {
         const date = new Date(transaction.date);
 
-        for (let i = 0; i < 12; i++) {
+        // Start from next month
+        for (let i = 1; i <= 12; i++) {
           const nextDate = new Date(
             currentYear,
             currentMonth + i,
@@ -72,6 +73,7 @@ const IndexMoneyManager = () => {
             amount: transaction.amount,
             description: transaction.description,
             paid: transaction.paid,
+            date: formattedDate, // Add the date to the event
           });
         }
       }
@@ -79,6 +81,7 @@ const IndexMoneyManager = () => {
 
     return processedEvents;
   };
+
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat("es-CO", {
@@ -96,16 +99,16 @@ const IndexMoneyManager = () => {
     console.log(`Checkbox clicked for: ${content}`);
   };
 
-  const getCurrentMonthRecurringTransactions = () => {
+  const getNextMonthRecurringTransactions = () => {
     const currentDate = new Date();
-    const currentMonth = currentDate.getMonth();
-    const currentYear = currentDate.getFullYear();
+    const nextMonth = (currentDate.getMonth() + 1) % 12;
+    const nextMonthYear = currentDate.getFullYear() + (nextMonth === 0 ? 1 : 0);
 
     return Object.entries(events).reduce((acc, [date, dayEvents]) => {
       const eventDate = new Date(date);
       if (
-        eventDate.getMonth() === currentMonth &&
-        eventDate.getFullYear() === currentYear
+        eventDate.getMonth() === nextMonth &&
+        eventDate.getFullYear() === nextMonthYear
       ) {
         return [...acc, ...dayEvents.filter((event) => !event.paid)];
       }
@@ -114,17 +117,17 @@ const IndexMoneyManager = () => {
   };
 
   const renderPaymentsList = () => {
-    const currentMonthEvents = getCurrentMonthRecurringTransactions();
+    const nextMonthEvents = getNextMonthRecurringTransactions();
 
     return (
       <div className="bg-white rounded-lg shadow-md p-4">
         <h3 className="text-lg font-semibold mb-4 flex items-center">
           <CheckSquare className="w-5 h-5 mr-2 text-blue-500" />
-          Pagos Pendientes
+          Pagos Pendientes (Próximo mes)
         </h3>
-        {currentMonthEvents.length > 0 ? (
+        {nextMonthEvents.length > 0 ? (
           <ul className="space-y-2">
-            {currentMonthEvents.map((event, index) => (
+            {nextMonthEvents.map((event, index) => (
               <li
                 key={index}
                 className="flex items-center space-x-2 justify-between"
@@ -138,17 +141,26 @@ const IndexMoneyManager = () => {
                     {event.content} - {formatCurrency(event.amount)}
                   </span>
                 </div>
-                <Button
-                  type="primary"
-                  onClick={() => handlePayment(event)} // Pasar los datos del pago seleccionado al modal
-                >
-                  Pagar
-                </Button>
+                <div className="flex flex-col items-end">
+                  <span className="text-sm text-gray-500">
+                    Fecha de pago: {new Date(event.date).toLocaleDateString()}
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    (Se paga mensualmente)
+                  </span>
+                  <Button
+                    type="primary"
+                    onClick={() => handlePayment(event)}
+                    className="mt-1"
+                  >
+                    Pagar
+                  </Button>
+                </div>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-gray-500">No hay pagos pendientes este mes</p>
+          <p className="text-gray-500">No hay pagos pendientes para el próximo mes</p>
         )}
       </div>
     );
