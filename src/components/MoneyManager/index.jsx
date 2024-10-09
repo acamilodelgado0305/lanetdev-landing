@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Outlet, Link, useNavigate } from "react-router-dom";
-import { Modal, Checkbox, Button } from "antd";
-import { CreditCard, BarChart2, Send, MoreHorizontal, User, DollarSign, CheckSquare } from "lucide-react";
+import { Modal, Button } from "antd";
+import { CreditCard, BarChart2, Send, MoreHorizontal, User, DollarSign, CheckSquare, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { CiSettings } from "react-icons/ci";
 import { getTransactions } from "../../services/moneymanager/moneyService";
 import AddEntryModal from "../MoneyManager/transactions/addModal";
@@ -24,6 +24,10 @@ const IndexMoneyManager = () => {
   const [isPaymentsModalVisible, setIsPaymentsModalVisible] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [paymentToEdit, setPaymentToEdit] = useState(null);
+  const [completedPayments, setCompletedPayments] = useState({});
+  const [completedTasks, setCompletedTasks] = useState([]);
+  const [isCompletedExpanded, setIsCompletedExpanded] = useState(true);
+
 
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
@@ -49,6 +53,7 @@ const IndexMoneyManager = () => {
     const currentDate = new Date();
     const currentYear = currentDate.getFullYear();
     const currentMonth = currentDate.getMonth();
+
 
     transactions.forEach((transaction) => {
       if (transaction.recurrent) {
@@ -95,8 +100,23 @@ const IndexMoneyManager = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
 
-  const handleCheckboxClick = (content) => {
-    console.log(`Checkbox clicked for: ${content}`);
+  const handleTaskToggle = (event, isCompleted) => {
+    if (isCompleted) {
+      // If it's completed, move it back to pending
+      setCompletedPayments(prev => {
+        const newCompletedPayments = { ...prev };
+        delete newCompletedPayments[event.content];
+        return newCompletedPayments;
+      });
+      setCompletedTasks(prev => prev.filter(task => task.content !== event.content));
+    } else {
+      // If it's pending, move it to completed
+      setCompletedPayments(prev => ({
+        ...prev,
+        [event.content]: true
+      }));
+      setCompletedTasks(prev => [...prev, event]);
+    }
   };
 
   const getNextMonthRecurringTransactions = () => {
@@ -116,8 +136,15 @@ const IndexMoneyManager = () => {
     }, []);
   };
 
+  const formatDate = (dateString) => {
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString('es-ES', options);
+  };
+
+
   const renderPaymentsList = () => {
     const nextMonthEvents = getNextMonthRecurringTransactions();
+    const pendingTasks = nextMonthEvents.filter(event => !completedPayments[event.content]);
 
     return (
       <div className="bg-white rounded-lg shadow-md p-4">
@@ -125,28 +152,30 @@ const IndexMoneyManager = () => {
           <CheckSquare className="w-5 h-5 mr-2 text-blue-500" />
           Pagos Pendientes (Próximo mes)
         </h3>
-        {nextMonthEvents.length > 0 ? (
-          <ul className="space-y-2">
-            {nextMonthEvents.map((event, index) => (
-              <li
-                key={index}
-                className="flex items-center space-x-2 justify-between"
-              >
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    onChange={() => handleCheckboxClick(event.content)}
-                    className="text-blue-500"
-                  />
-                  <span className="text-gray-700">
-                    {event.content} - {formatCurrency(event.amount)}
-                  </span>
+        {pendingTasks.length > 0 ? (
+          <ul className="space-y-4">
+            {pendingTasks.map((event, index) => (
+              <li key={index} className="flex items-center space-x-2 justify-between p-2 rounded-lg">
+                <div className="flex items-center space-x-3 flex-grow">
+                  <div
+                    className="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center cursor-pointer"
+                    onClick={() => handleTaskToggle(event, false)}
+                  >
+                    {completedPayments[event.content] && (
+                      <Check className="w-4 h-4 text-white" />
+                    )}
+                  </div>
+                  <div className={`flex flex-col ${completedPayments[event.content] ? 'line-through text-gray-500' : ''}`}>
+                    <span className="font-medium">{event.content}</span>
+                    <span className="text-sm text-gray-600">{formatCurrency(event.amount)}</span>
+                  </div>
                 </div>
                 <div className="flex flex-col items-end">
                   <span className="text-sm text-gray-500">
-                    Fecha de pago: {new Date(event.date).toLocaleDateString()}
+                    {formatDate(event.date)}
                   </span>
                   <span className="text-xs text-gray-400">
-                    (Se paga mensualmente)
+                    (Mensual)
                   </span>
                   <Button
                     type="primary"
@@ -162,6 +191,34 @@ const IndexMoneyManager = () => {
         ) : (
           <p className="text-gray-500">No hay pagos pendientes para el próximo mes</p>
         )}
+        <div className="mt-6">
+          <div
+            className="flex items-center cursor-pointer"
+            onClick={() => setIsCompletedExpanded(!isCompletedExpanded)}
+          >
+            <h4 className="text-md font-semibold flex items-center">
+              Completadas ({completedTasks.length})
+              {isCompletedExpanded ? <ChevronUp className="ml-2" size={16} /> : <ChevronDown className="ml-2" size={16} />}
+            </h4>
+          </div>
+
+          
+          {isCompletedExpanded && (
+            <ul className="space-y-2 mt-2">
+              {completedTasks.map((task, index) => (
+                <li key={index} className="flex items-center space-x-2 text-gray-500 line-through">
+                  <div
+                    className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center cursor-pointer"
+                    onClick={() => handleTaskToggle(task, true)}
+                  >
+                    <Check className="w-4 h-4 text-white" />
+                  </div>
+                  <span>{task.content}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     );
   };
