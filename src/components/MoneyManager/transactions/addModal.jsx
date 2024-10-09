@@ -14,7 +14,6 @@ import timezone from "dayjs/plugin/timezone";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-
 const AddEntryModal = ({
   isOpen,
   onClose,
@@ -23,6 +22,7 @@ const AddEntryModal = ({
 }) => {
   const apiUrl = import.meta.env.VITE_API_FINANZAS;
 
+  // Estado inicial
   const [transactionType, setTransactionType] = useState("expense");
   const [amount, setAmount] = useState("");
   const [rawAmount, setRawAmount] = useState("");
@@ -42,8 +42,9 @@ const AddEntryModal = ({
   const [taxType, setTaxType] = useState("");
 
   useEffect(() => {
-    if (transactionToEdit) {
-      setIsEditing(true);
+    // Si hay una transacción para editar, activamos el modo edición
+    if (transactionToEdit && transactionToEdit.isEditing) {
+      setIsEditing(true); // Modo edición activado
       if (transactionToEdit.type === "transfer") {
         setTransactionType("Transferencia");
         setFromAccount(transactionToEdit.fromAccountId || "");
@@ -63,8 +64,16 @@ const AddEntryModal = ({
       setDescription(transactionToEdit.description || "");
       setIsRecurring(transactionToEdit.recurrent || false);
       setDate(transactionToEdit.date ? dayjs(transactionToEdit.date) : dayjs());
+    } else if (transactionToEdit && !transactionToEdit.isEditing) {
+      // Si se pasa una transacción, pero no es edición, llenamos los valores predeterminados
+      setTransactionType(transactionToEdit.type || "expense");
+      setAmount(transactionToEdit.amount ? transactionToEdit.amount.toString() : "");
+      setDescription(transactionToEdit.description || "");
+      setCategory(transactionToEdit.category || "");
+      setAccount(transactionToEdit.account || "");
+      setIsEditing(false); // Nos aseguramos de que esté en modo "nueva transacción"
     } else {
-      resetForm();
+      resetForm(); // Si no hay datos, es una nueva transacción
     }
   }, [transactionToEdit]);
 
@@ -78,7 +87,6 @@ const AddEntryModal = ({
       const response = await fetch(`${apiUrl}/categories`);
       const data = await response.json();
       setCategories(data);
-      console.log(data);
     } catch (error) {
       console.error("Error al obtener las categorías:", error);
     }
@@ -127,12 +135,11 @@ const AddEntryModal = ({
     let data;
     let endpoint;
     let method;
-    // Asegúrate de que la fecha se guarde con la hora correcta
     const localDate = dayjs(date)
-      .set('hour', dayjs().hour()) // Establece la hora actual o la hora deseada
+      .set('hour', dayjs().hour())
       .set('minute', dayjs().minute())
-      .set('second', 0) // O puedes ajustar los segundos si es necesario
-      .format("YYYY-MM-DDTHH:mm:ss"); // Formato sin UTC
+      .set('second', 0)
+      .format("YYYY-MM-DDTHH:mm:ss");
 
     if (transactionType === "Transferencia") {
       data = {
@@ -170,7 +177,7 @@ const AddEntryModal = ({
 
     try {
       const response = await fetch(endpoint, {
-        method: method,
+        method: method || "POST",
         headers: {
           "Content-Type": "application/json",
         },
@@ -230,11 +237,13 @@ const AddEntryModal = ({
     setIsEditing(false);
     setTaxType("");
   };
+
   const taxOptions = [
     { label: "IVA", value: "IVA" },
     { label: "Retención", value: "retencion" },
     { label: "Sin Impuesto", value: "sin_impuesto" },
   ];
+
   if (!isOpen) return null;
 
   const filteredCategories = categories.filter(
@@ -259,7 +268,6 @@ const AddEntryModal = ({
 
         <div className="flex">
           <div className="w-2/3 p-4 space-y-4">
-            {/* Botones de tipo de transacción */}
             <div className="flex justify-between space-x-2">
               <button
                 className={`flex-1 py-2 rounded-full ${transactionType === "income"
@@ -295,10 +303,10 @@ const AddEntryModal = ({
                 Fecha
               </label>
               <DatePicker
-                value={dayjs(date)} // Asegúrate de que 'date' siempre sea una instancia de dayjs
+                value={dayjs(date)}
                 onChange={(date) => {
                   if (date) {
-                    setDate(dayjs(date)); // Almacena el objeto dayjs
+                    setDate(dayjs(date));
                   }
                 }}
                 format="YYYY-MM-DD"
@@ -330,7 +338,6 @@ const AddEntryModal = ({
                   onChange={(e) => setFromAccount(e.target.value)}
                   options={accounts}
                 />
-
                 <SelectField
                   label="Cuenta de Destino"
                   id="toAccount"
