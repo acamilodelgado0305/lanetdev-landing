@@ -297,7 +297,10 @@ const TransactionsDashboard = () => {
     });
   };
 
-
+  const calculateVAT = (amount) => {
+    const vatRate = 0.19; // 19% de IVA en Colombia
+    return amount * vatRate;
+  };
 
 
   return (
@@ -431,9 +434,14 @@ const TransactionsDashboard = () => {
                       {entry.type === "expense" ? "-" : "+"}
                       {formatCurrency(entry.amount)}
                     </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-500">
-                      {entry.tax_type ? (
-                        <p>{entry.tax_type}</p>
+                    <td className="px-4 py-2">
+                      {entry.tax_type === "IVA" ? (
+                        <>
+                          <p>IVA</p>
+                          <p className="text-green-600 font-medium">
+                            {formatCurrency(calculateVAT(entry.amount))}
+                          </p>
+                        </>
                       ) : (
                         "No aplica"
                       )}
