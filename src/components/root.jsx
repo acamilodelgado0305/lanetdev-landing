@@ -45,7 +45,7 @@ export default function Root() {
   // Links de recursos
   const resourcesMenuLinks = useMemo(
     () => [
-      userRole === "superadmin" && { to: "/index/moneymanager", label: "Money Manager", icon: Book },
+      (userRole === "admin" || userRole === "superadmin") && { to: "/index/moneymanager", label: "Money Manager", icon: Book },
       { to: "/index/doc", label: "Documentación", icon: FileText },
       { to: "/index/communication", label: "Comunicación", icon: MessageCircle },
     ].filter(Boolean),
