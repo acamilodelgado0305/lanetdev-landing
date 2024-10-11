@@ -33,6 +33,8 @@ import {
 } from "react-icons/fa";
 
 import NoteContentModal from "./ViewImageModal";
+import { useAuth } from '../../Context/AuthProvider';
+
 
 const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
 
@@ -68,7 +70,7 @@ const TransactionsDashboard = () => {
   const [categories, setCategories] = useState([]);
   const [editTransaction, setEditTransaction] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
-
+  const { userRole } = useAuth();
   const openModal = () => {
     setEditTransaction(null);
     setIsModalOpen(true);
@@ -328,25 +330,37 @@ const TransactionsDashboard = () => {
 
           {/* Sección de estadísticas */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="bg-blue-50 p-3 rounded-lg">
-              <p className="text-xs text-gray-600 mb-1">Ingreso</p>
-              <p className="text-xl font-bold text-blue-600">
-                {formatCurrency(totalIncome)}
-              </p>
-            </div>
-            <div className="bg-red-50 p-3 rounded-lg">
-              <p className="text-xs text-gray-600 mb-1">Gastos</p>
-              <p className="text-xl font-bold text-red-600">
-                {formatCurrency(totalExpenses)}
-              </p>
-            </div>
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <p className="text-xs text-gray-600 mb-1">Balance</p>
-              <p className="text-xl font-bold text-black-600">
-                {formatCurrency(balance)}
-              </p>
-            </div>
+            {/* Solo superadmin puede ver Ingreso */}
+            {userRole === "superadmin" && (
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <p className="text-xs text-gray-600 mb-1">Ingreso</p>
+                <p className="text-xl font-bold text-blue-600">
+                  {formatCurrency(totalIncome)}
+                </p>
+              </div>
+            )}
+
+            {/* Ambos, admin y superadmin, pueden ver Gastos */}
+            {(userRole === "admin" || userRole === "superadmin") && (
+              <div className="bg-red-50 p-3 rounded-lg">
+                <p className="text-xs text-gray-600 mb-1">Gastos</p>
+                <p className="text-xl font-bold text-red-600">
+                  {formatCurrency(totalExpenses)}
+                </p>
+              </div>
+            )}
+
+            {/* Solo superadmin puede ver Balance */}
+            {userRole === "superadmin" && (
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-xs text-gray-600 mb-1">Balance</p>
+                <p className="text-xl font-bold text-black-600">
+                  {formatCurrency(balance)}
+                </p>
+              </div>
+            )}
           </div>
+
 
           {/* Controles de búsqueda y filtro */}
           <div className="mb-4 flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:justify-between sm:items-center">
