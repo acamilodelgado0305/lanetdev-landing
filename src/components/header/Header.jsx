@@ -10,10 +10,11 @@ const Header = ({ unreadEmailsCount }) => {
     const [startDate, setStartDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showNotificationModal, setShowNotificationModal] = useState(false);
+    const [searchTerm, setSearchTerm] = useState(''); // Nuevo estado para búsqueda
     const datePickerRef = useRef(null);
     const navigate = useNavigate();
     const { notifications } = useSocket(); // Obtén las notificaciones desde el contexto
-    console.log("notificaciones", notifications)
+
     const handleClickOutside = (event) => {
         if (datePickerRef.current && !datePickerRef.current.contains(event.target)) {
             setShowDatePicker(false);
@@ -36,12 +37,26 @@ const Header = ({ unreadEmailsCount }) => {
         navigate('/login');
     };
 
+    const handleSearch = () => {
+        if (searchTerm.trim()) {
+            navigate(`/index/search?query=${searchTerm}`);
+            setSearchTerm('');
+        }
+    };
+
     return (
         <div className="flex items-center justify-between w-full bg-white p-2 shadow-sm">
             <input
                 type="text"
                 placeholder="Buscar..."
                 className="hidden lg:block border rounded-md p-1 w-1/4 text-sm mx-4"
+                value={searchTerm} // Bind the input value to the searchTerm state
+                onChange={(e) => setSearchTerm(e.target.value)} // Update state on change
+                onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                        handleSearch(); // Llama a la función de búsqueda al presionar Enter
+                    }
+                }}
             />
             <div className="flex-grow flex mt-6 justify-end space-x-6 text-gray-700 items-center relative">
                 <div className="relative">
@@ -90,7 +105,6 @@ const Header = ({ unreadEmailsCount }) => {
                     <span className="ml-2 text-sm">Logout</span>
                 </div>
             </div>
-
 
             {/* Agrega el modal de notificaciones */}
             <NotificationModal
