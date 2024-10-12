@@ -128,10 +128,10 @@ function WhatsAppWeb() {
             </div>
 
             {/* Área de mensajes */}
-            <div className="flex-1 bg-gray-100 flex flex-col">
+            <div className="flex-1 bg-gray-100 flex flex-col relative">
                 {activeChat ? (
                     <>
-                        <div className="p-6 flex-1 overflow-y-auto">
+                        <div className="p-6 flex-1">
                             <h3 className="text-2xl font-bold mb-4">Conversación</h3>
                             {activeChat.messages.map((message, index) => (
                                 <div
@@ -160,34 +160,37 @@ function WhatsAppWeb() {
                             ))}
                         </div>
 
-                        <div className="p-4 bg-gray-200 flex items-center space-x-4 fixed bottom-0 w-full lg:w-[75%]">
-                            <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="px-2">
-                                😀
-                            </button>
-                            {showEmojiPicker && (
-                                <div className="absolute bottom-14">
-                                    <Picker onEmojiClick={onEmojiClick} />
-                                </div>
-                            )}
-                            <input
-                                type="file"
-                                onChange={handleFileUpload}
-                                className="hidden"
-                                id="fileInput"
-                            />
-                            <label htmlFor="fileInput" className="cursor-pointer">
-                                📎
-                            </label>
+                        {/* Área de entrada de mensaje */}
+                        <div className="p-4 bg-gray-200 flex items-center justify-between fixed bottom-0 w-full lg:w-[75%]">
+                            <div className="flex items-center space-x-3">
+                                <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="text-2xl">
+                                    😀
+                                </button>
+                                {showEmojiPicker && (
+                                    <div className="absolute bottom-14">
+                                        <Picker onEmojiClick={onEmojiClick} />
+                                    </div>
+                                )}
+                                <label htmlFor="fileInput" className="cursor-pointer text-2xl">
+                                    📎
+                                </label>
+                                <input
+                                    type="file"
+                                    onChange={handleFileUpload}
+                                    className="hidden"
+                                    id="fileInput"
+                                />
+                            </div>
                             <input
                                 type="text"
                                 value={newMessage}
                                 onChange={(e) => setNewMessage(e.target.value)}
                                 placeholder="Escribe un mensaje..."
-                                className="flex-1 p-2 border border-gray-300 rounded-lg"
+                                className="mt-4 mx-4 flex-1 p-2 border border-gray-300 rounded-lg"
                             />
                             <button
                                 onClick={handleSendMessage}
-                                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                                className="mt-2 mx-20 px-8 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 ml-2"
                             >
                                 Enviar
                             </button>
