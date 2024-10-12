@@ -102,24 +102,24 @@ function WhatsAppWeb() {
     };
 
     return (
-        <div className="flex flex-col lg:flex-row h-screen">
+        <div className="flex flex-col lg:flex-row h-screen bg-gray-50">
             {/* Lista de usuarios */}
-            <div className="lg:w-1/4 w-full bg-gray-800 text-white p-6 lg:block">
+            <div className="lg:w-1/4 w-full bg-gray-800 text-white p-6 lg:block shadow-lg">
                 <h2 className="text-xl font-bold mb-4 border-b border-gray-600 pb-2">Clientes</h2>
                 <ul className="space-y-4">
                     {users.map((user) => (
                         <li
                             key={user.id}
-                            className="p-3 cursor-pointer bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center"
+                            className="p-3 cursor-pointer bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center transition-all ease-in-out duration-200"
                             onClick={() => handleSelectChat(user.id)}
                         >
                             <img
                                 src={user.imgUrl}
                                 alt={user.name}
-                                className="w-12 h-12 rounded-full mr-4"
+                                className="w-12 h-12 rounded-full mr-4 shadow-md"
                             />
                             <div>
-                                <strong>{user.name}</strong><br />
+                                <strong className="text-lg">{user.name}</strong><br />
                                 <small className="text-gray-400">{user.phoneNumber}</small>
                             </div>
                         </li>
@@ -131,7 +131,7 @@ function WhatsAppWeb() {
             <div className="flex-1 bg-gray-100 flex flex-col relative">
                 {activeChat ? (
                     <>
-                        <div className="p-6 flex-1">
+                        <div className="p-6 flex-1 overflow-y-auto">
                             <h3 className="text-2xl font-bold mb-4">Conversación</h3>
                             {activeChat.messages.map((message, index) => (
                                 <div
@@ -142,16 +142,16 @@ function WhatsAppWeb() {
                                         <img
                                             src={getUserImage(activeChat.userId)}
                                             alt="Cliente"
-                                            className="w-8 h-8 rounded-full mr-2"
+                                            className="w-8 h-8 rounded-full mr-2 shadow-sm"
                                         />
                                     ) : (
                                         <img
                                             src={userImg}
                                             alt="Tú"
-                                            className="w-8 h-8 rounded-full mr-2"
+                                            className="w-8 h-8 rounded-full mr-2 shadow-sm"
                                         />
                                     )}
-                                    <div className={`p-3 rounded-lg max-w-md ${message.fromUser ? 'bg-primary text-white' : 'bg-gray-300'}`}>
+                                    <div className={`p-3 rounded-lg max-w-md shadow-sm ${message.fromUser ? 'bg-primary text-white' : 'bg-gray-300'}`}>
                                         <strong>{message.fromUser ? "Tú" : "Cliente"}:</strong> {message.text}
                                         <br />
                                         <small className="text-xs text-gray-900">{message.timestamp}</small>
@@ -161,7 +161,7 @@ function WhatsAppWeb() {
                         </div>
 
                         {/* Área de entrada de mensaje */}
-                        <div className="p-4 bg-gray-200 flex items-center justify-between fixed bottom-0 w-full lg:w-[75%]">
+                        <div className="p-4 bg-gray-200 flex items-center justify-between fixed bottom-0 w-full lg:w-[75%] shadow-md">
                             <div className="flex items-center space-x-3">
                                 <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="text-2xl">
                                     😀
@@ -186,11 +186,11 @@ function WhatsAppWeb() {
                                 value={newMessage}
                                 onChange={(e) => setNewMessage(e.target.value)}
                                 placeholder="Escribe un mensaje..."
-                                className="mt-4 mx-4 flex-1 p-2 border border-gray-300 rounded-lg"
+                                className="mt-4 mx-4 flex-1 p-2 border border-gray-300 rounded-lg shadow-sm"
                             />
                             <button
                                 onClick={handleSendMessage}
-                                className="mt-2 mx-20 px-8 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 ml-2"
+                                className="mt-2 mx-20 px-6 py-2 bg-primary text-white rounded-full hover:bg-blue-600 transition-all ease-in-out duration-200"
                             >
                                 Enviar
                             </button>
