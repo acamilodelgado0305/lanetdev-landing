@@ -65,7 +65,7 @@ const Indexcomunicacion = () => {
     }, [navigate]);
 
     return (
-        <div className="flex flex-col h-screen bg-gray-100">
+        <div className="flex flex-col  bg-gray-100">
             {/* Header with navigation */}
             <header className="bg-white shadow-sm">
                 <div className="max-w-7xl mx-auto  sm:px-6 lg:px-8">
