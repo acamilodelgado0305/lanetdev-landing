@@ -102,7 +102,7 @@ function WhatsAppWeb() {
     };
 
     return (
-        <div className="flex flex-col lg:flex-row h-screen bg-gray-50">
+        <div className="flex flex-col lg:flex-row h-screen">
             {/* Lista de usuarios */}
             <div className="lg:w-1/4 w-full bg-gray-800 text-white p-6 lg:block shadow-lg">
                 <h2 className="text-xl font-bold mb-4 border-b border-gray-600 pb-2">Clientes</h2>
@@ -127,8 +127,8 @@ function WhatsAppWeb() {
                 </ul>
             </div>
 
-            {/* Área de mensajes */}
-            <div className="flex-1 bg-gray-100 flex flex-col relative">
+            {/* Área de mensajes con imagen de fondo */}
+            <div className="flex-1 flex flex-col relative bg-cover bg-no-repeat bg-center" style={{ backgroundImage: `url('https://res.cloudinary.com/djbe9agfz/image/upload/v1728696603/4f1b8c54d9d83236153534b3cf71d71c_xvhciu.png')` }}>
                 {activeChat ? (
                     <>
                         <div className="p-6 flex-1 overflow-y-auto">
@@ -190,7 +190,7 @@ function WhatsAppWeb() {
                             />
                             <button
                                 onClick={handleSendMessage}
-                                className="mt-2 mx-20 px-6 py-2 bg-primary text-white rounded-full hover:bg-blue-600 transition-all ease-in-out duration-200"
+                                className="mt-2 mx-20 px-6 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-all ease-in-out duration-200"
                             >
                                 Enviar
                             </button>
