@@ -25,6 +25,13 @@ export default defineConfig({
       },
     },
   },
+  css: {
+    preprocessorOptions: {
+      less: {
+        javascriptEnabled: true,
+      },
+    },
+  },
   optimizeDeps: {
     include: ['jwt-decode'],
   },

@@ -24,6 +24,7 @@ import Calendario from "./components/MoneyManager/calendar/Calendar";
 import Indexconfig from "./components/confgapp/indexconfig";
 import Clientes from "./components/clientes/clientes"
 import SearchResults from "./components/search/SearchResults";
+import 'antd/dist/reset.css';
 
 const router = createBrowserRouter([
   {
