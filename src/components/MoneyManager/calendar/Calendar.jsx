@@ -4,6 +4,7 @@ import { EllipsisOutlined } from '@ant-design/icons';
 import 'antd/dist/reset.css';
 import esES from 'antd/locale/es_ES';
 import { getTransactions } from "../../../services/moneymanager/moneyService";
+import './FullScreenCalendar.css';
 
 const FullScreenCalendar = () => {
     const [events, setEvents] = useState({});
@@ -39,7 +40,6 @@ const FullScreenCalendar = () => {
             if (transaction.recurrent) {
                 const date = new Date(transaction.date);
 
-                // Generating the next 12 months for recurring transactions
                 for (let i = 0; i < 12; i++) {
                     const nextDate = new Date(currentYear, currentMonth + i, date.getDate());
                     const formattedDate = nextDate.toISOString().split('T')[0];
@@ -109,7 +109,7 @@ const FullScreenCalendar = () => {
         return (
             <ul className="events" style={{ listStyleType: 'none', padding: 0 }}>
                 {listData.map((item, index) => (
-                    <li key={index}>
+                    <li key={index} className="calendar-event">
                         {item.paid ? (
                             <Badge status="success" text={item.content} />
                         ) : (
@@ -117,7 +117,7 @@ const FullScreenCalendar = () => {
                                 status="error"
                                 text={
                                     <>
-                                        {item.content} - <span style={{ color: 'red' }}>Pendiente de pago</span>
+                                        {item.content} - <span className="pending-text">Pendiente de pago</span>
                                     </>
                                 }
                             />
@@ -135,37 +135,36 @@ const FullScreenCalendar = () => {
 
     return (
         <ConfigProvider locale={esES}>
-            <div style={{ height: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <div className="calendar-container">
                 {loading ? (
                     <Spin size="large" />
                 ) : (
-                    <>
-                        <div className="relative ">
-                            <div className="absolute top-3 right-72 z-10 flex items-center space-x-2">
-                                <Dropdown overlay={renderMenu()} trigger={['click']}>
-                                    <button className="flex items-center border border-gray-200 rounded-md px-3 py-1 cursor-pointer hover:border-blue-500 transition-colors duration-200">
-                                        <EllipsisOutlined style={{ fontSize: '24px', cursor: 'pointer' }} />
-                                        <span className="ml-2">Pagos</span>
-                                    </button>
-                                </Dropdown>
-                            </div>
-
-                            <Calendar 
-                                dateCellRender={dateCellRender} 
-                                onPanelChange={onPanelChange}
-                            />
+                    <div className="relative">
+                        <div className="absolute top-3 right-72 z-10 flex items-center space-x-2">
+                            <Dropdown overlay={renderMenu()} trigger={['click']}>
+                                <button className="flex items-center border border-gray-200 rounded-md px-3 py-1 cursor-pointer hover:border-blue-500 transition-colors duration-200">
+                                    <EllipsisOutlined style={{ fontSize: '24px', cursor: 'pointer' }} />
+                                    <span className="ml-2">Pagos</span>
+                                </button>
+                            </Dropdown>
                         </div>
 
-                        <Modal
-                            title="Detalles del Pago"
-                            visible={isModalVisible}
-                            onOk={handleModalOk}
-                            onCancel={handleModalCancel}
-                        >
-                            <p>{selectedEvent} - Aquí podrías realizar el pago</p>
-                        </Modal>
-                    </>
+                        <Calendar
+                            dateCellRender={dateCellRender}
+                            onPanelChange={onPanelChange}
+                            className="styled-calendar" // Clase personalizada para estilos adicionales
+                        />
+                    </div>
                 )}
+
+                <Modal
+                    title="Detalles del Pago"
+                    visible={isModalVisible}
+                    onOk={handleModalOk}
+                    onCancel={handleModalCancel}
+                >
+                    <p>{selectedEvent} - Aquí podrías realizar el pago</p>
+                </Modal>
             </div>
         </ConfigProvider>
     );

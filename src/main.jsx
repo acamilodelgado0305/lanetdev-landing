@@ -23,7 +23,8 @@ import Estadisticas from "./components/MoneyManager/estadisticas/Estadisticas";
 import Calendario from "./components/MoneyManager/calendar/Calendar";
 import Indexconfig from "./components/confgapp/indexconfig";
 import Clientes from "./components/clientes/clientes"
-
+import SearchResults from "./components/search/SearchResults";
+import 'antd/dist/reset.css';
 
 const router = createBrowserRouter([
   {
@@ -106,19 +107,18 @@ const router = createBrowserRouter([
             <Clientes />
           </PrivateRoute>
         ),
-        children: [
-        ],
       },
       {
         path: "config",
         element: <Indexconfig />,
-        children: [
-        ],
+      },
+      {
+        path: "search",
+        element: <SearchResults />,
       },
     ],
   },
-]);
-ReactDOM.createRoot(document.getElementById("root")).render(
+]); ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <SocketProvider>
       <AuthProvider>
