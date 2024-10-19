@@ -165,7 +165,7 @@ const AddEntryModal = ({
         categoryId: parseInt(category, 10),
         tax_type: taxType,
         recurrent: isRecurring,
-        time_recurrent: isRecurring ? timeRecurrent : null,
+        timeRecurrent: isRecurring ? timeRecurrent : null,
       };
       endpoint = `${apiUrl}/transactions`;
     }
