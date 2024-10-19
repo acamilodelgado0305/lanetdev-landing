@@ -40,6 +40,7 @@ const AddEntryModal = ({
   const [date, setDate] = useState(dayjs());
   const [isEditing, setIsEditing] = useState(false);
   const [taxType, setTaxType] = useState("");
+  const [timeRecurrent, setTimeRecurrent] = useState(null);
 
   useEffect(() => {
     // Si hay una transacción para editar, activamos el modo edición
@@ -164,6 +165,7 @@ const AddEntryModal = ({
         categoryId: parseInt(category, 10),
         tax_type: taxType,
         recurrent: isRecurring,
+        time_recurrent: isRecurring ? timeRecurrent : null,
       };
       endpoint = `${apiUrl}/transactions`;
     }
@@ -380,6 +382,19 @@ const AddEntryModal = ({
                     Recurrente
                   </label>
                 </div>
+                {isRecurring && (
+                  <SelectField
+                    label="Tiempo recurrente (meses)"
+                    id="timeRecurrent"
+                    value={timeRecurrent}
+                    onChange={(e) => setTimeRecurrent(parseInt(e.target.value, 10))}
+                    options={[
+                      { label: "3 meses", value: "3" },
+                      { label: "6 meses", value: "6" },
+                      { label: "12 meses", value: "12" },
+                    ]}
+                  />
+                )}
               </>
             )}
           </div>
