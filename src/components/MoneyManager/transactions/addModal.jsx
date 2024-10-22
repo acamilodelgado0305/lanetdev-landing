@@ -104,10 +104,25 @@ const AddEntryModal = ({
   };
 
   const handleAmountChange = (e) => {
-    const value = e.target.value.replace(/\D/g, "");
+    // Solo permitir números y un solo punto decimal (si es necesario)
+    const value = e.target.value.replace(/[^0-9.]/g, ""); // Elimina cualquier carácter que no sea numérico o un punto
+
+    // Si no hay valor, dejar el campo vacío
+    if (!value) {
+      setRawAmount(""); // Guardar valor numérico sin formato
+      setAmount(""); // Mostrar valor formateado vacío
+      return;
+    }
+
+    // Guardar valor numérico en rawAmount para uso interno
     setRawAmount(value);
-    const formattedAmount = new Intl.NumberFormat("es-CO").format(value);
-    setAmount(formattedAmount);
+
+    // Formatear el valor solo para mostrarlo
+    const formattedAmount = new Intl.NumberFormat("es-CO", {
+      minimumFractionDigits: 2,  // Mantener siempre dos decimales
+    }).format(value);
+
+    setAmount(formattedAmount); // Actualizar el valor formateado en el campo de entrada
   };
 
   const handleImageUpload = async (e) => {
@@ -137,9 +152,9 @@ const AddEntryModal = ({
     let endpoint;
     let method;
     const localDate = dayjs(date)
-      .set('hour', dayjs().hour())
-      .set('minute', dayjs().minute())
-      .set('second', 0)
+      .set("hour", dayjs().hour())
+      .set("minute", dayjs().minute())
+      .set("second", 0)
       .format("YYYY-MM-DDTHH:mm:ss");
 
     if (transactionType === "Transferencia") {
@@ -147,7 +162,7 @@ const AddEntryModal = ({
         userId: 1,
         fromAccountId: parseInt(fromAccount, 10),
         toAccountId: parseInt(toAccount, 10),
-        amount: parseFloat(rawAmount),
+        amount: parseFloat(rawAmount), // Asegúrate de enviar rawAmount como un número
         date: localDate,
         note: note,
         description: description,
@@ -156,7 +171,7 @@ const AddEntryModal = ({
     } else {
       data = {
         userId: 1,
-        amount: parseFloat(rawAmount),
+        amount: parseFloat(rawAmount), // Asegúrate de enviar rawAmount como un número
         type: transactionType.toLowerCase(),
         date: localDate,
         note: note,
@@ -169,7 +184,10 @@ const AddEntryModal = ({
       };
       endpoint = `${apiUrl}/transactions`;
     }
+
     console.log("Datos que se están enviando:", data);
+    // Enviar el formulario al backend...
+
     if (isEditing) {
       method = "PUT";
       endpoint += `/${transactionToEdit.id}`;
