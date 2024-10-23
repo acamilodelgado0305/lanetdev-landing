@@ -19,6 +19,7 @@ const RenderPaymentsList = () => {
                 const transactions = await getPendingTransactions();
                 const recPayments = transactions.filter(tx => tx.recurrent);
                 setRecurrentPayments(recPayments);
+                console.log(recPayments)
                 setLoading(false);
             } catch (error) {
                 console.error("Error fetching transactions:", error);
@@ -119,16 +120,18 @@ const RenderPaymentsList = () => {
                         <div>Estado</div>
                         <div>Acciones</div>
                     </div>
-                    {getPaginatedData(filteredPayments).map((payment, index) => (
+                    {getPaginatedData(filteredPayments).map((payment) => (
                         <div
-                            key={index}
+                            key={payment.id}
                             className="grid grid-cols-[50px_1fr_1fr_1fr_1fr_1fr] gap-4 py-2 border-b border-gray-200 items-center"
                         >
-                            <div>{index + 1 + (currentPage - 1) * pageSize}</div>
+                            <div>{payment.id}</div> {/* Mostrar el ID en vez del número de lista */}
                             <div>{payment.description}</div>
                             <div className="text-red-500">{formatCurrency(payment.amount)}</div>
                             <div>{formatDate(payment.date)}</div>
-                            <div className="text-green-600">Activo</div>
+                            <div className={payment.estado ? "text-green-600" : "text-red-600"}>
+                                {payment.estado ? "Activo" : "Inactivo"}
+                            </div>
                             <div>
                                 <Button type="primary" onClick={() => handlePaymentClick(payment)}>
                                     Pagar
