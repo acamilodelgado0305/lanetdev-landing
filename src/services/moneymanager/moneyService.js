@@ -115,6 +115,16 @@ export const getTransactions = async () => {
     }
 };
 
+export const getPendingTransactions = async () => {
+    try {
+        const response = await moneyApi.get('/transactions/pending');
+        return response.data;
+    } catch (error) {
+        console.error('Error al obtener las transacciones pendientes:', error);
+        throw error;
+    }
+};
+
 export const deleteTransaction = async (id) => {
     try {
         const response = await moneyApi.delete(`/transactions/${id}`);
