@@ -11,13 +11,12 @@ const RenderPaymentsList = () => {
     const [pageSize] = useState(5);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [paymentToEdit, setPaymentToEdit] = useState(null);
+    const [currentMonth, setCurrentMonth] = useState(new Date()); // Mes actual
 
-    // Llamada a la API para obtener transacciones
     useEffect(() => {
         const fetchTransactions = async () => {
             try {
                 const transactions = await getPendingTransactions();
-                // Filtrar solo los pagos recurrentes
                 const recPayments = transactions.filter(tx => tx.recurrent);
                 setRecurrentPayments(recPayments);
                 setLoading(false);
@@ -40,7 +39,6 @@ const RenderPaymentsList = () => {
         return data.slice(startIndex, endIndex);
     };
 
-    // Formatear el monto (sin el símbolo de moneda)
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('es-CO', {
             minimumFractionDigits: 2,
@@ -48,7 +46,6 @@ const RenderPaymentsList = () => {
         }).format(amount);
     };
 
-    // Formatear la fecha en formato legible
     const formatDate = (dateString) => {
         return new Date(dateString).toLocaleDateString('es-ES', {
             year: 'numeric',
@@ -58,7 +55,6 @@ const RenderPaymentsList = () => {
     };
 
     const handlePaymentClick = (payment) => {
-
         setPaymentToEdit({
             amount: payment.amount,
             description: payment.description,
@@ -78,70 +74,78 @@ const RenderPaymentsList = () => {
         handleModalClose();
     };
 
+    // Obtener solo los pagos del mes actual
+    const filteredPayments = recurrentPayments.filter((payment) => {
+        const paymentDate = new Date(payment.date);
+        return (
+            paymentDate.getMonth() === currentMonth.getMonth() &&
+            paymentDate.getFullYear() === currentMonth.getFullYear()
+        );
+    });
+
+    // Moverse entre meses
+    const handlePrevMonth = () => {
+        setCurrentMonth(new Date(currentMonth.setMonth(currentMonth.getMonth() - 1)));
+    };
+
+    const handleNextMonth = () => {
+        setCurrentMonth(new Date(currentMonth.setMonth(currentMonth.getMonth() + 1)));
+    };
+
+    const currentMonthLabel = currentMonth.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+
     if (loading) {
         return <p>Cargando transacciones...</p>;
     }
 
     return (
-        <div className="bg-white rounded-lg shadow-md p-4 mx-20">
-            <h3 className="text-lg font-semibold mb-4 flex items-center">
+        <div className="bg-white rounded-lg shadow-md p-4">
+            <h3 className="text-lg font-semibold mb-4 flex items-center justify-between">
                 <CheckSquare className="w-5 h-5 mr-2 text-blue-500" />
-                Pagos Recurrentes
+                Pagos Recurrentes - {currentMonthLabel}
+                <div>
+                    <Button onClick={handlePrevMonth}>Mes anterior</Button>
+                    <Button onClick={handleNextMonth} className="ml-2">Mes siguiente</Button>
+                </div>
             </h3>
 
-            {recurrentPayments.length > 0 ? (
+            {filteredPayments.length > 0 ? (
                 <>
-                    <ul className="space-y-4">
-                        {getPaginatedData(recurrentPayments).map((payment, index) => (
-                            <li
-                                key={index}
-                                className="bg-white rounded-lg shadow-lg p-4 flex items-center justify-between space-x-4 border border-gray-200"
-                            >
-                                {/* Sección de la descripción */}
-                                <div className="flex-grow">
-                                    <span className="block font-semibold text-lg text-gray-800">{payment.description}</span>
-                                    <span className="block text-sm text-gray-500">Descripción del pago</span>
-                                </div>
-
-                                {/* Sección del monto */}
-                                <div className="flex-shrink-0 text-right">
-                                    <span className="block font-semibold text-xl text-red-500">
-                                        {formatCurrency(payment.amount)}
-                                    </span>
-                                    <span className="block text-sm text-gray-500">Monto</span>
-                                </div>
-
-                                {/* Sección de la fecha */}
-                                <div className="flex-shrink-0 text-right">
-                                    <span className="block font-medium text-gray-700">
-                                        {formatDate(payment.date)}
-                                    </span>
-                                    <span className="block text-sm text-gray-500">Fecha</span>
-                                </div>
-
-                                {/* Botón de acción */}
-                                <div className="flex-shrink-0">
-                                    <Button
-                                        type="primary"
-                                        onClick={() => handlePaymentClick(payment)}
-                                    >
-                                        Pagar
-                                    </Button>
-                                </div>
-                            </li>
-                        ))}
-                    </ul>
-                    {/* Paginación */}
+                    <div className="grid grid-cols-[50px_1fr_1fr_1fr_1fr_1fr] gap-4 border-b-2 py-2 bg-gray-100 font-semibold">
+                        <div>#</div>
+                        <div>Descripción</div>
+                        <div>Monto</div>
+                        <div>Fecha</div>
+                        <div>Estado</div>
+                        <div>Acciones</div>
+                    </div>
+                    {getPaginatedData(filteredPayments).map((payment, index) => (
+                        <div
+                            key={index}
+                            className="grid grid-cols-[50px_1fr_1fr_1fr_1fr_1fr] gap-4 py-2 border-b border-gray-200 items-center"
+                        >
+                            <div>{index + 1 + (currentPage - 1) * pageSize}</div>
+                            <div>{payment.description}</div>
+                            <div className="text-red-500">{formatCurrency(payment.amount)}</div>
+                            <div>{formatDate(payment.date)}</div>
+                            <div className="text-green-600">Activo</div>
+                            <div>
+                                <Button type="primary" onClick={() => handlePaymentClick(payment)}>
+                                    Pagar
+                                </Button>
+                            </div>
+                        </div>
+                    ))}
                     <Pagination
                         current={currentPage}
                         pageSize={pageSize}
-                        total={recurrentPayments.length}
+                        total={filteredPayments.length}
                         onChange={handlePageChange}
                         className="mt-4"
                     />
                 </>
             ) : (
-                <p className="text-gray-500">No hay pagos recurrentes.</p>
+                <p className="text-gray-500">No hay pagos recurrentes para este mes.</p>
             )}
 
             <AddEntryModal

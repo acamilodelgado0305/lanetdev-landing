@@ -193,7 +193,7 @@ const IndexMoneyManager = () => {
               Transacciones
             </NavLink>
             <NavLink to="/index/moneymanager/Pagos Pendientes" icon={Send}>
-              Pagos Pendientes
+              Pagos Recurrentes
             </NavLink>
             {/* <button
               onClick={() => setIsPaymentsModalVisible(true)}
