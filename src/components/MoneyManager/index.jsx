@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Outlet, Link, useNavigate } from "react-router-dom";
-import { Modal, Button } from "antd";
+import { Modal, Button, Input } from "antd";
 import { CreditCard, BarChart2, Send, MoreHorizontal, User, DollarSign, CheckSquare, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { CiSettings } from "react-icons/ci";
 import { getTransactions } from "../../services/moneymanager/moneyService";
 import AddEntryModal from "../MoneyManager/transactions/addModal";
+import RenderPaymentsList from "../MoneyManager/transactions/components/renderPaymentsList";
 
 // NavLink component
 const NavLink = ({ to, icon: Icon, children }) => (
@@ -141,88 +142,6 @@ const IndexMoneyManager = () => {
     return new Date(dateString).toLocaleDateString('es-ES', options);
   };
 
-
-  const renderPaymentsList = () => {
-    const nextMonthEvents = getNextMonthRecurringTransactions();
-    const pendingTasks = nextMonthEvents.filter(event => !completedPayments[event.content]);
-
-    return (
-      <div className="bg-white rounded-lg shadow-md p-4">
-        <h3 className="text-lg font-semibold mb-4 flex items-center">
-          <CheckSquare className="w-5 h-5 mr-2 text-blue-500" />
-          Pagos Pendientes (Próximo mes)
-        </h3>
-        {pendingTasks.length > 0 ? (
-          <ul className="space-y-4">
-            {pendingTasks.map((event, index) => (
-              <li key={index} className="flex items-center space-x-2 justify-between p-2 rounded-lg">
-                <div className="flex items-center space-x-3 flex-grow">
-                  <div
-                    className="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center cursor-pointer"
-                    onClick={() => handleTaskToggle(event, false)}
-                  >
-                    {completedPayments[event.content] && (
-                      <Check className="w-4 h-4 text-white" />
-                    )}
-                  </div>
-                  <div className={`flex flex-col ${completedPayments[event.content] ? 'line-through text-gray-500' : ''}`}>
-                    <span className="font-medium">{event.content}</span>
-                    <span className="text-sm text-gray-600">{formatCurrency(event.amount)}</span>
-                  </div>
-                </div>
-                <div className="flex flex-col items-end">
-                  <span className="text-sm text-gray-500">
-                    {formatDate(event.date)}
-                  </span>
-                  <span className="text-xs text-gray-400">
-                    (Mensual)
-                  </span>
-                  <Button
-                    type="primary"
-                    onClick={() => handlePayment(event)}
-                    className="mt-1"
-                  >
-                    Pagar
-                  </Button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-gray-500">No hay pagos pendientes para el próximo mes</p>
-        )}
-        <div className="mt-6">
-          <div
-            className="flex items-center cursor-pointer"
-            onClick={() => setIsCompletedExpanded(!isCompletedExpanded)}
-          >
-            <h4 className="text-md font-semibold flex items-center">
-              Completadas ({completedTasks.length})
-              {isCompletedExpanded ? <ChevronUp className="ml-2" size={16} /> : <ChevronDown className="ml-2" size={16} />}
-            </h4>
-          </div>
-
-          
-          {isCompletedExpanded && (
-            <ul className="space-y-2 mt-2">
-              {completedTasks.map((task, index) => (
-                <li key={index} className="flex items-center space-x-2 text-gray-500 line-through">
-                  <div
-                    className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center cursor-pointer"
-                    onClick={() => handleTaskToggle(task, true)}
-                  >
-                    <Check className="w-4 h-4 text-white" />
-                  </div>
-                  <span>{task.content}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
-    );
-  };
-
   const handlePayment = (payment) => {
     setPaymentToEdit({
       amount: payment.amount
@@ -270,25 +189,31 @@ const IndexMoneyManager = () => {
             </div>
           </div>
           <nav className="flex items-center justify-center hidden md:flex space-x-4">
+          <NavLink to="/index/moneymanager/estadisticas" icon={BarChart2}>
+              Dashboard
+            </NavLink>
             <NavLink to="/index/moneymanager/transactions" icon={Send}>
               Transacciones
             </NavLink>
-            <button
+        
+            <NavLink to="/index/moneymanager/Pagos Pendientes" icon={Send}>
+              Pagos Recurrentes
+            </NavLink>
+            {/* <button
               onClick={() => setIsPaymentsModalVisible(true)}
               className="flex items-center px-3 py-2 text-sm text-gray-600 rounded-md hover:bg-gray-100 transition-colors duration-200"
             >
               <CheckSquare className="w-5 h-5 mr-2 text-gray-500" />
               <span>Pagos Pendientes</span>
-            </button>
+            </button> */}
+            
             <NavLink to="/index/moneymanager/accounts" icon={DollarSign}>
               Cuentas
             </NavLink>
             <NavLink to="/index/moneymanager/calendario" icon={CreditCard}>
               Calendario
             </NavLink>
-            <NavLink to="/index/moneymanager/estadisticas" icon={BarChart2}>
-              Estadísticas
-            </NavLink>
+           
 
             <div className="relative" ref={dropdownRef}>
               <button
@@ -326,7 +251,7 @@ const IndexMoneyManager = () => {
         onCancel={() => setIsPaymentsModalVisible(false)}
         footer={null}
       >
-        {renderPaymentsList()}
+
       </Modal>
 
       <AddEntryModal

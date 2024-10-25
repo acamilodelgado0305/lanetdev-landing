@@ -21,9 +21,11 @@ import { SocketProvider } from './components/Context/SocketContext';
 import EmailManagement from './components/communication/EmailManagement';
 import Estadisticas from "./components/MoneyManager/estadisticas/Estadisticas";
 import Calendario from "./components/MoneyManager/calendar/Calendar";
+import RenderPaymentsList from "./components/MoneyManager/transactions/components/renderPaymentsList";
 import Indexconfig from "./components/confgapp/indexconfig";
 import Clientes from "./components/clientes/clientes"
-
+import SearchResults from "./components/search/SearchResults";
+import 'antd/dist/reset.css';
 
 const router = createBrowserRouter([
   {
@@ -76,6 +78,10 @@ const router = createBrowserRouter([
             element: <Calendario />,
           },
           {
+            path: "Pagos Pendientes",
+            element: <RenderPaymentsList />,
+          },
+          {
             path: "estadisticas",
             element: <Estadisticas />,
           }
@@ -106,19 +112,18 @@ const router = createBrowserRouter([
             <Clientes />
           </PrivateRoute>
         ),
-        children: [
-        ],
       },
       {
         path: "config",
         element: <Indexconfig />,
-        children: [
-        ],
+      },
+      {
+        path: "search",
+        element: <SearchResults />,
       },
     ],
   },
-]);
-ReactDOM.createRoot(document.getElementById("root")).render(
+]); ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <SocketProvider>
       <AuthProvider>

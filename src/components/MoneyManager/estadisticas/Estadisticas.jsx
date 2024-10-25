@@ -1,32 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  PieChart, Pie, Cell,
-  LineChart, Line
+  PieChart, Pie, Cell, LineChart, Line, Area, AreaChart
 } from 'recharts';
-import { Card, Row, Col, Statistic, List, Typography } from 'antd';
+import { ArrowUpRight, ArrowDownRight, DollarSign, AlertCircle, Calendar, TrendingUp, ArrowRight } from 'lucide-react';
 import { getAccounts, getCategories, getTransactions, getTransfers } from '../../../services/moneymanager/moneyService.js'; // Adjust the import path as needed
 
-const { Title } = Typography;
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
-
-const Estadisticas = () => {
+const Dashboard = () => {
   const [accounts, setAccounts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [transfers, setTransfers] = useState([]);
+  const [pendingPayments, setPendingPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [timeRange, setTimeRange] = useState('month'); // week, month, year
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [accountsData, categoriesData, transactionsData, transfersData] = await Promise.all([
+        const [accountsData, categoriesData, transactionsData, transfersData, paymentsData] = await Promise.all([
           getAccounts(),
           getCategories(),
           getTransactions(),
-          getTransfers()
+          getTransfers(),
         ]);
         setAccounts(accountsData);
         setCategories(categoriesData);
@@ -35,7 +32,7 @@ const Estadisticas = () => {
         setLoading(false);
       } catch (err) {
         console.error('Error fetching data:', err);
-        setError('Failed to fetch data. Please try again later.');
+        setError('Error al cargar los datos. Por favor, intente nuevamente.');
         setLoading(false);
       }
     };
@@ -43,152 +40,254 @@ const Estadisticas = () => {
     fetchData();
   }, []);
 
-  const getTotalBalance = () => accounts.reduce((sum, account) => sum + (Number(account.balance) || 0), 0);
+  const COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
-  const getCategoryTotals = () => {
-    const totals = {};
-    transactions.forEach(transaction => {
-      const amount = Number(transaction.amount) || 0;
-      if (totals[transaction.category]) {
-        totals[transaction.category] += amount;
-      } else {
-        totals[transaction.category] = amount;
-      }
-    });
-    return Object.entries(totals).map(([name, value]) => ({ name, value }));
+  const getTotalBalance = () => accounts.reduce((sum, account) => sum + (Number(account.balance) || 0), 0);
+  const getTotalIncome = () => transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+  const getTotalExpenses = () => transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+  
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value);
   };
 
-  const getMonthlyTransactions = () => {
+  const StatCard = ({ title, value, trend, trendValue, icon: Icon, color }) => (
+    <div className="bg-white rounded-xl p-6 shadow-sm">
+      <div className="flex justify-between items-start mb-4">
+        <div className={`p-2 rounded-lg ${color}`}>
+          <Icon size={20} className="text-white" />
+        </div>
+        <span className={`flex items-center text-sm ${trend === 'up' ? 'text-green-500' : 'text-red-500'}`}>
+          {trend === 'up' ? <ArrowUpRight size={20} /> : <ArrowDownRight size={20} />}
+          {trendValue}%
+        </span>
+      </div>
+      <h3 className="text-gray-600 text-sm font-medium mb-2">{title}</h3>
+      <p className="text-2xl font-bold text-gray-800">{formatCurrency(value)}</p>
+    </div>
+  );
+
+  const getSpendingTrends = () => {
     const monthlyData = transactions.reduce((acc, transaction) => {
       const date = new Date(transaction.date);
-      const monthYear = `${date.getMonth() + 1}/${date.getFullYear()}`;
+      const monthYear = date.toLocaleString('default', { month: 'short', year: 'numeric' });
       if (!acc[monthYear]) {
-        acc[monthYear] = { month: monthYear, income: 0, expense: 0 };
+        acc[monthYear] = {
+          name: monthYear,
+          income: 0,
+          expenses: 0,
+          savings: 0
+        };
       }
-      const amount = Number(transaction.amount) || 0;
       if (transaction.type === 'income') {
-        acc[monthYear].income += amount;
+        acc[monthYear].income += Number(transaction.amount) || 0;
       } else {
-        acc[monthYear].expense += amount;
+        acc[monthYear].expenses += Number(transaction.amount) || 0;
       }
+      acc[monthYear].savings = acc[monthYear].income - acc[monthYear].expenses;
       return acc;
     }, {});
     return Object.values(monthlyData);
   };
 
-  const formatCurrency = (value) => {
-    const num = Number(value);
-    return isNaN(num) ? '0.00' : num.toFixed(2);
-  };
+  if (loading) return (
+    <div className="flex justify-center items-center h-screen">
+      <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-purple-500"></div>
+    </div>
+  );
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>{error}</div>;
+  if (error) return <div className="text-red-500 text-center p-4">{error}</div>;
 
   return (
-    <Row gutter={[16, 16]}>
-      <Col span={24}>
-        <Card>
-          <Statistic title="Total Balance" value={getTotalBalance()} prefix="$" precision={2} />
-        </Card>
-      </Col>
-
-      <Col span={12}>
-        <Card title="Account Balances">
-          <div style={{ height: 300 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={accounts}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="balance" fill="#8884d8" />
-              </BarChart>
-            </ResponsiveContainer>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header Section */}
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-gray-800">Panel Financiero</h1>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setTimeRange('week')}
+              className={`px-4 py-2 rounded-lg ${
+                timeRange === 'week' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600'
+              }`}
+            >
+              Semana
+            </button>
+            <button
+              onClick={() => setTimeRange('month')}
+              className={`px-4 py-2 rounded-lg ${
+                timeRange === 'month' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600'
+              }`}
+            >
+              Mes
+            </button>
+            <button
+              onClick={() => setTimeRange('year')}
+              className={`px-4 py-2 rounded-lg ${
+                timeRange === 'year' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600'
+              }`}
+            >
+              Año
+            </button>
           </div>
-        </Card>
-      </Col>
+        </div>
 
-      <Col span={12}>
-        <Card title="Spending by Category">
-          <div style={{ height: 300 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={getCategoryTotals()}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {getCategoryTotals().map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatCard
+            title="Balance Total"
+            value={getTotalBalance()}
+            trend="up"
+            trendValue="12"
+            icon={DollarSign}
+            color="bg-indigo-600"
+          />
+          <StatCard
+            title="Ingresos Totales"
+            value={getTotalIncome()}
+            trend="up"
+            trendValue="8"
+            icon={TrendingUp}
+            color="bg-green-600"
+          />
+          <StatCard
+            title="Gastos Totales"
+            value={getTotalExpenses()}
+            trend="down"
+            trendValue="5"
+            icon={TrendingUp}
+            color="bg-red-600"
+          />
+          <StatCard
+            title="Pagos Pendientes"
+            value={pendingPayments.reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0)}
+            trend="up"
+            trendValue="2"
+            icon={AlertCircle}
+            color="bg-amber-600"
+          />
+        </div>
+
+        {/* Main Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Spending Trends */}
+          <div className="bg-white p-6 rounded-xl shadow-sm">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">Tendencias de Gastos e Ingresos</h2>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={getSpendingTrends()}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Area type="monotone" dataKey="income" stackId="1" stroke="#4F46E5" fill="#4F46E5" fillOpacity={0.2} />
+                  <Area type="monotone" dataKey="expenses" stackId="1" stroke="#EF4444" fill="#EF4444" fillOpacity={0.2} />
+                  <Area type="monotone" dataKey="savings" stackId="1" stroke="#10B981" fill="#10B981" fillOpacity={0.2} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-        </Card>
-      </Col>
 
-      <Col span={24}>
-        <Card title="Monthly Income vs Expenses">
-          <div style={{ height: 400 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={getMonthlyTransactions()}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="income" stroke="#82ca9d" />
-                <Line type="monotone" dataKey="expense" stroke="#8884d8" />
-              </LineChart>
-            </ResponsiveContainer>
+          {/* Category Distribution */}
+          <div className="bg-white p-6 rounded-xl shadow-sm">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">Distribución por Categorías</h2>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={categories}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {categories.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-        </Card>
-      </Col>
+        </div>
 
-      <Col span={12}>
-        <Card title="Recent Transactions">
-          <List
-            dataSource={transactions.slice(0, 5)}
-            renderItem={(transaction) => (
-              <List.Item
-                key={transaction.id}
-                extra={
-                  <span style={{ color: transaction.type === 'income' ? 'green' : 'red' }}>
-                    ${formatCurrency(transaction.amount)}
+        {/* Bottom Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Recent Transactions */}
+          <div className="bg-white p-6 rounded-xl shadow-sm lg:col-span-2">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold text-gray-800">Transacciones Recientes</h2>
+              <button className="text-indigo-600 hover:text-indigo-700 flex items-center">
+                Ver todas <ArrowRight size={16} className="ml-1" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              {transactions.slice(0, 5).map((transaction) => (
+                <div key={transaction.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <div className={`p-2 rounded-lg ${transaction.type === 'income' ? 'bg-green-100' : 'bg-red-100'}`}>
+                      {transaction.type === 'income' ? (
+                        <ArrowUpRight className="text-green-600" size={20} />
+                      ) : (
+                        <ArrowDownRight className="text-red-600" size={20} />
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-800">{transaction.description}</p>
+                      <p className="text-sm text-gray-500">{new Date(transaction.date).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                  <span className={`font-medium ${
+                    transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {formatCurrency(transaction.amount)}
                   </span>
-                }
-              >
-                <List.Item.Meta title={transaction.description} />
-              </List.Item>
-            )}
-          />
-        </Card>
-      </Col>
+                </div>
+              ))}
+            </div>
+          </div>
 
-      <Col span={12}>
-        <Card title="Recent Transfers">
-          <List
-            dataSource={transfers.slice(0, 5)}
-            renderItem={(transfer) => (
-              <List.Item key={transfer.id} extra={`$${formatCurrency(transfer.amount)}`}>
-                <List.Item.Meta 
-                  title={`${transfer.fromAccount} → ${transfer.toAccount}`}
-                />
-              </List.Item>
-            )}
-          />
-        </Card>
-      </Col>
-    </Row>
+          {/* Pending Payments */}
+          <div className="bg-white p-6 rounded-xl shadow-sm">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold text-gray-800">Pagos Pendientes</h2>
+              <button className="text-indigo-600 hover:text-indigo-700 flex items-center">
+                Ver todos <ArrowRight size={16} className="ml-1" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              {pendingPayments.slice(0, 4).map((payment) => (
+                <div key={payment.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <div className="p-2 rounded-lg bg-amber-100">
+                      <Calendar className="text-amber-600" size={20} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-800">{payment.description}</p>
+                      <p className="text-sm text-gray-500">Vence: {new Date(payment.dueDate).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                  <span className="font-medium text-amber-600">
+                    {formatCurrency(payment.amount)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
-export default Estadisticas;
+export default Dashboard;

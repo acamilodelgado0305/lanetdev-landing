@@ -1,0 +1,46 @@
+/* FullScreenCalendar.css */
+
+.calendar-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background-color: #f7f9fc;
+    min-height: 100vh;
+}
+
+.dropdown-button {
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    padding: 8px 16px;
+    border-radius: 4px;
+    transition: all 0.3s;
+}
+
+.dropdown-button:hover {
+    background-color: #e6f7ff;
+    border-color: #1890ff;
+}
+
+.styled-calendar .ant-picker-cell-inner {
+    font-weight: bold;
+    border-radius: 50%;
+    background-color: #f0f8ff;
+    transition: all 0.3s;
+}
+
+.styled-calendar .ant-picker-cell-inner:hover {
+    background-color: #bae7ff;
+}
+
+.calendar-event {
+    background-color: #f6f6f6;
+    padding: 8px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+}
+
+.pending-text {
+    color: red;
+    font-weight: bold;
+}
