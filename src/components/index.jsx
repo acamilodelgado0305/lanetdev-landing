@@ -1,9 +1,8 @@
 import React from 'react';
 import { Bar, Line, Doughnut, Pie, Radar, PolarArea } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, RadialLinearScale } from 'chart.js';
-import Header from '../components/header/Header';
 import TaskComponent from '../components/task/TaskComponent';
-import { BsFillArchiveFill, BsFillGrid3X3GapFill, BsPeopleFill, BsFillBellFill, BsCurrencyDollar } from 'react-icons/bs';
+import { BsFillArchiveFill, BsCurrencyDollar, BsPeopleFill, BsFillBellFill } from 'react-icons/bs';
 
 // Registra los componentes necesarios de Chart.js
 ChartJS.register(
@@ -108,22 +107,30 @@ export default function Index() {
         <h3 className="text-2xl font-semibold text-gray-800">Dashboard</h3>
       </div>
 
-      {/* Tarjetas de resumen */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
-        {[
-          { label: 'Productos', icon: <BsFillArchiveFill />, value: 300 },
-          { label: 'Ingresos', icon: <BsCurrencyDollar />, value: "$12,000" },
-          { label: 'Clientes Activos', icon: <BsPeopleFill />, value: 33 },
-          { label: 'Alertas', icon: <BsFillBellFill />, value: 42 },
-        ].map((item, index) => (
-          <div key={index} className="bg-white rounded-lg shadow-sm p-4 flex flex-col items-center hover:bg-blue-100 transition-all">
-            <div className="text-blue-500 text-2xl mb-2">{item.icon}</div>
-            <h3 className="text-sm font-medium text-gray-700">{item.label}</h3>
-            <h1 className="text-xl font-bold text-gray-700">{item.value}</h1>
-          </div>
-        ))}
-        <div>
+
+
+      {/* Sección para las tareas de pago a un lado y las tarjetas al otro lado */}
+      <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        {/* Columna para las tareas de pagos */}
+        <div className="md:col-span-1 bg-white rounded-lg shadow-md p-6 mb-6">
+          <h3 className="text-xl font-semibold text-gray-800 mb-4">Pagos Pendientes</h3>
           <TaskComponent />
+        </div>
+
+        {/* Columna para las tarjetas de resumen organizadas en filas de dos */}
+        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[
+            { label: 'Productos', icon: <BsFillArchiveFill />, value: 300 },
+            { label: 'Ingresos', icon: <BsCurrencyDollar />, value: "$12,000" },
+            { label: 'Clientes Activos', icon: <BsPeopleFill />, value: 33 },
+            { label: 'Alertas', icon: <BsFillBellFill />, value: 42 },
+          ].map((item, index) => (
+            <div key={index} className="bg-white rounded-lg shadow-sm p-4 flex flex-col items-center hover:bg-blue-100 transition-all">
+              <div className="text-blue-500 text-2xl mb-2">{item.icon}</div>
+              <h3 className="text-sm font-medium text-gray-700">{item.label}</h3>
+              <h1 className="text-xl font-bold text-gray-700">{item.value}</h1>
+            </div>
+          ))}
         </div>
       </div>
 
