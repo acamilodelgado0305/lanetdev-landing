@@ -189,9 +189,13 @@ const IndexMoneyManager = () => {
             </div>
           </div>
           <nav className="flex items-center justify-center hidden md:flex space-x-4">
+          <NavLink to="/index/moneymanager/estadisticas" icon={BarChart2}>
+              Dashboard
+            </NavLink>
             <NavLink to="/index/moneymanager/transactions" icon={Send}>
               Transacciones
             </NavLink>
+        
             <NavLink to="/index/moneymanager/Pagos Pendientes" icon={Send}>
               Pagos Recurrentes
             </NavLink>
@@ -202,15 +206,14 @@ const IndexMoneyManager = () => {
               <CheckSquare className="w-5 h-5 mr-2 text-gray-500" />
               <span>Pagos Pendientes</span>
             </button> */}
+            
             <NavLink to="/index/moneymanager/accounts" icon={DollarSign}>
               Cuentas
             </NavLink>
             <NavLink to="/index/moneymanager/calendario" icon={CreditCard}>
               Calendario
             </NavLink>
-            <NavLink to="/index/moneymanager/estadisticas" icon={BarChart2}>
-              Estadísticas
-            </NavLink>
+           
 
             <div className="relative" ref={dropdownRef}>
               <button
