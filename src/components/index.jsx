@@ -2,6 +2,7 @@ import React from 'react';
 import { Bar, Line, Doughnut, Pie, Radar, PolarArea } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, RadialLinearScale } from 'chart.js';
 import Header from '../components/header/Header';
+import TaskComponent from '../components/task/TaskComponent';
 import { BsFillArchiveFill, BsFillGrid3X3GapFill, BsPeopleFill, BsFillBellFill, BsCurrencyDollar } from 'react-icons/bs';
 
 // Registra los componentes necesarios de Chart.js
@@ -121,6 +122,9 @@ export default function Index() {
             <h1 className="text-xl font-bold text-gray-700">{item.value}</h1>
           </div>
         ))}
+        <div>
+          <TaskComponent />
+        </div>
       </div>
 
       {/* Gráficos */}
