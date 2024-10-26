@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
   PlusCircle,
-  ChevronLeft,
-  ChevronRight,
-  Search,
-  Filter,
 } from "lucide-react";
 import {
   format as formatDate,
@@ -23,18 +19,11 @@ import {
   deleteTransaction,
   deleteTransfer
 } from "../../../services/moneymanager/moneyService";
-import { Table, Input, Button, Dropdown, Menu, Modal, message } from "antd";
-import {
-  FaTrashAlt,
-  FaUserEdit,
-  FaSearch,
-  FaFilter,
-  FaDownload,
-} from "react-icons/fa";
-
+import { Modal, message } from "antd";
 import NoteContentModal from "./ViewImageModal";
+import TransactionTable from "./components/TransactionTable";
+import TransactionFilters from "./components/TransactionFilters";
 import { useAuth } from '../../Context/AuthProvider';
-
 
 const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
 
@@ -51,8 +40,7 @@ const formatCurrency = (amount) => {
 };
 
 const TransactionsDashboard = () => {
-
-  const [isContentModalOpen, setIsContentModalOpen] = useState(false); // Estado para el modal de contenido
+  const [isContentModalOpen, setIsContentModalOpen] = useState(false);
   const [selectedNoteContent, setSelectedNoteContent] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [error, setError] = useState(null);
@@ -71,6 +59,7 @@ const TransactionsDashboard = () => {
   const [editTransaction, setEditTransaction] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
   const { userRole } = useAuth();
+
   const openModal = () => {
     setEditTransaction(null);
     setIsModalOpen(true);
@@ -92,38 +81,6 @@ const TransactionsDashboard = () => {
     setSelectedNoteContent("");
   };
 
-  const handleBlur = () => {
-    if (searchTerm) {
-      setSearchTerm("");
-      setIsSearching(false);
-      fetchEntries();
-    }
-  };
-
-  const handleSearchClick = async () => {
-    setIsSearching(true);
-
-    try {
-      const [transactions, transfers] = await Promise.all([
-        getTransactions(),
-        getTransfers(),
-      ]);
-
-      const allEntries = [
-        ...transactions.map((tx) => ({ ...tx, entryType: "transaction" })),
-        ...transfers.map((tf) => ({ ...tf, entryType: "transfer" })),
-      ];
-
-      const sortedEntries = allEntries.sort(
-        (a, b) => new Date(b.date) - new Date(a.date)
-      );
-
-      setEntries(sortedEntries); // Actualiza todas las transacciones
-    } catch (error) {
-      console.error("Error fetching all transactions:", error);
-    }
-  };
-
   const fetchEntries = async () => {
     try {
       const [transactions, transfers] = await Promise.all([
@@ -133,10 +90,7 @@ const TransactionsDashboard = () => {
 
       const allEntries = [
         ...transactions.map((tx) => ({ ...tx, entryType: "transaction" })),
-        ...transfers.map((tf) => ({
-          ...tf,
-          entryType: "transfer",
-        })),
+        ...transfers.map((tf) => ({ ...tf, entryType: "transfer" })),
       ];
 
       const sortedEntries = allEntries.sort(
@@ -205,6 +159,7 @@ const TransactionsDashboard = () => {
   }, [currentMonth]);
 
   const getCategoryName = (categoryId) => {
+    if (!categories || categories.length === 0) return "Categoría no encontrada";
     const category = categories.find((cat) => cat.id === categoryId);
     return category ? category.name : "Categoría no encontrada";
   };
@@ -218,7 +173,6 @@ const TransactionsDashboard = () => {
     let filtered = entriesToFilter;
 
     if (!isSearching) {
-      // Aplicar filtro por mes si no estamos buscando
       filtered = filtered.filter((entry) => {
         const entryDate = new Date(entry.date);
         return (
@@ -228,7 +182,6 @@ const TransactionsDashboard = () => {
       });
     }
 
-    // Aplicar filtro de búsqueda si hay un término
     if (searchTerm) {
       filtered = filtered.filter(
         (entry) =>
@@ -238,7 +191,6 @@ const TransactionsDashboard = () => {
       );
     }
 
-    // Filtrar por tipo (ingreso, gasto, transferencia)
     if (filterType !== "all") {
       filtered = filtered.filter((entry) =>
         filterType === "transfer"
@@ -255,27 +207,6 @@ const TransactionsDashboard = () => {
     applyFilters();
   }, [searchTerm, filterType, entries, currentMonth, isSearching]);
 
-  useEffect(() => {
-    if (!searchTerm) {
-      setIsSearching(false);
-      fetchEntries();
-    }
-  }, [searchTerm]);
-
-  // Pagination
-  const indexOfLastEntry = currentPage * entriesPerPage;
-  const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
-  const currentEntries = filteredEntries.slice(
-    indexOfFirstEntry,
-    indexOfLastEntry
-  );
-
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
-  if (error) {
-    return <div className="text-center text-red-500 p-4">{error}</div>;
-  }
-
 
   const handleDelete = async (entry) => {
     Modal.confirm({
@@ -290,7 +221,7 @@ const TransactionsDashboard = () => {
           }
           setEntries(entries.filter((e) => e.id !== entry.id));
           message.success(`${entry.entryType === "transfer" ? "Transferencia" : "Transacción"} eliminada con éxito`);
-          fetchMonthlyData(); // Actualizamos los totales después de eliminar
+          fetchMonthlyData();
         } catch (error) {
           console.error(`Error al eliminar la ${entry.entryType === "transfer" ? "transferencia" : "transacción"}:`, error);
           message.error(`Error al eliminar la ${entry.entryType === "transfer" ? "transferencia" : "transacción"}`);
@@ -299,38 +230,33 @@ const TransactionsDashboard = () => {
     });
   };
 
-  const calculateVAT = (amount) => {
-    const vatRate = 0.19; // 19% de IVA en Colombia
-    return amount * vatRate;
-  };
+  // Paginación
+  const indexOfLastEntry = currentPage * entriesPerPage;
+  const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
+  const currentEntries = filteredEntries.slice(
+    indexOfFirstEntry,
+    indexOfLastEntry
+  );
 
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   return (
     <div className="bg-gray-100  w-full p-2">
       <main className="max-w-full mx-auto">
         <div className="bg-white rounded-lg shadow-lg p-4 relative h-full overflow-hidden">
-          {/* Encabezado con controles de mes */}
-          <div className="flex justify-between items-center mb-4">
-            <button
-              className="text-blue-500 hover:text-blue-600 transition-colors"
-              onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-            >
-              <ChevronLeft size={20} />
-            </button>
-            <h2 className="text-xl font-semibold">
-              {formatDate(currentMonth, "MMMM yyyy")}
-            </h2>
-            <button
-              className="text-blue-500 hover:text-blue-600 transition-colors"
-              onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-            >
-              <ChevronRight size={20} />
-            </button>
-          </div>
+          {/* Filtros y controles de búsqueda */}
+          <TransactionFilters
+            currentMonth={currentMonth}
+            searchTerm={searchTerm}
+            filterType={filterType}
+            onSearchChange={(term) => setSearchTerm(term)}
+            onFilterChange={(type) => setFilterType(type)}
+            onPrevMonth={() => setCurrentMonth(subMonths(currentMonth, 1))}
+            onNextMonth={() => setCurrentMonth(addMonths(currentMonth, 1))}
+          />
 
           {/* Sección de estadísticas */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            {/* Solo superadmin puede ver Ingreso */}
             {userRole === "superadmin" && (
               <div className="bg-blue-50 p-3 rounded-lg">
                 <p className="text-xs text-gray-600 mb-1">Ingreso</p>
@@ -339,8 +265,6 @@ const TransactionsDashboard = () => {
                 </p>
               </div>
             )}
-
-            {/* Ambos, admin y superadmin, pueden ver Gastos */}
             {(userRole === "admin" || userRole === "superadmin") && (
               <div className="bg-red-50 p-3 rounded-lg">
                 <p className="text-xs text-gray-600 mb-1">Gastos</p>
@@ -349,8 +273,6 @@ const TransactionsDashboard = () => {
                 </p>
               </div>
             )}
-
-            {/* Solo superadmin puede ver Balance */}
             {userRole === "superadmin" && (
               <div className="bg-gray-50 p-3 rounded-lg">
                 <p className="text-xs text-gray-600 mb-1">Balance</p>
@@ -361,136 +283,16 @@ const TransactionsDashboard = () => {
             )}
           </div>
 
-
-          {/* Controles de búsqueda y filtro */}
-          <div className="mb-4 flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:justify-between sm:items-center">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Buscar transacciones..."
-                className="mx-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pl-8 pr-2 py-1 text-sm"
-                value={searchTerm}
-                onClick={handleSearchClick}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onBlur={handleBlur}
-              />
-              <Search
-                className="ml-[94%] md:ml-[90%] -mt-8 transform -translate-y-1/2 text-gray-400"
-                size={18}
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Filter size={18} className="text-gray-400" />
-              <select
-                className="border rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-              >
-                <option value="all">Todos</option>
-                <option value="income">Ingresos</option>
-                <option value="expense">Gastos</option>
-                <option value="transfer">Transferencias</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Contenedor de la tabla con scroll vertical y horizontal */}
-          <div className="overflow-auto max-h-[40vh]">
-            <table className="min-w-full bg-white text-sm">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Fecha
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Descripción
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Cuenta
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Categoría
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Monto
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Impuestos
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Comprobante
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Acciones
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {currentEntries.map((entry, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-500">
-                      {formatDate(new Date(entry.date), "d MMM yyyy")}
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap">
-                      <div className="text-xs font-medium text-gray-900">
-                        {entry.description}
-                      </div>
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-500">
-                      {entry.entryType === "transfer"
-                        ? `${getAccountName(entry.from_account_id)} ➡️ ${getAccountName(entry.to_account_id)}`
-                        : getAccountName(entry.account_id)}
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-500">
-                      {getCategoryName(entry.category_id) || "Sin categoría"}
-                    </td>
-                    <td className={`px-4 py-2 whitespace-nowrap text-xs font-medium ${entry.type === "expense" ? "text-red-600" : "text-blue-600"}`}>
-                      {entry.type === "expense" ? "-" : "+"}
-                      {formatCurrency(entry.amount)}
-                    </td>
-                    <td className="px-4 py-2">
-                      {entry.tax_type === "IVA" ? (
-                        <>
-                          <p>IVA</p>
-                          <p className="text-green-600 font-medium">
-                            {formatCurrency(calculateVAT(entry.amount))}
-                          </p>
-                        </>
-                      ) : (
-                        "No aplica"
-                      )}
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-xs">
-                      {entry.note ? (
-                        <button className="text-blue-500 hover:text-blue-600" onClick={() => openContentModal(entry.note)}>
-                          Ver contenido
-                        </button>
-                      ) : (
-                        "No hay contenido"
-                      )}
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-500">
-                      <Button
-                        className="mr-1"
-                        icon={<FaTrashAlt />}
-                        onClick={() => handleDelete(entry)}
-                        danger
-                        size="small"
-                      />
-
-                      <Button
-                        onClick={() => openEditModal(entry)}
-                        icon={<FaUserEdit />}
-                        type="primary"
-                        size="small"
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
+          {/* Tabla de transacciones */}
+          <TransactionTable
+            entries={currentEntries}
+            categories={categories}
+            accounts={accounts}
+            onDelete={handleDelete}
+            onEdit={openEditModal}
+            onOpenContentModal={openContentModal}
+            onOpenModal={openModal}
+          />
           {/* Paginación */}
           <div className="mt-2 flex justify-center">
             {Array.from({
@@ -516,13 +318,14 @@ const TransactionsDashboard = () => {
           >
             <PlusCircle size={30} />
           </button>
+
+          {/* Modales */}
           <AddEntryModal
             isOpen={isModalOpen}
             onClose={closeModal}
             onTransactionAdded={handleEntryAdded}
             transactionToEdit={editTransaction}
           />
-
           <NoteContentModal
             isOpen={isContentModalOpen}
             onClose={closeContentModal}

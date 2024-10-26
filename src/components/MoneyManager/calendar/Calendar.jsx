@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Badge, Spin, ConfigProvider, Modal, Checkbox, Button, Dropdown, Menu } from 'antd';
 import { EllipsisOutlined } from '@ant-design/icons';
-import 'antd/dist/reset.css';
 import esES from 'antd/locale/es_ES';
-import { getTransactions } from "../../../services/moneymanager/moneyService";
+import { getTransactions, getPendingTransactions } from "../../../services/moneymanager/moneyService";
 import './FullScreenCalendar.css';
 
 const FullScreenCalendar = () => {
@@ -20,9 +19,15 @@ const FullScreenCalendar = () => {
 
     const fetchTransactions = async () => {
         try {
-            const transactions = await getTransactions();
-            const processedEvents = processRecurringTransactions(transactions);
+            const [transactions, pendingTransactions] = await Promise.all([
+                getTransactions(),
+                getPendingTransactions()
+            ]);
+
+            const pendingIds = new Set(pendingTransactions.map(trans => trans.id));
+            const processedEvents = processRecurringTransactions(transactions, pendingIds);
             setEvents(processedEvents);
+            //console.log("data", processedEvents)
             setLoading(false);
         } catch (error) {
             console.error("Error fetching transactions:", error);
@@ -30,7 +35,7 @@ const FullScreenCalendar = () => {
         }
     };
 
-    const processRecurringTransactions = (transactions) => {
+    const processRecurringTransactions = (transactions, pendingIds) => {
         const processedEvents = {};
         const currentDate = new Date();
         const currentYear = currentDate.getFullYear();
@@ -51,7 +56,7 @@ const FullScreenCalendar = () => {
                     processedEvents[formattedDate].push({
                         type: transaction.type === 'income' ? 'success' : 'error',
                         content: `${transaction.description} - $${transaction.amount}`,
-                        paid: transaction.paid
+                        isPending: pendingIds.has(transaction.id) || transaction.isPending // Incluye isPending desde los datos
                     });
                 }
             }
@@ -85,7 +90,7 @@ const FullScreenCalendar = () => {
                 return eventDate.getMonth() === currentMonth && eventDate.getFullYear() === currentYear;
             })
             .flatMap(date => events[date].map(event => ({ date, ...event })))
-            .filter(event => !event.paid);
+            .filter(event => event.isPending);
 
         return (
             <Menu>
@@ -110,18 +115,14 @@ const FullScreenCalendar = () => {
             <ul className="events" style={{ listStyleType: 'none', padding: 0 }}>
                 {listData.map((item, index) => (
                     <li key={index} className="calendar-event">
-                        {item.paid ? (
-                            <Badge status="success" text={item.content} />
-                        ) : (
-                            <Badge
-                                status="error"
-                                text={
-                                    <>
-                                        {item.content} - <span className="pending-text">Pendiente de pago</span>
-                                    </>
-                                }
-                            />
-                        )}
+                        <Badge
+                            status={item.type}
+                            text={
+                                <span style={{ textDecoration: item.isPending ? 'none' : 'line-through' }}>
+                                    {item.content}
+                                </span>
+                            }
+                        />
                     </li>
                 ))}
             </ul>
@@ -152,7 +153,7 @@ const FullScreenCalendar = () => {
                         <Calendar
                             dateCellRender={dateCellRender}
                             onPanelChange={onPanelChange}
-                            className="styled-calendar" // Clase personalizada para estilos adicionales
+                            className="styled-calendar"
                         />
                     </div>
                 )}
