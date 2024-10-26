@@ -113,7 +113,7 @@ export default function Index() {
       <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         {/* Columna para las tareas de pagos */}
         <div className="md:col-span-1 bg-white rounded-lg shadow-md p-6 mb-6">
-          <h3 className="text-xl font-semibold text-gray-800 mb-4">Pagos Pendientes</h3>
+          <h3 className="text-xl font-semibold text-gray-800 mb-4">Tareas Pendientes</h3>
           <TaskComponent />
         </div>
 

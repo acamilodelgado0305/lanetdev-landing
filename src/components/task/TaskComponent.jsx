@@ -56,7 +56,7 @@ const TaskComponent = () => {
             ]);
             setNewTask('');
             setTaskDetails('');
-            setSelectedDate(dayjs()); // Resetear el formulario
+            setSelectedDate(dayjs());
         }
     };
 
@@ -106,7 +106,7 @@ const TaskComponent = () => {
                 {/* Menú desplegable de opciones generales */}
                 <Box display="flex" justifyContent="space-between">
                     <Typography variant="h6" gutterBottom>
-                        Pagos Pendientes
+                        Tareas Pendientes
                     </Typography>
                     <IconButton
                         aria-label="more"
@@ -127,7 +127,7 @@ const TaskComponent = () => {
                             },
                         }}
                     >
-                        <MenuItem onClick={handleMenuClose}>Mis Pagos</MenuItem>
+                        <MenuItem onClick={handleMenuClose}>Mis Tareas</MenuItem>
                         <MenuItem onClick={handleMenuClose}>Nueva lista</MenuItem>
                     </Menu>
                 </Box>
@@ -138,7 +138,7 @@ const TaskComponent = () => {
                         <IconButton color="primary">
                             <AddCircleOutlineIcon />
                         </IconButton>
-                        <Typography sx={{ marginLeft: 1, color: 'blue' }}>Añadir un Pago</Typography>
+                        <Typography sx={{ marginLeft: 1, color: 'blue' }}>Añadir una Tarea</Typography>
                     </AccordionSummary>
                     <AccordionDetails>
                         <Box display="flex" alignItems="center" mb={2}>
@@ -182,7 +182,7 @@ const TaskComponent = () => {
 
                 {/* Lista de tareas pendientes */}
                 <Typography variant="h6" gutterBottom>
-                    Pagos Pendientes
+                    Tareas Pendientes
                 </Typography>
                 <List>
                     {pendingTasks.map((task) => (
@@ -214,7 +214,7 @@ const TaskComponent = () => {
                                         }}
                                     >
                                         <MenuItem onClick={handleTaskMenuClose}>Mover al principio</MenuItem>
-                                        <MenuItem onClick={handleTaskMenuClose}>Añadir un subpago</MenuItem>
+                                        <MenuItem onClick={handleTaskMenuClose}>Añadir una Subtarea</MenuItem>
                                         <MenuItem onClick={handleTaskMenuClose}>Aplicar sangría</MenuItem>
                                         <MenuItem onClick={() => handleDeleteTask(task.id)}>Eliminar</MenuItem>
                                     </Menu>
@@ -235,7 +235,7 @@ const TaskComponent = () => {
 
                 {pendingTasks.length === 0 && (
                     <Typography variant="body2" color="textSecondary">
-                        No tienes Pagos pendientes.
+                        No tienes Tareas pendientes.
                     </Typography>
                 )}
 
@@ -243,7 +243,7 @@ const TaskComponent = () => {
 
                 {/* Lista de tareas completadas */}
                 <Typography variant="h6" gutterBottom>
-                    Pagos Completados
+                    Tareas Completados
                 </Typography>
                 <List>
                     {completedTasks.map((task) => (
@@ -270,7 +270,7 @@ const TaskComponent = () => {
 
                 {completedTasks.length === 0 && (
                     <Typography variant="body2" color="textSecondary">
-                        No tienes Pagos completados.
+                        No tienes Tareas completadas.
                     </Typography>
                 )}
             </Box>
