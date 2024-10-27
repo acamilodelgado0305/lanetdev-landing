@@ -56,11 +56,10 @@ const AddEntryModal = ({
         setAccount(transactionToEdit.account_id || "");
         setCategory(transactionToEdit.category_id || "");
       }
-
       // Convertir `amount` a número para `rawAmount` y a cadena para `amount`
       const numericAmount = parseFloat(transactionToEdit.amount) || 0;
-      setRawAmount(numericAmount); // Establece rawAmount como número para validación y envío
-      setAmount(numericAmount.toString()); // Visualización en el input como cadena
+      setRawAmount(numericAmount);
+      setAmount(new Intl.NumberFormat("es-CO").format(numericAmount));
 
       setNote(transactionToEdit.note || "");
       setDescription(transactionToEdit.description || "");
@@ -99,14 +98,10 @@ const AddEntryModal = ({
   };
 
   const handleAmountChange = (e) => {
-    const value = e.target.value.replace(/[^0-9.]/g, "");
-    if (!value) {
-      setRawAmount("");
-      setAmount("");
-      return;
-    }
-    setRawAmount(parseFloat(value));
-    setAmount(value);
+    const value = e.target.value.replace(/\./g, "").replace(/[^0-9]/g, "");
+    const numericValue = parseFloat(value) || 0;
+    setRawAmount(numericValue);
+    setAmount(new Intl.NumberFormat("es-CO").format(numericValue));
   };
 
   const handleImageUpload = async (e) => {
