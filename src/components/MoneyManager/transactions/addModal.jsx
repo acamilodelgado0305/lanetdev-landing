@@ -44,41 +44,34 @@ const AddEntryModal = ({
 
   useEffect(() => {
     // Si hay una transacción para editar, activamos el modo edición
-    if (transactionToEdit && transactionToEdit.isEditing) {
-      setIsEditing(true);
+    if (transactionToEdit) {
+      setIsEditing(!!transactionToEdit.isEditing);
+
       if (transactionToEdit.type === "transfer") {
         setTransactionType("Transferencia");
         setFromAccount(transactionToEdit.fromAccountId || "");
         setToAccount(transactionToEdit.toAccountId || "");
       } else {
         setTransactionType(transactionToEdit.type || "expense");
-        setAccount(transactionToEdit.account_id);
+        setAccount(transactionToEdit.account_id || "");
         setCategory(transactionToEdit.category_id || "");
       }
-      setRawAmount(parseFloat(transactionToEdit.amount) || "");
-      setAmount(
-        transactionToEdit.amount
-          ? new Intl.NumberFormat("es-CO", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          }).format(transactionToEdit.amount)
-          : ""
-      );
+
+      // Convertir `amount` a número para `rawAmount` y a cadena para `amount`
+      const numericAmount = parseFloat(transactionToEdit.amount) || 0;
+      setRawAmount(numericAmount); // Establece rawAmount como número para validación y envío
+      setAmount(numericAmount.toString()); // Visualización en el input como cadena
+
       setNote(transactionToEdit.note || "");
       setDescription(transactionToEdit.description || "");
       setIsRecurring(transactionToEdit.recurrent || false);
       setDate(transactionToEdit.date ? dayjs(transactionToEdit.date) : dayjs());
-    } else if (transactionToEdit && !transactionToEdit.isEditing) {
-      setTransactionType(transactionToEdit.type || "expense");
-      setAmount(transactionToEdit.amount ? transactionToEdit.amount.toString() : "");
-      setDescription(transactionToEdit.description || "");
-      setCategory(transactionToEdit.category || "");
-      setAccount(transactionToEdit.account || "");
-      setIsEditing(false);
+
     } else {
       resetForm();
     }
   }, [transactionToEdit]);
+
 
   useEffect(() => {
     fetchCategories();
