@@ -243,9 +243,9 @@ const TransactionsDashboard = () => {
   };
 
   return (
-    <div className="bg-white min-h-screen flex flex-col h-[90%]">
+    <div className="flex-1 bg-white]">
       {/* Barra superior de herramientas */}
-      <div className="border-b border-gray-200 bg-white sticky top-0 z-50 shadow-sm">
+      <div className="border-b border-gray-200 bg-white sticky top-0 shadow-sm">
         <div className="px-4 py-1 border-b border-gray-200">
           <Input
             placeholder="Buscar transacciones..."
@@ -288,7 +288,7 @@ const TransactionsDashboard = () => {
 
 
       {/* Contenido principal */}
-      <div className="h-[38em] px-4 py-2 overflow-hidden">
+      <div className="overflow-y-auto h[40em]">
         <div className="border border-gray-200 rounded-lg h-full flex flex-col">
           <TransactionTable
             entries={currentEntries}

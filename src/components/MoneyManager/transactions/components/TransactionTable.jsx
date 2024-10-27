@@ -130,9 +130,9 @@ const TransactionTable = ({
     ];
 
     return (
-        <div className=" overflow-auto">
+        <div className=" overflow-auto h-[39em]">
             <table className="w-full relative table-fixed border-collapse">
-                <thead className="sticky top-0 z-10 bg-white">
+                <thead className="sticky top-0 z-5 bg-white">
                     <tr className="border-b border-gray-200">
                         {columns.map((column) => (
                             <th 
