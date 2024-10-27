@@ -96,6 +96,39 @@ const TransactionsDashboard = () => {
       const sortedEntries = allEntries.sort(
         (a, b) => new Date(b.date) - new Date(a.date)
       );
+
+      setEntries(sortedEntries); // Actualiza todas las transacciones
+    } catch (error) {
+      console.error("Error fetching all transactions:", error);
+    }
+  };
+
+  const fetchEntries = async () => {
+    try {
+      const [transactions, transfers] = await Promise.all([
+        getTransactions(),
+        getTransfers(),
+      ]);
+
+      // Filtrar solo las transacciones con estado true
+      const filteredTransactions = transactions.filter(tx => tx.status === true);
+
+      const allEntries = [
+        ...filteredTransactions.map((tx) => ({
+          ...tx,
+          entryType: "transaction"
+        })),
+        ...transfers.map((tf) => ({
+          ...tf,
+          entryType: "transfer",
+        })),
+      ];
+
+      // Ordenar por fecha de más reciente a más antigua
+      const sortedEntries = allEntries.sort(
+        (a, b) => new Date(b.date) - new Date(a.date)
+      );
+
       setEntries(sortedEntries);
       applyFilters(sortedEntries);
     } catch (err) {
