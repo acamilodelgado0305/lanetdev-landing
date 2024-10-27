@@ -1,15 +1,8 @@
 import React, { useEffect, useState } from "react";
-import {
-  PlusCircle,
-} from "lucide-react";
-import {
-  format as formatDate,
-  startOfMonth,
-  endOfMonth,
-  subMonths,
-  addMonths,
-} from "date-fns";
+import { PlusOutlined, SearchOutlined, LeftOutlined, RightOutlined } from "@ant-design/icons";
+import { format as formatDate, startOfMonth, endOfMonth, subMonths, addMonths } from "date-fns";
 import axios from "axios";
+import { Modal, message, Input, Select, Button, Tooltip, Card, Statistic } from "antd";
 import AddEntryModal from "./addModal";
 import {
   getTransactions,
@@ -19,18 +12,15 @@ import {
   deleteTransaction,
   deleteTransfer
 } from "../../../services/moneymanager/moneyService";
-import { Modal, message } from "antd";
 import NoteContentModal from "./ViewImageModal";
 import TransactionTable from "./components/TransactionTable";
-import TransactionFilters from "./components/TransactionFilters";
 import { useAuth } from '../../Context/AuthProvider';
 
+const { Option } = Select;
 const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
 
 const formatCurrency = (amount) => {
-  if (isNaN(amount)) {
-    return "$0.00";
-  }
+  if (isNaN(amount)) return "$0.00";
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
@@ -59,6 +49,7 @@ const TransactionsDashboard = () => {
   const [editTransaction, setEditTransaction] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
   const { userRole } = useAuth();
+
 
   const openModal = () => {
     setEditTransaction(null);
@@ -103,39 +94,7 @@ const TransactionsDashboard = () => {
     }
   };
 
-  const fetchEntries = async () => {
-    try {
-      const [transactions, transfers] = await Promise.all([
-        getTransactions(),
-        getTransfers(),
-      ]);
 
-      // Filtrar solo las transacciones con estado true
-      const filteredTransactions = transactions.filter(tx => tx.status === true);
-
-      const allEntries = [
-        ...filteredTransactions.map((tx) => ({
-          ...tx,
-          entryType: "transaction"
-        })),
-        ...transfers.map((tf) => ({
-          ...tf,
-          entryType: "transfer",
-        })),
-      ];
-
-      // Ordenar por fecha de más reciente a más antigua
-      const sortedEntries = allEntries.sort(
-        (a, b) => new Date(b.date) - new Date(a.date)
-      );
-
-      setEntries(sortedEntries);
-      applyFilters(sortedEntries);
-    } catch (err) {
-      setError("Error al cargar las entradas");
-      console.error("Error fetching entries:", err);
-    }
-  };
 
   const fetchCategories = async () => {
     try {
@@ -273,50 +232,64 @@ const TransactionsDashboard = () => {
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
+
+  const getMonthsArray = () => {
+    const months = [];
+    for (let i = -2; i <= 2; i++) {
+      const date = addMonths(currentMonth, i);
+      months.push(date);
+    }
+    return months;
+  };
+
   return (
-    <div className="bg-gray-100  w-full p-2">
-      <main className="max-w-full mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-4 relative h-full overflow-hidden">
-          {/* Filtros y controles de búsqueda */}
-          <TransactionFilters
-            currentMonth={currentMonth}
-            searchTerm={searchTerm}
-            filterType={filterType}
-            onSearchChange={(term) => setSearchTerm(term)}
-            onFilterChange={(type) => setFilterType(type)}
-            onPrevMonth={() => setCurrentMonth(subMonths(currentMonth, 1))}
-            onNextMonth={() => setCurrentMonth(addMonths(currentMonth, 1))}
+    <div className="bg-white min-h-screen flex flex-col h-[90%]">
+      {/* Barra superior de herramientas */}
+      <div className="border-b border-gray-200 bg-white sticky top-0 z-50 shadow-sm">
+        <div className="px-4 py-1 border-b border-gray-200">
+          <Input
+            placeholder="Buscar transacciones..."
+            prefix={<SearchOutlined className="text-gray-400" />}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="max-w-lg"
+            size="large"
+            allowClear
           />
+        </div>
+        {/* Estadísticas */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-2 py-2 bg-gray-50 border-b border-gray-200">
+          {userRole === "superadmin" && (
+            <div className="bg-white rounded-lg shadow-sm p-4">
+              <div className="text-sm text-gray-500 mb-1">Ingresos totales</div>
+              <div className="text-2xl font-semibold text-blue-600">
+                {formatCurrency(totalIncome)}
+              </div>
+            </div>
+          )}
+          {(userRole === "admin" || userRole === "superadmin") && (
+            <div className="bg-white rounded-lg shadow-sm p-4">
+              <div className="text-sm text-gray-500 mb-1">Gastos totales</div>
+              <div className="text-2xl font-semibold text-red-600">
+                {formatCurrency(totalExpenses)}
+              </div>
+            </div>
+          )}
+          {userRole === "superadmin" && (
+            <div className="bg-white rounded-lg shadow-sm p-4">
+              <div className="text-sm text-gray-500 mb-1">Balance del mes</div>
+              <div className="text-2xl font-semibold text-gray-900">
+                {formatCurrency(balance)}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
 
-          {/* Sección de estadísticas */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            {userRole === "superadmin" && (
-              <div className="bg-blue-50 p-3 rounded-lg">
-                <p className="text-xs text-gray-600 mb-1">Ingreso</p>
-                <p className="text-xl font-bold text-blue-600">
-                  {formatCurrency(totalIncome)}
-                </p>
-              </div>
-            )}
-            {(userRole === "admin" || userRole === "superadmin") && (
-              <div className="bg-red-50 p-3 rounded-lg">
-                <p className="text-xs text-gray-600 mb-1">Gastos</p>
-                <p className="text-xl font-bold text-red-600">
-                  {formatCurrency(totalExpenses)}
-                </p>
-              </div>
-            )}
-            {userRole === "superadmin" && (
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <p className="text-xs text-gray-600 mb-1">Balance</p>
-                <p className="text-xl font-bold text-black-600">
-                  {formatCurrency(balance)}
-                </p>
-              </div>
-            )}
-          </div>
 
-          {/* Tabla de transacciones */}
+      {/* Contenido principal */}
+      <div className="h-[38em] px-4 py-2 overflow-hidden">
+        <div className="border border-gray-200 rounded-lg h-full flex flex-col">
           <TransactionTable
             entries={currentEntries}
             categories={categories}
@@ -326,46 +299,72 @@ const TransactionsDashboard = () => {
             onOpenContentModal={openContentModal}
             onOpenModal={openModal}
           />
-          {/* Paginación */}
-          <div className="mt-2 flex justify-center">
-            {Array.from({
-              length: Math.ceil(filteredEntries.length / entriesPerPage),
-            }).map((_, index) => (
+        </div>
+      </div>
+
+      {/* Navegación de meses estilo Google Sheets */}
+      <div className="border-t border-gray-200 bg-gray-50">
+        <div className="flex items-center px-2 h-10">
+          <Button
+            type="text"
+            size="small"
+            icon={<LeftOutlined />}
+            onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+          />
+
+          <div className="flex overflow-x-auto space-x-1 px-2">
+            {getMonthsArray().map((date) => (
               <button
-                key={index}
-                onClick={() => paginate(index + 1)}
-                className={`mx-1 px-2 py-1 rounded text-xs ${currentPage === index + 1
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200"
+                key={date.getTime()}
+                onClick={() => setCurrentMonth(date)}
+                className={`px-4 py-1 text-xs rounded-t border-t-2 min-w-max ${formatDate(date, "yyyy-MM") === formatDate(currentMonth, "yyyy-MM")
+                  ? "bg-white text-blue-600 border-blue-600 font-medium"
+                  : "text-gray-600 hover:bg-gray-100 border-transparent"
                   }`}
               >
-                {index + 1}
+                {formatDate(date, "MMMM yyyy")}
               </button>
             ))}
           </div>
 
-          <button
-            onClick={openModal}
-            className="fixed bottom-11 right-11 bg-[#FE6256] hover:bg-[#FFA38E] text-white rounded-full p-3 shadow-lg transition-colors duration-300"
-            aria-label="Añadir entrada"
-          >
-            <PlusCircle size={30} />
-          </button>
-
-          {/* Modales */}
-          <AddEntryModal
-            isOpen={isModalOpen}
-            onClose={closeModal}
-            onTransactionAdded={handleEntryAdded}
-            transactionToEdit={editTransaction}
-          />
-          <NoteContentModal
-            isOpen={isContentModalOpen}
-            onClose={closeContentModal}
-            noteContent={selectedNoteContent}
+          <Button
+            type="text"
+            size="small"
+            icon={<RightOutlined />}
+            onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
           />
         </div>
-      </main>
+      </div>
+
+      {/* Botón flotante y modales */}
+      <Tooltip title="Añadir transacción">
+        <Button
+          type="primary"
+          shape="circle"
+          size="large"
+          icon={<PlusOutlined />}
+          onClick={openModal}
+          className="fixed bottom-8 right-8 shadow-lg"
+          style={{
+            backgroundColor: '#1890ff',
+            width: '48px',
+            height: '48px'
+          }}
+        />
+      </Tooltip>
+
+      <AddEntryModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        onTransactionAdded={handleEntryAdded}
+        transactionToEdit={editTransaction}
+      />
+
+      <NoteContentModal
+        isOpen={isContentModalOpen}
+        onClose={closeContentModal}
+        noteContent={selectedNoteContent}
+      />
     </div>
   );
 };

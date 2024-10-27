@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { 
+import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, Area, AreaChart
 } from 'recharts';
 import { ArrowUpRight, ArrowDownRight, DollarSign, AlertCircle, Calendar, TrendingUp, ArrowRight } from 'lucide-react';
-import { getAccounts, getCategories, getTransactions, getTransfers } from '../../../services/moneymanager/moneyService.js'; // Adjust the import path as needed
+import { getAccounts, getCategories, getTransactions, getTransfers } from '../../../services/moneymanager/moneyService.js';
+import axios from 'axios';
+import { format as formatDate } from 'date-fns';
+import {  Link } from "react-router-dom";
+
+const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
 
 const Dashboard = () => {
+  const COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
   const [accounts, setAccounts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [transactions, setTransactions] = useState([]);
@@ -14,12 +20,18 @@ const Dashboard = () => {
   const [pendingPayments, setPendingPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [timeRange, setTimeRange] = useState('month'); // week, month, year
+  const [timeRange, setTimeRange] = useState('month');
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [monthlyStats, setMonthlyStats] = useState({
+    balance: 0,
+    totalIncome: 0,
+    totalExpenses: 0
+  });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [accountsData, categoriesData, transactionsData, transfersData, paymentsData] = await Promise.all([
+        const [accountsData, categoriesData, transactionsData, transfersData] = await Promise.all([
           getAccounts(),
           getCategories(),
           getTransactions(),
@@ -38,14 +50,29 @@ const Dashboard = () => {
     };
 
     fetchData();
-  }, []);
+    fetchMonthlyData();
+  }, [currentMonth]);
 
-  const COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+  const fetchMonthlyData = async () => {
+    const monthYear = formatDate(currentMonth, "yyyy-MM");
+    try {
+      const [balanceResponse, incomeResponse, expensesResponse] = await Promise.all([
+        axios.get(`${API_BASE_URL}/transactions/balance/month/${monthYear}`),
+        axios.get(`${API_BASE_URL}/transactions/income/month/${monthYear}`),
+        axios.get(`${API_BASE_URL}/transactions/expenses/month/${monthYear}`),
+      ]);
 
-  const getTotalBalance = () => accounts.reduce((sum, account) => sum + (Number(account.balance) || 0), 0);
-  const getTotalIncome = () => transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
-  const getTotalExpenses = () => transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
-  
+      setMonthlyStats({
+        balance: parseFloat(balanceResponse.data.balance) || 0,
+        totalIncome: parseFloat(incomeResponse.data.totalIncome) || 0,
+        totalExpenses: parseFloat(expensesResponse.data.totalExpenses) || 0
+      });
+    } catch (err) {
+      console.error("Error fetching monthly data:", err);
+      setError("Error al cargar los datos mensuales");
+    }
+  };
+
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
@@ -111,25 +138,22 @@ const Dashboard = () => {
           <div className="flex space-x-2">
             <button
               onClick={() => setTimeRange('week')}
-              className={`px-4 py-2 rounded-lg ${
-                timeRange === 'week' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600'
-              }`}
+              className={`px-4 py-2 rounded-lg ${timeRange === 'week' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600'
+                }`}
             >
               Semana
             </button>
             <button
               onClick={() => setTimeRange('month')}
-              className={`px-4 py-2 rounded-lg ${
-                timeRange === 'month' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600'
-              }`}
+              className={`px-4 py-2 rounded-lg ${timeRange === 'month' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600'
+                }`}
             >
               Mes
             </button>
             <button
               onClick={() => setTimeRange('year')}
-              className={`px-4 py-2 rounded-lg ${
-                timeRange === 'year' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600'
-              }`}
+              className={`px-4 py-2 rounded-lg ${timeRange === 'year' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600'
+                }`}
             >
               Año
             </button>
@@ -140,7 +164,7 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
             title="Balance Total"
-            value={getTotalBalance()}
+            value={monthlyStats.balance}
             trend="up"
             trendValue="12"
             icon={DollarSign}
@@ -148,7 +172,7 @@ const Dashboard = () => {
           />
           <StatCard
             title="Ingresos Totales"
-            value={getTotalIncome()}
+            value={monthlyStats.totalIncome}
             trend="up"
             trendValue="8"
             icon={TrendingUp}
@@ -156,7 +180,7 @@ const Dashboard = () => {
           />
           <StatCard
             title="Gastos Totales"
-            value={getTotalExpenses()}
+            value={monthlyStats.totalExpenses}
             trend="down"
             trendValue="5"
             icon={TrendingUp}
@@ -227,9 +251,12 @@ const Dashboard = () => {
           <div className="bg-white p-6 rounded-xl shadow-sm lg:col-span-2">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold text-gray-800">Transacciones Recientes</h2>
+              <Link to="/index/moneymanager/transactions">
+              
               <button className="text-indigo-600 hover:text-indigo-700 flex items-center">
                 Ver todas <ArrowRight size={16} className="ml-1" />
               </button>
+              </Link>
             </div>
             <div className="space-y-4">
               {transactions.slice(0, 5).map((transaction) => (
@@ -247,9 +274,8 @@ const Dashboard = () => {
                       <p className="text-sm text-gray-500">{new Date(transaction.date).toLocaleDateString()}</p>
                     </div>
                   </div>
-                  <span className={`font-medium ${
-                    transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
-                  }`}>
+                  <span className={`font-medium ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+                    }`}>
                     {formatCurrency(transaction.amount)}
                   </span>
                 </div>
