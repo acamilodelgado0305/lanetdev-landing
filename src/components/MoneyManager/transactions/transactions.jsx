@@ -150,17 +150,6 @@ const TransactionsDashboard = () => {
     fetchAccounts();
   }, [currentMonth]);
 
-  const getCategoryName = (categoryId) => {
-    if (!categories || categories.length === 0) return "Categoría no encontrada";
-    const category = categories.find((cat) => cat.id === categoryId);
-    return category ? category.name : "Categoría no encontrada";
-  };
-
-  const getAccountName = (accountId) => {
-    const account = accounts.find((acc) => acc.id === accountId);
-    return account ? account.name : "Cuenta no encontrada";
-  };
-
   const applyFilters = (entriesToFilter = entries) => {
     let filtered = entriesToFilter;
 

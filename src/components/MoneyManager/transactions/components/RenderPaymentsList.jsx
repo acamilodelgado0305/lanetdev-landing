@@ -56,8 +56,18 @@ const RenderPaymentsList = () => {
     };
 
     const handlePaymentClick = (payment) => {
+        // Eliminar decimales y convertir a cadena
+        const formattedAmount = Math.floor(payment.amount).toString();
+
+        console.log("Datos capturados para el modal:", {
+            amount: formattedAmount,
+            description: payment.description,
+            type: "expense",
+            isEditing: false,
+        });
+
         setPaymentToEdit({
-            amount: payment.amount,
+            amount: formattedAmount,
             description: payment.description,
             type: "expense",
             isEditing: false,
