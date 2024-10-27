@@ -1,45 +1,49 @@
 import React, { useState } from 'react';
 import {
     Typography,
-    Box,
+    Card,
     List,
-    ListItem,
-    ListItemText,
-    IconButton,
     Checkbox,
-    TextField,
-    Divider,
-    Accordion,
-    AccordionSummary,
-    AccordionDetails,
+    Input,
+    Button,
+    DatePicker,
+    Collapse,
     Menu,
-    MenuItem,
-    ListItemIcon,
-} from '@mui/material';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EventIcon from '@mui/icons-material/Event';
-import InfoIcon from '@mui/icons-material/Info';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import StarBorderIcon from '@mui/icons-material/StarBorder';
-import StarIcon from '@mui/icons-material/Star';
-import { MobileDatePicker } from '@mui/x-date-pickers/MobileDatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+    Dropdown,
+    Space,
+    message,
+    Tag,
+    Progress,
+    Badge
+} from 'antd';
+import {
+    PlusOutlined,
+    DeleteOutlined,
+    CalendarOutlined,
+    InfoCircleOutlined,
+    MoreOutlined,
+    StarOutlined,
+    StarFilled,
+    CheckCircleOutlined,
+    ClockCircleOutlined
+} from '@ant-design/icons';
 import dayjs from 'dayjs';
+
+const { Title, Text } = Typography;
+const { Panel } = Collapse;
+const { TextArea } = Input;
 
 const TaskComponent = () => {
     const [tasks, setTasks] = useState([]);
     const [newTask, setNewTask] = useState('');
     const [taskDetails, setTaskDetails] = useState('');
     const [selectedDate, setSelectedDate] = useState(dayjs());
-    const [anchorEl, setAnchorEl] = useState(null);
-    const [anchorElTask, setAnchorElTask] = useState(null);
-    const [favoriteTaskId, setFavoriteTaskId] = useState(null);
+    const [activeKey, setActiveKey] = useState([]);
 
-    const open = Boolean(anchorEl);
-    const openTaskMenu = Boolean(anchorElTask);
+    // Calcular el progreso de las tareas
+    const totalTasks = tasks.length;
+    const completedTasksCount = tasks.filter(task => task.completed).length;
+    const progressPercentage = totalTasks ? Math.round((completedTasksCount / totalTasks) * 100) : 0;
 
     const handleAddTask = () => {
         if (newTask.trim() !== '') {
@@ -52,11 +56,14 @@ const TaskComponent = () => {
                     completed: false,
                     date: selectedDate,
                     favorite: false,
+                    createdAt: dayjs(),
                 },
             ]);
             setNewTask('');
             setTaskDetails('');
             setSelectedDate(dayjs());
+            message.success('Tarea agregada correctamente');
+            setActiveKey([]); // Cerrar el panel después de agregar
         }
     };
 
@@ -65,11 +72,13 @@ const TaskComponent = () => {
             task.id === taskId ? { ...task, completed: !task.completed } : task
         );
         setTasks(updatedTasks);
+        message.success('Estado de la tarea actualizado');
     };
 
     const handleDeleteTask = (taskId) => {
         const updatedTasks = tasks.filter((task) => task.id !== taskId);
         setTasks(updatedTasks);
+        message.success('Tarea eliminada correctamente');
     };
 
     const handleFavoriteTask = (taskId) => {
@@ -77,204 +86,237 @@ const TaskComponent = () => {
             task.id === taskId ? { ...task, favorite: !task.favorite } : task
         );
         setTasks(updatedTasks);
-        setFavoriteTaskId(taskId);
     };
 
-    const handleMenuClick = (event) => {
-        setAnchorEl(event.currentTarget);
+    const getTaskStatus = (task) => {
+        const dueDate = dayjs(task.date);
+        if (task.completed) return 'success';
+        if (dueDate.isBefore(dayjs(), 'day')) return 'error';
+        if (dueDate.isSame(dayjs(), 'day')) return 'warning';
+        return 'processing';
     };
 
-    const handleMenuClose = () => {
-        setAnchorEl(null);
-    };
+    const getTaskMenu = (taskId) => (
+        <Menu
+            items={[
+                {
+                    key: '1',
+                    label: 'Mover al principio',
+                    icon: <ArrowUpOutlined />,
+                    onClick: () => message.info('Mover al principio')
+                },
+                {
+                    key: '2',
+                    label: 'Añadir una Subtarea',
+                    icon: <PlusOutlined />,
+                    onClick: () => message.info('Añadir subtarea')
+                },
+                {
+                    type: 'divider'
+                },
+                {
+                    key: '4',
+                    label: 'Eliminar',
+                    icon: <DeleteOutlined />,
+                    danger: true,
+                    onClick: () => handleDeleteTask(taskId)
+                },
+            ]}
+        />
+    );
 
-    const handleTaskMenuClick = (event, taskId) => {
-        setAnchorElTask({ taskId, anchor: event.currentTarget });
-    };
-
-    const handleTaskMenuClose = () => {
-        setAnchorElTask(null);
-    };
-
-    // Separar tareas completadas y pendientes
+    // Separar tareas
     const completedTasks = tasks.filter((task) => task.completed);
-    const pendingTasks = tasks.filter((task) => !task.completed);
+    const pendingTasks = tasks.filter((task) => !task.completed)
+        .sort((a, b) => {
+            if (a.favorite !== b.favorite) return b.favorite ? 1 : -1;
+            return dayjs(a.date).diff(dayjs(b.date));
+        });
 
     return (
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <Box sx={{ maxWidth: 400, margin: 'auto', p: 4, backgroundColor: 'white', boxShadow: 3, borderRadius: 2 }}>
-                {/* Menú desplegable de opciones generales */}
-                <Box display="flex" justifyContent="space-between">
-                    <Typography variant="h6" gutterBottom>
-                        Tareas Pendientes
-                    </Typography>
-                    <IconButton
-                        aria-label="more"
-                        aria-controls="long-menu"
-                        aria-haspopup="true"
-                        onClick={handleMenuClick}
-                    >
-                        <MoreVertIcon />
-                    </IconButton>
-                    <Menu
-                        anchorEl={anchorEl}
-                        open={open}
-                        onClose={handleMenuClose}
-                        PaperProps={{
-                            style: {
-                                maxHeight: 200,
-                                width: '20ch',
-                            },
-                        }}
-                    >
-                        <MenuItem onClick={handleMenuClose}>Mis Tareas</MenuItem>
-                        <MenuItem onClick={handleMenuClose}>Nueva lista</MenuItem>
-                    </Menu>
-                </Box>
+        <div className="p-4 bg-gray-50 min-h-[20em]">
+            <Card 
+                className="max-w-2xl mx-auto shadow-lg"
+                bodyStyle={{ padding: '24px' }}
+            >
+                <div className="flex justify-between items-center mb-6">
+                    <div>
+                        <Title level={4} className="mb-1">Mis Tareas</Title>
+                        <Text type="secondary">
+                            {pendingTasks.length} pendientes, {completedTasks.length} completadas
+                        </Text>
+                    </div>
+                    <Progress 
+                        type="circle" 
+                        percent={progressPercentage} 
+                        width={50}
+                        format={percent => `${percent}%`}
+                    />
+                </div>
 
-                {/* Accordion para añadir nueva tarea */}
-                <Accordion>
-                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                        <IconButton color="primary">
-                            <AddCircleOutlineIcon />
-                        </IconButton>
-                        <Typography sx={{ marginLeft: 1, color: 'blue' }}>Añadir una Tarea</Typography>
-                    </AccordionSummary>
-                    <AccordionDetails>
-                        <Box display="flex" alignItems="center" mb={2}>
-                            <TextField
-                                fullWidth
-                                label="Título"
-                                variant="outlined"
+                <Collapse 
+                    ghost 
+                    activeKey={activeKey}
+                    onChange={setActiveKey}
+                    className="mb-6 bg-blue-50 rounded-lg border border-blue-100"
+                >
+                    <Panel 
+                        header={
+                            <Space>
+                                <PlusOutlined className="text-blue-500" />
+                                <Text strong className="text-blue-500">Nueva Tarea</Text>
+                            </Space>
+                        }
+                        key="1"
+                        className="border-none"
+                    >
+                        <div className="space-y-4 p-4">
+                            <Input
+                                size="large"
+                                placeholder="¿Qué necesitas hacer?"
                                 value={newTask}
                                 onChange={(e) => setNewTask(e.target.value)}
+                                prefix={<PlusOutlined className="text-gray-400" />}
+                                className="border-2 hover:border-blue-400"
                             />
-                        </Box>
-
-                        <Box display="flex" alignItems="center" mb={2}>
-                            <InfoIcon color="action" sx={{ marginRight: 2 }} />
-                            <TextField
-                                fullWidth
-                                label="Detalles"
-                                variant="outlined"
+                            <TextArea
+                                placeholder="Agrega más detalles"
                                 value={taskDetails}
                                 onChange={(e) => setTaskDetails(e.target.value)}
+                                className="border-2 hover:border-blue-400"
+                                rows={3}
                             />
-                        </Box>
-
-                        <Box display="flex" alignItems="center" mb={2}>
-                            <EventIcon color="action" sx={{ marginRight: 2 }} />
-                            <MobileDatePicker
-                                label="Fecha y hora"
+                            <DatePicker
+                                size="large"
                                 value={selectedDate}
-                                onChange={(newValue) => setSelectedDate(newValue)}
-                                renderInput={(params) => <TextField {...params} fullWidth />}
+                                onChange={setSelectedDate}
+                                placeholder="Fecha límite"
+                                format="DD/MM/YYYY"
+                                className="w-full border-2 hover:border-blue-400"
                             />
-                        </Box>
+                            <Button 
+                                type="primary" 
+                                icon={<PlusOutlined />} 
+                                onClick={handleAddTask}
+                                size="large"
+                                className="w-full"
+                            >
+                                Crear Tarea
+                            </Button>
+                        </div>
+                    </Panel>
+                </Collapse>
 
-                        <IconButton color="primary" onClick={handleAddTask}>
-                            <AddCircleOutlineIcon />
-                        </IconButton>
-                    </AccordionDetails>
-                </Accordion>
+                <div className="space-y-6">
+                    {/* Tareas Pendientes */}
+                    <div>
+                        <div className="flex items-center justify-between mb-4">
+                            <Title level={5} className="mb-0">Pendientes</Title>
+                            <Tag color="blue">{pendingTasks.length}</Tag>
+                        </div>
+                        <List
+                            className="bg-white rounded-lg shadow-sm"
+                            dataSource={pendingTasks}
+                            renderItem={(task) => (
+                                <List.Item
+                                    className="hover:bg-gray-50 transition-colors"
+                                    actions={[
+                                        <Button
+                                            type="text"
+                                            icon={task.favorite ? 
+                                                <StarFilled className="text-yellow-400" /> : 
+                                                <StarOutlined className="hover:text-yellow-400" />
+                                            }
+                                            onClick={() => handleFavoriteTask(task.id)}
+                                        />,
+                                        <Dropdown overlay={getTaskMenu(task.id)} trigger={['click']}>
+                                            <Button type="text" icon={<MoreOutlined />} />
+                                        </Dropdown>
+                                    ]}
+                                >
+                                    <List.Item.Meta
+                                        avatar={
+                                            <Checkbox 
+                                                checked={task.completed} 
+                                                onChange={() => handleToggleTask(task.id)}
+                                                className="scale-125"
+                                            />
+                                        }
+                                        title={
+                                            <div className="flex items-center gap-2">
+                                                <Text>{task.title}</Text>
+                                                <Badge 
+                                                    status={getTaskStatus(task)} 
+                                                    text={dayjs(task.date).format('DD MMM')}
+                                                />
+                                            </div>
+                                        }
+                                        description={task.details && 
+                                            <Text type="secondary" className="mt-1 block">
+                                                {task.details}
+                                            </Text>
+                                        }
+                                    />
+                                </List.Item>
+                            )}
+                            locale={{
+                                emptyText: 
+                                    <div className="py-8 text-center">
+                                        <CheckCircleOutlined style={{ fontSize: '2rem' }} className="text-gray-300 mb-2" />
+                                        <Text type="secondary" className="block">¡No hay tareas pendientes!</Text>
+                                    </div>
+                            }}
+                        />
+                    </div>
 
-                <Divider sx={{ my: 2 }} />
-
-                {/* Lista de tareas pendientes */}
-                <Typography variant="h6" gutterBottom>
-                    Tareas Pendientes
-                </Typography>
-                <List>
-                    {pendingTasks.map((task) => (
-                        <ListItem
-                            key={task.id}
-                            secondaryAction={
-                                <>
-                                    <IconButton edge="end" aria-label="favorite" onClick={() => handleFavoriteTask(task.id)}>
-                                        {task.favorite ? <StarIcon color="primary" /> : <StarBorderIcon />}
-                                    </IconButton>
-
-                                    <IconButton
-                                        edge="end"
-                                        aria-label="more"
-                                        onClick={(event) => handleTaskMenuClick(event, task.id)}
+                    {/* Tareas Completadas */}
+                    {completedTasks.length > 0 && (
+                        <div>
+                            <div className="flex items-center justify-between mb-4">
+                                <Title level={5} className="mb-0">Completadas</Title>
+                                <Tag color="green">{completedTasks.length}</Tag>
+                            </div>
+                            <List
+                                className="bg-white rounded-lg shadow-sm opacity-75"
+                                dataSource={completedTasks}
+                                renderItem={(task) => (
+                                    <List.Item
+                                        className="hover:bg-gray-50 transition-colors"
+                                        actions={[
+                                            <Button
+                                                type="text"
+                                                icon={<DeleteOutlined />}
+                                                onClick={() => handleDeleteTask(task.id)}
+                                                danger
+                                            />
+                                        ]}
                                     >
-                                        <MoreVertIcon />
-                                    </IconButton>
-                                    {/* Menú desplegable por cada tarea */}
-                                    <Menu
-                                        anchorEl={anchorElTask?.taskId === task.id ? anchorElTask.anchor : null}
-                                        open={anchorElTask?.taskId === task.id}
-                                        onClose={handleTaskMenuClose}
-                                        PaperProps={{
-                                            style: {
-                                                maxHeight: 200,
-                                                width: '20ch',
-                                            },
-                                        }}
-                                    >
-                                        <MenuItem onClick={handleTaskMenuClose}>Mover al principio</MenuItem>
-                                        <MenuItem onClick={handleTaskMenuClose}>Añadir una Subtarea</MenuItem>
-                                        <MenuItem onClick={handleTaskMenuClose}>Aplicar sangría</MenuItem>
-                                        <MenuItem onClick={() => handleDeleteTask(task.id)}>Eliminar</MenuItem>
-                                    </Menu>
-                                </>
-                            }
-                        >
-                            <Checkbox
-                                checked={task.completed}
-                                onChange={() => handleToggleTask(task.id)}
+                                        <List.Item.Meta
+                                            avatar={
+                                                <Checkbox 
+                                                    checked={task.completed} 
+                                                    onChange={() => handleToggleTask(task.id)}
+                                                    className="scale-125"
+                                                />
+                                            }
+                                            title={<Text delete>{task.title}</Text>}
+                                            description={
+                                                <Space size="small">
+                                                    <CheckCircleOutlined className="text-green-500" />
+                                                    <Text type="secondary">
+                                                        Completada el {dayjs(task.date).format('DD MMM')}
+                                                    </Text>
+                                                </Space>
+                                            }
+                                        />
+                                    </List.Item>
+                                )}
                             />
-                            <ListItemText
-                                primary={task.title}
-                                secondary={task.date ? task.date.format('DD/MM/YYYY') : ''}
-                            />
-                        </ListItem>
-                    ))}
-                </List>
-
-                {pendingTasks.length === 0 && (
-                    <Typography variant="body2" color="textSecondary">
-                        No tienes Tareas pendientes.
-                    </Typography>
-                )}
-
-                <Divider sx={{ my: 2 }} />
-
-                {/* Lista de tareas completadas */}
-                <Typography variant="h6" gutterBottom>
-                    Tareas Completados
-                </Typography>
-                <List>
-                    {completedTasks.map((task) => (
-                        <ListItem
-                            key={task.id}
-                            secondaryAction={
-                                <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteTask(task.id)}>
-                                    <DeleteIcon />
-                                </IconButton>
-                            }
-                        >
-                            <Checkbox
-                                checked={task.completed}
-                                onChange={() => handleToggleTask(task.id)}
-                            />
-                            <ListItemText
-                                primary={task.title}
-                                secondary={task.date ? task.date.format('DD/MM/YYYY') : ''}
-                                style={{ textDecoration: task.completed ? 'line-through' : 'none' }}
-                            />
-                        </ListItem>
-                    ))}
-                </List>
-
-                {completedTasks.length === 0 && (
-                    <Typography variant="body2" color="textSecondary">
-                        No tienes Tareas completadas.
-                    </Typography>
-                )}
-            </Box>
-        </LocalizationProvider>
+                        </div>
+                    )}
+                </div>
+            </Card>
+        </div>
     );
 };
 
