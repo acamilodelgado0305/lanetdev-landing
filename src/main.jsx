@@ -78,7 +78,7 @@ const router = createBrowserRouter([
             element: <Calendario />,
           },
           {
-            path: "Pagos Pendientes",
+            path: "Pagos-Pendientes",
             element: <RenderPaymentsList />,
           },
           {
