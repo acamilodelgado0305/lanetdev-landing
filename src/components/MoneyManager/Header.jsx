@@ -1,26 +1,27 @@
 // src/components/Header/Header.jsx
 import React, { useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { 
-  BarChart2, 
-  Send, 
-  DollarSign, 
-  CreditCard, 
+import {
+  BarChart2,
+  Send,
+  DollarSign,
+  CreditCard,
   MoreHorizontal,
-  User
+  User,
+  Repeat 
 } from 'lucide-react';
 import { CiSettings } from "react-icons/ci";
 
 const NavItem = ({ to, icon: Icon, children }) => {
   const location = useLocation();
   const isActive = location.pathname === to;
-  
+
   return (
     <Link
       to={to}
       className={`flex items-center px-3 h-10 text-sm transition-colors duration-200 relative group
-        ${isActive 
-          ? 'text-blue-600 font-medium' 
+        ${isActive
+          ? 'text-blue-600 font-medium'
           : 'text-gray-600 hover:text-gray-900'}`}
     >
       <Icon className={`w-4 h-4 mr-2 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
@@ -54,9 +55,7 @@ const Header = () => {
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
           <div className="flex items-center">
-            <Link to="/index/moneymanager/estadisticas" className="text-lg font-semibold text-gray-800">
-              Money Manager
-            </Link>
+           
           </div>
 
           {/* Navegación principal */}
@@ -67,15 +66,11 @@ const Header = () => {
             <NavItem to="/index/moneymanager/transactions" icon={Send}>
               Transacciones
             </NavItem>
-            <NavItem to="/index/moneymanager/Pagos-Pendientes" icon={Send}>
+            <NavItem to="/index/moneymanager/Pagos-Pendientes" icon={Repeat}>
               Pagos Recurrentes
             </NavItem>
-            <NavItem to="/index/moneymanager/accounts" icon={DollarSign}>
-              Cuentas
-            </NavItem>
-            <NavItem to="/index/moneymanager/calendario" icon={CreditCard}>
-              Calendario
-            </NavItem>
+
+
 
             {/* Dropdown "Más" */}
             <div className="relative" ref={dropdownRef}>
@@ -85,13 +80,20 @@ const Header = () => {
                   ${isDropdownOpen ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900'}`}
               >
                 <MoreHorizontal className="w-4 h-4 mr-2" />
-                <span>Más</span>
+                <span>Otros</span>
               </button>
-              
+
               {isDropdownOpen && (
                 <div className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-20 py-1 border border-gray-200">
+                  <NavItem to="/index/moneymanager/accounts" icon={DollarSign}>
+                    Cuentas
+                  </NavItem>
                   <NavItem to="/index/moneymanager/categorias" icon={User}>
                     Categorías
+                  </NavItem>
+
+                  <NavItem to="/index/moneymanager/calendario" icon={CreditCard}>
+                    Calendario
                   </NavItem>
                   <NavItem to="/index/moneymanager/configuracion" icon={CiSettings}>
                     Configuración
