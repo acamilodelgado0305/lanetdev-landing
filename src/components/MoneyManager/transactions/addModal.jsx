@@ -45,7 +45,7 @@ const AddEntryModal = ({
   useEffect(() => {
     // Si hay una transacción para editar, activamos el modo edición
     if (transactionToEdit && transactionToEdit.isEditing) {
-      setIsEditing(true); // Modo edición activado
+      setIsEditing(true);
       if (transactionToEdit.type === "transfer") {
         setTransactionType("Transferencia");
         setFromAccount(transactionToEdit.fromAccountId || "");
@@ -55,10 +55,13 @@ const AddEntryModal = ({
         setAccount(transactionToEdit.account_id);
         setCategory(transactionToEdit.category_id || "");
       }
-      setRawAmount(transactionToEdit.amount?.toString() || "");
+      setRawAmount(parseFloat(transactionToEdit.amount) || "");
       setAmount(
         transactionToEdit.amount
-          ? new Intl.NumberFormat("es-CO").format(transactionToEdit.amount)
+          ? new Intl.NumberFormat("es-CO", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }).format(transactionToEdit.amount)
           : ""
       );
       setNote(transactionToEdit.note || "");
@@ -66,15 +69,14 @@ const AddEntryModal = ({
       setIsRecurring(transactionToEdit.recurrent || false);
       setDate(transactionToEdit.date ? dayjs(transactionToEdit.date) : dayjs());
     } else if (transactionToEdit && !transactionToEdit.isEditing) {
-      // Si se pasa una transacción, pero no es edición, llenamos los valores predeterminados
       setTransactionType(transactionToEdit.type || "expense");
       setAmount(transactionToEdit.amount ? transactionToEdit.amount.toString() : "");
       setDescription(transactionToEdit.description || "");
       setCategory(transactionToEdit.category || "");
       setAccount(transactionToEdit.account || "");
-      setIsEditing(false); // Nos aseguramos de que esté en modo "nueva transacción"
+      setIsEditing(false);
     } else {
-      resetForm(); // Si no hay datos, es una nueva transacción
+      resetForm();
     }
   }, [transactionToEdit]);
 
@@ -104,25 +106,14 @@ const AddEntryModal = ({
   };
 
   const handleAmountChange = (e) => {
-    // Solo permitir números y un solo punto decimal (si es necesario)
-    const value = e.target.value.replace(/[^0-9.]/g, ""); // Elimina cualquier carácter que no sea numérico o un punto
-
-    // Si no hay valor, dejar el campo vacío
+    const value = e.target.value.replace(/[^0-9.]/g, "");
     if (!value) {
-      setRawAmount(""); // Guardar valor numérico sin formato
-      setAmount(""); // Mostrar valor formateado vacío
+      setRawAmount("");
+      setAmount("");
       return;
     }
-
-    // Guardar valor numérico en rawAmount para uso interno
-    setRawAmount(value);
-
-    // Formatear el valor solo para mostrarlo
-    const formattedAmount = new Intl.NumberFormat("es-CO", {
-      minimumFractionDigits: 2,  // Mantener siempre dos decimales
-    }).format(value);
-
-    setAmount(formattedAmount); // Actualizar el valor formateado en el campo de entrada
+    setRawAmount(parseFloat(value));
+    setAmount(value);
   };
 
   const handleImageUpload = async (e) => {
@@ -147,7 +138,32 @@ const AddEntryModal = ({
     }
   };
 
+  const validateFields = () => {
+    const errors = [];
+    if (!amount || isNaN(parseFloat(rawAmount))) {
+      errors.push("El campo 'Importe' es obligatorio y debe ser un número válido.");
+    }
+    if (transactionType === "Transferencia") {
+      if (!fromAccount) errors.push("La 'Cuenta de Origen' es obligatoria para una transferencia.");
+      if (!toAccount) errors.push("La 'Cuenta de Destino' es obligatoria para una transferencia.");
+    } else {
+      if (!account) errors.push("La 'Cuenta' es obligatoria.");
+      if (!category) errors.push("La 'Categoría' es obligatoria.");
+    }
+    return errors;
+  };
+
   const handleSave = async () => {
+    const errors = validateFields();
+    if (errors.length > 0) {
+      Swal.fire({
+        icon: "error",
+        title: "Error en la Transacción",
+        html: errors.join("<br/>"),
+        confirmButtonColor: "#d33",
+      });
+      return;
+    }
     let data;
     let endpoint;
     let method;
@@ -162,7 +178,7 @@ const AddEntryModal = ({
         userId: 1,
         fromAccountId: parseInt(fromAccount, 10),
         toAccountId: parseInt(toAccount, 10),
-        amount: parseFloat(rawAmount), // Asegúrate de enviar rawAmount como un número
+        amount: parseFloat(rawAmount),
         date: localDate,
         note: note,
         description: description,
@@ -171,7 +187,7 @@ const AddEntryModal = ({
     } else {
       data = {
         userId: 1,
-        amount: parseFloat(rawAmount), // Asegúrate de enviar rawAmount como un número
+        amount: parseFloat(rawAmount),
         type: transactionType.toLowerCase(),
         date: localDate,
         note: note,
@@ -186,8 +202,6 @@ const AddEntryModal = ({
     }
 
     console.log("Datos que se están enviando:", data);
-    // Enviar el formulario al backend...
-
     if (isEditing) {
       method = "PUT";
       endpoint += `/${transactionToEdit.id}`;

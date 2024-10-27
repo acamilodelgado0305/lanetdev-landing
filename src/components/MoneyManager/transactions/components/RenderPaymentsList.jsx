@@ -56,8 +56,18 @@ const RenderPaymentsList = () => {
     };
 
     const handlePaymentClick = (payment) => {
+        // Convertir el monto a un número entero o eliminar decimales si es necesario
+        const formattedAmount = parseInt(payment.amount); // O Math.floor(payment.amount)
+
+        console.log("Datos capturados para el modal:", {
+            amount: formattedAmount,
+            description: payment.description,
+            type: "expense",
+            isEditing: false,
+        });
+
         setPaymentToEdit({
-            amount: payment.amount,
+            amount: formattedAmount,
             description: payment.description,
             type: "expense",
             isEditing: false,
