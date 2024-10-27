@@ -21,7 +21,7 @@ import { SocketProvider } from './components/Context/SocketContext';
 import EmailManagement from './components/communication/EmailManagement';
 import Estadisticas from "./components/MoneyManager/estadisticas/Estadisticas";
 import Calendario from "./components/MoneyManager/calendar/Calendar";
-import RenderPaymentsList from "./components/MoneyManager/transactions/components/renderPaymentsList";
+import RenderPaymentsList from "./components/MoneyManager/transactions/components/RenderPaymentsList.jsx"
 import Indexconfig from "./components/confgapp/indexconfig";
 import Clientes from "./components/clientes/clientes"
 import SearchResults from "./components/search/SearchResults";
