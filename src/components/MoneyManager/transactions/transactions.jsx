@@ -235,7 +235,7 @@ const TransactionsDashboard = () => {
     <div className="flex-1 bg-white]">
       {/* Barra superior de herramientas */}
       <div className="border-b border-gray-200 bg-white sticky top-0 shadow-sm">
-        <div className="px-4 py-1 border-b border-gray-200">
+        <div className="px-4 py-1 border-b border-gray-200 flex justify-between items-center">
           <Input
             placeholder="Buscar transacciones..."
             prefix={<SearchOutlined className="text-gray-400" />}
@@ -245,6 +245,15 @@ const TransactionsDashboard = () => {
             size="large"
             allowClear
           />
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={openModal}
+            size="large"
+            className="ml-4"
+          >
+            Agregar Transacción
+          </Button>
         </div>
         {/* Estadísticas */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-2 py-2 bg-gray-50 border-b border-gray-200">
@@ -274,7 +283,6 @@ const TransactionsDashboard = () => {
           )}
         </div>
       </div>
-
 
       {/* Contenido principal */}
       <div className="overflow-y-auto h[40em]">
@@ -324,23 +332,6 @@ const TransactionsDashboard = () => {
           />
         </div>
       </div>
-
-      {/* Botón flotante y modales */}
-      <Tooltip title="Añadir transacción">
-        <Button
-          type="primary"
-          shape="circle"
-          size="large"
-          icon={<PlusOutlined />}
-          onClick={openModal}
-          className="fixed bottom-8 right-8 shadow-lg"
-          style={{
-            backgroundColor: '#1890ff',
-            width: '48px',
-            height: '48px'
-          }}
-        />
-      </Tooltip>
 
       <AddEntryModal
         isOpen={isModalOpen}
