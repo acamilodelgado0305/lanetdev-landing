@@ -81,27 +81,27 @@ const TransactionsDashboard = () => {
     setSelectedNoteContent("");
   };
 
-  const fetchEntries = async () => {
-    try {
-      const [transactions, transfers] = await Promise.all([
-        getTransactions(),
-        getTransfers(),
-      ]);
-
-      const allEntries = [
-        ...transactions.map((tx) => ({ ...tx, entryType: "transaction" })),
-        ...transfers.map((tf) => ({ ...tf, entryType: "transfer" })),
-      ];
-
-      const sortedEntries = allEntries.sort(
-        (a, b) => new Date(b.date) - new Date(a.date)
-      );
-
-      setEntries(sortedEntries); // Actualiza todas las transacciones
-    } catch (error) {
-      console.error("Error fetching all transactions:", error);
-    }
-  };
+  /*   const fetchEntries = async () => {
+      try {
+        const [transactions, transfers] = await Promise.all([
+          getTransactions(),
+          getTransfers(),
+        ]);
+  
+        const allEntries = [
+          ...transactions.map((tx) => ({ ...tx, entryType: "transaction" })),
+          ...transfers.map((tf) => ({ ...tf, entryType: "transfer" })),
+        ];
+  
+        const sortedEntries = allEntries.sort(
+          (a, b) => new Date(b.date) - new Date(a.date)
+        );
+  
+        setEntries(sortedEntries); // Actualiza todas las transacciones
+      } catch (error) {
+        console.error("Error fetching all transactions:", error);
+      }
+    }; */
 
   const fetchEntries = async () => {
     try {
@@ -190,6 +190,17 @@ const TransactionsDashboard = () => {
     fetchEntries();
     fetchAccounts();
   }, [currentMonth]);
+
+  const getCategoryName = (categoryId) => {
+    if (!categories || categories.length === 0) return "Categoría no encontrada";
+    const category = categories.find((cat) => cat.id === categoryId);
+    return category ? category.name : "Categoría no encontrada";
+  };
+
+  const getAccountName = (accountId) => {
+    const account = accounts.find((acc) => acc.id === accountId);
+    return account ? account.name : "Cuenta no encontrada";
+  };
 
   const applyFilters = (entriesToFilter = entries) => {
     let filtered = entriesToFilter;
