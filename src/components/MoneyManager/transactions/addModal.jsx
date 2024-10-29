@@ -35,6 +35,7 @@ const AddEntryModal = ({
   const [categories, setCategories] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [imageUrl, setImageUrl] = useState("");
+  const [imageUrls, setImageUrls] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isRecurring, setIsRecurring] = useState(false);
   const [date, setDate] = useState(dayjs());
@@ -105,19 +106,24 @@ const AddEntryModal = ({
   };
 
   const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (file) {
+    const files = Array.from(e.target.files);
+    if (files.length > 0) {
       setIsUploading(true);
       try {
-        const uploadedImageUrl = await uploadImage(file);
-        setImageUrl(uploadedImageUrl);
-        setNote((prevNote) => `${prevNote}\n${uploadedImageUrl}`);
+        // Usa Promise.all para cargar todos los archivos simultáneamente
+        const uploadedImageUrls = await Promise.all(files.map(async (file) => {
+          const uploadedImageUrl = await uploadImage(file);
+          return uploadedImageUrl;
+        }));
+
+        setImageUrls((prevUrls) => [...prevUrls, ...uploadedImageUrls]);
+        setNote((prevNote) => `${prevNote}\n${uploadedImageUrls.join("\n")}`);
       } catch (error) {
-        console.error("Error al subir la imagen:", error);
+        console.error("Error al subir las imágenes:", error);
         Swal.fire({
           icon: "error",
           title: "Error",
-          text: "No se pudo subir la imagen. Por favor, intente de nuevo.",
+          text: "No se pudieron subir algunas imágenes. Por favor, intente de nuevo.",
           confirmButtonColor: "#d33",
         });
       } finally {
@@ -125,6 +131,7 @@ const AddEntryModal = ({
       }
     }
   };
+
 
   const validateFields = () => {
     const errors = [];
@@ -422,24 +429,27 @@ const AddEntryModal = ({
           <div className="w-1/3 p-4 border-l">
             <div className="mb-4">
               <label htmlFor="imageUpload" className="block mb-1">
-                Subir Imagen
+                Subir Imágenes
               </label>
               <input
                 type="file"
                 id="imageUpload"
                 accept="image/*"
+                multiple // Permitir múltiples archivos
                 onChange={handleImageUpload}
                 className="w-full p-2 bg-gray-100 rounded border"
                 disabled={isUploading}
               />
-              {isUploading && <p>Subiendo imagen...</p>}
+              {isUploading && <p>Subiendo imágenes...</p>}
             </div>
-            {imageUrl && (
-              <img src={imageUrl} alt="Imagen adjunta" className="rounded" />
-            )}
+            {/* Muestra todas las imágenes cargadas */}
+            <div className="flex flex-wrap gap-4">
+              {imageUrls.map((url, index) => (
+                <img key={index} src={url} alt={`Imagen adjunta ${index + 1}`} className="rounded w-24 h-24 object-cover" />
+              ))}
+            </div>
           </div>
         </div>
-
         <div className="flex justify-end p-4 border-t">
           <button
             onClick={handleSave}

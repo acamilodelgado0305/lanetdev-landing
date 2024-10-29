@@ -72,27 +72,26 @@ const TransactionsDashboard = () => {
     setSelectedNoteContent("");
   };
 
-  /*   const fetchEntries = async () => {
-      try {
-        const [transactions, transfers] = await Promise.all([
-          getTransactions(),
-          getTransfers(),
-        ]);
-  
-        const allEntries = [
-          ...transactions.map((tx) => ({ ...tx, entryType: "transaction" })),
-          ...transfers.map((tf) => ({ ...tf, entryType: "transfer" })),
-        ];
-  
-        const sortedEntries = allEntries.sort(
-          (a, b) => new Date(b.date) - new Date(a.date)
-        );
-  
-        setEntries(sortedEntries); // Actualiza todas las transacciones
-      } catch (error) {
-        console.error("Error fetching all transactions:", error);
-      }
-    }; */
+  const fetchEntries = async () => {
+    try {
+      const [transactions, transfers] = await Promise.all([
+        getTransactions(),
+        getTransfers(),
+      ]);
+
+      const allEntries = [
+        ...transactions.map((tx) => ({ ...tx, entryType: "transaction" })),
+        ...transfers.map((tf) => ({ ...tf, entryType: "transfer" })),
+      ];
+
+      const sortedEntries = allEntries.sort(
+        (a, b) => new Date(b.date) - new Date(a.date)
+      );
+      setEntries(sortedEntries);
+    } catch (error) {
+      console.error("Error fetching all transactions:", error);
+    }
+  };
 
 
 
