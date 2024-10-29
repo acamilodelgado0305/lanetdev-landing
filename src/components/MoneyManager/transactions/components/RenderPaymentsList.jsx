@@ -4,7 +4,8 @@ import { CheckSquare } from "lucide-react";
 import { getPendingTransactions } from "../../../../services/moneymanager/moneyService";
 import AddEntryModal from "../addModal";
 
-const RenderPaymentsList = () => {
+export default function RenderPaymentsList() {
+    
     const [recurrentPayments, setRecurrentPayments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
@@ -170,5 +171,3 @@ const RenderPaymentsList = () => {
         </div>
     );
 };
-
-export default RenderPaymentsList;

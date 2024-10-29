@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { DataGrid } from "@mui/x-data-grid";
+import { Table } from "antd";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 
 const Clients = () => {
   const [clients, setClients] = useState([]);
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,6 +18,7 @@ const Clients = () => {
         ? `${import.meta.env.VITE_API_URL}/api/clientes/`
         : '/wisphub-api/api/clientes/';
 
+    setLoading(true);
     try {
       const response = await axios.get(apiUrl, {
         headers: {
@@ -30,51 +30,38 @@ const Clients = () => {
       setClients(response.data.results || []);
     } catch (error) {
       console.error('Error fetching clients:', error.response ? error.response.data : error.message);
+    } finally {
+      setLoading(false);
     }
   };
-
-  const handlePageChange = (newPage) => {
-    setPage(newPage);
-  };
-
-  const handlePageSizeChange = (newPageSize) => {
-    setPageSize(newPageSize);
-    setPage(0);
-  };
-
-  // Calcular el rango de datos a mostrar en la tabla
-  const startIndex = page * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedClients = clients.slice(startIndex, endIndex);
 
   const columns = [
-    { field: "id_servicio", headerName: "ID Servicio", width: 100 },
-    { field: "usuario", headerName: "Usuario", width: 150 },
-    { field: "email", headerName: "Email", width: 200 },
-    { field: "cedula", headerName: "Cédula", width: 150 },
-    { field: "direccion", headerName: "Dirección", width: 200 },
-    { field: "localidad", headerName: "Localidad", width: 150 },
-    { field: "ciudad", headerName: "Ciudad", width: 150 },
-    { field: "telefono", headerName: "Teléfono", width: 150 },
-    { field: "descuento", headerName: "Descuento", width: 100 },
-    { field: "saldo", headerName: "Saldo", width: 100 },
-    { field: "estado", headerName: "Estado", width: 100 },
-    { field: "ip", headerName: "IP", width: 150 },
-    { field: "fecha_instalacion", headerName: "Fecha Instalación", width: 180 },
-    { field: "plan_internet.nombre", headerName: "Plan Internet", width: 200 },
-    { field: "tecnico.nombre", headerName: "Técnico", width: 200 },
+    { title: "ID Servicio", dataIndex: "id_servicio", key: "id_servicio", width: 100 },
+    { title: "Usuario", dataIndex: "usuario", key: "usuario", width: 150 },
+    { title: "Email", dataIndex: "email", key: "email", width: 200 },
+    { title: "Cédula", dataIndex: "cedula", key: "cedula", width: 150 },
+    { title: "Dirección", dataIndex: "direccion", key: "direccion", width: 200 },
+    { title: "Localidad", dataIndex: "localidad", key: "localidad", width: 150 },
+    { title: "Ciudad", dataIndex: "ciudad", key: "ciudad", width: 150 },
+    { title: "Teléfono", dataIndex: "telefono", key: "telefono", width: 150 },
+    { title: "Descuento", dataIndex: "descuento", key: "descuento", width: 100 },
+    { title: "Saldo", dataIndex: "saldo", key: "saldo", width: 100 },
+    { title: "Estado", dataIndex: "estado", key: "estado", width: 100 },
+    { title: "IP", dataIndex: "ip", key: "ip", width: 150 },
+    { title: "Fecha Instalación", dataIndex: "fecha_instalacion", key: "fecha_instalacion", width: 180 },
+    { 
+      title: "Plan Internet", 
+      dataIndex: ["plan_internet", "nombre"], 
+      key: "plan_internet", 
+      width: 200 
+    },
+    { 
+      title: "Técnico", 
+      dataIndex: ["tecnico", "nombre"], 
+      key: "tecnico", 
+      width: 200 
+    },
   ];
-
-  const handleSelectionChange = (selection) => {
-    const selectedRowIndex = selection.length > 0 ? selection[0] : null;
-
-    if (selectedRowIndex !== null) {
-      const selectedClientId = paginatedClients[selectedRowIndex].id_servicio;
-      navigate(`/clientes/${selectedClientId}`);
-    }
-  };
-
-  const totalPages = Math.ceil(clients.length / pageSize);
 
   return (
     <div className="container mx-auto mt-10">
@@ -82,35 +69,21 @@ const Clients = () => {
         <h1 className="text-2xl font-bold">Clientes</h1>
       </div>
 
-      <div style={{ width: "100%", height: "70vh" }}>
-        <DataGrid
-          rows={clients}
-          columns={columns}
-          pageSize={100}
-          checkboxSelection
-          disableSelectionOnClick
-          getRowId={(row) => row.id_servicio}
-          onSelectionModelChange={handleSelectionChange}
-          pagination={false}
-        />
-      </div>
-      {/* <div className="flex justify-center mt-5">
-        <button
-          onClick={() => handlePageChange(page - 1)}
-          disabled={page === 0}
-          className="mr-2 bg-blue-500 text-white py-2 px-4 rounded"
-        >
-          Anterior
-        </button>
-        <span>Página {page + 1} de {totalPages}</span>
-        <button
-          onClick={() => handlePageChange(page + 1)}
-          disabled={page >= totalPages - 1}
-          className="ml-2 bg-blue-500 text-white py-2 px-4 rounded"
-        >
-          Siguiente
-        </button>
-      </div> */}
+      <Table
+        columns={columns}
+        dataSource={clients}
+        rowKey="id_servicio"
+        loading={loading}
+        scroll={{ x: 'max-content', y: '70vh' }}
+        pagination={{
+          defaultPageSize: 100,
+          showSizeChanger: true,
+          showTotal: (total, range) => `${range[0]}-${range[1]} de ${total} items`,
+        }}
+        onRow={(record) => ({
+          onClick: () => navigate(`/clientes/${record.id_servicio}`)
+        })}
+      />
     </div>
   );
 };
