@@ -4,8 +4,7 @@ import Swal from "sweetalert2";
 import { uploadImage } from "../../../services/apiService";
 import InputField from "../transactions/components/InputField";
 import SelectField from "../transactions/components/SelectField";
-import { DatePicker, Card, Tabs, Radio, Input, Upload, Button } from "antd";
-import { UploadOutlined } from "@ant-design/icons";
+import { DatePicker } from "antd";
 import "antd/dist/reset.css";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -36,6 +35,7 @@ const AddEntryModal = ({
   const [categories, setCategories] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [imageUrl, setImageUrl] = useState("");
+  const [imageUrls, setImageUrls] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isRecurring, setIsRecurring] = useState(false);
   const [date, setDate] = useState(dayjs());
@@ -106,19 +106,24 @@ const AddEntryModal = ({
   };
 
   const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (file) {
+    const files = Array.from(e.target.files);
+    if (files.length > 0) {
       setIsUploading(true);
       try {
-        const uploadedImageUrl = await uploadImage(file);
-        setImageUrl(uploadedImageUrl);
-        setNote((prevNote) => `${prevNote}\n${uploadedImageUrl}`);
+        // Usa Promise.all para cargar todos los archivos simultáneamente
+        const uploadedImageUrls = await Promise.all(files.map(async (file) => {
+          const uploadedImageUrl = await uploadImage(file);
+          return uploadedImageUrl;
+        }));
+
+        setImageUrls((prevUrls) => [...prevUrls, ...uploadedImageUrls]);
+        setNote((prevNote) => `${prevNote}\n${uploadedImageUrls.join("\n")}`);
       } catch (error) {
-        console.error("Error al subir la imagen:", error);
+        console.error("Error al subir las imágenes:", error);
         Swal.fire({
           icon: "error",
           title: "Error",
-          text: "No se pudo subir la imagen. Por favor, intente de nuevo.",
+          text: "No se pudieron subir algunas imágenes. Por favor, intente de nuevo.",
           confirmButtonColor: "#d33",
         });
       } finally {
@@ -126,6 +131,7 @@ const AddEntryModal = ({
       }
     }
   };
+
 
   const validateFields = () => {
     const errors = [];
@@ -261,6 +267,38 @@ const AddEntryModal = ({
     setTaxType("");
   };
 
+
+  const handleDeleteImage = (index, urlToDelete) => {
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: "No podrás revertir esta acción",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Eliminar la URL de la imagen del array de URLs
+        setImageUrls(prevUrls => prevUrls.filter((_, i) => i !== index));
+        
+        // Eliminar la URL de la imagen de las notas
+        setNote(prevNote => {
+          const notes = prevNote.split('\n');
+          const filteredNotes = notes.filter(note => note !== urlToDelete);
+          return filteredNotes.join('\n');
+        });
+
+        Swal.fire(
+          'Eliminada',
+          'La imagen ha sido eliminada.',
+          'success'
+        );
+      }
+    });
+};
+
   const taxOptions = [
     { label: "IVA", value: "IVA" },
     { label: "Retención", value: "retencion" },
@@ -273,223 +311,228 @@ const AddEntryModal = ({
     (cat) => cat.type === transactionType
   );
 
-  const transactionTypeOptions = [
-    { label: "Ingreso", value: "income", color: "#52c41a" },
-    { label: "Gasto", value: "expense", color: "#f5222d" },
-    { label: "Transferencia", value: "Transferencia", color: "#1890ff" },
-  ];
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
-      <div className="absolute inset-0 bg-black bg-opacity-50" onClick={onClose} />
-
-      <div className="fixed inset-y-0 right-0 flex max-w-full">
-        <div className={`w-screen max-w-md transform transition-all duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'
-          }`}>
-          <div className="h-full flex flex-col bg-white">
-            {/* Header */}
-            <div className="p-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-medium">
-                  {isEditing
-                    ? "Editar Transacción"
-                    : transactionType === "Transferencia"
-                      ? "Nueva Transferencia"
-                      : "Nueva Transacción"}
-                </h2>
-                <button
-                  onClick={onClose}
-                  className="text-gray-400 hover:text-gray-500"
-                >
-                  <IoClose size={24} />
-                </button>
-              </div>
-            </div>
-
-            {/* Main content */}
-            <div className="flex-1 overflow-y-auto">
-              <div className="p-4">
-                {/* Tipo de transacción */}
-                <div className="mb-6">
-                  <Radio.Group
-                    value={transactionType}
-                    onChange={(e) => setTransactionType(e.target.value)}
-                    buttonStyle="solid"
-                    className="w-full"
-                  >
-                    <div className="grid grid-cols-3 gap-2">
-                      {transactionTypeOptions.map((option) => (
-                        <Radio.Button
-                          key={option.value}
-                          value={option.value}
-                          className="text-center"
-                          style={{
-                            backgroundColor: transactionType === option.value ? option.color : undefined,
-                            color: transactionType === option.value ? 'white' : undefined,
-                          }}
-                        >
-                          {option.label}
-                        </Radio.Button>
-                      ))}
-                    </div>
-                  </Radio.Group>
-                </div>
-
-                <Card className="mb-4">
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block mb-1 text-sm">Fecha</label>
-                        <DatePicker
-                          value={dayjs(date)}
-                          onChange={(date) => date && setDate(dayjs(date))}
-                          format="YYYY-MM-DD"
-                          className="w-full"
-                        />
-                      </div>
-                      <div>
-                        <InputField
-                          label="Valor"
-                          id="amount"
-                          value={amount}
-                          onChange={handleAmountChange}
-                          placeholder="0.00"
-                        />
-                      </div>
-                    </div>
-
-                    <Input.TextArea
-                      placeholder="Descripción"
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      rows={2}
-                    />
-                  </div>
-                </Card>
-
-                <Card title="Detalles de la transacción" className="mb-4">
-                  {transactionType === "Transferencia" ? (
-                    <div className="space-y-4">
-                      <SelectField
-                        label="Cuenta de Origen"
-                        id="fromAccount"
-                        value={fromAccount}
-                        onChange={(e) => setFromAccount(e.target.value)}
-                        options={accounts}
-                      />
-                      <SelectField
-                        label="Cuenta de Destino"
-                        id="toAccount"
-                        value={toAccount}
-                        onChange={(e) => setToAccount(e.target.value)}
-                        options={accounts}
-                      />
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <SelectField
-                        label="Categoría"
-                        id="category"
-                        value={category}
-                        onChange={(e) => setCategory(e.target.value)}
-                        options={filteredCategories}
-                      />
-                      <SelectField
-                        label="Cuenta"
-                        id="account"
-                        value={account}
-                        onChange={(e) => setAccount(e.target.value)}
-                        options={accounts}
-                      />
-
-                      {/* Mostrar impuesto solo para gastos */}
-                      {transactionType === "expense" && (
-                        <SelectField
-                          label="Impuesto"
-                          id="taxType"
-                          value={taxType}
-                          onChange={(e) => setTaxType(e.target.value)}
-                          options={taxOptions}
-                        />
-                      )}
-
-                      {/* Opciones de recurrencia */}
-                      <div className="pt-4 border-t">
-                        <div className="flex items-center mb-4">
-                          <input
-                            type="checkbox"
-                            id="recurring"
-                            checked={isRecurring}
-                            onChange={(e) => setIsRecurring(e.target.checked)}
-                            className="mr-2"
-                          />
-                          <label htmlFor="recurring">Recurrente</label>
-                        </div>
-
-                        {isRecurring && (
-                          <SelectField
-                            label="Tiempo recurrente (meses)"
-                            id="timeRecurrent"
-                            value={timeRecurrent}
-                            onChange={(e) => setTimeRecurrent(parseInt(e.target.value, 10))}
-                            options={[
-                              { label: "3 meses", value: "3" },
-                              { label: "6 meses", value: "6" },
-                              { label: "12 meses", value: "12" },
-                            ]}
-                          />
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </Card>
-
-                {/* Sección de imagen */}
-                <Card title="Comprobante" className="mb-4">
-                  <Upload
-                    accept="image/*"
-                    showUploadList={false}
-                    beforeUpload={(file) => {
-                      handleImageUpload({ target: { files: [file] } });
-                      return false;
-                    }}
-                  >
-                    <Button icon={<UploadOutlined />} loading={isUploading}>
-                      Subir imagen
-                    </Button>
-                  </Upload>
-
-                  {imageUrl && (
-                    <div className="mt-4">
-                      <img
-                        src={imageUrl}
-                        alt="Comprobante"
-                        className="max-w-full rounded"
-                      />
-                    </div>
-                  )}
-                </Card>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="p-4 border-t border-gray-200">
-              <Button
-                type="primary"
-                onClick={handleSave}
-                className="w-full h-10"
-                style={{
-                  backgroundColor: '#1890ff',
-                }}
+    return (
+      <div 
+        className="fixed inset-0 bg-black bg-opacity-50 z-40"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) onClose();
+        }}
+      >
+        <div 
+          className="fixed inset-y-0 right-0 w-full md:w-1/2 lg:w-1/3 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 overflow-y-auto"
+          style={{
+            transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
+          }}
+        >
+          {/* Header */}
+          <div className="sticky top-0 bg-white z-10 border-b px-4 py-3 flex items-center justify-between">
+            <h2 className="text-xl font-semibold">
+              {isEditing
+                ? "Editar Transacción"
+                : transactionType === "Transferencia"
+                ? "Nueva Transferencia"
+                : "Nueva Transacción"}
+            </h2>
+            <button
+              onClick={onClose}
+              className="hover:bg-gray-100 p-2 rounded-full transition-colors"
+            >
+              <IoClose size={24} />
+            </button>
+          </div>
+  
+          {/* Main Content */}
+          <div className="p-4 space-y-6">
+            {/* Transaction Type Buttons */}
+            <div className="flex justify-between space-x-2">
+              <button
+                className={`flex-1 py-2 rounded-full ${
+                  transactionType === "income"
+                    ? "bg-green-500 text-white"
+                    : "bg-gray-200"
+                }`}
+                onClick={() => setTransactionType("income")}
               >
-                {isEditing ? "Actualizar" : "Guardar"}
-              </Button>
+                Ingreso
+              </button>
+              <button
+                className={`flex-1 py-2 rounded-full ${
+                  transactionType === "expense"
+                    ? "bg-red-500 text-white"
+                    : "bg-gray-200"
+                }`}
+                onClick={() => setTransactionType("expense")}
+              >
+                Gasto
+              </button>
+              <button
+                className={`flex-1 py-2 rounded-full ${
+                  transactionType === "Transferencia"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200"
+                }`}
+                onClick={() => setTransactionType("Transferencia")}
+              >
+                Transferencia
+              </button>
             </div>
+  
+            {/* Form Fields */}
+            <div className="space-y-4">
+              <div>
+                <label className="block mb-1 text-sm font-medium text-gray-700">
+                  Fecha
+                </label>
+                <DatePicker
+                  value={dayjs(date)}
+                  onChange={(date) => {
+                    if (date) {
+                      setDate(dayjs(date));
+                    }
+                  }}
+                  format="YYYY-MM-DD"
+                  className="w-full"
+                />
+              </div>
+  
+              <InputField
+                label="Importe"
+                id="amount"
+                value={amount}
+                onChange={handleAmountChange}
+                placeholder="0.00"
+              />
+  
+              <InputField
+                label="Descripción"
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Añade una descripción"
+              />
+  
+              {transactionType === "Transferencia" ? (
+                <>
+                  <SelectField
+                    label="Cuenta de Origen"
+                    id="fromAccount"
+                    value={fromAccount}
+                    onChange={(e) => setFromAccount(e.target.value)}
+                    options={accounts}
+                  />
+                  <SelectField
+                    label="Cuenta de Destino"
+                    id="toAccount"
+                    value={toAccount}
+                    onChange={(e) => setToAccount(e.target.value)}
+                    options={accounts}
+                  />
+                </>
+              ) : (
+                <>
+                  <SelectField
+                    label="Categoría"
+                    id="category"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    options={filteredCategories}
+                  />
+                  <SelectField
+                    label="Cuenta"
+                    id="account"
+                    value={account}
+                    onChange={(e) => setAccount(e.target.value)}
+                    options={accounts}
+                  />
+                  <SelectField
+                    label="Impuesto"
+                    id="taxType"
+                    value={taxType}
+                    onChange={(e) => setTaxType(e.target.value)}
+                    options={taxOptions}
+                  />
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="recurring"
+                      checked={isRecurring}
+                      onChange={(e) => setIsRecurring(e.target.checked)}
+                    />
+                    <label htmlFor="recurring" className="text-sm font-medium">
+                      Recurrente
+                    </label>
+                  </div>
+                  {isRecurring && (
+                    <SelectField
+                      label="Tiempo recurrente (meses)"
+                      id="timeRecurrent"
+                      value={timeRecurrent}
+                      onChange={(e) => setTimeRecurrent(parseInt(e.target.value, 10))}
+                      options={[
+                        { label: "3 meses", value: "3" },
+                        { label: "6 meses", value: "6" },
+                        { label: "12 meses", value: "12" },
+                      ]}
+                    />
+                  )}
+                </>
+              )}
+  
+              {/* Image Upload Section - Moved to bottom */}
+              <div className="space-y-4 pt-4 border-t">
+                <div>
+                  <label htmlFor="imageUpload" className="block mb-2 font-medium">
+                    Subir Imágenes
+                  </label>
+                  <input
+                    type="file"
+                    id="imageUpload"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageUpload}
+                    className="w-full p-2 bg-gray-100 rounded border"
+                    disabled={isUploading}
+                  />
+                  {isUploading && (
+                    <p className="text-sm text-gray-500 mt-2">Subiendo imágenes...</p>
+                  )}
+                </div>
+                {imageUrls.length > 0 && (
+                  <div className="grid grid-cols-3 gap-4">
+                    {imageUrls.map((url, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={url}
+                          alt={`Imagen adjunta ${index + 1}`}
+                          className="rounded w-full h-24 object-cover"
+                        />
+                        <button
+                          onClick={() => handleDeleteImage(index, url)}
+                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                        >
+                          <IoClose size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+  
+          {/* Footer - Fixed at bottom */}
+          <div className="sticky bottom-0 bg-white border-t p-4 mt-6">
+            <button
+              onClick={handleSave}
+              className="w-full bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition-colors"
+            >
+              {isEditing ? "Actualizar" : "Guardar"}
+            </button>
           </div>
         </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
 
 export default AddEntryModal;
