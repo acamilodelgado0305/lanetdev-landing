@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Button, Tooltip, Dropdown, Menu } from 'antd';
 import { format as formatDate } from 'date-fns';
-import {
-    DeleteOutlined,
-    EditOutlined,
-    FileTextOutlined,
-    FilterOutlined,
-    CaretDownOutlined
+import { 
+  DeleteOutlined, 
+  EditOutlined, 
+  FileTextOutlined,
+  FilterOutlined,
+  CaretDownOutlined
 } from '@ant-design/icons';
 import _ from 'lodash';
 
@@ -43,11 +43,11 @@ const TransactionTable = ({
     // Obtener valores únicos para los filtros
     const getUniqueValues = (field) => {
         return _.uniq(entries.map(entry => {
-            switch (field) {
+            switch(field) {
                 case 'category':
                     return getCategoryName(entry.category_id);
                 case 'account':
-                    return entry.entryType === "transfer"
+                    return entry.entryType === "transfer" 
                         ? `${getAccountName(entry.from_account_id)} ➡️ ${getAccountName(entry.to_account_id)}`
                         : getAccountName(entry.account_id);
                 case 'tax_type':
@@ -68,7 +68,7 @@ const TransactionTable = ({
                             type="checkbox"
                             checked={columnFilters[field]?.includes(value)}
                             onChange={(e) => {
-                                let newFilters = { ...columnFilters };
+                                let newFilters = {...columnFilters};
                                 if (!newFilters[field]) newFilters[field] = [];
                                 if (e.target.checked) {
                                     newFilters[field] = [...newFilters[field], value];
@@ -87,43 +87,43 @@ const TransactionTable = ({
     );
 
     const columns = [
-        {
-            title: 'Fecha',
+        { 
+            title: 'Fecha', 
             field: 'date',
             width: '100px',
         },
-        {
-            title: 'Descripción',
+        { 
+            title: 'Descripción', 
             field: 'description',
             width: '200px',
         },
-        {
-            title: 'Cuenta',
+        { 
+            title: 'Cuenta', 
             field: 'account',
             width: '150px',
         },
-        {
-            title: 'Categoría',
+        { 
+            title: 'Categoría', 
             field: 'category',
             width: '150px',
         },
-        {
-            title: 'Monto',
+        { 
+            title: 'Monto', 
             field: 'amount',
             width: '120px',
         },
-        {
-            title: 'Impuestos',
+        { 
+            title: 'Impuestos', 
             field: 'tax_type',
             width: '120px',
         },
-        {
-            title: 'Comprobante',
+        { 
+            title: 'Comprobante', 
             field: 'note',
             width: '120px',
         },
-        {
-            title: 'Acciones',
+        { 
+            title: 'Acciones', 
             field: 'actions',
             width: '100px',
         }
@@ -135,7 +135,7 @@ const TransactionTable = ({
                 <thead className="sticky top-0 z-5 bg-white">
                     <tr className="border-b border-gray-200">
                         {columns.map((column) => (
-                            <th
+                            <th 
                                 key={column.field}
                                 style={{ width: column.width }}
                                 className="border-r border-gray-200 bg-gray-50 p-0"
@@ -145,15 +145,16 @@ const TransactionTable = ({
                                         {column.title}
                                     </span>
                                     {column.field !== 'actions' && (
-                                        <Dropdown
-                                            overlay={getFilterMenu(column.field)}
+                                        <Dropdown 
+                                            overlay={getFilterMenu(column.field)} 
                                             trigger={['click']}
                                         >
                                             <Button
                                                 type="text"
                                                 size="small"
-                                                className={`flex items-center ${columnFilters[column.field]?.length ? 'text-blue-600' : 'text-gray-400'
-                                                    }`}
+                                                className={`flex items-center ${
+                                                    columnFilters[column.field]?.length ? 'text-blue-600' : 'text-gray-400'
+                                                }`}
                                                 icon={<FilterOutlined />}
                                             >
                                                 <CaretDownOutlined style={{ fontSize: '10px' }} />
@@ -169,7 +170,7 @@ const TransactionTable = ({
                     {entries.filter(entry => {
                         return Object.entries(columnFilters).every(([field, values]) => {
                             let cellValue;
-                            switch (field) {
+                            switch(field) {
                                 case 'category':
                                     cellValue = getCategoryName(entry.category_id);
                                     break;
@@ -189,8 +190,9 @@ const TransactionTable = ({
                     }).map((entry, rowIndex) => (
                         <tr
                             key={rowIndex}
-                            className={`border-b hover:bg-gray-50 ${hoveredRow === rowIndex ? 'bg-gray-50' : ''
-                                }`}
+                            className={`border-b hover:bg-gray-50 ${
+                                hoveredRow === rowIndex ? 'bg-gray-50' : ''
+                            }`}
                             onMouseEnter={() => setHoveredRow(rowIndex)}
                             onMouseLeave={() => setHoveredRow(null)}
                         >
@@ -208,8 +210,9 @@ const TransactionTable = ({
                             <td className="border-r border-gray-200 p-2 truncate">
                                 {getCategoryName(entry.category_id)}
                             </td>
-                            <td className={`border-r border-gray-200 p-2 truncate font-medium ${entry.type === "expense" ? "text-red-600" : "text-green-600"
-                                }`}>
+                            <td className={`border-r border-gray-200 p-2 truncate font-medium ${
+                                entry.type === "expense" ? "text-red-600" : "text-green-600"
+                            }`}>
                                 {entry.type === "expense" ? "-" : "+"}
                                 {formatCurrency(entry.amount)}
                             </td>
@@ -226,15 +229,11 @@ const TransactionTable = ({
                                 )}
                             </td>
                             <td className="border-r border-gray-200 p-2 truncate">
-                                {entry.note && entry.note.trim().length > 0 ? (
+                                {entry.note ? (
                                     <Button
                                         type="link"
                                         size="small"
-                                        onClick={() => {
-                                            // Convierte el string `note` en un array de URLs
-                                            const noteUrls = entry.note.trim().split('\n').filter(url => url); // Filtra para eliminar cualquier elemento vacío
-                                            onOpenContentModal(noteUrls); // Pasa el array de URLs al modal
-                                        }}
+                                        onClick={() => onOpenContentModal(entry.note)}
                                         icon={<FileTextOutlined />}
                                     >
                                         Ver
