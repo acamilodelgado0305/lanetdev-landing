@@ -15,6 +15,7 @@ import {
 import NoteContentModal from "./ViewImageModal";
 import TransactionTable from "./components/TransactionTable";
 import { useAuth } from '../../Context/AuthProvider';
+import Header from "./components/Header";
 
 const { Option } = Select;
 const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
@@ -49,6 +50,7 @@ const TransactionsDashboard = () => {
   const [editTransaction, setEditTransaction] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
   const { userRole } = useAuth();
+
 
 
   const openModal = () => {
@@ -240,6 +242,19 @@ const TransactionsDashboard = () => {
     }
     return months;
   };
+  const fetchData = async (endpoint) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}${endpoint}`);
+      setEntries(response.data);
+    } catch (error) {
+      setError("Error al cargar los datos");
+      console.error("Error al realizar la solicitud:", error);
+    }
+  };
+  useEffect(() => {
+    // Cargar datos iniciales (opcional, dependiendo de la pestaña que quieras cargar primero)
+    fetchData("/incomes");
+  }, []);
 
   return (
     <div className="flex-1 bg-white]">
@@ -260,6 +275,14 @@ const TransactionsDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-2 py-2 bg-gray-50 border-b border-gray-200">
           {userRole === "superadmin" && (
             <div className="bg-white rounded-lg shadow-sm p-4">
+              <div className="text-sm text-gray-500 mb-1">Balance del mes</div>
+              <div className="text-2xl font-semibold text-gray-900">
+                {formatCurrency(balance)}
+              </div>
+            </div>
+          )}
+          {userRole === "superadmin" && (
+            <div className="bg-white rounded-lg shadow-sm p-4">
               <div className="text-sm text-gray-500 mb-1">Ingresos totales</div>
               <div className="text-2xl font-semibold text-blue-600">
                 {formatCurrency(totalIncome)}
@@ -274,30 +297,25 @@ const TransactionsDashboard = () => {
               </div>
             </div>
           )}
-          {userRole === "superadmin" && (
-            <div className="bg-white rounded-lg shadow-sm p-4">
-              <div className="text-sm text-gray-500 mb-1">Balance del mes</div>
-              <div className="text-2xl font-semibold text-gray-900">
-                {formatCurrency(balance)}
-              </div>
-            </div>
-          )}
+
         </div>
       </div>
-
+      <div className="my-4">
+        <Header onNavClick={fetchData} />
+      </div>
 
       {/* Contenido principal */}
       <div className="overflow-y-auto h[40em]">
         <div className="border border-gray-200 rounded-lg h-full flex flex-col">
+          {error && <p className="text-red-500">{error}</p>}
           <TransactionTable
-            entries={currentEntries}
+            entries={entries}
             categories={categories}
             accounts={accounts}
             onDelete={handleDelete}
             onEdit={openEditModal}
             onOpenContentModal={openContentModal}
-            onOpenModal={openModal}
-          />
+            onOpenModal={openModal} />
         </div>
       </div>
 
