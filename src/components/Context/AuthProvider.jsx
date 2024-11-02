@@ -77,7 +77,6 @@ export const AuthProvider = ({ children }) => {
 
     // Función para cerrar sesión
     const logout = () => {
-        console.log("Cerrando sesión");
         setAuthToken(null);
         setUser(null);
         setUserRole(null);
