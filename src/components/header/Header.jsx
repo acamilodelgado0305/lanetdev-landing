@@ -4,6 +4,8 @@ import { DatePicker } from 'antd';  // Importar el DatePicker de Ant Design
 import { useNavigate } from 'react-router-dom';
 import { Link } from "react-router-dom";
 import { useSocket } from '../Context/SocketContext';
+import { useAuth } from '../Context/AuthProvider';
+
 import NotificationModal from '../communication/components/NotificationModal';
 
 
@@ -15,6 +17,7 @@ const Header = ({ unreadEmailsCount }) => {
     const datePickerRef = useRef(null);
     const navigate = useNavigate();
     const { notifications } = useSocket();
+    const { logout } = useAuth();
 
     const handleClickOutside = (event) => {
         if (datePickerRef.current && !datePickerRef.current.contains(event.target)) {
@@ -34,7 +37,7 @@ const Header = ({ unreadEmailsCount }) => {
     };
 
     const handleLogout = () => {
-        localStorage.removeItem('authToken');
+        logout();
         navigate('/login');
     };
 
