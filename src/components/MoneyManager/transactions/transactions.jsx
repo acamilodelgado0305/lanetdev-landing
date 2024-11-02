@@ -15,6 +15,7 @@ import {
 import NoteContentModal from "./ViewImageModal";
 import TransactionTable from "./components/TransactionTable";
 import { useAuth } from '../../Context/AuthProvider';
+import Header from "./components/Header";
 
 const { Option } = Select;
 const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
@@ -49,6 +50,7 @@ const TransactionsDashboard = () => {
   const [editTransaction, setEditTransaction] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
   const { userRole } = useAuth();
+
 
 
   const openModal = () => {
@@ -87,7 +89,8 @@ const TransactionsDashboard = () => {
       const sortedEntries = allEntries.sort(
         (a, b) => new Date(b.date) - new Date(a.date)
       );
-      setEntries(sortedEntries);
+
+      setEntries(sortedEntries); // Actualiza todas las transacciones
     } catch (error) {
       console.error("Error fetching all transactions:", error);
     }
@@ -148,17 +151,6 @@ const TransactionsDashboard = () => {
     fetchEntries();
     fetchAccounts();
   }, [currentMonth]);
-
-  const getCategoryName = (categoryId) => {
-    if (!categories || categories.length === 0) return "Categoría no encontrada";
-    const category = categories.find((cat) => cat.id === categoryId);
-    return category ? category.name : "Categoría no encontrada";
-  };
-
-  const getAccountName = (accountId) => {
-    const account = accounts.find((acc) => acc.id === accountId);
-    return account ? account.name : "Cuenta no encontrada";
-  };
 
   const applyFilters = (entriesToFilter = entries) => {
     let filtered = entriesToFilter;
@@ -240,12 +232,25 @@ const TransactionsDashboard = () => {
     }
     return months;
   };
+  const fetchData = async (endpoint) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}${endpoint}`);
+      setEntries(response.data);
+    } catch (error) {
+      setError("Error al cargar los datos");
+      console.error("Error al realizar la solicitud:", error);
+    }
+  };
+  useEffect(() => {
+    // Cargar datos iniciales (opcional, dependiendo de la pestaña que quieras cargar primero)
+    fetchData("/incomes");
+  }, []);
 
   return (
     <div className="flex-1 bg-white]">
       {/* Barra superior de herramientas */}
       <div className="border-b border-gray-200 bg-white sticky top-0 shadow-sm">
-        <div className="px-4 py-1 border-b border-gray-200">
+        <div className="px-4 py-1 border-b border-gray-200 flex justify-between items-center">
           <Input
             placeholder="Buscar transacciones..."
             prefix={<SearchOutlined className="text-gray-400" />}
@@ -255,9 +260,26 @@ const TransactionsDashboard = () => {
             size="large"
             allowClear
           />
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={openModal}
+            size="large"
+            className="ml-4"
+          >
+            Agregar Transacción
+          </Button>
         </div>
         {/* Estadísticas */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-2 py-2 bg-gray-50 border-b border-gray-200">
+          {userRole === "superadmin" && (
+            <div className="bg-white rounded-lg shadow-sm p-4">
+              <div className="text-sm text-gray-500 mb-1">Balance del mes</div>
+              <div className="text-2xl font-semibold text-gray-900">
+                {formatCurrency(balance)}
+              </div>
+            </div>
+          )}
           {userRole === "superadmin" && (
             <div className="bg-white rounded-lg shadow-sm p-4">
               <div className="text-sm text-gray-500 mb-1">Ingresos totales</div>
@@ -274,30 +296,25 @@ const TransactionsDashboard = () => {
               </div>
             </div>
           )}
-          {userRole === "superadmin" && (
-            <div className="bg-white rounded-lg shadow-sm p-4">
-              <div className="text-sm text-gray-500 mb-1">Balance del mes</div>
-              <div className="text-2xl font-semibold text-gray-900">
-                {formatCurrency(balance)}
-              </div>
-            </div>
-          )}
+
         </div>
       </div>
-
+      <div className="my-4">
+        <Header onNavClick={fetchData} />
+      </div>
 
       {/* Contenido principal */}
       <div className="overflow-y-auto h[40em]">
         <div className="border border-gray-200 rounded-lg h-full flex flex-col">
+          {error && <p className="text-red-500">{error}</p>}
           <TransactionTable
-            entries={currentEntries}
+            entries={entries}
             categories={categories}
             accounts={accounts}
             onDelete={handleDelete}
             onEdit={openEditModal}
             onOpenContentModal={openContentModal}
-            onOpenModal={openModal}
-          />
+            onOpenModal={openModal} />
         </div>
       </div>
 
@@ -334,23 +351,6 @@ const TransactionsDashboard = () => {
           />
         </div>
       </div>
-
-      {/* Botón flotante y modales */}
-      <Tooltip title="Añadir transacción">
-        <Button
-          type="primary"
-          shape="circle"
-          size="large"
-          icon={<PlusOutlined />}
-          onClick={openModal}
-          className="fixed bottom-8 right-8 shadow-lg"
-          style={{
-            backgroundColor: '#1890ff',
-            width: '48px',
-            height: '48px'
-          }}
-        />
-      </Tooltip>
 
       <AddEntryModal
         isOpen={isModalOpen}
