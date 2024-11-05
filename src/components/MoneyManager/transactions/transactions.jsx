@@ -36,6 +36,8 @@ const TransactionsDashboard = () => {
   const [isContentModalOpen, setIsContentModalOpen] = useState(false);
   const [selectedNoteContent, setSelectedNoteContent] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isIncomeModalOpen, setIsIncomeModalOpen] = useState(false);
+  const [transactionType, setTransactionType] = useState(null);
   const [error, setError] = useState(null);
   const [entries, setEntries] = useState([]);
   const [filteredEntries, setFilteredEntries] = useState([]);
@@ -59,7 +61,6 @@ const TransactionsDashboard = () => {
     setEditTransaction(null);
     setIsModalOpen(true);
   };
-  const closeModal = () => setIsModalOpen(false);
 
   const openContentModal = (noteContent) => {
     setSelectedNoteContent(noteContent);
@@ -74,6 +75,32 @@ const TransactionsDashboard = () => {
   const closeContentModal = () => {
     setIsContentModalOpen(false);
     setSelectedNoteContent("");
+  };
+
+  const openIncomeModal = () => {
+    setIsIncomeModalOpen(true);
+    setEditTransaction(null);
+  };
+
+  const openExpenseModal = () => {
+    setTransactionType('expense');
+    setIsModalOpen(true);
+    setEditTransaction(null);
+  };
+
+  const openTransferModal = () => {
+    setTransactionType('transfer');
+    setIsModalOpen(true);
+    setEditTransaction(null);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setTransactionType(null);
+  };
+
+  const closeIncomeModal = () => {
+    setIsIncomeModalOpen(false);
   };
 
   const fetchEntries = async () => {
@@ -258,24 +285,24 @@ const TransactionsDashboard = () => {
         <div className="w-full flex items-end justify-end">
           <div className="flex gap-3">
             <Button
-              onClick={openModal}
+              onClick={openIncomeModal}
               className="bg-green-500 hover:bg-green-600 text-white h-12 px-6"
             >
               Nuevo Ingreso
             </Button>
 
             <Button
-              onClick={openModal}
+              onClick={openExpenseModal}
               className="bg-red-500 hover:bg-red-600 text-white h-12 px-6"
             >
               Nuevo Egreso
             </Button>
 
             <Button
-              onClick={openModal}
-              className="bg-blue-500 hover:bg-red-400 text-white h-12 px-6"
+              onClick={openTransferModal}
+              className="bg-blue-500 hover:bg-blue-600 text-white h-12 px-6"
             >
-              Nuevo Transferencia
+              Nueva Transferencia
             </Button>
           </div>
 
@@ -415,14 +442,15 @@ const TransactionsDashboard = () => {
         onClose={closeModal}
         onTransactionAdded={handleEntryAdded}
         transactionToEdit={editTransaction}
+        transactionType={transactionType}
       />
 
       <AddIncome
-        isOpen={isModalOpen}
-        onClose={closeModal}
+        isOpen={isIncomeModalOpen}
+        onClose={closeIncomeModal}
         onTransactionAdded={handleEntryAdded}
         transactionToEdit={editTransaction}
-      ></AddIncome>
+      />
 
       <NoteContentModal
         isOpen={isContentModalOpen}
