@@ -8,7 +8,7 @@ import {
   CreditCard,
   MoreHorizontal,
   User,
-  Repeat 
+  Repeat
 } from 'lucide-react';
 import { CiSettings } from "react-icons/ci";
 
@@ -55,7 +55,7 @@ const Header = () => {
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
           <div className="flex items-center">
-           
+
           </div>
 
           {/* Navegación principal */}
@@ -101,9 +101,15 @@ const Header = () => {
                 </div>
               )}
             </div>
+
+
           </nav>
         </div>
+
+
+
       </div>
+      <div className="h-[1.2px] bg-[#293A4C] w-full"></div>
     </header>
   );
 };

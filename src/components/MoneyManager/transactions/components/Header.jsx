@@ -3,12 +3,12 @@ import React, { useState } from 'react';
 const NavItem = ({ label, isActive, onClick }) => (
     <button
         onClick={onClick}
-        className={`flex justify-center items-center px-3 h-10 text-sm transition-colors duration-200 relative group flex-1
+        className={`flex justify-center items-center  h-10 text-sm transition-colors duration-200 relative group flex-1
       ${isActive ? 'text-blue-600 font-medium' : 'text-gray-600 hover:text-gray-900'}`}
     >
         <span>{label}</span>
         {isActive && (
-            <div className="absolute bottom-0 left-1/4 w-1/2 h-1 bg-blue-600" />
+            <div className="absolute bottom-0  w-full h-1 bg-[#293A4C]" />
         )}
     </button>
 );
@@ -30,7 +30,7 @@ const Header = ({ onNavClick }) => {
 
     return (
         <header className="bg-white shadow-sm w-full">
-            <div className="flex justify-between px-4 py-2">
+            <div className="flex justify-between py-1">
                 {navItems.map((item, index) => (
                     <NavItem
                         key={index}

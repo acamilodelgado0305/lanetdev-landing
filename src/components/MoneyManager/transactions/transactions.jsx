@@ -4,6 +4,7 @@ import { format as formatDate, startOfMonth, endOfMonth, subMonths, addMonths } 
 import axios from "axios";
 import { Modal, message, Input, Select, Button, Tooltip, Card, Statistic } from "antd";
 import AddEntryModal from "./addModal";
+import AddIncome from "./Add/AddIncome";
 import {
   getTransactions,
   getTransfers,
@@ -16,6 +17,7 @@ import NoteContentModal from "./ViewImageModal";
 import TransactionTable from "./components/TransactionTable";
 import { useAuth } from '../../Context/AuthProvider';
 import Header from "./components/Header";
+import { TrendingUp, DollarSign, CreditCard } from 'lucide-react';
 
 const { Option } = Select;
 const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
@@ -248,60 +250,113 @@ const TransactionsDashboard = () => {
 
   return (
     <div className="flex-1 bg-white]">
+
+
+
       {/* Barra superior de herramientas */}
-      <div className="border-b border-gray-200 bg-white sticky top-0 shadow-sm">
-        <div className="px-4 py-1 border-b border-gray-200 flex justify-between items-center">
-          <Input
-            placeholder="Buscar transacciones..."
-            prefix={<SearchOutlined className="text-gray-400" />}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-lg"
-            size="large"
-            allowClear
-          />
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={openModal}
-            size="large"
-            className="ml-4"
-          >
-            Agregar Transacción
-          </Button>
-        </div>
-        {/* Estadísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-2 py-2 bg-gray-50 border-b border-gray-200">
-          {userRole === "superadmin" && (
-            <div className="bg-white rounded-lg shadow-sm p-4">
-              <div className="text-sm text-gray-500 mb-1">Balance del mes</div>
-              <div className="text-2xl font-semibold text-gray-900">
-                {formatCurrency(balance)}
-              </div>
-            </div>
-          )}
-          {userRole === "superadmin" && (
-            <div className="bg-white rounded-lg shadow-sm p-4">
-              <div className="text-sm text-gray-500 mb-1">Ingresos totales</div>
-              <div className="text-2xl font-semibold text-blue-600">
-                {formatCurrency(totalIncome)}
-              </div>
-            </div>
-          )}
-          {(userRole === "admin" || userRole === "superadmin") && (
-            <div className="bg-white rounded-lg shadow-sm p-4">
-              <div className="text-sm text-gray-500 mb-1">Gastos totales</div>
-              <div className="text-2xl font-semibold text-red-600">
-                {formatCurrency(totalExpenses)}
-              </div>
-            </div>
-          )}
+      <div className="py-2 border bg-white sticky top-0 shadow-sm">
+        <div className="w-full flex items-end justify-end">
+          <div className="flex gap-3">
+            <Button
+              onClick={openModal}
+              className="bg-green-500 hover:bg-green-600 text-white h-12 px-6"
+            >
+              Nuevo Ingreso
+            </Button>
+
+            <Button
+              onClick={openModal}
+              className="bg-red-500 hover:bg-red-600 text-white h-12 px-6"
+            >
+              Nuevo Egreso
+            </Button>
+
+            <Button
+              onClick={openModal}
+              className="bg-blue-500 hover:bg-red-400 text-white h-12 px-6"
+            >
+              Nuevo Transferencia
+            </Button>
+          </div>
 
         </div>
+
+
+
+
+
+        <div className="w-full flex items-center justify-center">
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-[17em] px-6 py-4">
+            {userRole === "superadmin" && (
+              <div className="flex items-center space-x-4">
+                <div className="bg-green-50 p-4 rounded-full">
+                  <TrendingUp className="h-6 w-6 text-green-600" />
+                </div>
+                <div>
+                  <div className="text-sm text-gray-500 mb-1">Balance</div>
+                  <div className="text-xl font-semibold text-gray-900">
+                    {formatCurrency(balance)}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {userRole === "superadmin" && (
+              <div className="flex items-center space-x-4">
+                <div className="bg-blue-50 p-4 rounded-full">
+                  <DollarSign className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <div className="text-sm text-gray-500 mb-1">Ventas totales</div>
+                  <div className="text-xl font-semibold text-green-600">
+                    {formatCurrency(totalIncome)}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {(userRole === "admin" || userRole === "superadmin") && (
+              <div className="flex items-center space-x-4">
+                <div className="bg-red-50 p-4 rounded-full">
+                  <CreditCard className="h-6 w-6 text-red-600" />
+                </div>
+                <div>
+                  <div className="text-sm text-gray-500 mb-1">Gastos totales</div>
+                  <div className="text-xl font-semibold text-red-600">
+                    {formatCurrency(totalExpenses)}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+
+
+        </div>
+
+
+
+
+        <div className="w-full flex items-center justify-center">
+          <div className="w-[25em]">
+            <div className="relative">
+              <Input
+                placeholder="Buscar"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 h-10"
+              />
+
+            </div>
+          </div>
+        </div>
       </div>
-      <div className="my-4">
+      <div className="my-1">
         <Header onNavClick={fetchData} />
       </div>
+
+
 
       {/* Contenido principal */}
       <div className="overflow-y-auto h[40em]">
@@ -319,15 +374,8 @@ const TransactionsDashboard = () => {
       </div>
 
       {/* Navegación de meses estilo Google Sheets */}
-      <div className="border-t border-gray-200 bg-gray-50">
-        <div className="flex items-center px-2 h-10">
-          <Button
-            type="text"
-            size="small"
-            icon={<LeftOutlined />}
-            onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-          />
-
+      <div className="border-t w-full border-gray-200 bg-gray-50 flex items-center">
+        <div className="w-full flex items-center justify-center">
           <div className="flex overflow-x-auto space-x-1 px-2">
             {getMonthsArray().map((date) => (
               <button
@@ -351,6 +399,16 @@ const TransactionsDashboard = () => {
           />
         </div>
       </div>
+      <div className="flex items-center px-2 h-10">
+        <Button
+          type="text"
+          size="small"
+          icon={<LeftOutlined />}
+          onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+        />
+
+
+      </div>
 
       <AddEntryModal
         isOpen={isModalOpen}
@@ -358,6 +416,13 @@ const TransactionsDashboard = () => {
         onTransactionAdded={handleEntryAdded}
         transactionToEdit={editTransaction}
       />
+
+      <AddIncome
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        onTransactionAdded={handleEntryAdded}
+        transactionToEdit={editTransaction}
+      ></AddIncome>
 
       <NoteContentModal
         isOpen={isContentModalOpen}
