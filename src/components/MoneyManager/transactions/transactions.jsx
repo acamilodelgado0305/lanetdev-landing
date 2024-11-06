@@ -401,8 +401,15 @@ const TransactionsDashboard = () => {
       </div>
 
       {/* Navegación de meses estilo Google Sheets */}
-      <div className="border-t w-full border-gray-200 bg-gray-50 flex items-center">
-        <div className="w-full flex items-center justify-center">
+      <div className="fixed bottom-0 mx-0 w-full bg-gray-50 border-t border-gray-200 flex justify-center items-center py-2 z-50">
+        <div className="flex items-center space-x-4">
+          <Button
+            type="text"
+            size="small"
+            icon={<LeftOutlined />}
+            onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+          />
+
           <div className="flex overflow-x-auto space-x-1 px-2">
             {getMonthsArray().map((date) => (
               <button
@@ -425,16 +432,6 @@ const TransactionsDashboard = () => {
             onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
           />
         </div>
-      </div>
-      <div className="flex items-center px-2 h-10">
-        <Button
-          type="text"
-          size="small"
-          icon={<LeftOutlined />}
-          onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-        />
-
-
       </div>
 
       <AddEntryModal
