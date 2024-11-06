@@ -13,7 +13,7 @@ import dayjs from "dayjs";
 
 const { TabPane } = Tabs;
 
-const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) => {
+const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) => {
   const [transactionType, setTransactionType] = useState("expense");
   const [amount, setAmount] = useState("");
   const [rawAmount, setRawAmount] = useState("");
@@ -436,4 +436,4 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
   );
 };
 
-export default AddIncome;
+export default AddExpense;
