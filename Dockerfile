@@ -13,7 +13,14 @@ RUN npm install
 # Copia el resto del código de la aplicación
 COPY . .
 
-# Construye la aplicación para producción
+# Construye la aplicación para producción usando las variables de entorno definidas en CapRover
+ARG VITE_API_FINANZAS
+ARG VITE_API_AUTH
+ARG VITE_API_URL
+ARG VITE_API_KEY
+ARG VITE_APP_SOCKET_URL
+
+# Construye la aplicación
 RUN npm run build
 
 # Utiliza una imagen de nginx para servir la aplicación
