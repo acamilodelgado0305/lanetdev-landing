@@ -13,14 +13,21 @@ RUN npm install
 # Copia el resto del código de la aplicación
 COPY . .
 
-# Construye la aplicación para producción usando las variables de entorno definidas en CapRover
+# Define las variables de entorno que se pasarán durante la construcción
 ARG VITE_API_FINANZAS
 ARG VITE_API_AUTH
 ARG VITE_API_URL
 ARG VITE_API_KEY
 ARG VITE_APP_SOCKET_URL
 
-# Construye la aplicación
+# Configura las variables en el entorno de ejecución
+ENV VITE_API_FINANZAS=$VITE_API_FINANZAS
+ENV VITE_API_AUTH=$VITE_API_AUTH
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_API_KEY=$VITE_API_KEY
+ENV VITE_APP_SOCKET_URL=$VITE_APP_SOCKET_URL
+
+# Construye la aplicación para producción
 RUN npm run build
 
 # Utiliza una imagen de nginx para servir la aplicación
