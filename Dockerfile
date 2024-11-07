@@ -20,7 +20,7 @@ ARG VITE_API_URL
 ARG VITE_API_KEY
 ARG VITE_APP_SOCKET_URL
 
-# Configura las variables en el entorno de ejecución
+# Configura las variables en el entorno de ejecución (solo en el build)
 ENV VITE_API_FINANZAS=$VITE_API_FINANZAS
 ENV VITE_API_AUTH=$VITE_API_AUTH
 ENV VITE_API_URL=$VITE_API_URL
