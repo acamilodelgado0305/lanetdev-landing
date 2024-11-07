@@ -13,6 +13,20 @@ RUN npm install
 # Copia el resto del código de la aplicación
 COPY . .
 
+# Define las variables de entorno que se pasarán durante la construcción
+ARG VITE_API_FINANZAS
+ARG VITE_API_AUTH
+ARG VITE_API_URL
+ARG VITE_API_KEY
+ARG VITE_APP_SOCKET_URL
+
+# Configura las variables en el entorno de ejecución (solo en el build)
+ENV VITE_API_FINANZAS=$VITE_API_FINANZAS
+ENV VITE_API_AUTH=$VITE_API_AUTH
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_API_KEY=$VITE_API_KEY
+ENV VITE_APP_SOCKET_URL=$VITE_APP_SOCKET_URL
+
 # Construye la aplicación para producción
 RUN npm run build
 
