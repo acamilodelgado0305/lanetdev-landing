@@ -21,7 +21,7 @@ import { TrendingUp, DollarSign, CreditCard } from 'lucide-react';
 
 const { Option } = Select;
 const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
-console.log('API Base URL:', import.meta.env.VITE_API_FINANZAS);
+console.log(import.meta.env.VITE_API_FINANZAS);
 
 const formatCurrency = (amount) => {
   if (isNaN(amount)) return "$0.00";
