@@ -402,7 +402,7 @@ const TransactionsDashboard = () => {
       </div>
 
       {/* Navegación de meses estilo Google Sheets */}
-      <div className="fixed bottom-0 mx-0 w-full bg-gray-50 border-t border-gray-200 flex justify-center items-center py-2 z-50">
+      <div className="fixed bottom-0 mx-0 w-full bg-gray-50 border-t border-gray-200 flex justify-center items-center py-2 z-4">
         <div className="flex items-center space-x-4">
           <Button
             type="text"

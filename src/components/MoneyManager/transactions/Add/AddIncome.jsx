@@ -11,7 +11,7 @@ import Swal from "sweetalert2";
 import { uploadImage } from "../../../../services/apiService";
 import dayjs from "dayjs";
 
-const { TabPane } = Tabs;
+const apiUrl = import.meta.env.VITE_API_FINANZAS;
 
 const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) => {
   const [transactionType, setTransactionType] = useState("expense");
@@ -19,8 +19,8 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
   const [rawAmount, setRawAmount] = useState("");
   const [category, setCategory] = useState("");
   const [account, setAccount] = useState("");
-  const [fromAccount, setFromAccount] = useState("");
-  const [toAccount, setToAccount] = useState("");
+
+
   const [note, setNote] = useState("");
   const [description, setDescription] = useState("");
   const [categories, setCategories] = useState([]);
@@ -35,6 +35,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
   const [timeRecurrent, setTimeRecurrent] = useState(null);
 
 
+
   useEffect(() => {
     fetchCategories();
     fetchAccounts();
@@ -44,7 +45,12 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
     try {
       const response = await fetch(`${apiUrl}/categories`);
       const data = await response.json();
-      setCategories(data);
+      // Filtrar solo las categorías de tipo ingreso
+      const incomeCategories = data.filter(category =>
+        category.type?.toLowerCase() === 'income' ||
+        category.type?.toLowerCase() === 'ingreso'
+      );
+      setCategories(incomeCategories);
     } catch (error) {
       console.error("Error al obtener las categorías:", error);
     }
@@ -54,11 +60,28 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
     try {
       const response = await fetch(`${apiUrl}/accounts`);
       const data = await response.json();
-      setAccounts(data);
+      // Filtrar las cuentas, excluyendo los préstamos
+      const filteredAccounts = data.filter(account =>
+        !account.type?.toLowerCase().includes('loan') &&
+        !account.type?.toLowerCase().includes('prestamo') &&
+        !account.type?.toLowerCase().includes('préstamo')
+      );
+      setAccounts(filteredAccounts);
     } catch (error) {
       console.error("Error al obtener las cuentas:", error);
     }
   };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
+
 
 
   const handleAmountChange = (e) => {
@@ -198,14 +221,36 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
     }
   };
 
+
+
+
   const getAccountIcon = (type) => {
-    switch (type.toLowerCase()) {
-      case 'bank':
+    // Normalizar el tipo a minúsculas y remover acentos
+    const normalizedType = type?.toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+
+    switch (true) {
+      // Casos para cuentas bancarias
+      case normalizedType?.includes('banco'):
+      case normalizedType?.includes('bank'):
+      case normalizedType?.includes('bancaria'):
         return <BankOutlined className="text-2xl" />;
-      case 'cash':
+
+      // Casos para efectivo
+      case normalizedType?.includes('efectivo'):
+      case normalizedType?.includes('cash'):
+      case normalizedType?.includes('dinero'):
         return <WalletOutlined className="text-2xl" />;
-      case 'card':
+
+      // Casos para tarjetas
+      case normalizedType?.includes('tarjeta'):
+      case normalizedType?.includes('card'):
+      case normalizedType?.includes('credito'):
+      case normalizedType?.includes('debito'):
         return <CreditCardOutlined className="text-2xl" />;
+
+      // Caso por defecto
       default:
         return <DollarOutlined className="text-2xl" />;
     }
@@ -230,7 +275,8 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
       <div className="fixed inset-y-0 right-0 w-full md:w-[35em] bg-white shadow-2xl transform 
                       transition-transform duration-300 ease-in-out overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-white z-10 border-b px-6 py-4 flex items-center justify-between">
+        <div className="sticky top-0 bg-white z-10 border-b px-6 pt-5
+         flex items-center justify-between">
           <h2 className="text-xl font-semibold text-gray-800">
             {transactionToEdit ? "Editar Ingreso" : "Nuevo Ingreso"}
           </h2>
@@ -243,12 +289,12 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
         </div>
 
         {/* Contenido Principal */}
-        <div className="p-6 space-y-6">
+        <div className="pb-2 px-4 space-y-6">
           {/* Tabs de Tipo de Pago */}
           <Radio.Group
             value={isRecurring ? "recurrent" : "single"}
             onChange={(e) => setIsRecurring(e.target.value === "recurrent")}
-            className="w-full mb-6"
+            className="w-full mb-1"
           >
             <div className="grid grid-cols-2 gap-4">
               <Radio.Button value="single" className="h-14 flex items-center justify-center">
@@ -290,9 +336,9 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
           {/* Métodos de Pago */}
           <div className="space-y-4">
             <label className="block text-base font-medium text-gray-700">
-              Método de pago
+              Cuenta destino
             </label>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               {Object.entries(groupAccountsByType()).map(([type, accountsOfType]) => (
                 <div key={type} className="space-y-4">
                   {accountsOfType.map((acc) => (
@@ -303,11 +349,14 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
                           ? 'border-green-500 border-2'
                           : 'hover:border-gray-300'
                         }`}
-                      bodyStyle={{ padding: '12px' }}
+                      bodyStyle={{ padding: '8px' }}
                     >
                       <div className="flex flex-col items-center space-y-2">
                         {getAccountIcon(acc.type)}
-                        <span className="text-sm text-center">{acc.name}</span>
+                        <span className="text-sm font-medium text-center">{acc.name}</span>
+                        <span className="text-xs text-gray-600">
+                          {formatCurrency(acc.balance || 0)}
+                        </span>
                       </div>
                     </Card>
                   ))}
@@ -315,11 +364,10 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
               ))}
             </div>
           </div>
-
           {/* Categoría */}
           <div className="space-y-4">
             <label className="block text-base font-medium text-gray-700">
-              Categoría
+              Categoría de Ingreso
             </label>
             <div className="grid grid-cols-3 gap-4">
               {categories.map((cat) => (
@@ -327,8 +375,8 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
                   key={cat.id}
                   onClick={() => setCategory(cat.id.toString())}
                   className={`cursor-pointer transition-all ${category === cat.id.toString()
-                      ? 'border-green-500 border-2'
-                      : 'hover:border-gray-300'
+                    ? 'border-green-500 border-2'
+                    : 'hover:border-gray-300'
                     }`}
                   bodyStyle={{ padding: '12px' }}
                 >
@@ -340,6 +388,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
               ))}
             </div>
           </div>
+
 
           {/* Descripción */}
           <div>
