@@ -55,8 +55,6 @@ const TransactionsDashboard = () => {
   const [isSearching, setIsSearching] = useState(false);
   const { userRole } = useAuth();
 
-
-
   const openModal = () => {
     setEditTransaction(null);
     setIsModalOpen(true);
@@ -103,29 +101,19 @@ const TransactionsDashboard = () => {
     setIsIncomeModalOpen(false);
   };
 
-  const fetchEntries = async () => {
+  const fetchEntries = async (endpoint = "/transactions") => {
     try {
-      const [transactions, transfers] = await Promise.all([
-        getTransactions(),
-        getTransfers(),
-      ]);
-
-      const allEntries = [
-        ...transactions.map((tx) => ({ ...tx, entryType: "transaction" })),
-        ...transfers.map((tf) => ({ ...tf, entryType: "transfer" })),
-      ];
-
-      const sortedEntries = allEntries.sort(
+      const response = await axios.get(`${API_BASE_URL}${endpoint}`);
+      const sortedEntries = response.data.sort(
         (a, b) => new Date(b.date) - new Date(a.date)
       );
 
       setEntries(sortedEntries); // Actualiza todas las transacciones
     } catch (error) {
       console.error("Error fetching all transactions:", error);
+      setError("Error al cargar los datos");
     }
   };
-
-
 
   const fetchCategories = async () => {
     try {
@@ -219,7 +207,6 @@ const TransactionsDashboard = () => {
     applyFilters();
   }, [searchTerm, filterType, entries, currentMonth, isSearching]);
 
-
   const handleDelete = async (entry) => {
     Modal.confirm({
       title: `¿Está seguro de que desea eliminar esta ${entry.entryType === "transfer" ? "transferencia" : "transacción"}?`,
@@ -252,7 +239,6 @@ const TransactionsDashboard = () => {
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-
   const getMonthsArray = () => {
     const months = [];
     for (let i = -2; i <= 2; i++) {
@@ -261,25 +247,23 @@ const TransactionsDashboard = () => {
     }
     return months;
   };
+
   const fetchData = async (endpoint) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}${endpoint}`);
-      setEntries(response.data);
+      await fetchEntries(endpoint);
+      setError(null); // Clear any existing error
     } catch (error) {
       setError("Error al cargar los datos");
       console.error("Error al realizar la solicitud:", error);
     }
   };
+
   useEffect(() => {
-    // Cargar datos iniciales (opcional, dependiendo de la pestaña que quieras cargar primero)
     fetchData("/incomes");
   }, []);
 
   return (
     <div className="flex-1 bg-white]">
-
-
-
       {/* Barra superior de herramientas */}
       <div className="py-2 border bg-white sticky top-0 shadow-sm">
         <div className="w-full flex items-end justify-end">
@@ -305,15 +289,9 @@ const TransactionsDashboard = () => {
               Nueva Transferencia
             </Button>
           </div>
-
         </div>
 
-
-
-
-
         <div className="w-full flex items-center justify-center">
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-[17em] px-6 py-4">
             {userRole === "superadmin" && (
               <div className="flex items-center space-x-4">
@@ -357,13 +335,7 @@ const TransactionsDashboard = () => {
               </div>
             )}
           </div>
-
-
-
         </div>
-
-
-
 
         <div className="w-full flex items-center justify-center">
           <div className="w-[25em]">
@@ -374,29 +346,28 @@ const TransactionsDashboard = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 h-10"
               />
-
             </div>
           </div>
         </div>
       </div>
+
       <div className="my-1">
         <Header onNavClick={fetchData} />
       </div>
-
-
 
       {/* Contenido principal */}
       <div className="overflow-y-auto h[40em]">
         <div className="border border-gray-200 rounded-lg h-full flex flex-col">
           {error && <p className="text-red-500">{error}</p>}
           <TransactionTable
-            entries={entries}
+            entries={currentEntries} // Filtra para la paginación
             categories={categories}
             accounts={accounts}
             onDelete={handleDelete}
             onEdit={openEditModal}
             onOpenContentModal={openContentModal}
-            onOpenModal={openModal} />
+            onOpenModal={openModal}
+          />
         </div>
       </div>
 
