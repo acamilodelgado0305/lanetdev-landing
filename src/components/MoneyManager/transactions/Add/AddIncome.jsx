@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { IoClose } from "react-icons/io5";
-import { DatePicker, Input, Button, Tabs, Card, Radio } from "antd";
+import { DatePicker, Checkbox, Input, Button, Tabs, Card, Radio } from "antd";
 import {
   BankOutlined,
   WalletOutlined,
   CreditCardOutlined,
-  DollarOutlined
+  DollarOutlined, DollarCircleOutlined, CloseOutlined 
 } from '@ant-design/icons';
 import Swal from "sweetalert2";
 import { uploadImage } from "../../../../services/apiService";
@@ -19,8 +19,8 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
   const [rawAmount, setRawAmount] = useState("");
   const [category, setCategory] = useState("");
   const [account, setAccount] = useState("");
-
-
+  const [fromAccount, setFromAccount] = useState("");
+  const [toAccount, setToAccount] = useState("");
   const [note, setNote] = useState("");
   const [description, setDescription] = useState("");
   const [categories, setCategories] = useState([]);
@@ -28,11 +28,9 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
   const [imageUrl, setImageUrl] = useState("");
   const [imageUrls, setImageUrls] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [isRecurring, setIsRecurring] = useState(false);
   const [date, setDate] = useState(dayjs());
   const [isEditing, setIsEditing] = useState(false);
-  const [taxType, setTaxType] = useState("");
-  const [timeRecurrent, setTimeRecurrent] = useState(null);
+
 
 
 
@@ -40,6 +38,9 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
     fetchCategories();
     fetchAccounts();
   }, []);
+
+
+  //-----------FETCH---------------------------
 
   const fetchCategories = async () => {
     try {
@@ -72,6 +73,9 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
     }
   };
 
+
+  //-------------MONEDA--------------------
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
@@ -82,7 +86,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
   };
 
 
-
+//--------------------------FUNCIONES
 
   const handleAmountChange = (e) => {
     const value = e.target.value.replace(/\./g, "").replace(/[^0-9]/g, "");
@@ -160,9 +164,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
         description: description,
         accountId: parseInt(account, 10),
         categoryId: parseInt(category, 10),
-        tax_type: taxType,
-        recurrent: isRecurring,
-        timeRecurrent: isRecurring ? timeRecurrent : null,
+
       };
       endpoint = `${apiUrl}/transactions`;
     }
@@ -275,36 +277,32 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
       <div className="fixed inset-y-0 right-0 w-full md:w-[35em] bg-white shadow-2xl transform 
                       transition-transform duration-300 ease-in-out overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-white z-10 border-b px-6 pt-5
-         flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-gray-800">
-            {transactionToEdit ? "Editar Ingreso" : "Nuevo Ingreso"}
-          </h2>
-          <Button
-            type="text"
-            icon={<IoClose size={24} />}
-            onClick={onClose}
-            className="hover:bg-gray-100 rounded-full"
-          />
+        <div className="sticky top-0 bg-white z-10">
+          <div className="px-6 pt-4 ">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-green-500">
+                  <DollarCircleOutlined className="text-xl" />
+                </span>
+                <h2 className="text-xl font-semibold text-gray-800">
+                  {transactionToEdit ? "Editar Ingreso" : "Nuevo Ingreso"}
+                </h2>
+              </div>
+
+              <Button
+                type="text"
+                icon={<CloseOutlined className="text-lg" />}
+                onClick={onClose}
+                className="hover:bg-gray-100 rounded-full h-8 w-8 flex items-center justify-center"
+              />
+            </div>
+          </div>
+          <div className="h-1 bg-green-500" /> {/* Línea verde decorativa */}
         </div>
 
         {/* Contenido Principal */}
-        <div className="pb-2 px-4 space-y-6">
-          {/* Tabs de Tipo de Pago */}
-          <Radio.Group
-            value={isRecurring ? "recurrent" : "single"}
-            onChange={(e) => setIsRecurring(e.target.value === "recurrent")}
-            className="w-full mb-1"
-          >
-            <div className="grid grid-cols-2 gap-4">
-              <Radio.Button value="single" className="h-14 flex items-center justify-center">
-                <span className="text-base">Pago Único</span>
-              </Radio.Button>
-              <Radio.Button value="recurrent" className="h-14 flex items-center justify-center">
-                <span className="text-base">Pago Recurrente</span>
-              </Radio.Button>
-            </div>
-          </Radio.Group>
+        <div className="pt-3 px-4 space-y-6">
+
 
           {/* Fecha e Importe */}
           <div className="grid grid-cols-2 gap-4">
@@ -334,60 +332,90 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
           </div>
 
           {/* Métodos de Pago */}
-          <div className="space-y-4">
-            <label className="block text-base font-medium text-gray-700">
-              Cuenta destino
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Selecciona la cuenta destino
             </label>
-            <div className="grid grid-cols-2 gap-4">
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {Object.entries(groupAccountsByType()).map(([type, accountsOfType]) => (
-                <div key={type} className="space-y-4">
-                  {accountsOfType.map((acc) => (
-                    <Card
-                      key={acc.id}
-                      onClick={() => setAccount(acc.id.toString())}
-                      className={`cursor-pointer transition-all ${account === acc.id.toString()
-                          ? 'border-green-500 border-2'
+                <div key={type}>
+                  {/* Título del tipo de cuenta */}
+                  <div className="text-xs font-medium text-gray-500 mb-2 ml-1">
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                  </div>
+
+                  <div className="space-y-2">
+                    {accountsOfType.map((acc) => (
+                      <Card
+                        key={acc.id}
+                        onClick={() => setAccount(acc.id.toString())}
+                        className={`cursor-pointer transition-all hover:shadow-sm ${account === acc.id.toString()
+                          ? 'border-green-500 border-2 bg-green-50'
                           : 'hover:border-gray-300'
-                        }`}
-                      bodyStyle={{ padding: '8px' }}
-                    >
-                      <div className="flex flex-col items-center space-y-2">
-                        {getAccountIcon(acc.type)}
-                        <span className="text-sm font-medium text-center">{acc.name}</span>
-                        <span className="text-xs text-gray-600">
-                          {formatCurrency(acc.balance || 0)}
-                        </span>
-                      </div>
-                    </Card>
-                  ))}
+                          }`}
+                        bodyStyle={{ padding: '8px' }}
+                        size="small"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className="flex-shrink-0">
+                            {getAccountIcon(acc.type)}
+                          </div>
+                          <div className="flex-grow">
+                            <div className="text-sm font-medium">{acc.name}</div>
+                            <div className="text-xs text-gray-600">
+                              {formatCurrency(acc.balance || 0)}
+                            </div>
+                          </div>
+                          {account === acc.id.toString() && (
+                            <div className="flex-shrink-0 text-green-500">
+                              <CheckCircleOutlined />
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
+
+
           {/* Categoría */}
-          <div className="space-y-4">
-            <label className="block text-base font-medium text-gray-700">
-              Categoría de Ingreso
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Selecciona la categoría de ingreso
             </label>
-            <div className="grid grid-cols-3 gap-4">
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {categories.map((cat) => (
                 <Card
                   key={cat.id}
                   onClick={() => setCategory(cat.id.toString())}
-                  className={`cursor-pointer transition-all ${category === cat.id.toString()
-                    ? 'border-green-500 border-2'
+                  className={`cursor-pointer transition-all hover:shadow-sm ${category === cat.id.toString()
+                    ? 'border-green-500 border-2 bg-green-50'
                     : 'hover:border-gray-300'
                     }`}
-                  bodyStyle={{ padding: '12px' }}
+                  bodyStyle={{ padding: '8px' }}
+                  size="small"
                 >
-                  <div className="flex flex-col items-center space-y-2">
-                    <span className="text-2xl">{cat.icon || '🏷'}</span>
-                    <span className="text-sm text-center">{cat.name}</span>
+                  <div className="flex items-center space-x-3">
+                    <span className="text-xl flex-shrink-0">{cat.icon || '🏷'}</span>
+                    <span className="text-sm font-medium flex-grow">{cat.name}</span>
+                    {category === cat.id.toString() && (
+                      <CheckCircleOutlined className="text-green-500 flex-shrink-0" />
+                    )}
                   </div>
                 </Card>
               ))}
             </div>
           </div>
+
+
+    
+
+          <div className="h-1 bg-green-500" /> {/* Línea verde decorativa */}
 
 
           {/* Descripción */}
@@ -404,25 +432,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
             />
           </div>
 
-          {/* Opciones de Recurrencia */}
-          {isRecurring && (
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Periodicidad
-              </label>
-              <Radio.Group
-                value={timeRecurrent}
-                onChange={(e) => setTimeRecurrent(e.target.value)}
-                className="w-full"
-              >
-                <div className="grid grid-cols-3 gap-4">
-                  <Radio.Button value="3">Cada 3 meses</Radio.Button>
-                  <Radio.Button value="6">Cada 6 meses</Radio.Button>
-                  <Radio.Button value="12">Cada año</Radio.Button>
-                </div>
-              </Radio.Group>
-            </div>
-          )}
+
 
           {/* Adjuntos */}
           <div className="space-y-4">
