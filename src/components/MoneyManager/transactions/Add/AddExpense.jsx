@@ -230,7 +230,7 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
       <div className="fixed inset-y-0 right-0 w-full md:w-[35em] bg-white shadow-2xl transform 
                       transition-transform duration-300 ease-in-out overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-white z-10 border-b px-6 py-4 flex items-center justify-between">
+        <div className="sticky top-0 bg-white z-10 border-b px-6 pt-3 flex items-center justify-between">
           <h2 className="text-xl font-semibold text-gray-800">
             {transactionToEdit ? "Editar Ingreso" : "Nuevo Ingreso"}
           </h2>
@@ -243,7 +243,7 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
         </div>
 
         {/* Contenido Principal */}
-        <div className="p-6 space-y-6">
+        <div className="p-4 space-y-6">
           {/* Tabs de Tipo de Pago */}
           <Radio.Group
             value={isRecurring ? "recurrent" : "single"}
