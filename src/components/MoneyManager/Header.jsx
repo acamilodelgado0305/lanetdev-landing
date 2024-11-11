@@ -50,7 +50,7 @@ const Header = () => {
   }, []);
 
   return (
-    <header className="bg-white shadow-sm w-full">
+    <header className="bg-white shadow-sm w-full ">
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
@@ -67,8 +67,10 @@ const Header = () => {
               Transacciones
             </NavItem>
             <NavItem to="/index/moneymanager/Pagos-Pendientes" icon={Repeat}>
-              Pagos Recurrentes
+              Informes
             </NavItem>
+
+
 
 
 
@@ -80,7 +82,7 @@ const Header = () => {
                   ${isDropdownOpen ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900'}`}
               >
                 <MoreHorizontal className="w-4 h-4 mr-2" />
-                <span>Otros</span>
+                <span>Configuración</span>
               </button>
 
               {isDropdownOpen && (
@@ -97,6 +99,9 @@ const Header = () => {
                   </NavItem>
                   <NavItem to="/index/moneymanager/configuracion" icon={CiSettings}>
                     Configuración
+                  </NavItem>
+                  <NavItem to="/index/moneymanager/Pagos-Pendientes" icon={Repeat}>
+                    Pagos Recurrentes
                   </NavItem>
                 </div>
               )}
