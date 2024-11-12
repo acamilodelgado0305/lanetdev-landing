@@ -3,16 +3,17 @@ import { Button, Pagination } from "antd";
 import { CheckSquare } from "lucide-react";
 import { getPendingTransactions } from "../../../../services/moneymanager/moneyService";
 import AddEntryModal from "../addModal";
+import PaymentComponent from "./PaymentComponent";
 
 export default function RenderPaymentsList() {
-    
     const [recurrentPayments, setRecurrentPayments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize] = useState(5);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [paymentToEdit, setPaymentToEdit] = useState(null);
-    const [currentMonth, setCurrentMonth] = useState(new Date()); // Mes actual
+    const [currentMonth, setCurrentMonth] = useState(new Date());
+    const [showCreatePayment, setShowCreatePayment] = useState(false);
 
     useEffect(() => {
         const fetchTransactions = async () => {
@@ -20,7 +21,7 @@ export default function RenderPaymentsList() {
                 const transactions = await getPendingTransactions();
                 const recPayments = transactions.filter(tx => tx.recurrent);
                 setRecurrentPayments(recPayments);
-                console.log(recPayments)
+                console.log(recPayments);
                 setLoading(false);
             } catch (error) {
                 console.error("Error fetching transactions:", error);
@@ -57,16 +58,7 @@ export default function RenderPaymentsList() {
     };
 
     const handlePaymentClick = (payment) => {
-        // Eliminar decimales y convertir a cadena
         const formattedAmount = Math.floor(payment.amount).toString();
-
-        console.log("Datos capturados para el modal:", {
-            amount: formattedAmount,
-            description: payment.description,
-            type: "expense",
-            isEditing: false,
-        });
-
         setPaymentToEdit({
             amount: formattedAmount,
             description: payment.description,
@@ -95,7 +87,6 @@ export default function RenderPaymentsList() {
         );
     });
 
-    // Moverse entre meses
     const handlePrevMonth = () => {
         setCurrentMonth(new Date(currentMonth.setMonth(currentMonth.getMonth() - 1)));
     };
@@ -112,54 +103,69 @@ export default function RenderPaymentsList() {
 
     return (
         <div className="bg-white rounded-lg shadow-md p-4">
-            <h3 className="text-lg font-semibold mb-4 flex items-center justify-between">
-                <CheckSquare className="w-5 h-5 mr-2 text-blue-500" />
-                Pagos Recurrentes - {currentMonthLabel}
-                <div>
-                    <Button onClick={handlePrevMonth}>Mes anterior</Button>
-                    <Button onClick={handleNextMonth} className="ml-2">Mes siguiente</Button>
-                </div>
-            </h3>
+            <div className="flex justify-between items-center mb-4">
+                <Button
+                    onClick={() => setShowCreatePayment(!showCreatePayment)}
+                    type="primary"
+                >
+                    {showCreatePayment ? "Ver Pagos Recurrentes" : "Crear Nuevo Pago"}
+                </Button>
+            </div>
 
-            {filteredPayments.length > 0 ? (
-                <>
-                    <div className="grid grid-cols-[50px_1fr_1fr_1fr_1fr_1fr] gap-4 border-b-2 py-2 bg-gray-100 font-semibold">
-                        <div>#</div>
-                        <div>Descripción</div>
-                        <div>Monto</div>
-                        <div>Fecha</div>
-                        <div>Estado</div>
-                        <div>Acciones</div>
-                    </div>
-                    {getPaginatedData(filteredPayments).map((payment) => (
-                        <div
-                            key={payment.id}
-                            className="grid grid-cols-[50px_1fr_1fr_1fr_1fr_1fr] gap-4 py-2 border-b border-gray-200 items-center"
-                        >
-                            <div>{payment.id}</div> {/* Mostrar el ID en vez del número de lista */}
-                            <div>{payment.description}</div>
-                            <div className="text-red-500">{formatCurrency(payment.amount)}</div>
-                            <div>{formatDate(payment.date)}</div>
-                            <div className={payment.estado ? "text-green-600" : "text-red-600"}>
-                                {payment.estado ? "Activo" : "Inactivo"}
-                            </div>
-                            <div>
-                                <Button type="primary" onClick={() => handlePaymentClick(payment)}>
-                                    Pagar
-                                </Button>
-                            </div>
-                        </div>
-                    ))}
-                    <Pagination
-                        current={currentPage}
-                        pageSize={pageSize}
-                        total={filteredPayments.length}
-                        onChange={handlePageChange}
-                        className="mt-4"
-                    />
-                </>
+            {showCreatePayment ? (
+                <PaymentComponent />
             ) : (
-                <p className="text-gray-500">No hay pagos recurrentes para este mes.</p>
+                <>
+                    <h3 className="text-lg font-semibold mb-4 flex items-center justify-between">
+                        <CheckSquare className="w-5 h-5 mr-2 text-blue-500" />
+                        Pagos Recurrentes - {currentMonthLabel}
+                        <div>
+                            <Button onClick={handlePrevMonth}>Mes anterior</Button>
+                            <Button onClick={handleNextMonth} className="ml-2">Mes siguiente</Button>
+                        </div>
+                    </h3>
+
+                    {filteredPayments.length > 0 ? (
+                        <>
+                            <div className="grid grid-cols-[50px_1fr_1fr_1fr_1fr_1fr] gap-4 border-b-2 py-2 bg-gray-100 font-semibold">
+                                <div>#</div>
+                                <div>Descripción</div>
+                                <div>Monto</div>
+                                <div>Fecha</div>
+                                <div>Estado</div>
+                                <div>Acciones</div>
+                            </div>
+                            {getPaginatedData(filteredPayments).map((payment) => (
+                                <div
+                                    key={payment.id}
+                                    className="grid grid-cols-[50px_1fr_1fr_1fr_1fr_1fr] gap-4 py-2 border-b border-gray-200 items-center"
+                                >
+                                    <div>{payment.id}</div>
+                                    <div>{payment.description}</div>
+                                    <div className="text-red-500">{formatCurrency(payment.amount)}</div>
+                                    <div>{formatDate(payment.date)}</div>
+                                    <div className={payment.estado ? "text-green-600" : "text-red-600"}>
+                                        {payment.estado ? "Activo" : "Inactivo"}
+                                    </div>
+                                    <div>
+                                        <Button type="primary" onClick={() => handlePaymentClick(payment)}>
+                                            Pagar
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))}
+                            <Pagination
+                                current={currentPage}
+                                pageSize={pageSize}
+                                total={filteredPayments.length}
+                                onChange={handlePageChange}
+                                className="mt-4"
+                            />
+                        </>
+                    ) : (
+                        <p className="text-gray-500">No hay pagos recurrentes para este mes.</p>
+                    )}
+                </>
             )}
 
             <AddEntryModal
@@ -170,4 +176,4 @@ export default function RenderPaymentsList() {
             />
         </div>
     );
-};
+}

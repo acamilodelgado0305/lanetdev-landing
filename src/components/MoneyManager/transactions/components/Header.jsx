@@ -17,15 +17,15 @@ const Header = ({ onNavClick }) => {
     const [activeIndex, setActiveIndex] = useState(0);
 
     const navItems = [
-        { label: 'Gastos', endpoint: '/expenses' },
         { label: 'Ingresos', endpoint: '/incomes' },
+        { label: 'Gastos', endpoint: '/expenses' },
         { label: 'Transferencias', endpoint: '/transactions' },
         { label: 'Pagos Recurrentes', endpoint: '/recurring-payments' },
     ];
 
     const handleNavClick = (index, endpoint) => {
         setActiveIndex(index);
-        onNavClick(endpoint);
+        onNavClick(endpoint); // Llama a onNavClick con el endpoint específico
     };
 
     return (

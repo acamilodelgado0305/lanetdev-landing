@@ -2,12 +2,10 @@ import React, { useEffect, useState } from "react";
 import { PlusOutlined, SearchOutlined, LeftOutlined, RightOutlined } from "@ant-design/icons";
 import { format as formatDate, startOfMonth, endOfMonth, subMonths, addMonths } from "date-fns";
 import axios from "axios";
-import { Modal, message, Input, Select, Button, Tooltip, Card, Statistic } from "antd";
+import { Modal, message, Input, Select, Button } from "antd";
 import AddEntryModal from "./addModal";
 import AddIncome from "./Add/AddIncome";
 import {
-  getTransactions,
-  getTransfers,
   getAccounts,
   getCategories,
   deleteTransaction,
@@ -15,13 +13,13 @@ import {
 } from "../../../services/moneymanager/moneyService";
 import NoteContentModal from "./ViewImageModal";
 import TransactionTable from "./components/TransactionTable";
+import IncomeTable from "./components/IncomeTable";
 import { useAuth } from '../../Context/AuthProvider';
 import Header from "./components/Header";
 import { TrendingUp, DollarSign, CreditCard } from 'lucide-react';
 
 const { Option } = Select;
 const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
-console.log('API Base URL:', import.meta.env.VITE_API_FINANZAS);
 
 const formatCurrency = (amount) => {
   if (isNaN(amount)) return "$0.00";
@@ -54,9 +52,8 @@ const TransactionsDashboard = () => {
   const [categories, setCategories] = useState([]);
   const [editTransaction, setEditTransaction] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [selectedEndpoint, setSelectedEndpoint] = useState("/incomes");
   const { userRole } = useAuth();
-
-
 
   const openModal = () => {
     setEditTransaction(null);
@@ -104,29 +101,18 @@ const TransactionsDashboard = () => {
     setIsIncomeModalOpen(false);
   };
 
-  const fetchEntries = async () => {
+  // Consolidar la función para cargar datos de acuerdo con el endpoint
+  const fetchData = async (endpoint) => {
     try {
-      const [transactions, transfers] = await Promise.all([
-        getTransactions(),
-        getTransfers(),
-      ]);
-
-      const allEntries = [
-        ...transactions.map((tx) => ({ ...tx, entryType: "transaction" })),
-        ...transfers.map((tf) => ({ ...tf, entryType: "transfer" })),
-      ];
-
-      const sortedEntries = allEntries.sort(
-        (a, b) => new Date(b.date) - new Date(a.date)
-      );
-
-      setEntries(sortedEntries); // Actualiza todas las transacciones
+      const response = await axios.get(`${API_BASE_URL}${endpoint}`);
+      const sortedEntries = response.data.sort((a, b) => new Date(b.date) - new Date(a.date));
+      setEntries(sortedEntries);
+      setError(null);
     } catch (error) {
-      console.error("Error fetching all transactions:", error);
+      console.error("Error fetching data:", error);
+      setError("Error al cargar los datos");
     }
   };
-
-
 
   const fetchCategories = async () => {
     try {
@@ -158,8 +144,7 @@ const TransactionsDashboard = () => {
 
       const balanceValue = parseFloat(balanceResponse.data.balance) || 0;
       const incomeValue = parseFloat(incomeResponse.data.totalIncome) || 0;
-      const expensesValue =
-        parseFloat(expensesResponse.data.totalExpenses) || 0;
+      const expensesValue = parseFloat(expensesResponse.data.totalExpenses) || 0;
 
       setBalance(balanceValue);
       setTotalIncome(incomeValue);
@@ -171,16 +156,15 @@ const TransactionsDashboard = () => {
   };
 
   const handleEntryAdded = () => {
-    fetchEntries();
+    fetchData(selectedEndpoint); // Usa el endpoint actual para refrescar los datos
     fetchMonthlyData();
   };
 
   useEffect(() => {
     fetchCategories();
-    fetchMonthlyData();
-    fetchEntries();
     fetchAccounts();
-  }, [currentMonth]);
+    fetchData(selectedEndpoint); // Cargar datos iniciales según el endpoint seleccionado
+  }, [selectedEndpoint]);
 
   const applyFilters = (entriesToFilter = entries) => {
     let filtered = entriesToFilter;
@@ -220,7 +204,6 @@ const TransactionsDashboard = () => {
     applyFilters();
   }, [searchTerm, filterType, entries, currentMonth, isSearching]);
 
-
   const handleDelete = async (entry) => {
     Modal.confirm({
       title: `¿Está seguro de que desea eliminar esta ${entry.entryType === "transfer" ? "transferencia" : "transacción"}?`,
@@ -246,13 +229,9 @@ const TransactionsDashboard = () => {
   // Paginación
   const indexOfLastEntry = currentPage * entriesPerPage;
   const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
-  const currentEntries = filteredEntries.slice(
-    indexOfFirstEntry,
-    indexOfLastEntry
-  );
+  const paginatedEntries = filteredEntries.slice(indexOfFirstEntry, indexOfLastEntry);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
 
   const getMonthsArray = () => {
     const months = [];
@@ -262,60 +241,44 @@ const TransactionsDashboard = () => {
     }
     return months;
   };
-  const fetchData = async (endpoint) => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}${endpoint}`);
-      setEntries(response.data);
-    } catch (error) {
-      setError("Error al cargar los datos");
-      console.error("Error al realizar la solicitud:", error);
-    }
+
+  // Maneja el clic de navegación y establece el endpoint seleccionado
+  const handleNavClick = (endpoint) => {
+    setSelectedEndpoint(endpoint); // Actualiza el endpoint seleccionado
+    fetchData(endpoint); // Carga los datos de acuerdo al nuevo endpoint
   };
-  useEffect(() => {
-    // Cargar datos iniciales (opcional, dependiendo de la pestaña que quieras cargar primero)
-    fetchData("/incomes");
-  }, []);
+
+  const handlePreviousMonth = () => {
+    setCurrentMonth(subMonths(currentMonth, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentMonth(addMonths(currentMonth, 1));
+  };
 
   return (
     <div className="flex-1 bg-white]">
-
-
-
       {/* Barra superior de herramientas */}
       <div className="py-2 border bg-white sticky top-0 shadow-sm">
+        {/* Botones de ingresos, egresos, etc. */}
         <div className="w-full flex items-end justify-end">
           <div className="flex gap-3">
-            <Button
-              onClick={openIncomeModal}
-              className="bg-green-500 hover:bg-green-600 text-white h-12 px-6"
-            >
+            <Button onClick={openIncomeModal} className="bg-green-500 hover:bg-green-600 text-white h-12 px-6">
               Nuevo Ingreso
             </Button>
-
-            <Button
-              onClick={openExpenseModal}
-              className="bg-red-500 hover:bg-red-600 text-white h-12 px-6"
-            >
+            <Button onClick={openExpenseModal} className="bg-red-500 hover:bg-red-600 text-white h-12 px-6">
               Nuevo Egreso
             </Button>
-
-            <Button
-              onClick={openTransferModal}
-              className="bg-blue-500 hover:bg-blue-600 text-white h-12 px-6"
-            >
+            <Button onClick={openTransferModal} className="bg-blue-500 hover:bg-blue-600 text-white h-12 px-6">
               Nueva Transferencia
             </Button>
           </div>
-
         </div>
 
-
-
-
-
+        {/* Resumen de datos financieros */}
         <div className="w-full flex items-center justify-center">
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-[17em] px-6 py-4">
+            {/* Resumen de datos financieros condicional por rol */}
             {userRole === "superadmin" && (
               <div className="flex items-center space-x-4">
                 <div className="bg-green-50 p-4 rounded-full">
@@ -323,9 +286,7 @@ const TransactionsDashboard = () => {
                 </div>
                 <div>
                   <div className="text-sm text-gray-500 mb-1">Balance</div>
-                  <div className="text-xl font-semibold text-gray-900">
-                    {formatCurrency(balance)}
-                  </div>
+                  <div className="text-xl font-semibold text-gray-900">{formatCurrency(balance)}</div>
                 </div>
               </div>
             )}
@@ -337,9 +298,7 @@ const TransactionsDashboard = () => {
                 </div>
                 <div>
                   <div className="text-sm text-gray-500 mb-1">Ventas totales</div>
-                  <div className="text-xl font-semibold text-green-600">
-                    {formatCurrency(totalIncome)}
-                  </div>
+                  <div className="text-xl font-semibold text-green-600">{formatCurrency(totalIncome)}</div>
                 </div>
               </div>
             )}
@@ -351,65 +310,60 @@ const TransactionsDashboard = () => {
                 </div>
                 <div>
                   <div className="text-sm text-gray-500 mb-1">Gastos totales</div>
-                  <div className="text-xl font-semibold text-red-600">
-                    {formatCurrency(totalExpenses)}
-                  </div>
+                  <div className="text-xl font-semibold text-red-600">{formatCurrency(totalExpenses)}</div>
                 </div>
               </div>
             )}
           </div>
-
-
-
         </div>
 
-
-
-
+        {/* Input de búsqueda */}
         <div className="w-full flex items-center justify-center">
           <div className="w-[25em]">
             <div className="relative">
-              <Input
-                placeholder="Buscar"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 h-10"
-              />
-
+              <Input placeholder="Buscar" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 h-10" />
             </div>
           </div>
         </div>
       </div>
+
+      {/* Header de navegación entre categorías */}
       <div className="my-1">
-        <Header onNavClick={fetchData} />
+        <Header onNavClick={handleNavClick} />
       </div>
-
-
 
       {/* Contenido principal */}
       <div className="overflow-y-auto h[40em]">
         <div className="border border-gray-200 rounded-lg h-full flex flex-col">
           {error && <p className="text-red-500">{error}</p>}
-          <TransactionTable
-            entries={entries}
-            categories={categories}
-            accounts={accounts}
-            onDelete={handleDelete}
-            onEdit={openEditModal}
-            onOpenContentModal={openContentModal}
-            onOpenModal={openModal} />
+          {selectedEndpoint === "/incomes" ? (
+            <IncomeTable
+              entries={paginatedEntries} // Filtra para la paginación
+              categories={categories}
+              accounts={accounts}
+              onDelete={handleDelete}
+              onEdit={openEditModal}
+              onOpenContentModal={openContentModal}
+              onOpenModal={openModal}
+            />
+          ) : (
+            <TransactionTable
+              entries={paginatedEntries} // Filtra para la paginación
+              categories={categories}
+              accounts={accounts}
+              onDelete={handleDelete}
+              onEdit={openEditModal}
+              onOpenContentModal={openContentModal}
+              onOpenModal={openModal}
+            />
+          )}
         </div>
       </div>
 
       {/* Navegación de meses estilo Google Sheets */}
       <div className="fixed bottom-0 mx-0 w-full bg-gray-50 border-t border-gray-200 flex justify-center items-center py-2 z-4">
         <div className="flex items-center space-x-4">
-          <Button
-            type="text"
-            size="small"
-            icon={<LeftOutlined />}
-            onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-          />
+          <Button type="text" size="small" icon={<LeftOutlined />} onClick={handlePreviousMonth} />
 
           <div className="flex overflow-x-auto space-x-1 px-2">
             {getMonthsArray().map((date) => (
@@ -426,35 +380,16 @@ const TransactionsDashboard = () => {
             ))}
           </div>
 
-          <Button
-            type="text"
-            size="small"
-            icon={<RightOutlined />}
-            onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-          />
+          <Button type="text" size="small" icon={<RightOutlined />} onClick={handleNextMonth} />
         </div>
       </div>
 
-      <AddEntryModal
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        onTransactionAdded={handleEntryAdded}
-        transactionToEdit={editTransaction}
-        transactionType={transactionType}
-      />
+      {/* Modales */}
+      <AddEntryModal isOpen={isModalOpen} onClose={closeModal} onTransactionAdded={handleEntryAdded} transactionToEdit={editTransaction} transactionType={transactionType} />
 
-      <AddIncome
-        isOpen={isIncomeModalOpen}
-        onClose={closeIncomeModal}
-        onTransactionAdded={handleEntryAdded}
-        transactionToEdit={editTransaction}
-      />
+      <AddIncome isOpen={isIncomeModalOpen} onClose={closeIncomeModal} onTransactionAdded={handleEntryAdded} transactionToEdit={editTransaction} />
 
-      <NoteContentModal
-        isOpen={isContentModalOpen}
-        onClose={closeContentModal}
-        noteContent={selectedNoteContent}
-      />
+      <NoteContentModal isOpen={isContentModalOpen} onClose={closeContentModal} noteContent={selectedNoteContent} />
     </div>
   );
 };
