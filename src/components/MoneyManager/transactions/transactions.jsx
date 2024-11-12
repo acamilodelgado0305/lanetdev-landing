@@ -13,6 +13,7 @@ import {
 } from "../../../services/moneymanager/moneyService";
 import NoteContentModal from "./ViewImageModal";
 import TransactionTable from "./components/TransactionTable";
+import IncomeTable from "./components/IncomeTable";
 import { useAuth } from '../../Context/AuthProvider';
 import Header from "./components/Header";
 import { TrendingUp, DollarSign, CreditCard } from 'lucide-react';
@@ -335,15 +336,27 @@ const TransactionsDashboard = () => {
       <div className="overflow-y-auto h[40em]">
         <div className="border border-gray-200 rounded-lg h-full flex flex-col">
           {error && <p className="text-red-500">{error}</p>}
-          <TransactionTable
-            entries={paginatedEntries} // Filtra para la paginación
-            categories={categories}
-            accounts={accounts}
-            onDelete={handleDelete}
-            onEdit={openEditModal}
-            onOpenContentModal={openContentModal}
-            onOpenModal={openModal}
-          />
+          {selectedEndpoint === "/incomes" ? (
+            <IncomeTable
+              entries={paginatedEntries} // Filtra para la paginación
+              categories={categories}
+              accounts={accounts}
+              onDelete={handleDelete}
+              onEdit={openEditModal}
+              onOpenContentModal={openContentModal}
+              onOpenModal={openModal}
+            />
+          ) : (
+            <TransactionTable
+              entries={paginatedEntries} // Filtra para la paginación
+              categories={categories}
+              accounts={accounts}
+              onDelete={handleDelete}
+              onEdit={openEditModal}
+              onOpenContentModal={openContentModal}
+              onOpenModal={openModal}
+            />
+          )}
         </div>
       </div>
 
@@ -358,8 +371,8 @@ const TransactionsDashboard = () => {
                 key={date.getTime()}
                 onClick={() => setCurrentMonth(date)}
                 className={`px-4 py-1 text-xs rounded-t border-t-2 min-w-max ${formatDate(date, "yyyy-MM") === formatDate(currentMonth, "yyyy-MM")
-                    ? "bg-white text-blue-600 border-blue-600 font-medium"
-                    : "text-gray-600 hover:bg-gray-100 border-transparent"
+                  ? "bg-white text-blue-600 border-blue-600 font-medium"
+                  : "text-gray-600 hover:bg-gray-100 border-transparent"
                   }`}
               >
                 {formatDate(date, "MMMM yyyy")}
