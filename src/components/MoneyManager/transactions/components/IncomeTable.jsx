@@ -81,7 +81,10 @@ const IncomeTable = ({
         { title: 'Descripción', field: 'description', width: '200px' },
         { title: 'Cuenta', field: 'account', width: '150px' },
         { title: 'Categoría', field: 'category', width: '150px' },
-        { title: 'Monto', field: 'amount', width: '120px' },
+        { title: 'Monto Total', field: 'amount', width: '120px' },
+        { title: 'Monto FEV', field: 'amountfev', width: '120px' },  // Nueva columna
+        { title: 'Monto Diverse', field: 'amountdiverse', width: '120px' }, // Nueva columna
+        { title: 'Tipo', field: 'type', width: '100px' }, // Nueva columna
         { title: 'Comprobante', field: 'note', width: '120px' },
         { title: 'Acciones', field: 'actions', width: '100px' },
     ];
@@ -160,6 +163,15 @@ const IncomeTable = ({
                             </td>
                             <td className="border-r border-gray-200 p-2 truncate font-medium text-green-600">
                                 +{formatCurrency(entry.amount)}
+                            </td>
+                            <td className="border-r border-gray-200 p-2 truncate text-blue-600">
+                                +{formatCurrency(entry.amountfev)} {/* Mostrar amountfev */}
+                            </td>
+                            <td className="border-r border-gray-200 p-2 truncate text-blue-600">
+                                +{formatCurrency(entry.amountdiverse)} {/* Mostrar amountdiverse */}
+                            </td>
+                            <td className="border-r border-gray-200 p-2 truncate">
+                                {entry.type}
                             </td>
                             <td className="border-r border-gray-200 p-2 truncate">
                                 {entry.note ? (
