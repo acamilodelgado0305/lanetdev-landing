@@ -7,7 +7,8 @@ import { ArrowUpRight, ArrowDownRight, DollarSign, AlertCircle, Calendar, Trendi
 import { getAccounts, getCategories, getTransactions, getTransfers } from '../../../services/moneymanager/moneyService.js';
 import axios from 'axios';
 import { format as formatDate } from 'date-fns';
-import {  Link } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { BankOutlined, WalletOutlined } from '@ant-design/icons';
 
 const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
 
@@ -128,6 +129,8 @@ const Dashboard = () => {
   );
 
   if (error) return <div className="text-red-500 text-center p-4">{error}</div>;
+
+
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -252,10 +255,10 @@ const Dashboard = () => {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold text-gray-800">Transacciones Recientes</h2>
               <Link to="/index/moneymanager/transactions">
-              
-              <button className="text-indigo-600 hover:text-indigo-700 flex items-center">
-                Ver todas <ArrowRight size={16} className="ml-1" />
-              </button>
+
+                <button className="text-indigo-600 hover:text-indigo-700 flex items-center">
+                  Ver todas <ArrowRight size={16} className="ml-1" />
+                </button>
               </Link>
             </div>
             <div className="space-y-4">
@@ -283,31 +286,37 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Pending Payments */}
           <div className="bg-white p-6 rounded-xl shadow-sm">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold text-gray-800">Pagos Pendientes</h2>
+              <h2 className="text-lg font-semibold text-gray-800">Cuentas de la Empresa</h2>
               <button className="text-indigo-600 hover:text-indigo-700 flex items-center">
-                Ver todos <ArrowRight size={16} className="ml-1" />
+                Ver todas <ArrowRight size={16} className="ml-1" />
               </button>
             </div>
             <div className="space-y-4">
-              {pendingPayments.slice(0, 4).map((payment) => (
-                <div key={payment.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-4">
-                    <div className="p-2 rounded-lg bg-amber-100">
-                      <Calendar className="text-amber-600" size={20} />
+              {accounts
+                .filter((account) => account.type !== "Prestamos")
+                .slice(0, 4) // Limitar el número de cuentas mostradas
+                .map((account) => (
+                  <div key={account.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center space-x-4">
+                      <div className="p-2 rounded-lg bg-indigo-100">
+                        {account.type === "Dinero en Efectivo" ? (
+                          <WalletOutlined className="text-3xl text-indigo-500" />
+                        ) : (
+                          <BankOutlined className="text-3xl text-indigo-500" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-800">{account.name}</p>
+                        <p className="text-sm text-gray-500">{account.type}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-gray-800">{payment.description}</p>
-                      <p className="text-sm text-gray-500">Vence: {new Date(payment.dueDate).toLocaleDateString()}</p>
-                    </div>
+                    <span className="font-medium text-gray-800">
+                      {formatCurrency(account.balance)}
+                    </span>
                   </div>
-                  <span className="font-medium text-amber-600">
-                    {formatCurrency(payment.amount)}
-                  </span>
-                </div>
-              ))}
+                ))}
             </div>
           </div>
         </div>
