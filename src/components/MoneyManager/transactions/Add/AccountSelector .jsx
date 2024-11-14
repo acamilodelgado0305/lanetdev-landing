@@ -8,9 +8,9 @@ import {
   CheckCircleOutlined
 } from '@ant-design/icons';
 
-const AccountSelector = ({ 
-  accounts = [], 
-  selectedAccount, 
+const AccountSelector = ({
+  accounts = [],
+  selectedAccount,
   onAccountSelect,
   formatCurrency = (amount) => amount
 }) => {
@@ -68,11 +68,10 @@ const AccountSelector = ({
                 <Card
                   key={acc.id}
                   onClick={() => onAccountSelect(acc.id.toString())}
-                  className={`cursor-pointer transition-all hover:shadow-sm ${
-                    selectedAccount === acc.id.toString()
-                      ? 'border-green-500 border-2 bg-green-50'
-                      : 'hover:border-gray-300'
-                  }`}
+                  className={`cursor-pointer transition-all hover:shadow-sm ${selectedAccount === acc.id.toString()
+                    ? 'border-green-500 border-2 bg-green-50'
+                    : 'hover:border-gray-300'
+                    }`}
                   bodyStyle={{ padding: '8px' }}
                   size="small"
                 >
