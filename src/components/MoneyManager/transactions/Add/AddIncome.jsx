@@ -172,7 +172,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
 
 
 
- 
+
   const handleSave = async () => {
     try {
       if (!account || !category) {
@@ -184,7 +184,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
         });
         return;
       }
-  
+
       // Verificar que el monto no sea 0 o vacío
       if (!rawAmount && category !== arqueoCategoryId?.toString()) {
         Swal.fire({
@@ -195,7 +195,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
         });
         return;
       }
-  
+
       // Si es categoría Arqueo, verificar que al menos uno de los montos no sea 0
       if (category === arqueoCategoryId?.toString() && !rawFevAmount && !rawDiversoAmount) {
         Swal.fire({
@@ -206,19 +206,28 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
         });
         return;
       }
-  
+
+      let transactionType;
+      // Determinar el tipo de transacción
+      if (category === ventaCategoryId?.toString()) {
+        transactionType = isFevChecked ? "FEV*" : "arqueo";
+      } else {
+        transactionType = "arqueo"; // tipo por defecto para otras categorías
+      }
+
+
       let requestBody = {
-        user_id: 1, // Asegúrate de obtener el user_id correcto
+        user_id: sessionStorage.getItem('userId'),
         account_id: parseInt(account),
         category_id: parseInt(category),
-        type: "income",
+        type: transactionType, // Usar el tipo determinado por la condición
         date: date.format("YYYY-MM-DD[T]HH:mm:ss[Z]"),
         note: note,
         description: description,
         estado: true
       };
-  
-      // Añadir campos específicos según la categoría
+
+
       if (category === ventaCategoryId?.toString()) {
         requestBody = {
           ...requestBody,
@@ -236,7 +245,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
           amount: rawAmount
         };
       }
-  
+
       const response = await fetch(`${apiUrl}/incomes`, {
         method: isEditing ? "PUT" : "POST",
         headers: {
@@ -244,22 +253,22 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
         },
         body: JSON.stringify(requestBody),
       });
-  
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-  
+
       const result = await response.json();
-  
+
       Swal.fire({
         icon: "success",
         title: isEditing ? "Ingreso Actualizado" : "Ingreso Registrado",
-        text: isEditing 
-          ? "El ingreso se ha actualizado correctamente" 
+        text: isEditing
+          ? "El ingreso se ha actualizado correctamente"
           : "El ingreso se ha registrado correctamente",
         confirmButtonColor: "#3085d6",
       });
-  
+
       // Limpiar el formulario
       setAmount("");
       setRawAmount("");
@@ -273,13 +282,13 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
       setDescription("");
       setImageUrls([]);
       setDate(dayjs());
-  
+
       // Cerrar el modal y actualizar la lista
       onClose();
       if (onTransactionAdded) {
         onTransactionAdded();
       }
-  
+
     } catch (error) {
       console.error("Error al guardar el ingreso:", error);
       Swal.fire({
