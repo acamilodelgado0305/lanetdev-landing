@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Button, Input, Select, Form } from "antd";
+import { Button, Input, Select, Form, Switch } from "antd";
 import {
     CloseOutlined,
     UserOutlined,
@@ -9,12 +9,14 @@ import {
     MailOutlined,
     FileTextOutlined,
     BarcodeOutlined,
+    GlobalOutlined,
+    CheckCircleOutlined,
 } from "@ant-design/icons";
 import Swal from "sweetalert2";
 
 const { Option } = Select;
 
-const apiUrl = import.meta.env.VITE_API_PROVIDERS;
+const apiUrl = import.meta.env.VITE_API_FINANZAS;
 
 const AddProvider = ({ isOpen, onClose, onProviderAdded, providerToEdit }) => {
     const [form] = Form.useForm();
@@ -33,7 +35,7 @@ const AddProvider = ({ isOpen, onClose, onProviderAdded, providerToEdit }) => {
     const handleSave = async () => {
         try {
             const values = await form.validateFields();
-
+            console.log(values);
             const method = isEditing ? "PUT" : "POST";
             const endpoint = isEditing
                 ? `${apiUrl}/providers/${providerToEdit.id}`
@@ -149,8 +151,15 @@ const AddProvider = ({ isOpen, onClose, onProviderAdded, providerToEdit }) => {
                             <Input />
                         </Form.Item>
 
-                        <Form.Item label="Tipo de Régimen" name="tipo_regimen">
-                            <Input />
+                        <Form.Item
+                            label="Tipo de Régimen"
+                            name="tipo_regimen"
+                            rules={[{ required: true, message: "Campo requerido" }]}
+                        >
+                            <Select placeholder="Seleccione el régimen">
+                                <Option value="Simplificado">Simplificado</Option>
+                                <Option value="Común">Común</Option>
+                            </Select>
                         </Form.Item>
 
                         <Form.Item label="Dirección" name="direccion">
@@ -163,6 +172,10 @@ const AddProvider = ({ isOpen, onClose, onProviderAdded, providerToEdit }) => {
 
                         <Form.Item label="Departamento" name="departamento">
                             <Input />
+                        </Form.Item>
+
+                        <Form.Item label="País" name="pais" initialValue="Colombia">
+                            <Input prefix={<GlobalOutlined />} />
                         </Form.Item>
 
                         <Form.Item label="Teléfono" name="telefono">
@@ -184,16 +197,23 @@ const AddProvider = ({ isOpen, onClose, onProviderAdded, providerToEdit }) => {
                             <Input />
                         </Form.Item>
 
-                        <Form.Item label="Código Actividad Económica" name="codigo_actividad_economica">
-                            <Input />
-                        </Form.Item>
-
-                        <Form.Item label="Responsabilidad Fiscal" name="responsabilidad_fiscal">
-                            <Input />
+                        <Form.Item
+                            label="Responsabilidad Fiscal"
+                            name="responsabilidad_fiscal"
+                            rules={[{ required: true, message: "Campo requerido" }]}
+                        >
+                            <Select placeholder="Seleccione la responsabilidad">
+                                <Option value="R-99-NG">R-99-NG</Option>
+                                <Option value="R-99-PN">R-99-PN</Option>
+                            </Select>
                         </Form.Item>
 
                         <Form.Item label="Matrícula Mercantil" name="matricula_mercantil">
                             <Input />
+                        </Form.Item>
+
+                        <Form.Item label="Estado" name="estado" valuePropName="checked">
+                            <Switch checkedChildren="Activo" unCheckedChildren="Inactivo" />
                         </Form.Item>
 
                         <Form.Item>

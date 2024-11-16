@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import ProvidersTable from "./ProvidersTable"; // Tu componente de la tabla
-import AddProviderModal from "./AddProvider"; // Tu componente del modal
+import ProvidersTable from "./ProvidersTable";
+import AddProviderModal from "./AddProvider";
+import ProviderDetailsModal from "./ProviderDetailsModal";
 import { Button } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import axios from "axios";
@@ -9,8 +10,11 @@ const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
 
 const ProvidersPage = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
     const [providers, setProviders] = useState([]);
-    const [providerToEdit, setProviderToEdit] = useState(null); // Estado para edición
+    const [providerToEdit, setProviderToEdit] = useState(null);
+    const [providerToView, setProviderToView] = useState(null);
+
 
     // Función para obtener los proveedores
     const fetchProviders = async () => {
@@ -37,17 +41,31 @@ const ProvidersPage = () => {
         setProviderToEdit(provider); // Establecer el proveedor a editar
         setIsModalOpen(true); // Abrir el modal
     };
-
+    const handleViewProvider = (provider) => {
+        setProviderToView(provider);
+        setIsDetailsModalOpen(true);
+    };
     const handleModalClose = () => {
-        setProviderToEdit(null); // Limpiar el estado de edición
-        setIsModalOpen(false); // Cerrar el modal
+        setProviderToEdit(null);
+        setIsModalOpen(false);
     };
 
     const handleProviderAdded = async () => {
-        await fetchProviders(); // Refresca los proveedores después de agregar/editar
-        handleModalClose(); // Cierra el modal
+        await fetchProviders();
+        handleModalClose();
     };
-
+    const handleDetailsModalClose = () => {
+        setProviderToView(null);
+        setIsDetailsModalOpen(false);
+    };
+    const handleDeleteProvider = async (provider) => {
+        try {
+            await axios.delete(`${API_BASE_URL}/providers/${provider.id}`);
+            await fetchProviders();
+        } catch (error) {
+            console.error("Error al eliminar el proveedor:", error);
+        }
+    };
     return (
         <div className="p-6">
             <div className="flex justify-between items-center mb-4">
@@ -64,9 +82,9 @@ const ProvidersPage = () => {
             {/* Tabla de proveedores */}
             <ProvidersTable
                 providers={providers}
-                onDelete={fetchProviders} // Puedes reemplazarlo por una función más específica
-                onEdit={handleEditProvider} // Pasar la función para editar
-                onView={(provider) => console.log("Ver detalles del proveedor:", provider)}
+                onDelete={handleDeleteProvider}
+                onEdit={handleEditProvider}
+                onView={handleViewProvider}
             />
 
             {/* Modal de registro/edición */}
@@ -74,7 +92,13 @@ const ProvidersPage = () => {
                 isOpen={isModalOpen}
                 onClose={handleModalClose}
                 onProviderAdded={handleProviderAdded}
-                providerToEdit={providerToEdit} // Pasar el proveedor a editar
+                providerToEdit={providerToEdit}
+            />
+            {/* Modal de detalles */}
+            <ProviderDetailsModal
+                isOpen={isDetailsModalOpen}
+                onClose={handleDetailsModalClose}
+                provider={providerToView}
             />
         </div>
     );
