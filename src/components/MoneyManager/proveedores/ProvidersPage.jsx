@@ -10,6 +10,7 @@ const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
 const ProvidersPage = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [providers, setProviders] = useState([]);
+    const [providerToEdit, setProviderToEdit] = useState(null); // Estado para edición
 
     // Función para obtener los proveedores
     const fetchProviders = async () => {
@@ -26,12 +27,25 @@ const ProvidersPage = () => {
         fetchProviders();
     }, []);
 
-    const handleAddProvider = () => setIsModalOpen(true);
-    const handleModalClose = () => setIsModalOpen(false);
+    // Manejo del modal
+    const handleAddProvider = () => {
+        setProviderToEdit(null); // Limpiar el estado de edición
+        setIsModalOpen(true); // Abrir el modal
+    };
+
+    const handleEditProvider = (provider) => {
+        setProviderToEdit(provider); // Establecer el proveedor a editar
+        setIsModalOpen(true); // Abrir el modal
+    };
+
+    const handleModalClose = () => {
+        setProviderToEdit(null); // Limpiar el estado de edición
+        setIsModalOpen(false); // Cerrar el modal
+    };
 
     const handleProviderAdded = async () => {
-        await fetchProviders(); // Refresca los proveedores después de agregar uno nuevo
-        setIsModalOpen(false); // Cierra el modal
+        await fetchProviders(); // Refresca los proveedores después de agregar/editar
+        handleModalClose(); // Cierra el modal
     };
 
     return (
@@ -51,15 +65,16 @@ const ProvidersPage = () => {
             <ProvidersTable
                 providers={providers}
                 onDelete={fetchProviders} // Puedes reemplazarlo por una función más específica
-                onEdit={(provider) => console.log("Editar proveedor:", provider)}
+                onEdit={handleEditProvider} // Pasar la función para editar
                 onView={(provider) => console.log("Ver detalles del proveedor:", provider)}
             />
 
-            {/* Modal de registro */}
+            {/* Modal de registro/edición */}
             <AddProviderModal
                 isOpen={isModalOpen}
                 onClose={handleModalClose}
                 onProviderAdded={handleProviderAdded}
+                providerToEdit={providerToEdit} // Pasar el proveedor a editar
             />
         </div>
     );
