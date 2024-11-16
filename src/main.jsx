@@ -16,6 +16,7 @@ import WhatsAppWeb from "./components/communication/WhatsAppWeb";
 import AccountContent from "./components/MoneyManager/accounts/accounts";
 import TransactionsDashboard from "./components/MoneyManager/transactions/transactions";
 import Categories from "./components/MoneyManager/categories/Categories";
+import ProvidersPage from "./components/MoneyManager/proveedores/ProvidersPage.jsx";
 import { AuthProvider } from './components/Context/AuthProvider';
 import { SocketProvider } from './components/Context/SocketContext';
 import EmailManagement from './components/communication/EmailManagement';
@@ -72,6 +73,10 @@ const router = createBrowserRouter([
           {
             path: "categorias",
             element: <Categories />,
+          },
+          {
+            path: "proveedores",
+            element: <ProvidersPage />,
           },
           {
             path: "calendario",

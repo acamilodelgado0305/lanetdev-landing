@@ -93,6 +93,9 @@ const Header = () => {
                   <NavItem to="/index/moneymanager/categorias" icon={User}>
                     Categorías
                   </NavItem>
+                  <NavItem to="/index/moneymanager/proveedores" icon={User}>
+                    Proveedores
+                  </NavItem>
 
                   <NavItem to="/index/moneymanager/calendario" icon={CreditCard}>
                     Calendario
