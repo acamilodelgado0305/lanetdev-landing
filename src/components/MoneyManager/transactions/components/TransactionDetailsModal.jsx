@@ -1,14 +1,39 @@
-import React from "react";
-import { Button } from "antd";
+import React, { useState } from "react";
+import { Button, Modal } from "antd";
 import {
     CloseOutlined,
     EditOutlined,
     DeleteOutlined,
     FileTextOutlined,
     PrinterOutlined,
+    ExclamationCircleOutlined,
 } from "@ant-design/icons";
 
-const TransactionDetailModal = ({ isOpen, onClose, entry, getCategoryName, getAccountName, formatCurrency }) => {
+const TransactionDetailModal = ({
+    isOpen,
+    onClose,
+    entry,
+    getCategoryName,
+    getAccountName,
+    formatCurrency,
+}) => {
+    const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+
+    const showDeleteModal = () => {
+        setDeleteModalOpen(true);
+    };
+
+    const handleDelete = () => {
+        // Aquí agregar lógica para eliminar el ingreso (e.g., llamada a API)
+        console.log("Ingreso eliminado:", entry.id);
+        setDeleteModalOpen(false);
+        onClose(); // Cerrar el modal de detalles después de eliminar
+    };
+
+    const handleCancelDelete = () => {
+        setDeleteModalOpen(false);
+    };
+
     if (!isOpen || !entry) return null;
 
     return (
@@ -20,7 +45,7 @@ const TransactionDetailModal = ({ isOpen, onClose, entry, getCategoryName, getAc
                         <div className="bg-blue-100 p-2 rounded-full">
                             <FileTextOutlined className="text-blue-500 text-xl" />
                         </div>
-                        <h2 className="text-xl font-semibold">Detalle del Ingreso</h2>
+                        <h2 className="text-xl font-semibold">Detalle de la Transacción</h2>
                     </div>
                     <Button
                         type="text"
@@ -31,7 +56,7 @@ const TransactionDetailModal = ({ isOpen, onClose, entry, getCategoryName, getAc
                 </div>
                 <hr className="border-t-2 border-blue-500 mb-4" />
 
-                {/* Información principal */}
+                {/* Descripción principal */}
                 <h3 className="text-lg font-semibold">{entry.description}</h3>
                 <p className="text-sm text-gray-500">Transacción #{entry.id}</p>
 
@@ -40,25 +65,31 @@ const TransactionDetailModal = ({ isOpen, onClose, entry, getCategoryName, getAc
                     <p className="text-xl font-bold text-gray-800">
                         {formatCurrency(entry.amount)}
                         <span className="ml-2 px-2 py-1 text-sm text-blue-600 bg-blue-100 rounded">
-                            {entry.status || "Pendiente"}
+                            {entry.estado ? "Activo" : "Inactivo"}
                         </span>
                     </p>
                     <div className="grid grid-cols-2 gap-4 mt-4">
                         <div>
                             <p className="text-sm text-gray-500">Fecha y hora</p>
-                            <p className="font-medium">{new Date(entry.date).toLocaleString()}</p>
+                            <p className="font-medium">
+                                {new Date(entry.date).toLocaleString()}
+                            </p>
                         </div>
                         <div>
-                            <p className="text-sm text-gray-500">Método de pago</p>
-                            <p className="font-medium">{entry.paymentMethod || "N/A"}</p>
+                            <p className="text-sm text-gray-500">Usuario</p>
+                            <p className="font-medium">{entry.user_id || "Desconocido"}</p>
                         </div>
                         <div>
                             <p className="text-sm text-gray-500">Categoría</p>
-                            <p className="font-medium">{getCategoryName(entry.category_id)}</p>
+                            <p className="font-medium">
+                                {getCategoryName(entry.category_id)}
+                            </p>
                         </div>
                         <div>
                             <p className="text-sm text-gray-500">Cuenta</p>
-                            <p className="font-medium">{getAccountName(entry.account_id)}</p>
+                            <p className="font-medium">
+                                {getAccountName(entry.account_id)}
+                            </p>
                         </div>
                         <div>
                             <p className="text-sm text-gray-500">Monto FEV</p>
@@ -72,50 +103,80 @@ const TransactionDetailModal = ({ isOpen, onClose, entry, getCategoryName, getAc
                                 {formatCurrency(entry.amountdiverse || 0)}
                             </p>
                         </div>
+                        <div>
+                            <p className="text-sm text-gray-500">Tipo</p>
+                            <p className="font-medium">{entry.type || "Desconocido"}</p>
+                        </div>
+                        <div>
+                            <p className="text-sm text-gray-500">Estado</p>
+                            <p className="font-medium">
+                                {entry.estado ? "Activo" : "Inactivo"}
+                            </p>
+                        </div>
+                        {entry.note && (
+                            <div className="col-span-2">
+                                <p className="text-sm text-gray-500">Nota</p>
+                                <p className="font-medium">{entry.note}</p>
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                {/* Resumen adicional */}
-                <h4 className="text-lg font-semibold">Detalles adicionales</h4>
-                <p className="mt-2 text-sm text-gray-500">
-                    Tipo de ingreso: <span className="font-medium">{entry.type || "N/A"}</span>
-                </p>
-                {entry.note && (
-                    <p className="mt-2 text-sm text-gray-500">
-                        Nota: <span className="font-medium">{entry.note}</span>
-                    </p>
-                )}
-
-                {/* Botones inferiores */}
+                {/* Botones de acción */}
                 <div className="fixed bottom-0 left-0 right-0 bg-white p-4 border-t flex justify-around">
                     <Button
-                        icon={<PrinterOutlined />}
-                        className="flex items-center justify-center w-24"
+                        className="flex flex-col items-center text-blue-600 hover:text-blue-800"
+                        icon={
+                            <PrinterOutlined style={{ fontSize: "2rem", color: "#2563eb" }} />
+                        }
                     >
-                        Imprimir
+                        <span className="text-sm mt-1 font-semibold">Imprimir</span>
                     </Button>
                     <Button
-                        icon={<FileTextOutlined />}
-                        className="flex items-center justify-center w-24"
+                        className="flex flex-col items-center text-green-600 hover:text-green-800"
+                        icon={
+                            <FileTextOutlined style={{ fontSize: "2rem", color: "#16a34a" }} />
+                        }
                     >
-                        Comprobante
+                        <span className="text-sm mt-1 font-semibold">Comprobante</span>
                     </Button>
                     <Button
-                        type="primary"
-                        icon={<EditOutlined />}
-                        className="flex items-center justify-center w-24"
+                        className="flex flex-col items-center text-yellow-600 bg-yellow-100 hover:bg-yellow-200"
+                        icon={
+                            <EditOutlined style={{ fontSize: "2rem", color: "#ca8a04" }} />
+                        }
                     >
-                        Editar
+                        <span className="text-sm mt-1 font-semibold text-yellow-600">Editar</span>
                     </Button>
                     <Button
                         danger
-                        icon={<DeleteOutlined />}
-                        className="flex items-center justify-center w-24"
+                        className="flex flex-col items-center text-red-600 hover:text-red-800"
+                        icon={
+                            <DeleteOutlined style={{ fontSize: "2rem", color: "#dc2626" }} />
+                        }
+                        onClick={showDeleteModal}
                     >
-                        Eliminar
+                        <span className="text-sm mt-1 font-semibold">Eliminar</span>
                     </Button>
                 </div>
             </div>
+
+            {/* Modal de confirmación de eliminación */}
+            <Modal
+                title="Confirmar Eliminación"
+                open={isDeleteModalOpen}
+                onOk={handleDelete}
+                onCancel={handleCancelDelete}
+                okText="Eliminar"
+                cancelText="Cancelar"
+                okButtonProps={{ danger: true }}
+                icon={<ExclamationCircleOutlined />}
+            >
+                <p>
+                    ¿Está seguro de que desea eliminar este ingreso:{" "}
+                    <strong>{entry.description}</strong>?
+                </p>
+            </Modal>
         </div>
     );
 };

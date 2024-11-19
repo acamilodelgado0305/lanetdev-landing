@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Button, Dropdown, Menu } from "antd";
+import { Button, Dropdown, Menu, Tooltip } from "antd";
 import { format as formatDate } from "date-fns";
 import { FilterOutlined, CaretDownOutlined } from "@ant-design/icons";
 import _ from "lodash";
@@ -128,42 +128,48 @@ const IncomeTable = ({ entries, categories = [], accounts = [] }) => {
                     </thead>
                     <tbody>
                         {entries.map((entry, rowIndex) => (
-                            <tr
+                            <Tooltip
                                 key={rowIndex}
-                                className={`border-b hover:bg-gray-50 ${hoveredRow === rowIndex ? "bg-gray-50" : ""
-                                    }`}
-                                onMouseEnter={() => setHoveredRow(rowIndex)}
-                                onMouseLeave={() => setHoveredRow(null)}
-                                onClick={() => openModal(entry)}
+                                title={`Fila: ${rowIndex + 1}, Descripción: ${entry.description}`}
+                                placement="top"
                             >
-                                <td className="border-r border-gray-200 p-2 truncate">
-                                    {formatDate(new Date(entry.date), "d MMM yyyy")}
-                                </td>
-                                <td className="border-r border-gray-200 p-2 truncate">
-                                    {entry.description}
-                                </td>
-                                <td className="border-r border-gray-200 p-2 truncate">
-                                    {getAccountName(entry.account_id)}
-                                </td>
-                                <td className="border-r border-gray-200 p-2 truncate">
-                                    {getCategoryName(entry.category_id)}
-                                </td>
-                                <td className="border-r border-gray-200 p-2 truncate font-medium text-green-600">
-                                    +{formatCurrency(entry.amount)}
-                                </td>
-                                <td className="border-r border-gray-200 p-2 truncate text-blue-600">
-                                    +{formatCurrency(entry.amountfev)}
-                                </td>
-                                <td className="border-r border-gray-200 p-2 truncate text-blue-600">
-                                    +{formatCurrency(entry.amountdiverse)}
-                                </td>
-                                <td className="border-r border-gray-200 p-2 truncate">
-                                    {entry.type}
-                                </td>
-                                <td className="border-r border-gray-200 p-2 truncate">
-                                    {entry.note || "—"}
-                                </td>
-                            </tr>
+                                <tr
+                                    style={{ cursor: "pointer" }}
+                                    className={`border-b hover:bg-gray-50 ${hoveredRow === rowIndex ? "bg-gray-50" : ""
+                                        }`}
+                                    onMouseEnter={() => setHoveredRow(rowIndex)}
+                                    onMouseLeave={() => setHoveredRow(null)}
+                                    onClick={() => openModal(entry)}
+                                >
+                                    <td className="border-r border-gray-200 p-2 truncate">
+                                        {formatDate(new Date(entry.date), "d MMM yyyy")}
+                                    </td>
+                                    <td className="border-r border-gray-200 p-2 truncate">
+                                        {entry.description}
+                                    </td>
+                                    <td className="border-r border-gray-200 p-2 truncate">
+                                        {getAccountName(entry.account_id)}
+                                    </td>
+                                    <td className="border-r border-gray-200 p-2 truncate">
+                                        {getCategoryName(entry.category_id)}
+                                    </td>
+                                    <td className="border-r border-gray-200 p-2 truncate font-medium text-green-600">
+                                        +{formatCurrency(entry.amount)}
+                                    </td>
+                                    <td className="border-r border-gray-200 p-2 truncate text-blue-600">
+                                        +{formatCurrency(entry.amountfev)}
+                                    </td>
+                                    <td className="border-r border-gray-200 p-2 truncate text-blue-600">
+                                        +{formatCurrency(entry.amountdiverse)}
+                                    </td>
+                                    <td className="border-r border-gray-200 p-2 truncate">
+                                        {entry.type}
+                                    </td>
+                                    <td className="border-r border-gray-200 p-2 truncate">
+                                        {entry.note || "—"}
+                                    </td>
+                                </tr>
+                            </Tooltip>
                         ))}
                     </tbody>
                 </table>
