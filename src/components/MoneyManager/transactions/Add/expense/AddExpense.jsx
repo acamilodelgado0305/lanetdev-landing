@@ -3,7 +3,7 @@ import { IoClose } from "react-icons/io5";
 import AccountSelector from "../AccountSelector ";
 import CategorySelector from '../CategorySelector';
 import TypeSelector from './TypeSelector';
-import { DatePicker, Input, Button, Select } from "antd";
+import { DatePicker, Input, Button, Select, Switch, Radio } from "antd";
 import {
   DollarCircleOutlined,
   CloseOutlined,
@@ -36,6 +36,16 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
   const [provider, setProvider] = useState("");
   const [providers, setProviders] = useState([]);
   const [finalAmount, setFinalAmount] = useState(0);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurringDuration, setRecurringDuration] = useState(3);
+
+  // Nuevos estados para IVA y retención
+  const [hasIva, setHasIva] = useState(true);
+  const [hasRetefuente, setHasRetefuente] = useState(false);
+  const [retefuentePercentage, setRetefuentePercentage] = useState(2.5);
+  const [ivaAmount, setIvaAmount] = useState(0);
+  const [retefuenteAmount, setRetefuenteAmount] = useState(0);
+
 
   useEffect(() => {
     fetchCategories();
@@ -98,31 +108,6 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
     setAmount(new Intl.NumberFormat("es-CO").format(numericValue));
   };
 
-  const handleImageUpload = async (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length > 0) {
-      setIsUploading(true);
-      try {
-        const uploadedImageUrls = await Promise.all(files.map(async (file) => {
-          const uploadedImageUrl = await uploadImage(file);
-          return uploadedImageUrl;
-        }));
-
-        setImageUrls((prevUrls) => [...prevUrls, ...uploadedImageUrls]);
-        setNote((prevNote) => `${prevNote}\n${uploadedImageUrls.join("\n")}`);
-      } catch (error) {
-        console.error("Error al subir las imágenes:", error);
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: "No se pudieron subir algunas imágenes. Por favor, intente de nuevo.",
-          confirmButtonColor: "#d33",
-        });
-      } finally {
-        setIsUploading(false);
-      }
-    }
-  };
 
   const handleSave = async () => {
     try {
@@ -146,43 +131,84 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
         return;
       }
 
-      const requestBody = {
+      // Preparar el objeto base para la solicitud
+      const baseRequestBody = {
         user_id: sessionStorage.getItem('userId'),
         account_id: parseInt(account),
         category_id: parseInt(category),
-        amount: rawAmount,
+        base_amount: rawAmount, // Importe base
+        amount: finalAmount, // Importe total
         type: type,
         date: date.format("YYYY-MM-DD[T]HH:mm:ss[Z]"),
         note: note,
         description: description,
-        estado: true
+        provider_id: provider || null,
+        recurrent: isRecurring,
+        timerecurrent: isRecurring ? (recurringDuration === 'indefinido' ? 999999 : parseInt(recurringDuration)) : null,
+        estado: true,
+        // Campos de impuestos
+        tax_type: hasIva ? 'IVA' : null,
+        tax_percentage: hasIva ? 19.00 : null,
+        tax_amount: hasIva ? ivaAmount : null,
+        retention_type: hasRetefuente ? 'RETEFUENTE' : null,
+        retention_percentage: hasRetefuente ? retefuentePercentage : null,
+        retention_amount: hasRetefuente ? retefuenteAmount : null
       };
 
-      const response = await fetch(`${apiUrl}/expenses`, {
-        method: isEditing ? "PUT" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
+      // Si es recurrente, crear array de solicitudes para todos los meses
+      const requests = [];
+
+      // Primera transacción (estado true)
+      requests.push({
+        ...baseRequestBody,
+        estado: true
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      // Si es recurrente, agregar transacciones adicionales
+      if (isRecurring && recurringDuration !== 'indefinido') {
+        const months = parseInt(recurringDuration);
+        for (let i = 1; i < months; i++) {
+          requests.push({
+            ...baseRequestBody,
+            date: date.add(i, 'month').format("YYYY-MM-DD[T]HH:mm:ss[Z]"),
+            estado: false
+          });
+        }
       }
 
-      const result = await response.json();
+      // Realizar todas las solicitudes
+      const responses = await Promise.all(
+        requests.map(requestBody =>
+          fetch(`${apiUrl}/expenses`, {
+            method: isEditing ? "PUT" : "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(requestBody),
+          })
+        )
+      );
+
+      // Verificar si todas las solicitudes fueron exitosas
+      const allSuccessful = responses.every(response => response.ok);
+
+      if (!allSuccessful) {
+        throw new Error('Algunas transacciones no pudieron ser creadas');
+      }
 
       Swal.fire({
         icon: "success",
         title: isEditing ? "Transacción Actualizada" : "Transacción Registrada",
-        text: isEditing
-          ? "La transacción se ha actualizado correctamente"
+        text: isRecurring
+          ? `Se han creado ${requests.length} transacciones recurrentes`
           : "La transacción se ha registrado correctamente",
         confirmButtonColor: "#3085d6",
       });
 
+      // Limpiar el formulario
       setAmount("");
       setRawAmount("");
+      setFinalAmount(0);
       setCategory("");
       setAccount("");
       setNote("");
@@ -190,6 +216,13 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
       setImageUrls([]);
       setDate(dayjs());
       setType("gasto");
+      setIsRecurring(false);
+      setRecurringDuration(3);
+      setHasIva(true);
+      setHasRetefuente(false);
+      setRetefuentePercentage(2.5);
+      setIvaAmount(0);
+      setRetefuenteAmount(0);
 
       onClose();
       if (onTransactionAdded) {
@@ -231,6 +264,42 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
           </Select.Option>
         ))}
       </Select>
+    </div>
+  );
+
+
+  const RecurringExpenseSelector = () => (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <label className="block text-sm font-medium text-gray-700">
+          Gasto Recurrente
+        </label>
+        <Switch
+          checked={isRecurring}
+          onChange={setIsRecurring}
+          className={isRecurring ? "bg-red-500" : "bg-gray-200"}
+        />
+      </div>
+
+      {isRecurring && (
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Duración de la Recurrencia
+          </label>
+          <Radio.Group
+            value={recurringDuration}
+            onChange={(e) => setRecurringDuration(e.target.value)}
+            className="w-full"
+          >
+            <div className="grid grid-cols-2 gap-2">
+              <Radio.Button value={3} className="text-center">3 meses</Radio.Button>
+              <Radio.Button value={6} className="text-center">6 meses</Radio.Button>
+              <Radio.Button value={12} className="text-center">12 meses</Radio.Button>
+              <Radio.Button value="indefinido" className="text-center">Indefinido</Radio.Button>
+            </div>
+          </Radio.Group>
+        </div>
+      )}
     </div>
   );
 
@@ -279,7 +348,6 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
 
 
         <div className="pt-3 px-4 space-y-6">
-          {/* Fecha e Importe */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -298,6 +366,14 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
               rawAmount={rawAmount}
               setRawAmount={setRawAmount}
               setFinalAmount={setFinalAmount}
+              hasIva={hasIva}
+              setHasIva={setHasIva}
+              hasRetefuente={hasRetefuente}
+              setHasRetefuente={setHasRetefuente}
+              retefuentePercentage={retefuentePercentage}
+              setRetefuentePercentage={setRetefuentePercentage}
+              setIvaAmount={setIvaAmount}
+              setRetefuenteAmount={setRetefuenteAmount}
             />
           </div>
 
@@ -324,6 +400,8 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
           />
 
           <div className="h-0.5 bg-red-200" />
+
+          <RecurringExpenseSelector />
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
