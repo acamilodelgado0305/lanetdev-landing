@@ -4,7 +4,8 @@ import { format as formatDate, startOfMonth, endOfMonth, subMonths, addMonths } 
 import axios from "axios";
 import { Modal, message, Input, Select, Button } from "antd";
 import AddEntryModal from "./addModal";
-import AddIncome from "./Add/AddIncome";
+import AddIncome from "./Add/Income/AddIncome";
+import AddExpense from "./Add/expense/AddExpense";
 import {
   getAccounts,
   getCategories,
@@ -36,6 +37,7 @@ const TransactionsDashboard = () => {
   const [selectedNoteContent, setSelectedNoteContent] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isIncomeModalOpen, setIsIncomeModalOpen] = useState(false);
+  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [transactionType, setTransactionType] = useState(null);
   const [error, setError] = useState(null);
   const [entries, setEntries] = useState([]);
@@ -81,8 +83,7 @@ const TransactionsDashboard = () => {
   };
 
   const openExpenseModal = () => {
-    setTransactionType('expense');
-    setIsModalOpen(true);
+    setIsExpenseModalOpen(true);
     setEditTransaction(null);
   };
 
@@ -99,6 +100,12 @@ const TransactionsDashboard = () => {
 
   const closeIncomeModal = () => {
     setIsIncomeModalOpen(false);
+    setEditTransaction(null);
+  };
+
+  const closeExpenseModal = () => {
+    setIsExpenseModalOpen(false);
+    setEditTransaction(null);
   };
 
   // Consolidar la función para cargar datos de acuerdo con el endpoint
@@ -387,7 +394,20 @@ const TransactionsDashboard = () => {
       {/* Modales */}
       <AddEntryModal isOpen={isModalOpen} onClose={closeModal} onTransactionAdded={handleEntryAdded} transactionToEdit={editTransaction} transactionType={transactionType} />
 
-      <AddIncome isOpen={isIncomeModalOpen} onClose={closeIncomeModal} onTransactionAdded={handleEntryAdded} transactionToEdit={editTransaction} />
+      <AddIncome
+        isOpen={isIncomeModalOpen}
+        onClose={closeIncomeModal}
+        onTransactionAdded={handleEntryAdded}
+        transactionToEdit={editTransaction}
+      />
+
+      <AddExpense
+        isOpen={isExpenseModalOpen}
+        onClose={closeExpenseModal}
+        onTransactionAdded={handleEntryAdded}
+        transactionToEdit={editTransaction}
+      />
+
 
       <NoteContentModal isOpen={isContentModalOpen} onClose={closeContentModal} noteContent={selectedNoteContent} />
     </div>
