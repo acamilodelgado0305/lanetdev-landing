@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button, Modal } from "antd";
 import {
     CloseOutlined,
@@ -9,6 +9,8 @@ import {
     ExclamationCircleOutlined,
 } from "@ant-design/icons";
 
+import { getUserById } from "../../../../services/apiService";
+import { useAuth } from "../../../Context/AuthProvider";
 const TransactionDetailModal = ({
     isOpen,
     onClose,
@@ -18,6 +20,25 @@ const TransactionDetailModal = ({
     formatCurrency,
 }) => {
     const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [userName, setUserName] = useState("Cargando...");
+    const { authToken } = useAuth();
+
+    useEffect(() => {
+        if (isOpen && entry?.user_id && authToken) {
+            fetchUserName(entry.user_id, authToken);
+        }
+    }, [isOpen, entry, authToken]);
+
+    const fetchUserName = async (userId, token) => {
+        try {
+            const userData = await getUserById(userId, token);
+            setUserName(userData.username || "Desconocido");
+        } catch (error) {
+            console.error("Error al obtener el usuario:", error);
+            setUserName("Desconocido");
+        }
+    };
+
 
     const showDeleteModal = () => {
         setDeleteModalOpen(true);
@@ -45,7 +66,7 @@ const TransactionDetailModal = ({
                         <div className="bg-blue-100 p-2 rounded-full">
                             <FileTextOutlined className="text-blue-500 text-xl" />
                         </div>
-                        <h2 className="text-xl font-semibold">Detalle de la Transacción</h2>
+                        <h2 className="text-xl font-semibold">Detalle del Ingreso</h2>
                     </div>
                     <Button
                         type="text"
@@ -57,14 +78,17 @@ const TransactionDetailModal = ({
                 <hr className="border-t-2 border-blue-500 mb-4" />
 
                 {/* Descripción principal */}
-                <h3 className="text-lg font-semibold">{entry.description}</h3>
-                <p className="text-sm text-gray-500">Transacción #{entry.id}</p>
+                <div>
+                    <p className="text-xl font-semibold">Usuario</p>
+                    <p className="font-medium">{userName || "Desconocido"}</p>
+                </div>
+
 
                 {/* Detalles del ingreso */}
                 <div className="bg-gray-50 p-4 rounded-lg my-4">
                     <p className="text-xl font-bold text-gray-800">
-                        {formatCurrency(entry.amount)}
-                        <span className="ml-2 px-2 py-1 text-sm text-blue-600 bg-blue-100 rounded">
+                        Monto total: {formatCurrency(entry.amount)}
+                        <span className="ml-4 px-2 py-1 text-sm text-blue-600 bg-blue-100 rounded">
                             {entry.estado ? "Activo" : "Inactivo"}
                         </span>
                     </p>
@@ -76,8 +100,8 @@ const TransactionDetailModal = ({
                             </p>
                         </div>
                         <div>
-                            <p className="text-sm text-gray-500">Usuario</p>
-                            <p className="font-medium">{entry.user_id || "Desconocido"}</p>
+                            <p className="text-sm text-gray-500">Descripción</p>
+                            <p className="font-medium">{entry.description}</p>
                         </div>
                         <div>
                             <p className="text-sm text-gray-500">Categoría</p>
@@ -123,7 +147,7 @@ const TransactionDetailModal = ({
                 </div>
 
                 {/* Botones de acción */}
-                <div className="fixed bottom-0 left-0 right-0 bg-white p-4 border-t flex justify-around">
+                <div className="fixed bottom-4 left-0 right-0 bg-white p-4 border-t flex justify-around">
                     <Button
                         className="flex flex-col items-center text-blue-600 hover:text-blue-800"
                         icon={
