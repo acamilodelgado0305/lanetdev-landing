@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Button, Modal } from "antd";
+import { Button, Modal, message } from "antd";
 import {
     CloseOutlined,
     EditOutlined,
@@ -11,6 +11,8 @@ import {
 
 import { getUserById } from "../../../../services/apiService";
 import { useAuth } from "../../../Context/AuthProvider";
+import axios from "axios";
+
 const TransactionDetailModal = ({
     isOpen,
     onClose,
@@ -22,6 +24,7 @@ const TransactionDetailModal = ({
     const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
     const [userName, setUserName] = useState("Cargando...");
     const { authToken } = useAuth();
+    const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
 
     useEffect(() => {
         if (isOpen && entry?.user_id && authToken) {
@@ -39,18 +42,27 @@ const TransactionDetailModal = ({
         }
     };
 
-
     const showDeleteModal = () => {
         setDeleteModalOpen(true);
     };
 
-    const handleDelete = () => {
-        // Aquí agregar lógica para eliminar el ingreso (e.g., llamada a API)
-        console.log("Ingreso eliminado:", entry.id);
-        setDeleteModalOpen(false);
-        onClose(); // Cerrar el modal de detalles después de eliminar
-    };
+    const handleDelete = async () => {
+        try {
+            const response = await axios.delete(`${API_BASE_URL}/incomes/${entry.id}`);
+            if (response.status === 200 || response.status === 204) {
+                console.log("Ingreso eliminado:", entry.id);
 
+                message.success("Ingreso eliminado con éxito.");
+                setDeleteModalOpen(false);
+                onClose();
+            } else {
+                throw new Error("Error inesperado al eliminar el ingreso.");
+            }
+        } catch (error) {
+            console.error("Error eliminando el ingreso:", error);
+            message.error("Hubo un error al intentar eliminar el ingreso. Por favor, inténtalo de nuevo.");
+        }
+    };
     const handleCancelDelete = () => {
         setDeleteModalOpen(false);
     };
