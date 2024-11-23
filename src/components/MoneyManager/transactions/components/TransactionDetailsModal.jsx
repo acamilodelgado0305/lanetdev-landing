@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Button, Modal, Input, message } from "antd";
+import { Button, Modal, Input, message, Upload, Spin } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
 import {
     CloseOutlined,
     EditOutlined,
@@ -13,6 +14,7 @@ import {
 import { getUserById } from "../../../../services/apiService";
 import { useAuth } from "../../../Context/AuthProvider";
 import axios from "axios";
+import { uploadImage } from "../../../../services/apiService";
 
 const TransactionDetailModal = ({
     isOpen,
@@ -26,6 +28,11 @@ const TransactionDetailModal = ({
     const [isEditMode, setEditMode] = useState(false); // Estado para modo edición
     const [editedEntry, setEditedEntry] = useState({});
     const [userName, setUserName] = useState("Cargando...");
+    const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+    const [currentImage, setCurrentImage] = useState(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [imageUrls, setImageUrls] = useState([]);
+
     const { authToken } = useAuth();
     const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
 
@@ -79,34 +86,55 @@ const TransactionDetailModal = ({
     const handleInputChange = (field, value) => {
         setEditedEntry((prev) => ({
             ...prev,
-            [field]: value,
+            [field]: field.includes("amount")
+                ? value.replace(/\./g, "").replace(/[^0-9]/g, "")
+                : value,
         }));
     };
+    const openImageModal = (imageUrl) => {
+        setCurrentImage(imageUrl);
+        setIsImageModalOpen(true);
+    };
 
+    const closeImageModal = () => {
+        setCurrentImage(null);
+        setIsImageModalOpen(false);
+    };
     const handleSaveChanges = async () => {
         try {
             console.log("Datos enviados para la actualización:", editedEntry);
+
+            // Valida los campos esenciales
+            if (!editedEntry.amount || isNaN(parseFloat(editedEntry.amount)) || parseFloat(editedEntry.amount) <= 0) {
+                message.error("El monto debe ser un número positivo.");
+                return;
+            }
+
+            // Limpia los valores antes de enviar
             const formattedEntry = {
                 ...editedEntry,
                 amount: parseFloat(editedEntry.amount),
-                amountfev: parseFloat(editedEntry.amountfev),
-                amountdiverse: parseFloat(editedEntry.amountdiverse),
+                amountfev: parseFloat(editedEntry.amountfev) || 0, // Por defecto, 0 si está vacío
+                amountdiverse: parseFloat(editedEntry.amountdiverse) || 0, // Por defecto, 0 si está vacío
+                note: (editedEntry.note || "").trim(), // Elimina saltos de línea adicionales
                 estado: editedEntry.estado === "Activo" || editedEntry.estado === true,
             };
 
-            // Validación antes de enviar
-            if (isNaN(formattedEntry.amount) || formattedEntry.amount <= 0) {
-                message.error("El monto debe ser un número positivo....");
-                return;
-            }
+            // Envía la petición PUT
             const response = await axios.put(
                 `${API_BASE_URL}/incomes/${entry.id}`,
-                editedEntry,
+                formattedEntry,
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                }
             );
+
             if (response.status === 200) {
                 message.success("Ingreso actualizado con éxito.");
-                setEditMode(false);
-                onClose();
+                setEditMode(false); // Sal del modo edición
+                onClose(); // Cierra el modal
             } else {
                 throw new Error("Error inesperado al actualizar el ingreso.");
             }
@@ -117,6 +145,33 @@ const TransactionDetailModal = ({
     };
 
     if (!isOpen || !entry) return null;
+
+    const handleImageUpload = async (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length > 0) {
+            setIsUploading(true);
+            try {
+                // Usa Promise.all para cargar todos los archivos simultáneamente
+                const uploadedImageUrls = await Promise.all(files.map(async (file) => {
+                    const uploadedImageUrl = await uploadImage(file);
+                    return uploadedImageUrl;
+                }));
+
+                setImageUrls((prevUrls) => [...prevUrls, ...uploadedImageUrls]);
+                setNote((prevNote) => `${prevNote}\n${uploadedImageUrls.join("\n")}`);
+            } catch (error) {
+                console.error("Error al subir las imágenes:", error);
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "No se pudieron subir algunas imágenes. Por favor, intente de nuevo.",
+                    confirmButtonColor: "#d33",
+                });
+            } finally {
+                setIsUploading(false);
+            }
+        }
+    };
 
     return (
         <div className="fixed inset-y-0 right-0 w-full md:w-[32em] bg-white shadow-lg z-50 transform transition-transform duration-300 overflow-y-auto">
@@ -247,14 +302,60 @@ const TransactionDetailModal = ({
                         </div>
                         {entry.note && (
                             <div className="col-span-2">
-                                <p className="text-sm text-gray-500">Nota</p>
+                                <p className="text-sm text-gray-500">Comprobante</p>
                                 {isEditMode ? (
-                                    <Input
-                                        value={editedEntry.note}
-                                        onChange={(e) => handleInputChange("note", e.target.value)}
-                                    />
+                                    <div>
+                                        {/* Campo para subir imágenes */}
+                                        <input
+                                            type="file"
+                                            multiple
+                                            accept="image/*"
+                                            onChange={handleImageUpload}
+                                            className="mb-2"
+                                        />
+
+                                        {/* Indicador de carga */}
+                                        {isUploading && (
+                                            <div className="flex items-center gap-2">
+                                                <Spin size="small" />
+                                                <span>Subiendo imágenes...</span>
+                                            </div>
+                                        )}
+
+                                        {/* Mostrar miniaturas de las imágenes subidas */}
+                                        <div className="flex flex-wrap gap-2 mt-2">
+                                            {imageUrls.map((url, index) => (
+                                                <div key={index} className="relative w-16 h-16">
+                                                    <img
+                                                        src={url}
+                                                        alt={`Comprobante ${index + 1}`}
+                                                        className="w-full h-full object-cover border rounded-md"
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
                                 ) : (
-                                    <p className="font-medium">{entry.note}</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {entry.note && entry.note.trim() ? (
+                                            entry.note
+                                                .trim()
+                                                .split("\n")
+                                                .filter((noteUrl) => noteUrl.trim() !== "")
+                                                .map((noteUrl, index) => (
+                                                    <div key={index} className="relative w-28 h-40">
+                                                        <img
+                                                            src={noteUrl}
+                                                            alt={`Comprobante ${index + 1}`}
+                                                            className="w-full h-full object-cover border rounded-md cursor-pointer"
+                                                            onClick={() => openImageModal(noteUrl)}
+                                                        />
+                                                    </div>
+                                                ))
+                                        ) : (
+                                            <p className="text-gray-500">Sin comprobantes</p>
+                                        )}
+                                    </div>
                                 )}
                             </div>
                         )}
@@ -310,7 +411,21 @@ const TransactionDetailModal = ({
                 </div>
             </div>
 
-
+            <Modal
+                visible={isImageModalOpen}
+                onCancel={closeImageModal}
+                footer={null}
+                centered
+                width={300}
+            >
+                {currentImage && (
+                    <img
+                        src={currentImage}
+                        alt="Comprobante ampliado"
+                        className="w-full h-auto rounded-md"
+                    />
+                )}
+            </Modal>
             {/* Modal de confirmación de eliminación */}
             <Modal
                 title="Confirmar Eliminación"

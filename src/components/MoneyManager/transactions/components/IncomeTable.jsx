@@ -13,7 +13,7 @@ const IncomeTable = ({ entries, categories = [], accounts = [] }) => {
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-
+    const [selectedImages, setSelectedImages] = useState([]);
 
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat("es-CO", {
@@ -42,7 +42,7 @@ const IncomeTable = ({ entries, categories = [], accounts = [] }) => {
 
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.download = "comprobante.jpg";
+            link.download = url.split("/").pop(); // Usa el nombre original de la imagen
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -53,6 +53,14 @@ const IncomeTable = ({ entries, categories = [], accounts = [] }) => {
             console.error("Error al descargar el archivo:", error);
         }
     };
+    const downloadAllImages = async (urls) => {
+        try {
+            await Promise.all(urls.map((url) => downloadImage(url))); // Llama a downloadImage para cada URL
+        } catch (error) {
+            console.error("Error al descargar las imágenes:", error);
+        }
+    };
+
     const getUniqueValues = (field) => {
         return _.uniq(
             entries.map((entry) => {
@@ -103,24 +111,17 @@ const IncomeTable = ({ entries, categories = [], accounts = [] }) => {
         setIsModalOpen(false);
         setSelectedEntry(null);
     };
-    const openImageModal = (imageUrl) => {
-        setSelectedImage(imageUrl);
-        setIsImageModalOpen(true);
-    };
 
-    const closeImageModal = () => {
-        setIsImageModalOpen(false);
-        setSelectedImage(null);
-    };
-    const openDrawer = (imageUrl) => {
-        setSelectedImage(imageUrl);
+    const openDrawer = (images) => {
+        setSelectedImages(images);
         setIsDrawerOpen(true);
     };
 
     const closeDrawer = () => {
         setIsDrawerOpen(false);
-        setSelectedImage(null);
+        setSelectedImages([]);
     };
+
 
     const columns = [
         { title: "Fecha", field: "date", width: "100px" },
@@ -212,7 +213,8 @@ const IncomeTable = ({ entries, categories = [], accounts = [] }) => {
                                             <a
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    openDrawer(entry.note);
+                                                    const notesArray = entry.note.trim().split("\n").filter((noteUrl) => noteUrl.trim() !== "");
+                                                    openDrawer(notesArray); // Pasa todas las URLs al Drawer
                                                 }}
                                                 className="text-blue-500 underline"
                                             >
@@ -235,18 +237,33 @@ const IncomeTable = ({ entries, categories = [], accounts = [] }) => {
                 width={420}
             >
                 <div className="flex flex-col items-center">
-                    <img src={selectedImage} alt="Comprobante" className="w-full h-auto mb-4" />
-                    <div className="flex flex-row justify-center space-x-4">
-                        <Button
-                            type="primary"
-                            onClick={() => downloadImage(selectedImage)}
-                        >
-                            Descargar
-                        </Button>
-                        <Button key="close" onClick={closeDrawer}>
-                            Cerrar
-                        </Button>
+                    <h1 className="mb-8">Comprobantes de ingresos</h1>
+                    <div className="flex flex-wrap gap-4 justify-center mb-4">
+                        {selectedImages.map((image, index) => (
+                            <div key={index} className="relative w-60 h-80">
+                                <img
+                                    src={image}
+                                    alt={`Comprobante ${index + 1}`}
+                                    className="w-full h-full object-cover border rounded-md"
+                                />
+                                <Button
+                                    type="link"
+                                    className="absolute bottom-1 left-1 text-blue-500"
+                                    onClick={() => downloadImage(image)} // Descarga individual
+                                >
+                                    Descargar
+                                </Button>
+                            </div>
+                        ))}
                     </div>
+                    {selectedImages.length > 1 && (
+                        <Button type="primary" onClick={() => downloadAllImages(selectedImages)}>
+                            Descargar todas
+                        </Button>
+                    )}
+                    <Button key="close" onClick={closeDrawer} className="mt-4">
+                        Cerrar
+                    </Button>
                 </div>
             </Drawer>
             <TransactionDetailModal
