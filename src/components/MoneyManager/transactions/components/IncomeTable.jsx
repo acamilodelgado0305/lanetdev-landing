@@ -89,6 +89,7 @@ const IncomeTable = ({ entries, categories = [], accounts = [] }) => {
         { title: "Monto FEV", field: "amountfev", width: "120px" },
         { title: "Monto Diverse", field: "amountdiverse", width: "120px" },
         { title: "Tipo", field: "type", width: "100px" },
+        { title: "Note", field: "note", width: "120px" },
         { title: "Comprobante", field: "note", width: "120px" },
     ];
 
