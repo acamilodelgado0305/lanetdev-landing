@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Button, Dropdown, Menu, Tooltip } from "antd";
+import { Button, Dropdown, Menu, Tooltip, Modal, Drawer } from "antd";
 import { format as formatDate } from "date-fns";
 import { FilterOutlined, CaretDownOutlined } from "@ant-design/icons";
 import _ from "lodash";
@@ -10,6 +10,10 @@ const IncomeTable = ({ entries, categories = [], accounts = [] }) => {
     const [hoveredRow, setHoveredRow] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedEntry, setSelectedEntry] = useState(null);
+    const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
 
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat("es-CO", {
@@ -28,7 +32,27 @@ const IncomeTable = ({ entries, categories = [], accounts = [] }) => {
         const account = accounts.find((acc) => acc.id === accountId);
         return account ? account.name : "Cuenta no encontrada";
     };
+    const downloadImage = async (url) => {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error("No se pudo descargar el archivo.");
+            }
+            const blob = await response.blob();
 
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "comprobante.jpg";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Limpia la URL temporal
+            URL.revokeObjectURL(link.href);
+        } catch (error) {
+            console.error("Error al descargar el archivo:", error);
+        }
+    };
     const getUniqueValues = (field) => {
         return _.uniq(
             entries.map((entry) => {
@@ -79,6 +103,24 @@ const IncomeTable = ({ entries, categories = [], accounts = [] }) => {
         setIsModalOpen(false);
         setSelectedEntry(null);
     };
+    const openImageModal = (imageUrl) => {
+        setSelectedImage(imageUrl);
+        setIsImageModalOpen(true);
+    };
+
+    const closeImageModal = () => {
+        setIsImageModalOpen(false);
+        setSelectedImage(null);
+    };
+    const openDrawer = (imageUrl) => {
+        setSelectedImage(imageUrl);
+        setIsDrawerOpen(true);
+    };
+
+    const closeDrawer = () => {
+        setIsDrawerOpen(false);
+        setSelectedImage(null);
+    };
 
     const columns = [
         { title: "Fecha", field: "date", width: "100px" },
@@ -90,7 +132,6 @@ const IncomeTable = ({ entries, categories = [], accounts = [] }) => {
         { title: "Monto Diverse", field: "amountdiverse", width: "120px" },
         { title: "Tipo", field: "type", width: "100px" },
         { title: "Comprobante", field: "note", width: "120px" },
-
     ];
 
     return (
@@ -167,7 +208,19 @@ const IncomeTable = ({ entries, categories = [], accounts = [] }) => {
                                         {entry.type}
                                     </td>
                                     <td className="border-r border-gray-200 p-2 truncate">
-                                        {entry.note || "—"}
+                                        {entry.note ? (
+                                            <a
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    openDrawer(entry.note);
+                                                }}
+                                                className="text-blue-500 underline"
+                                            >
+                                                Ver comprobante
+                                            </a>
+                                        ) : (
+                                            "—"
+                                        )}
                                     </td>
                                 </tr>
                             </Tooltip>
@@ -175,7 +228,27 @@ const IncomeTable = ({ entries, categories = [], accounts = [] }) => {
                     </tbody>
                 </table>
             </div>
-
+            <Drawer
+                visible={isDrawerOpen}
+                onClose={closeDrawer}
+                placement="right"
+                width={420}
+            >
+                <div className="flex flex-col items-center">
+                    <img src={selectedImage} alt="Comprobante" className="w-full h-auto mb-4" />
+                    <div className="flex flex-row justify-center space-x-4">
+                        <Button
+                            type="primary"
+                            onClick={() => downloadImage(selectedImage)}
+                        >
+                            Descargar
+                        </Button>
+                        <Button key="close" onClick={closeDrawer}>
+                            Cerrar
+                        </Button>
+                    </div>
+                </div>
+            </Drawer>
             <TransactionDetailModal
                 isOpen={isModalOpen}
                 onClose={closeModal}
