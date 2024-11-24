@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button, Modal, Input, message, Upload, Spin } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
+import Swal from "sweetalert2";
 import {
     CloseOutlined,
     EditOutlined,
@@ -37,11 +38,32 @@ const TransactionDetailModal = ({
     const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
 
     useEffect(() => {
-        if (isOpen && entry?.user_id && authToken) {
-            fetchUserName(entry.user_id, authToken);
-        }
         if (isOpen) {
-            setEditedEntry(entry || {});
+            if (entry) {
+                // Precarga datos en modo edición
+                setEditedEntry({
+                    ...entry,
+                    amount: parseFloat(entry.amount) || 0,
+                    amountfev: parseFloat(entry.amountfev) || 0,
+                    amountdiverse: parseFloat(entry.amountdiverse) || 0,
+                    note: entry.note || "",
+                    description: entry.description || "",
+                    estado: entry.estado,
+                });
+                fetchUserName(entry.user_id, authToken);
+            } else {
+                // Reinicia formulario en modo creación
+                setEditedEntry({
+                    amount: "",
+                    amountfev: "",
+                    amountdiverse: "",
+                    category_id: "",
+                    account_id: "",
+                    note: "",
+                    description: "",
+                    estado: true,
+                });
+            }
         }
     }, [isOpen, entry, authToken]);
 
@@ -102,25 +124,30 @@ const TransactionDetailModal = ({
     };
     const handleSaveChanges = async () => {
         try {
-            console.log("Datos enviados para la actualización:", editedEntry);
-
-            // Valida los campos esenciales
-            if (!editedEntry.amount || isNaN(parseFloat(editedEntry.amount)) || parseFloat(editedEntry.amount) <= 0) {
+            if (!editedEntry.amount || parseFloat(editedEntry.amount) <= 0) {
                 message.error("El monto debe ser un número positivo.");
                 return;
             }
 
-            // Limpia los valores antes de enviar
+            if (!editedEntry.category_id) {
+                message.error("Por favor seleccione una categoría.");
+                return;
+            }
+
+            if (!editedEntry.account_id) {
+                message.error("Por favor seleccione una cuenta.");
+                return;
+            }
+
             const formattedEntry = {
                 ...editedEntry,
                 amount: parseFloat(editedEntry.amount),
-                amountfev: parseFloat(editedEntry.amountfev) || 0, // Por defecto, 0 si está vacío
-                amountdiverse: parseFloat(editedEntry.amountdiverse) || 0, // Por defecto, 0 si está vacío
-                note: (editedEntry.note || "").trim(), // Elimina saltos de línea adicionales
+                amountfev: parseFloat(editedEntry.amountfev) || 0,
+                amountdiverse: parseFloat(editedEntry.amountdiverse) || 0,
+                note: editedEntry.note.trim(),
                 estado: editedEntry.estado === "Activo" || editedEntry.estado === true,
             };
 
-            // Envía la petición PUT
             const response = await axios.put(
                 `${API_BASE_URL}/incomes/${entry.id}`,
                 formattedEntry,
@@ -133,8 +160,8 @@ const TransactionDetailModal = ({
 
             if (response.status === 200) {
                 message.success("Ingreso actualizado con éxito.");
-                setEditMode(false); // Sal del modo edición
-                onClose(); // Cierra el modal
+                setEditMode(false);
+                onClose();
             } else {
                 throw new Error("Error inesperado al actualizar el ingreso.");
             }
@@ -144,23 +171,49 @@ const TransactionDetailModal = ({
         }
     };
 
-    if (!isOpen || !entry) return null;
+    if (!isOpen) return null;
+
+    if (!editedEntry) {
+        return (
+            <div className="flex items-center justify-center h-full">
+                <Spin size="large" tip="Cargando datos..." />
+            </div>
+        );
+    }
 
     const handleImageUpload = async (e) => {
         const files = Array.from(e.target.files);
         if (files.length > 0) {
             setIsUploading(true);
             try {
-                // Usa Promise.all para cargar todos los archivos simultáneamente
-                const uploadedImageUrls = await Promise.all(files.map(async (file) => {
-                    const uploadedImageUrl = await uploadImage(file);
-                    return uploadedImageUrl;
+                // Subir todas las imágenes seleccionadas
+                const uploadedImageUrls = await Promise.all(
+                    files.map(async (file) => {
+                        const uploadedImageUrl = await uploadImage(file);
+                        return uploadedImageUrl;
+                    })
+                );
+
+                // Actualizar el campo `note` en el estado `editedEntry`
+                setEditedEntry((prev) => ({
+                    ...prev,
+                    note: uploadedImageUrls.join("\n"), // Sobrescribe las URLs de las imágenes existentes
                 }));
 
-                setImageUrls((prevUrls) => [...prevUrls, ...uploadedImageUrls]);
-                setNote((prevNote) => `${prevNote}\n${uploadedImageUrls.join("\n")}`);
+                // También actualiza las imágenes que se muestran en el formulario
+                setImageUrls(uploadedImageUrls);
+
+                // Notificar éxito
+                Swal.fire({
+                    icon: "success",
+                    title: "Imágenes actualizadas",
+                    text: "Las imágenes se han reemplazado correctamente.",
+                    confirmButtonColor: "#28a745",
+                });
             } catch (error) {
                 console.error("Error al subir las imágenes:", error);
+
+                // Notificar error
                 Swal.fire({
                     icon: "error",
                     title: "Error",
@@ -168,10 +221,11 @@ const TransactionDetailModal = ({
                     confirmButtonColor: "#d33",
                 });
             } finally {
-                setIsUploading(false);
+                setIsUploading(false); // Finaliza el estado de carga
             }
         }
     };
+
 
     return (
         <div className="fixed inset-y-0 right-0 w-full md:w-[32em] bg-white shadow-lg z-50 transform transition-transform duration-300 overflow-y-auto">
