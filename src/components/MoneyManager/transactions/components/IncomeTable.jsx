@@ -248,7 +248,7 @@ const IncomeTable = ({ entries, categories = [], accounts = [] }) => {
                                 />
                                 <Button
                                     type="link"
-                                    className="absolute bottom-1 left-1 text-blue-500"
+                                    className="mx-20 absolute bottom-2   text-white bg-green-600"
                                     onClick={() => downloadImage(image)} // Descarga individual
                                 >
                                     Descargar
@@ -257,7 +257,7 @@ const IncomeTable = ({ entries, categories = [], accounts = [] }) => {
                         ))}
                     </div>
                     {selectedImages.length > 1 && (
-                        <Button type="primary" onClick={() => downloadAllImages(selectedImages)}>
+                        <Button type="primary" onClick={() => downloadAllImages(selectedImages)} className=" text-white bg-green-600">
                             Descargar todas
                         </Button>
                     )}

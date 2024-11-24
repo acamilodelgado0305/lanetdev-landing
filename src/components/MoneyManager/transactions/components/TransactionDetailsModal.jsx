@@ -33,6 +33,7 @@ const TransactionDetailModal = ({
     const [currentImage, setCurrentImage] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
     const [imageUrls, setImageUrls] = useState([]);
+    const [selectedImages, setSelectedImages] = useState([]);
 
     const { authToken } = useAuth();
     const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
@@ -122,6 +123,17 @@ const TransactionDetailModal = ({
         setCurrentImage(null);
         setIsImageModalOpen(false);
     };
+    const handleImageSelection = (e) => {
+        const files = Array.from(e.target.files);
+
+        // Agrega las imágenes seleccionadas al estado
+        setSelectedImages((prev) => [...prev, ...files]);
+
+        // Genera URLs locales para previsualización
+        const filePreviews = files.map((file) => URL.createObjectURL(file));
+        setImageUrls((prevUrls) => [...prevUrls, ...filePreviews]);
+    };
+
     const handleSaveChanges = async () => {
         try {
             if (!editedEntry.amount || parseFloat(editedEntry.amount) <= 0) {
@@ -139,12 +151,23 @@ const TransactionDetailModal = ({
                 return;
             }
 
+            // Subir imágenes seleccionadas al servidor y obtener sus URLs
+            const uploadedImageUrls = await Promise.all(
+                selectedImages.map(async (file) => {
+                    const uploadedImageUrl = await uploadImage(file);
+                    return uploadedImageUrl;
+                })
+            );
+
+            // Concatenar URLs preexistentes con nuevas imágenes
+            const updatedNote = uploadedImageUrls.join("\n");
+
             const formattedEntry = {
                 ...editedEntry,
                 amount: parseFloat(editedEntry.amount),
                 amountfev: parseFloat(editedEntry.amountfev) || 0,
                 amountdiverse: parseFloat(editedEntry.amountdiverse) || 0,
-                note: editedEntry.note.trim(),
+                note: updatedNote, // Reemplazar las imágenes anteriores por las nuevas
                 estado: editedEntry.estado === "Activo" || editedEntry.estado === true,
             };
 
@@ -180,6 +203,7 @@ const TransactionDetailModal = ({
             </div>
         );
     }
+
 
     const handleImageUpload = async (e) => {
         const files = Array.from(e.target.files);
@@ -255,7 +279,7 @@ const TransactionDetailModal = ({
                     <p className="font-medium">{userName || "Desconocido"}</p>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg my-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-4 mb-20">
                         <div>
                             <p className="text-sm text-gray-500">Monto</p>
                             {isEditMode ? (
@@ -364,7 +388,7 @@ const TransactionDetailModal = ({
                                             type="file"
                                             multiple
                                             accept="image/*"
-                                            onChange={handleImageUpload}
+                                            onChange={handleImageSelection}
                                             className="mb-2"
                                         />
 
@@ -415,56 +439,7 @@ const TransactionDetailModal = ({
                         )}
                     </div>
                 </div>
-
-                {/* Botones de acción */}
-                <div className="fixed bottom-4 left-0 right-0 bg-white p-4 border-t flex justify-around">
-                    <Button
-                        className="flex flex-col items-center text-blue-600 hover:text-blue-800"
-                        icon={
-                            <PrinterOutlined style={{ fontSize: "2rem", color: "#2563eb" }} />
-                        }
-                    >
-                        <span className="text-sm mt-1 font-semibold">Imprimir</span>
-                    </Button>
-                    <Button
-                        className="flex flex-col items-center text-green-600 hover:text-green-800"
-                        icon={
-                            <FileTextOutlined style={{ fontSize: "2rem", color: "#16a34a" }} />
-                        }
-                    >
-                        <span className="text-sm mt-1 font-semibold">Comprobante</span>
-                    </Button>
-                    {isEditMode ? (
-
-                        <Button
-                            className="flex flex-col items-center text-green-600 hover:text-green-800"
-                            icon={<SaveOutlined style={{ fontSize: "2rem", color: "#16a34a" }} />}
-                            onClick={handleSaveChanges}
-                        >
-                            <span className="text-sm mt-1 font-semibold">Guardar</span>
-                        </Button>
-                    ) : (
-                        <Button
-                            className="flex flex-col items-center text-yellow-600 bg-yellow-100 hover:bg-yellow-200"
-                            icon={<EditOutlined style={{ fontSize: "2rem", color: "#ca8a04" }} />}
-                            onClick={toggleEditMode}
-                        >
-                            <span className="text-sm mt-1 font-semibold text-yellow-600">Editar</span>
-                        </Button>
-                    )}
-                    <Button
-                        danger
-                        className="flex flex-col items-center text-red-600 hover:text-red-800"
-                        icon={
-                            <DeleteOutlined style={{ fontSize: "2rem", color: "#dc2626" }} />
-                        }
-                        onClick={showDeleteModal}
-                    >
-                        <span className="text-sm mt-1 font-semibold">Eliminar</span>
-                    </Button>
-                </div>
             </div>
-
             <Modal
                 visible={isImageModalOpen}
                 onCancel={closeImageModal}
@@ -496,7 +471,55 @@ const TransactionDetailModal = ({
                     <strong>{entry.description}</strong>?
                 </p>
             </Modal>
+            {/* Botones de acción */}
+            <div className=" sticky bottom-4 left-0 right-0 bg-white p-4 border-t flex justify-around">
+                <Button
+                    className="flex flex-col items-center text-blue-600 hover:text-blue-800"
+                    icon={
+                        <PrinterOutlined style={{ fontSize: "2rem", color: "#2563eb" }} />
+                    }
+                >
+                    <span className="text-sm mt-1 font-semibold">Imprimir</span>
+                </Button>
+                <Button
+                    className="flex flex-col items-center text-green-600 hover:text-green-800"
+                    icon={
+                        <FileTextOutlined style={{ fontSize: "2rem", color: "#16a34a" }} />
+                    }
+                >
+                    <span className="text-sm mt-1 font-semibold">Comprobante</span>
+                </Button>
+                {isEditMode ? (
+
+                    <Button
+                        className="flex flex-col items-center text-green-600 hover:text-green-800"
+                        icon={<SaveOutlined style={{ fontSize: "2rem", color: "#16a34a" }} />}
+                        onClick={handleSaveChanges}
+                    >
+                        <span className="text-sm mt-1 font-semibold">Guardar</span>
+                    </Button>
+                ) : (
+                    <Button
+                        className="flex flex-col items-center text-yellow-600 bg-yellow-100 hover:bg-yellow-200"
+                        icon={<EditOutlined style={{ fontSize: "2rem", color: "#ca8a04" }} />}
+                        onClick={toggleEditMode}
+                    >
+                        <span className="text-sm mt-1 font-semibold text-yellow-600">Editar</span>
+                    </Button>
+                )}
+                <Button
+                    danger
+                    className="flex flex-col items-center text-red-600 hover:text-red-800"
+                    icon={
+                        <DeleteOutlined style={{ fontSize: "2rem", color: "#dc2626" }} />
+                    }
+                    onClick={showDeleteModal}
+                >
+                    <span className="text-sm mt-1 font-semibold">Eliminar</span>
+                </Button>
+            </div>
         </div>
+
     );
 };
 
