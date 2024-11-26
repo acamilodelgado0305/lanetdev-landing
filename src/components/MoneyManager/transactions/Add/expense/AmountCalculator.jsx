@@ -17,7 +17,7 @@ const AmountCalculator = ({
   setRetefuenteAmount
 }) => {
   const IVA_PERCENTAGE = 19;
-  const RETEFUENTE_THRESHOLD = 1300000;
+  const RETEFUENTE_THRESHOLD = 1271000;
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat("es-CO").format(value);

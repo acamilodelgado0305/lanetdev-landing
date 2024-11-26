@@ -38,6 +38,7 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
   const [finalAmount, setFinalAmount] = useState(0);
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurringDuration, setRecurringDuration] = useState(3);
+  const [subType, setSubType] = useState("");
 
   // Nuevos estados para IVA y retención
   const [hasIva, setHasIva] = useState(true);
@@ -139,6 +140,7 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
         base_amount: rawAmount, // Importe base
         amount: finalAmount, // Importe total
         type: type,
+        sub_type: subType, // Adding subType to the request
         date: date.format("YYYY-MM-DD[T]HH:mm:ss[Z]"),
         note: note,
         description: description,
@@ -216,6 +218,7 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
       setImageUrls([]);
       setDate(dayjs());
       setType("gasto");
+      setSubType(""); // Reset subType
       setIsRecurring(false);
       setRecurringDuration(3);
       setHasIva(true);
@@ -303,25 +306,33 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
     </div>
   );
 
+  const handleTypeChange = (newType) => {
+    setType(newType);
+    if (newType !== "gasto") {
+      setSubType(""); // Reinicia el sub-tipo si el tipo principal no es "gasto"
+    }
+  };
+
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-40 overflow-y-auto"
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 z-40 flex justify-center items-center"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
-      }}>
-      <div className="fixed inset-y-0 right-0 w-full md:w-[32em] bg-white shadow-2xl transform 
-                      transition-transform duration-300 ease-in-out overflow-y-auto">
+      }}
+    >
+      <div className="w-full max-w-full bg-white shadow-2xl rounded-lg max-h-full flex flex-col">
         {/* Header */}
-        <div className="sticky top-0 bg-white z-10">
-          <div className="px-6 pt-4">
+        <div className="sticky top-0 bg-white rounded-t-lg z-10">
+          <div className="px-6 py-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 <span className="text-red-500">
-                  <DollarCircleOutlined className="text-xl" />
+                  <DollarCircleOutlined className="text-2xl" />
                 </span>
-                <h2 className="text-xl font-semibold text-gray-800">
+                <h2 className="text-2xl font-semibold text-gray-800">
                   {transactionToEdit ? "Editar Transacción" : "Nuevo Egreso"}
                 </h2>
               </div>
@@ -336,96 +347,152 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
           <div className="h-1 bg-red-500" />
         </div>
 
-        {/* Type Selection */}
-        <div className="p-2">
-          <div className="p-5">
-            <TypeSelector
-              selectedType={type}
-              onTypeChange={setType}
-            />
-          </div>
-        </div>
+        {/* Content - Scrollable Area */}
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Main Form Section */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Essential Information Section */}
+              <div className="bg-white p-4 rounded-lg border border-gray-500 shadow-sm">
+                <h3 className="font-medium text-gray-700 pb-2 border-b border-gray-200">
+                  Información Básica
+                </h3>
 
+                <div className="space-y-4 mt-4">
+                  <div className="p-3 bg-gray-50 rounded-md">
+                    <TypeSelector
+                      selectedType={type}
+                      onTypeChange={handleTypeChange}
+                      selectedSubType={subType}
+                      onSubTypeChange={setSubType}
+                    />
+                  </div>
 
-        <div className="pt-3 px-4 space-y-6">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Fecha
-              </label>
-              <DatePicker
-                value={date}
-                onChange={(newDate) => setDate(newDate)}
-                format="YYYY-MM-DD"
-                className="w-full"
-              />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      <Input.TextArea
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        placeholder="Descripción egreso"
+                        rows={2}
+                        className="w-full text-base"
+                        style={{
+                          fontSize: '1rem',
+                          padding: '8px',
+                          minHeight: '60px'
+                        }}
+                      />
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      <DatePicker
+                        value={date}
+                        onChange={(newDate) => setDate(newDate)}
+                        format="YYYY-MM-DD"
+                        className="w-full text-base"
+                        style={{
+                          fontSize: '1rem',
+                          padding: '4px 8px',
+                          height: '32px'
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="h-0.5 bg-red-200" />
+
+                  <div className="p-3 bg-gray-50 rounded-md">
+                    <CategorySelector
+                      categories={categories}
+                      selectedCategory={category}
+                      onCategorySelect={setCategory}
+                    />
+                  </div>
+                </div>
+
+                <div className="h-0.5 bg-red-200" />
+                {/* Description and Notes Section */}
+                <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                  <h3 className="font-medium text-gray-700 pb-2 border-b border-gray-200">
+                    Detalles
+                  </h3>
+                  <div className="mt-4 p-3 bg-gray-50 rounded-md">
+                    <ImageUploader
+                      imageUrls={imageUrls}
+                      setImageUrls={setImageUrls}
+                      note={note}
+                      setNote={setNote}
+                    />
+                  </div>
+                </div>
+
+                {/* Provider Section */}
+                <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                  <h3 className="font-medium text-gray-700 pb-2 border-b border-gray-200">
+                    Proveedor
+                  </h3>
+                  <div className="mt-4 p-3 bg-gray-50 rounded-md">
+                    <ProviderSelector
+                      providers={providers}
+                      selectedProvider={provider}
+                      onProviderSelect={setProvider}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
-            <AmountCalculator
-              baseAmount={amount}
-              onBaseAmountChange={setAmount}
-              rawAmount={rawAmount}
-              setRawAmount={setRawAmount}
-              setFinalAmount={setFinalAmount}
-              hasIva={hasIva}
-              setHasIva={setHasIva}
-              hasRetefuente={hasRetefuente}
-              setHasRetefuente={setHasRetefuente}
-              retefuentePercentage={retefuentePercentage}
-              setRetefuentePercentage={setRetefuentePercentage}
-              setIvaAmount={setIvaAmount}
-              setRetefuenteAmount={setRetefuenteAmount}
-            />
+
+            {/* Right Column - Financial Details */}
+            <div className="space-y-6">
+              <div className="bg-white p-4 rounded-lg border border-gray-500 shadow-sm">
+                <h3 className="font-medium text-gray-700 pb-2 border-b border-gray-200">
+                  Detalles Financieros
+                </h3>
+
+                <div className="space-y-4 mt-4">
+                  <div className="p-3 bg-gray-50 rounded-md">
+                    <AccountSelector
+                      accounts={accounts}
+                      selectedAccount={account}
+                      onAccountSelect={setAccount}
+                      formatCurrency={formatCurrency}
+                    />
+                  </div>
+                  <div className="h-0.5 bg-red-200" />
+
+                  <div className="p-3 bg-gray-50 rounded-md">
+                    <AmountCalculator
+                      baseAmount={amount}
+                      onBaseAmountChange={setAmount}
+                      rawAmount={rawAmount}
+                      setRawAmount={setRawAmount}
+                      setFinalAmount={setFinalAmount}
+                      hasIva={hasIva}
+                      setHasIva={setHasIva}
+                      hasRetefuente={hasRetefuente}
+                      setHasRetefuente={setHasRetefuente}
+                      retefuentePercentage={retefuentePercentage}
+                      setRetefuentePercentage={setRetefuentePercentage}
+                      setIvaAmount={setIvaAmount}
+                      setRetefuenteAmount={setRetefuenteAmount}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                <h3 className="font-medium text-gray-700 pb-2 border-b border-gray-200">
+                  Recurrencia
+                </h3>
+                <div className="mt-4 p-3 bg-gray-50 rounded-md">
+                  <RecurringExpenseSelector />
+                </div>
+              </div>
+            </div>
           </div>
-
-          <div className="h-0.5 bg-red-200" />
-
-          <AccountSelector
-            accounts={accounts}
-            selectedAccount={account}
-            onAccountSelect={setAccount}
-            formatCurrency={formatCurrency}
-          />
-
-          <CategorySelector
-            categories={categories}
-            selectedCategory={category}
-            onCategorySelect={setCategory}
-          />
-
-
-          <ProviderSelector
-            providers={providers}
-            selectedProvider={provider}
-            onProviderSelect={setProvider}
-          />
-
-          <div className="h-0.5 bg-red-200" />
-
-          <RecurringExpenseSelector />
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Descripción
-            </label>
-            <Input.TextArea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Añade una descripción"
-              rows={3}
-              className="w-full"
-            />
-          </div>
-
-          <ImageUploader
-            imageUrls={imageUrls}
-            setImageUrls={setImageUrls}
-            note={note}
-            setNote={setNote}
-          />
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-white border-t p-6">
+        <div className="sticky bottom-0 bg-white border-t p-4 rounded-b-lg">
           <Button
             type="primary"
             onClick={handleSave}
@@ -437,6 +504,7 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
         </div>
       </div>
     </div>
+
   );
 };
 
