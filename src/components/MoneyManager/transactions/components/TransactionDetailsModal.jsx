@@ -34,6 +34,9 @@ const TransactionDetailModal = ({
     const [isUploading, setIsUploading] = useState(false);
     const [imageUrls, setImageUrls] = useState([]);
     const [selectedImages, setSelectedImages] = useState([]);
+    const [accounts, setAccounts] = useState([]);
+    const [loading, setLoading] = useState(true);
+
 
     const { authToken } = useAuth();
     const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
@@ -67,6 +70,23 @@ const TransactionDetailModal = ({
             }
         }
     }, [isOpen, entry, authToken]);
+
+    useEffect(() => {
+        const fetchAccounts = async () => {
+            try {
+                const response = await axios.get(`${API_BASE_URL}/accounts`);
+                const filteredAccounts = response.data.filter(account => account.type === "Banco");
+                setAccounts(filteredAccounts);
+                setLoading(false);
+            } catch (error) {
+                console.error("Error fetching accounts:", error);
+                setLoading(false);
+            }
+        };
+
+        fetchAccounts();
+    }, []);
+
 
     const fetchUserName = async (userId, token) => {
         try {
@@ -252,7 +272,7 @@ const TransactionDetailModal = ({
 
 
     return (
-        <div className="fixed inset-y-0 right-0 w-full md:w-[32em] bg-white shadow-lg z-50 transform transition-transform duration-300 overflow-y-auto">
+        <div className="fixed inset-y-0 right-0 w-full md:w-[38em] bg-white shadow-lg z-50 transform transition-transform duration-300 overflow-y-auto">
             <div className="p-6">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-4">
@@ -318,10 +338,22 @@ const TransactionDetailModal = ({
                         <div>
                             <p className="text-sm text-gray-500">Cuenta</p>
                             {isEditMode ? (
-                                <Input
+                                <select
                                     value={editedEntry.account_id}
                                     onChange={(e) => handleInputChange("account_id", e.target.value)}
-                                />
+                                    className="form-select w-full h-12"
+                                >
+                                    <option value="">Seleccionar cuenta...</option>
+                                    {loading ? (
+                                        <option>Loading...</option>
+                                    ) : (
+                                        accounts.map((account) => (
+                                            <option key={account.id} value={account.id}>
+                                                {account.name}
+                                            </option>
+                                        ))
+                                    )}
+                                </select>
                             ) : (
                                 <p className="font-medium">
                                     {getAccountName(entry.account_id)}
