@@ -10,7 +10,7 @@ import { format as formatDate } from 'date-fns';
 import { Link } from "react-router-dom";
 import { BankOutlined, WalletOutlined } from '@ant-design/icons';
 
-const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
+const VITE_API_FINANZAS = import.meta.env.VITE_API_FINANZAS;
 
 const Dashboard = () => {
   const COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
@@ -23,25 +23,34 @@ const Dashboard = () => {
   const [error, setError] = useState(null);
   const [timeRange, setTimeRange] = useState('month');
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [monthlyStats, setMonthlyStats] = useState({
-    balance: 0,
-    totalIncome: 0,
-    totalExpenses: 0
+  const [generalBalance, setGeneralBalance] = useState({
+    total_incomes: 0,
+    total_expenses: 0,
+    net_balance: 0
   });
+
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [accountsData, categoriesData, transactionsData, transfersData] = await Promise.all([
+        // Fetch general balance junto con los otros datos
+        const [accountsData, categoriesData, transactionsData, transfersData, balanceData] = await Promise.all([
           getAccounts(),
           getCategories(),
           getTransactions(),
           getTransfers(),
+          axios.get(`${VITE_API_FINANZAS}/balance/general`),
         ]);
+
         setAccounts(accountsData);
         setCategories(categoriesData);
         setTransactions(transactionsData);
         setTransfers(transfersData);
+        setGeneralBalance({
+          total_incomes: parseFloat(balanceData.data.total_incomes) || 0,
+          total_expenses: parseFloat(balanceData.data.total_expenses) || 0,
+          net_balance: parseFloat(balanceData.data.net_balance) || 0
+        });
         setLoading(false);
       } catch (err) {
         console.error('Error fetching data:', err);
@@ -51,8 +60,13 @@ const Dashboard = () => {
     };
 
     fetchData();
-    fetchMonthlyData();
-  }, [currentMonth]);
+  }, []);
+
+
+  const calculateTrend = (current, previous) => {
+    if (!previous) return 0;
+    return ((current - previous) / Math.abs(previous) * 100).toFixed(1);
+  };
 
   const fetchMonthlyData = async () => {
     const monthYear = formatDate(currentMonth, "yyyy-MM");
@@ -166,26 +180,26 @@ const Dashboard = () => {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
-            title="Balance Total"
-            value={monthlyStats.balance}
-            trend="up"
-            trendValue="12"
+            title="Balance General"
+            value={generalBalance.net_balance}
+            trend={generalBalance.net_balance >= 0 ? "up" : "down"}
+            trendValue={Math.abs(calculateTrend(generalBalance.net_balance, 0))}
             icon={DollarSign}
             color="bg-indigo-600"
           />
           <StatCard
             title="Ingresos Totales"
-            value={monthlyStats.totalIncome}
+            value={generalBalance.total_incomes}
             trend="up"
-            trendValue="8"
+            trendValue={calculateTrend(generalBalance.total_incomes, 0)}
             icon={TrendingUp}
             color="bg-green-600"
           />
           <StatCard
             title="Gastos Totales"
-            value={monthlyStats.totalExpenses}
+            value={generalBalance.total_expenses}
             trend="down"
-            trendValue="5"
+            trendValue={calculateTrend(generalBalance.total_expenses, 0)}
             icon={TrendingUp}
             color="bg-red-600"
           />

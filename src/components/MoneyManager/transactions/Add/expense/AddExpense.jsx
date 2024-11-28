@@ -501,7 +501,7 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
             size="large"
             className="w-full bg-red-500 hover:bg-red-600 h-12"
           >
-            {transactionToEdit ? "Actualizar Transacción" : "Registrar Transacción"}
+             Registrar Egreso
           </Button>
         </div>
       </div>

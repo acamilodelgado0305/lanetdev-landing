@@ -16,7 +16,7 @@ const CategorySelector = ({
 
       <div className="flex justify-center">
         <label className="block font-bold text-gray-500 mb-2">
-          Selecciona la categoría de Egreso
+          Selecciona la categoría
         </label>
       </div>
 
