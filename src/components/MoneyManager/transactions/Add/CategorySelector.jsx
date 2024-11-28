@@ -2,36 +2,40 @@ import React from 'react';
 import { Card, Checkbox } from 'antd';
 import { CheckCircleOutlined } from '@ant-design/icons';
 
-const CategorySelector = ({ 
-  categories = [], 
-  selectedCategory, 
+const CategorySelector = ({
+  categories = [],
+  selectedCategory,
   onCategorySelect,
   additionalInputs = null,
-  onFevCheckChange = () => {},
+  onFevCheckChange = () => { },
   isFevChecked = false,
   ventaCategoryId = null
 }) => {
   return (
     <div className="space-y-3">
-      <label className="block text-sm font-medium text-gray-700 mb-2">
-        Selecciona la categoría de ingreso
-      </label>
+
+      <div className="flex justify-center">
+        <label className="block font-bold text-gray-500 mb-2">
+          Selecciona la categoría de Egreso
+        </label>
+      </div>
+
+
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         {categories.map((cat) => (
           <Card
             key={cat.id}
             onClick={() => onCategorySelect(cat.id.toString())}
-            className={`cursor-pointer transition-all hover:shadow-sm ${
-              selectedCategory === cat.id.toString()
-                ? 'border-green-500 border-2 bg-green-50'
-                : 'hover:border-gray-300'
-            }`}
+            className={`cursor-pointer transition-all hover:shadow-sm ${selectedCategory === cat.id.toString()
+              ? 'border-green-500 border-2 bg-green-50'
+              : 'hover:border-gray-300'
+              }`}
             bodyStyle={{ padding: '8px' }}
             size="small"
           >
             <div className="flex items-center space-x-3">
-              <span className="text-xl flex-shrink-0">{cat.icon || '🏷'}</span>
+             
               <span className="text-sm font-medium flex-grow">{cat.name}</span>
               {selectedCategory === cat.id.toString() && (
                 <CheckCircleOutlined className="text-green-500 flex-shrink-0" />
