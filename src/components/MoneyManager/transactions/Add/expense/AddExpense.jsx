@@ -102,12 +102,6 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
     }).format(amount);
   };
 
-  const handleAmountChange = (e) => {
-    const value = e.target.value.replace(/\./g, "").replace(/[^0-9]/g, "");
-    const numericValue = parseFloat(value) || 0;
-    setRawAmount(numericValue);
-    setAmount(new Intl.NumberFormat("es-CO").format(numericValue));
-  };
 
 
   const handleSave = async () => {
@@ -245,7 +239,7 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
 
 
   const ProviderSelector = ({ providers, selectedProvider, onProviderSelect }) => (
-    <div className="space-y-2">
+    <div className="">
       <label className="block text-sm font-medium text-gray-700">
         Proveedor
       </label>
@@ -323,24 +317,24 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-full bg-white shadow-2xl rounded-lg max-h-full flex flex-col">
-        {/* Header */}
+      <div className="w-full max-w-[80%] bg-white shadow-2xl rounded-lg max-h-[90%] flex flex-col">
         <div className="sticky top-0 bg-white rounded-t-lg z-10">
-          <div className="px-6 py-4">
+          <div className="px-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <span className="text-red-500">
                   <DollarCircleOutlined className="text-2xl" />
                 </span>
-                <h2 className="text-2xl font-semibold text-gray-800">
+                <h2 className="text-2xl pt-2 font-semibold text-gray-800">
                   {transactionToEdit ? "Editar Transacción" : "Nuevo Egreso"}
                 </h2>
               </div>
               <Button
+                color="red"
                 type="text"
                 icon={<CloseOutlined className="text-lg" />}
                 onClick={onClose}
-                className="hover:bg-gray-100 rounded-full h-8 w-8 flex items-center justify-center"
+                className="rounded-full h-8 w-8 flex items-center justify-center"
               />
             </div>
           </div>
@@ -354,9 +348,37 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
             <div className="lg:col-span-2 space-y-6">
               {/* Essential Information Section */}
               <div className="bg-white p-4 rounded-lg border border-gray-500 shadow-sm">
-                <h3 className="font-medium text-gray-700 pb-2 border-b border-gray-200">
-                  Información Básica
-                </h3>
+                <div className="flex justify-center">
+                  <h3 className="font-bold text-gray-500 pb-2 border-b border-gray-200">
+                    Información Básica
+                  </h3>
+                </div>
+
+
+
+                <div className="mt-2 p-2  rounded-md flex items-center gap-4 w-full">
+                  {/* ProviderSelector con flex-grow para que tome el espacio disponible */}
+                  <div className="flex-grow">
+                    <ProviderSelector
+                      providers={providers}
+                      selectedProvider={provider}
+                      onProviderSelect={setProvider}
+                      className="w-full" // Asegura que el selector tome todo el ancho disponible
+                    />
+                  </div>
+
+                  {/* DatePicker con un ancho fijo apropiado */}
+                  <DatePicker
+                    value={date}
+                    onChange={(newDate) => setDate(newDate)}
+                    format="YYYY-MM-DD"
+                    className="w-40" // Ancho fijo para el DatePicker
+                    style={{
+                      fontSize: '1rem',
+                    }}
+                  />
+                </div>
+
 
                 <div className="space-y-4 mt-4">
                   <div className="p-3 bg-gray-50 rounded-md">
@@ -366,6 +388,7 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
                       selectedSubType={subType}
                       onSubTypeChange={setSubType}
                     />
+
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -384,17 +407,7 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
                       />
                     </div>
                     <div className="p-3 bg-gray-50 rounded-md">
-                      <DatePicker
-                        value={date}
-                        onChange={(newDate) => setDate(newDate)}
-                        format="YYYY-MM-DD"
-                        className="w-full text-base"
-                        style={{
-                          fontSize: '1rem',
-                          padding: '4px 8px',
-                          height: '32px'
-                        }}
-                      />
+
                     </div>
                   </div>
 
@@ -412,7 +425,7 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
                 <div className="h-0.5 bg-red-200" />
                 {/* Description and Notes Section */}
                 <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                  <h3 className="font-medium text-gray-700 pb-2 border-b border-gray-200">
+                  <h3 className="font-bold text-gray-500 pb-2 border-b border-gray-200">
                     Detalles
                   </h3>
                   <div className="mt-4 p-3 bg-gray-50 rounded-md">
@@ -425,39 +438,18 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
                   </div>
                 </div>
 
-                {/* Provider Section */}
-                <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                  <h3 className="font-medium text-gray-700 pb-2 border-b border-gray-200">
-                    Proveedor
-                  </h3>
-                  <div className="mt-4 p-3 bg-gray-50 rounded-md">
-                    <ProviderSelector
-                      providers={providers}
-                      selectedProvider={provider}
-                      onProviderSelect={setProvider}
-                    />
-                  </div>
-                </div>
+
               </div>
             </div>
 
             {/* Right Column - Financial Details */}
             <div className="space-y-6">
               <div className="bg-white p-4 rounded-lg border border-gray-500 shadow-sm">
-                <h3 className="font-medium text-gray-700 pb-2 border-b border-gray-200">
+                <h3 className="font-bold text-gray-500 pb-2 border-b border-gray-200">
                   Detalles Financieros
                 </h3>
 
                 <div className="space-y-4 mt-4">
-                  <div className="p-3 bg-gray-50 rounded-md">
-                    <AccountSelector
-                      accounts={accounts}
-                      selectedAccount={account}
-                      onAccountSelect={setAccount}
-                      formatCurrency={formatCurrency}
-                    />
-                  </div>
-                  <div className="h-0.5 bg-red-200" />
 
                   <div className="p-3 bg-gray-50 rounded-md">
                     <AmountCalculator
@@ -476,11 +468,21 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
                       setRetefuenteAmount={setRetefuenteAmount}
                     />
                   </div>
+
+                  <div className="h-0.5 bg-red-200" />
+                  <div className="p-3 bg-gray-50 rounded-md">
+                    <AccountSelector
+                      accounts={accounts}
+                      selectedAccount={account}
+                      onAccountSelect={setAccount}
+                      formatCurrency={formatCurrency}
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                <h3 className="font-medium text-gray-700 pb-2 border-b border-gray-200">
+              <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm border-gray-500">
+                <h3 className="font-bold text-gray-500 pb-2 border-b border-gray-200">
                   Recurrencia
                 </h3>
                 <div className="mt-4 p-3 bg-gray-50 rounded-md">
@@ -499,7 +501,7 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
             size="large"
             className="w-full bg-red-500 hover:bg-red-600 h-12"
           >
-            {transactionToEdit ? "Actualizar Transacción" : "Registrar Transacción"}
+             Registrar Egreso
           </Button>
         </div>
       </div>

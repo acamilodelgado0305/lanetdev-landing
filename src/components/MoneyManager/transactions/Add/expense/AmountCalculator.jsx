@@ -154,7 +154,7 @@ const AmountCalculator = ({
             <span>-${formatCurrency(rawAmount * (retefuentePercentage / 100))}</span>
           </div>
         )}
-        <div className="flex justify-between font-bold border-t pt-2">
+        <div className="flex justify-between font-extrabold border-t pt-2">
           <span>Total:</span>
           <span>${formatCurrency(rawAmount + 
             (hasIva ? rawAmount * (IVA_PERCENTAGE / 100) : 0) - 
