@@ -143,6 +143,24 @@ const TransactionDetailModal = ({
         setCurrentImage(null);
         setIsImageModalOpen(false);
     };
+    const handleDeleteImage = (index) => {
+        // Eliminar la URL de la imagen seleccionada de entry.note
+        const updatedNote = entry.note.split("\n").filter((_, i) => i !== index).join("\n");
+
+        // Actualizar el estado con la nueva lista de imágenes
+        setEditedEntry((prev) => ({
+            ...prev,
+            note: updatedNote,
+        }));
+
+        // Eliminar la imagen de la vista previa
+        const updatedImageUrls = imageUrls.filter((_, i) => i !== index);
+        setImageUrls(updatedImageUrls);
+    };
+    const handleLeaveImage = (index) => {
+        // Solo dejar la imagen actual y continuar con la carga de nuevas imágenes
+        console.log("Imagen dejada: ", entry.note);
+    };
     const handleImageSelection = (e) => {
         const files = Array.from(e.target.files);
 
@@ -152,8 +170,21 @@ const TransactionDetailModal = ({
         // Genera URLs locales para previsualización
         const filePreviews = files.map((file) => URL.createObjectURL(file));
         setImageUrls((prevUrls) => [...prevUrls, ...filePreviews]);
-    };
 
+        // Si estamos reemplazando una imagen, la reemplazamos en el índice correspondiente
+        if (replacingIndex !== null) {
+            const updatedImageUrls = [...imageUrls];
+            updatedImageUrls[replacingIndex] = filePreviews[0]; // Reemplazamos la imagen en el índice correspondiente
+            setImageUrls(updatedImageUrls);
+
+            // Actualizamos la nota (se puede hacer con un join de las URLs)
+            const updatedNote = updatedImageUrls.join("\n");
+            setEditedEntry((prev) => ({
+                ...prev,
+                note: updatedNote,
+            }));
+        }
+    };
     const handleSaveChanges = async () => {
         try {
             if (!editedEntry.amount || parseFloat(editedEntry.amount) <= 0) {
@@ -180,7 +211,7 @@ const TransactionDetailModal = ({
             );
 
             // Concatenar URLs preexistentes con nuevas imágenes
-            const updatedNote = uploadedImageUrls.join("\n");
+            const updatedNote = entry.note.trim() ? `${entry.note}\n${uploadedImageUrls.join("\n")}` : uploadedImageUrls.join("\n");
 
             const formattedEntry = {
                 ...editedEntry,
@@ -225,55 +256,9 @@ const TransactionDetailModal = ({
     }
 
 
-    const handleImageUpload = async (e) => {
-        const files = Array.from(e.target.files);
-        if (files.length > 0) {
-            setIsUploading(true);
-            try {
-                // Subir todas las imágenes seleccionadas
-                const uploadedImageUrls = await Promise.all(
-                    files.map(async (file) => {
-                        const uploadedImageUrl = await uploadImage(file);
-                        return uploadedImageUrl;
-                    })
-                );
-
-                // Actualizar el campo `note` en el estado `editedEntry`
-                setEditedEntry((prev) => ({
-                    ...prev,
-                    note: uploadedImageUrls.join("\n"), // Sobrescribe las URLs de las imágenes existentes
-                }));
-
-                // También actualiza las imágenes que se muestran en el formulario
-                setImageUrls(uploadedImageUrls);
-
-                // Notificar éxito
-                Swal.fire({
-                    icon: "success",
-                    title: "Imágenes actualizadas",
-                    text: "Las imágenes se han reemplazado correctamente.",
-                    confirmButtonColor: "#28a745",
-                });
-            } catch (error) {
-                console.error("Error al subir las imágenes:", error);
-
-                // Notificar error
-                Swal.fire({
-                    icon: "error",
-                    title: "Error",
-                    text: "No se pudieron subir algunas imágenes. Por favor, intente de nuevo.",
-                    confirmButtonColor: "#d33",
-                });
-            } finally {
-                setIsUploading(false); // Finaliza el estado de carga
-            }
-        }
-    };
-
-
     return (
         <div className="fixed inset-y-0 right-0 w-full md:w-[38em] bg-white shadow-lg z-50 transform transition-transform duration-300 overflow-y-auto">
-            <div className="p-6">
+            <div className="p-8">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center space-x-2">
@@ -410,31 +395,72 @@ const TransactionDetailModal = ({
                                 </p>
                             )}
                         </div>
-                        {entry.note && (
-                            <div className="col-span-2">
-                                <p className="text-sm text-gray-500">Comprobante</p>
-                                {isEditMode ? (
-                                    <div>
-                                        {/* Campo para subir imágenes */}
-                                        <input
-                                            type="file"
-                                            multiple
-                                            accept="image/*"
-                                            onChange={handleImageSelection}
-                                            className="mb-2"
-                                        />
+                        <div>
+                            {entry.note && entry.note.trim() ? (
+                                <div className="col-span-2">
+                                    <p className="text-sm text-gray-500">Comprobante</p>
 
-                                        {/* Indicador de carga */}
-                                        {isUploading && (
-                                            <div className="flex items-center gap-2">
-                                                <Spin size="small" />
-                                                <span>Subiendo imágenes...</span>
+                                    {/* Mostrar imágenes existentes */}
+                                    <div className="flex flex-wrap gap-2">
+                                        {entry.note.trim().split("\n").map((noteUrl, index) => (
+                                            <div key={index} className="relative w-28 h-40">
+                                                <img
+                                                    src={noteUrl}
+                                                    alt={`Comprobante ${index + 1}`}
+                                                    className="w-full h-full object-cover border rounded-md cursor-pointer"
+                                                    onClick={() => openImageModal(noteUrl)} // Lógica para abrir una modal si deseas ver la imagen
+                                                />
+
+                                                {/* Mostrar opciones solo si estamos en modo edición */}
+                                                {isEditMode && (
+                                                    <div className="absolute top-0 right-0 bg-black bg-opacity-50 text-white text-xs rounded p-1 flex gap-1">
+                                                        {/* Eliminar la imagen */}
+                                                        <button
+                                                            onClick={() => handleDeleteImage(index)}
+                                                            className="bg-red-500 hover:bg-red-600 p-1 rounded"
+                                                        >
+                                                            Eliminar
+                                                        </button>
+                                                        {/* Dejar la imagen actual */}
+                                                        <button
+                                                            onClick={() => handleLeaveImage(index)}
+                                                            className="bg-green-500 hover:bg-green-600 p-1 rounded"
+                                                        >
+                                                            Dejar
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </div>
-                                        )}
+                                        ))}
+                                    </div>
+                                </div>
+                            ) : (
+                                <p className="text-gray-500">Sin comprobantes</p>
+                            )}
 
-                                        {/* Mostrar miniaturas de las imágenes subidas */}
-                                        <div className="flex flex-wrap gap-2 mt-2">
-                                            {imageUrls.map((url, index) => (
+                            {/* Campo para seleccionar nuevas imágenes solo si estamos editando */}
+                            {isEditMode && (
+                                <>
+                                    <input
+                                        type="file"
+                                        multiple
+                                        accept="image/*"
+                                        onChange={handleImageSelection}
+                                        className="mb-2"
+                                    />
+
+                                    {/* Indicador de carga */}
+                                    {isUploading && (
+                                        <div className="flex items-center gap-2">
+                                            <Spin size="small" />
+                                            <span>Subiendo imágenes...</span>
+                                        </div>
+                                    )}
+
+                                    {/* Mostrar miniaturas de las imágenes subidas */}
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                        {imageUrls.length > 0 ? (
+                                            imageUrls.map((url, index) => (
                                                 <div key={index} className="relative w-16 h-16">
                                                     <img
                                                         src={url}
@@ -442,33 +468,15 @@ const TransactionDetailModal = ({
                                                         className="w-full h-full object-cover border rounded-md"
                                                     />
                                                 </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="flex flex-wrap gap-2">
-                                        {entry.note && entry.note.trim() ? (
-                                            entry.note
-                                                .trim()
-                                                .split("\n")
-                                                .filter((noteUrl) => noteUrl.trim() !== "")
-                                                .map((noteUrl, index) => (
-                                                    <div key={index} className="relative w-28 h-40">
-                                                        <img
-                                                            src={noteUrl}
-                                                            alt={`Comprobante ${index + 1}`}
-                                                            className="w-full h-full object-cover border rounded-md cursor-pointer"
-                                                            onClick={() => openImageModal(noteUrl)}
-                                                        />
-                                                    </div>
-                                                ))
+                                            ))
                                         ) : (
                                             <p className="text-gray-500">Sin comprobantes</p>
                                         )}
                                     </div>
-                                )}
-                            </div>
-                        )}
+                                </>
+                            )}
+
+                        </div>
                     </div>
                 </div>
             </div>
