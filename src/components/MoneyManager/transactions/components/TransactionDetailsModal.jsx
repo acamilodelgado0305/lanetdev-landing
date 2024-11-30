@@ -36,7 +36,9 @@ const TransactionDetailModal = ({
     const [selectedImages, setSelectedImages] = useState([]);
     const [accounts, setAccounts] = useState([]);
     const [loading, setLoading] = useState(true);
-
+    const [ventaCategoryId, setVentaCategoryId] = useState(null);
+    const [categories, setCategories] = useState([]);
+    const [arqueoCategoryId, setArqueoCategoryId] = useState(null);
 
     const { authToken } = useAuth();
     const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
@@ -87,7 +89,39 @@ const TransactionDetailModal = ({
         fetchAccounts();
     }, []);
 
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                // Usamos axios para obtener las categorías
+                const response = await axios.get(`${API_BASE_URL}/categories`);
 
+                // Filtramos las categorías que son de tipo 'income' o 'ingreso'
+                const incomeCategories = response.data.filter(category =>
+                    category.type?.toLowerCase() === 'income' ||
+                    category.type?.toLowerCase() === 'ingreso'
+                );
+
+                // Actualizamos el estado con las categorías filtradas
+                setCategories(incomeCategories);
+
+                // Buscamos las categorías 'Arqueo' y 'Venta' para guardarlas
+                const arqueoCategory = incomeCategories.find(cat => cat.name === 'Arqueo');
+                const ventaCategory = incomeCategories.find(cat => cat.name === 'Venta');
+
+                if (arqueoCategory) {
+                    setArqueoCategoryId(arqueoCategory.id);
+                }
+                if (ventaCategory) {
+                    setVentaCategoryId(ventaCategory.id);
+                }
+            } catch (error) {
+                console.error("Error al obtener las categorías:", error);
+            }
+        };
+
+        // Llamamos a la función para obtener las categorías
+        fetchCategories();
+    }, [isOpen]);
     const fetchUserName = async (userId, token) => {
         try {
             const userData = await getUserById(userId, token);
@@ -310,10 +344,22 @@ const TransactionDetailModal = ({
                         <div>
                             <p className="text-sm text-gray-500">Categoría</p>
                             {isEditMode ? (
-                                <Input
+                                <select
                                     value={editedEntry.category_id}
                                     onChange={(e) => handleInputChange("category_id", e.target.value)}
-                                />
+                                    className="form-select w-full h-12"
+                                >
+                                    <option value="">Seleccionar categoría...</option>
+                                    {loading ? (
+                                        <option>Cargando...</option>
+                                    ) : (
+                                        categories.map((category) => (
+                                            <option key={category.id} value={category.id}>
+                                                {category.name}
+                                            </option>
+                                        ))
+                                    )}
+                                </select>
                             ) : (
                                 <p className="font-medium">
                                     {getCategoryName(entry.category_id)}
