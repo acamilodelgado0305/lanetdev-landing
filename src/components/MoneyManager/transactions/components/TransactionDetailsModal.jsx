@@ -34,6 +34,11 @@ const TransactionDetailModal = ({
     const [isUploading, setIsUploading] = useState(false);
     const [imageUrls, setImageUrls] = useState([]);
     const [selectedImages, setSelectedImages] = useState([]);
+    const [accounts, setAccounts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [ventaCategoryId, setVentaCategoryId] = useState(null);
+    const [categories, setCategories] = useState([]);
+    const [arqueoCategoryId, setArqueoCategoryId] = useState(null);
 
     const { authToken } = useAuth();
     const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
@@ -68,6 +73,55 @@ const TransactionDetailModal = ({
         }
     }, [isOpen, entry, authToken]);
 
+    useEffect(() => {
+        const fetchAccounts = async () => {
+            try {
+                const response = await axios.get(`${API_BASE_URL}/accounts`);
+                const filteredAccounts = response.data.filter(account => account.type === "Banco");
+                setAccounts(filteredAccounts);
+                setLoading(false);
+            } catch (error) {
+                console.error("Error fetching accounts:", error);
+                setLoading(false);
+            }
+        };
+
+        fetchAccounts();
+    }, []);
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                // Usamos axios para obtener las categorías
+                const response = await axios.get(`${API_BASE_URL}/categories`);
+
+                // Filtramos las categorías que son de tipo 'income' o 'ingreso'
+                const incomeCategories = response.data.filter(category =>
+                    category.type?.toLowerCase() === 'income' ||
+                    category.type?.toLowerCase() === 'ingreso'
+                );
+
+                // Actualizamos el estado con las categorías filtradas
+                setCategories(incomeCategories);
+
+                // Buscamos las categorías 'Arqueo' y 'Venta' para guardarlas
+                const arqueoCategory = incomeCategories.find(cat => cat.name === 'Arqueo');
+                const ventaCategory = incomeCategories.find(cat => cat.name === 'Venta');
+
+                if (arqueoCategory) {
+                    setArqueoCategoryId(arqueoCategory.id);
+                }
+                if (ventaCategory) {
+                    setVentaCategoryId(ventaCategory.id);
+                }
+            } catch (error) {
+                console.error("Error al obtener las categorías:", error);
+            }
+        };
+
+        // Llamamos a la función para obtener las categorías
+        fetchCategories();
+    }, [isOpen]);
     const fetchUserName = async (userId, token) => {
         try {
             const userData = await getUserById(userId, token);
@@ -123,6 +177,24 @@ const TransactionDetailModal = ({
         setCurrentImage(null);
         setIsImageModalOpen(false);
     };
+    const handleDeleteImage = (index) => {
+        // Eliminar la URL de la imagen seleccionada de entry.note
+        const updatedNote = entry.note.split("\n").filter((_, i) => i !== index).join("\n");
+
+        // Actualizar el estado con la nueva lista de imágenes
+        setEditedEntry((prev) => ({
+            ...prev,
+            note: updatedNote,
+        }));
+
+        // Eliminar la imagen de la vista previa
+        const updatedImageUrls = imageUrls.filter((_, i) => i !== index);
+        setImageUrls(updatedImageUrls);
+    };
+    const handleLeaveImage = (index) => {
+        // Solo dejar la imagen actual y continuar con la carga de nuevas imágenes
+        console.log("Imagen dejada: ", entry.note);
+    };
     const handleImageSelection = (e) => {
         const files = Array.from(e.target.files);
 
@@ -132,8 +204,21 @@ const TransactionDetailModal = ({
         // Genera URLs locales para previsualización
         const filePreviews = files.map((file) => URL.createObjectURL(file));
         setImageUrls((prevUrls) => [...prevUrls, ...filePreviews]);
-    };
 
+        // Si estamos reemplazando una imagen, la reemplazamos en el índice correspondiente
+        if (replacingIndex !== null) {
+            const updatedImageUrls = [...imageUrls];
+            updatedImageUrls[replacingIndex] = filePreviews[0]; // Reemplazamos la imagen en el índice correspondiente
+            setImageUrls(updatedImageUrls);
+
+            // Actualizamos la nota (se puede hacer con un join de las URLs)
+            const updatedNote = updatedImageUrls.join("\n");
+            setEditedEntry((prev) => ({
+                ...prev,
+                note: updatedNote,
+            }));
+        }
+    };
     const handleSaveChanges = async () => {
         try {
             if (!editedEntry.amount || parseFloat(editedEntry.amount) <= 0) {
@@ -160,7 +245,7 @@ const TransactionDetailModal = ({
             );
 
             // Concatenar URLs preexistentes con nuevas imágenes
-            const updatedNote = uploadedImageUrls.join("\n");
+            const updatedNote = entry.note.trim() ? `${entry.note}\n${uploadedImageUrls.join("\n")}` : uploadedImageUrls.join("\n");
 
             const formattedEntry = {
                 ...editedEntry,
@@ -205,55 +290,9 @@ const TransactionDetailModal = ({
     }
 
 
-    const handleImageUpload = async (e) => {
-        const files = Array.from(e.target.files);
-        if (files.length > 0) {
-            setIsUploading(true);
-            try {
-                // Subir todas las imágenes seleccionadas
-                const uploadedImageUrls = await Promise.all(
-                    files.map(async (file) => {
-                        const uploadedImageUrl = await uploadImage(file);
-                        return uploadedImageUrl;
-                    })
-                );
-
-                // Actualizar el campo `note` en el estado `editedEntry`
-                setEditedEntry((prev) => ({
-                    ...prev,
-                    note: uploadedImageUrls.join("\n"), // Sobrescribe las URLs de las imágenes existentes
-                }));
-
-                // También actualiza las imágenes que se muestran en el formulario
-                setImageUrls(uploadedImageUrls);
-
-                // Notificar éxito
-                Swal.fire({
-                    icon: "success",
-                    title: "Imágenes actualizadas",
-                    text: "Las imágenes se han reemplazado correctamente.",
-                    confirmButtonColor: "#28a745",
-                });
-            } catch (error) {
-                console.error("Error al subir las imágenes:", error);
-
-                // Notificar error
-                Swal.fire({
-                    icon: "error",
-                    title: "Error",
-                    text: "No se pudieron subir algunas imágenes. Por favor, intente de nuevo.",
-                    confirmButtonColor: "#d33",
-                });
-            } finally {
-                setIsUploading(false); // Finaliza el estado de carga
-            }
-        }
-    };
-
-
     return (
-        <div className="fixed inset-y-0 right-0 w-full md:w-[32em] bg-white shadow-lg z-50 transform transition-transform duration-300 overflow-y-auto">
-            <div className="p-6">
+        <div className="fixed inset-y-0 right-0 w-full md:w-[38em] bg-white shadow-lg z-50 transform transition-transform duration-300 overflow-y-auto">
+            <div className="p-8">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center space-x-2">
@@ -305,10 +344,22 @@ const TransactionDetailModal = ({
                         <div>
                             <p className="text-sm text-gray-500">Categoría</p>
                             {isEditMode ? (
-                                <Input
+                                <select
                                     value={editedEntry.category_id}
                                     onChange={(e) => handleInputChange("category_id", e.target.value)}
-                                />
+                                    className="form-select w-full h-12"
+                                >
+                                    <option value="">Seleccionar categoría...</option>
+                                    {loading ? (
+                                        <option>Cargando...</option>
+                                    ) : (
+                                        categories.map((category) => (
+                                            <option key={category.id} value={category.id}>
+                                                {category.name}
+                                            </option>
+                                        ))
+                                    )}
+                                </select>
                             ) : (
                                 <p className="font-medium">
                                     {getCategoryName(entry.category_id)}
@@ -318,10 +369,22 @@ const TransactionDetailModal = ({
                         <div>
                             <p className="text-sm text-gray-500">Cuenta</p>
                             {isEditMode ? (
-                                <Input
+                                <select
                                     value={editedEntry.account_id}
                                     onChange={(e) => handleInputChange("account_id", e.target.value)}
-                                />
+                                    className="form-select w-full h-12"
+                                >
+                                    <option value="">Seleccionar cuenta...</option>
+                                    {loading ? (
+                                        <option>Loading...</option>
+                                    ) : (
+                                        accounts.map((account) => (
+                                            <option key={account.id} value={account.id}>
+                                                {account.name}
+                                            </option>
+                                        ))
+                                    )}
+                                </select>
                             ) : (
                                 <p className="font-medium">
                                     {getAccountName(entry.account_id)}
@@ -378,31 +441,55 @@ const TransactionDetailModal = ({
                                 </p>
                             )}
                         </div>
-                        {entry.note && (
-                            <div className="col-span-2">
-                                <p className="text-sm text-gray-500">Comprobante</p>
-                                {isEditMode ? (
-                                    <div>
-                                        {/* Campo para subir imágenes */}
-                                        <input
-                                            type="file"
-                                            multiple
-                                            accept="image/*"
-                                            onChange={handleImageSelection}
-                                            className="mb-2"
-                                        />
+                        <div>
+                            {entry.note && entry.note.trim() ? (
+                                <div className="col-span-2">
+                                    <p className="text-sm text-gray-500">Comprobante</p>
 
-                                        {/* Indicador de carga */}
-                                        {isUploading && (
-                                            <div className="flex items-center gap-2">
-                                                <Spin size="small" />
-                                                <span>Subiendo imágenes...</span>
+                                    {/* Mostrar imágenes existentes */}
+                                    <div className="flex flex-wrap gap-2">
+                                        {entry.note.trim().split("\n").map((noteUrl, index) => (
+                                            <div key={index} className="relative w-28 h-40">
+                                                <img
+                                                    src={noteUrl}
+                                                    alt={`Comprobante ${index + 1}`}
+                                                    className="w-full h-full object-cover border rounded-md cursor-pointer"
+                                                    onClick={() => openImageModal(noteUrl)} // Lógica para abrir una modal si deseas ver la imagen
+                                                />
+
+                                                {/* Mostrar opciones solo si estamos en modo edición */}
+
                                             </div>
-                                        )}
+                                        ))}
+                                    </div>
+                                </div>
+                            ) : (
+                                <p className="text-gray-500">Sin comprobantes</p>
+                            )}
 
-                                        {/* Mostrar miniaturas de las imágenes subidas */}
-                                        <div className="flex flex-wrap gap-2 mt-2">
-                                            {imageUrls.map((url, index) => (
+                            {/* Campo para seleccionar nuevas imágenes solo si estamos editando */}
+                            {isEditMode && (
+                                <>
+                                    <input
+                                        type="file"
+                                        multiple
+                                        accept="image/*"
+                                        onChange={handleImageSelection}
+                                        className="mb-2"
+                                    />
+
+                                    {/* Indicador de carga */}
+                                    {isUploading && (
+                                        <div className="flex items-center gap-2">
+                                            <Spin size="small" />
+                                            <span>Subiendo imágenes...</span>
+                                        </div>
+                                    )}
+
+                                    {/* Mostrar miniaturas de las imágenes subidas */}
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                        {imageUrls.length > 0 ? (
+                                            imageUrls.map((url, index) => (
                                                 <div key={index} className="relative w-16 h-16">
                                                     <img
                                                         src={url}
@@ -410,33 +497,15 @@ const TransactionDetailModal = ({
                                                         className="w-full h-full object-cover border rounded-md"
                                                     />
                                                 </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="flex flex-wrap gap-2">
-                                        {entry.note && entry.note.trim() ? (
-                                            entry.note
-                                                .trim()
-                                                .split("\n")
-                                                .filter((noteUrl) => noteUrl.trim() !== "")
-                                                .map((noteUrl, index) => (
-                                                    <div key={index} className="relative w-28 h-40">
-                                                        <img
-                                                            src={noteUrl}
-                                                            alt={`Comprobante ${index + 1}`}
-                                                            className="w-full h-full object-cover border rounded-md cursor-pointer"
-                                                            onClick={() => openImageModal(noteUrl)}
-                                                        />
-                                                    </div>
-                                                ))
+                                            ))
                                         ) : (
                                             <p className="text-gray-500">Sin comprobantes</p>
                                         )}
                                     </div>
-                                )}
-                            </div>
-                        )}
+                                </>
+                            )}
+
+                        </div>
                     </div>
                 </div>
             </div>
