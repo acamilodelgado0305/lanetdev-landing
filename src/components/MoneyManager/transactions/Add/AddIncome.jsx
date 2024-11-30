@@ -25,9 +25,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
   const [rawDiversoAmount, setRawDiversoAmount] = useState("");
   const [category, setCategory] = useState("");
   const [account, setAccount] = useState("");
-  const [fromAccount, setFromAccount] = useState("");
-  const [toAccount, setToAccount] = useState("");
-  const [note, setNote] = useState("");
+  const [voucher, setVoucher] = useState("");
   const [description, setDescription] = useState("");
   const [categories, setCategories] = useState([]);
   const [accounts, setAccounts] = useState([]);
@@ -155,7 +153,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
         }));
 
         setImageUrls((prevUrls) => [...prevUrls, ...uploadedImageUrls]);
-        setNote((prevNote) => `${prevNote}\n${uploadedImageUrls.join("\n")}`);
+        setVoucher((prevVoucher) => `${prevVoucher}\n${uploadedImageUrls.join("\n")}`);
       } catch (error) {
         console.error("Error al subir las imágenes:", error);
         Swal.fire({
@@ -222,7 +220,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
         category_id: parseInt(category),
         type: transactionType, // Usar el tipo determinado por la condición
         date: date.format("YYYY-MM-DD[T]HH:mm:ss[Z]"),
-        note: note,
+        voucher: voucher,
         description: description,
         estado: true
       };
@@ -278,7 +276,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
       setRawDiversoAmount("");
       setCategory("");
       setAccount("");
-      setNote("");
+      setVoucher("");
       setDescription("");
       setImageUrls([]);
       setDate(dayjs());
@@ -505,7 +503,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
                       icon={<IoClose />}
                       onClick={() => {
                         setImageUrls(urls => urls.filter((_, i) => i !== index));
-                        setNote(note => note.replace(url, '').trim());
+                        setVoucher(voucher => voucher.replace(url, '').trim());
                       }}
                       className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
                     />
