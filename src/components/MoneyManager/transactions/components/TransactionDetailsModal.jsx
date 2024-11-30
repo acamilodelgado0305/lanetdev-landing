@@ -412,24 +412,7 @@ const TransactionDetailModal = ({
                                                 />
 
                                                 {/* Mostrar opciones solo si estamos en modo edición */}
-                                                {isEditMode && (
-                                                    <div className="absolute top-0 right-0 bg-black bg-opacity-50 text-white text-xs rounded p-1 flex gap-1">
-                                                        {/* Eliminar la imagen */}
-                                                        <button
-                                                            onClick={() => handleDeleteImage(index)}
-                                                            className="bg-red-500 hover:bg-red-600 p-1 rounded"
-                                                        >
-                                                            Eliminar
-                                                        </button>
-                                                        {/* Dejar la imagen actual */}
-                                                        <button
-                                                            onClick={() => handleLeaveImage(index)}
-                                                            className="bg-green-500 hover:bg-green-600 p-1 rounded"
-                                                        >
-                                                            Dejar
-                                                        </button>
-                                                    </div>
-                                                )}
+
                                             </div>
                                         ))}
                                     </div>
