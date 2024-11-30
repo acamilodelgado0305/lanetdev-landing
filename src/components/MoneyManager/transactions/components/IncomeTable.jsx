@@ -132,7 +132,7 @@ const IncomeTable = ({ entries, categories = [], accounts = [] }) => {
         { title: "Monto FEV", field: "amountfev", width: "120px" },
         { title: "Monto Diverse", field: "amountdiverse", width: "120px" },
         { title: "Tipo", field: "type", width: "100px" },
-        { title: "Comprobante", field: "note", width: "120px" },
+        { title: "Comprobante", field: "voucher", width: "120px" },
     ];
 
     return (
@@ -209,12 +209,14 @@ const IncomeTable = ({ entries, categories = [], accounts = [] }) => {
                                         {entry.type}
                                     </td>
                                     <td className="border-r border-gray-200 p-2 truncate">
-                                        {entry.note ? (
+                                        {Array.isArray(entry.voucher) && entry.voucher.length > 0 ? (
                                             <a
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    const notesArray = entry.note.trim().split("\n").filter((noteUrl) => noteUrl.trim() !== "");
-                                                    openDrawer(notesArray); // Pasa todas las URLs al Drawer
+                                                    const voucherArray = entry.voucher.filter(
+                                                        (voucherUrl) => typeof voucherUrl === "string" && voucherUrl.trim() !== ""
+                                                    ); // Asegurarse de que sean cadenas no vacías
+                                                    openDrawer(voucherArray); // Pasa las URLs al Drawer
                                                 }}
                                                 className="text-blue-500 underline"
                                             >
@@ -224,6 +226,7 @@ const IncomeTable = ({ entries, categories = [], accounts = [] }) => {
                                             "—"
                                         )}
                                     </td>
+
                                 </tr>
                             </Tooltip>
                         ))}

@@ -52,7 +52,7 @@ const TransactionDetailModal = ({
                     amount: parseFloat(entry.amount) || 0,
                     amountfev: parseFloat(entry.amountfev) || 0,
                     amountdiverse: parseFloat(entry.amountdiverse) || 0,
-                    note: entry.note || "",
+                    voucher: entry.voucher || "",
                     description: entry.description || "",
                     estado: entry.estado,
                 });
@@ -65,7 +65,7 @@ const TransactionDetailModal = ({
                     amountdiverse: "",
                     category_id: "",
                     account_id: "",
-                    note: "",
+                    voucher: "",
                     description: "",
                     estado: true,
                 });
@@ -178,13 +178,13 @@ const TransactionDetailModal = ({
         setIsImageModalOpen(false);
     };
     const handleDeleteImage = (index) => {
-        // Eliminar la URL de la imagen seleccionada de entry.note
-        const updatedNote = entry.note.split("\n").filter((_, i) => i !== index).join("\n");
+        // Eliminar la URL de la imagen seleccionada de entry.voucher
+        const updatedVoucher = entry.voucher.split("\n").filter((_, i) => i !== index).join("\n");
 
         // Actualizar el estado con la nueva lista de imágenes
         setEditedEntry((prev) => ({
             ...prev,
-            note: updatedNote,
+            voucher: updatedVoucher,
         }));
 
         // Eliminar la imagen de la vista previa
@@ -193,7 +193,7 @@ const TransactionDetailModal = ({
     };
     const handleLeaveImage = (index) => {
         // Solo dejar la imagen actual y continuar con la carga de nuevas imágenes
-        console.log("Imagen dejada: ", entry.note);
+        console.log("Imagen dejada: ", entry.voucher);
     };
     const handleImageSelection = (e) => {
         const files = Array.from(e.target.files);
@@ -212,10 +212,10 @@ const TransactionDetailModal = ({
             setImageUrls(updatedImageUrls);
 
             // Actualizamos la nota (se puede hacer con un join de las URLs)
-            const updatedNote = updatedImageUrls.join("\n");
+            const updatedVoucher = updatedImageUrls.join("\n");
             setEditedEntry((prev) => ({
                 ...prev,
-                note: updatedNote,
+                voucher: updatedVoucher,
             }));
         }
     };
@@ -245,14 +245,14 @@ const TransactionDetailModal = ({
             );
 
             // Concatenar URLs preexistentes con nuevas imágenes
-            const updatedNote = entry.note.trim() ? `${entry.note}\n${uploadedImageUrls.join("\n")}` : uploadedImageUrls.join("\n");
+            const updatedVpucher = entry.voucher.trim() ? `${entry.voucher}\n${uploadedImageUrls.join("\n")}` : uploadedImageUrls.join("\n");
 
             const formattedEntry = {
                 ...editedEntry,
                 amount: parseFloat(editedEntry.amount),
                 amountfev: parseFloat(editedEntry.amountfev) || 0,
                 amountdiverse: parseFloat(editedEntry.amountdiverse) || 0,
-                note: updatedNote, // Reemplazar las imágenes anteriores por las nuevas
+                voucher: updatedVoucher, // Reemplazar las imágenes anteriores por las nuevas
                 estado: editedEntry.estado === "Activo" || editedEntry.estado === true,
             };
 
@@ -442,19 +442,19 @@ const TransactionDetailModal = ({
                             )}
                         </div>
                         <div>
-                            {entry.note && entry.note.trim() ? (
+                            {entry.voucher && entry.voucher.trim() ? (
                                 <div className="col-span-2">
                                     <p className="text-sm text-gray-500">Comprobante</p>
 
                                     {/* Mostrar imágenes existentes */}
                                     <div className="flex flex-wrap gap-2">
-                                        {entry.note.trim().split("\n").map((noteUrl, index) => (
+                                        {entry.voucher.trim().split("\n").map((voucherUrl, index) => (
                                             <div key={index} className="relative w-28 h-40">
                                                 <img
-                                                    src={noteUrl}
+                                                    src={voucherUrl}
                                                     alt={`Comprobante ${index + 1}`}
                                                     className="w-full h-full object-cover border rounded-md cursor-pointer"
-                                                    onClick={() => openImageModal(noteUrl)} // Lógica para abrir una modal si deseas ver la imagen
+                                                    onClick={() => openImageModal(voucherUrl)} // Lógica para abrir una modal si deseas ver la imagen
                                                 />
 
                                                 {/* Mostrar opciones solo si estamos en modo edición */}

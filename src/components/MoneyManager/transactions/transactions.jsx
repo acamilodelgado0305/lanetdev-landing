@@ -12,7 +12,7 @@ import {
   deleteTransaction,
   deleteTransfer
 } from "../../../services/moneymanager/moneyService";
-import NoteContentModal from "./ViewImageModal";
+import VoucherContentModal from "./ViewImageModal";
 import TransactionTable from "./components/TransactionTable";
 import IncomeTable from "./components/IncomeTable";
 import { useAuth } from '../../Context/AuthProvider';
@@ -34,7 +34,7 @@ const formatCurrency = (amount) => {
 
 const TransactionsDashboard = () => {
   const [isContentModalOpen, setIsContentModalOpen] = useState(false);
-  const [selectedNoteContent, setSelectedNoteContent] = useState("");
+  const [selectedVoucherContent, setSelectedVoucherContent] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isIncomeModalOpen, setIsIncomeModalOpen] = useState(false);
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
@@ -62,8 +62,8 @@ const TransactionsDashboard = () => {
     setIsModalOpen(true);
   };
 
-  const openContentModal = (noteContent) => {
-    setSelectedNoteContent(noteContent);
+  const openContentModal = (voucherContent) => {
+    setSelectedVoucherContent(voucherContent);
     setIsContentModalOpen(true);
   };
 
@@ -74,7 +74,7 @@ const TransactionsDashboard = () => {
 
   const closeContentModal = () => {
     setIsContentModalOpen(false);
-    setSelectedNoteContent("");
+    setSelectedVoucherContent("");
   };
 
   const openIncomeModal = () => {
@@ -190,7 +190,7 @@ const TransactionsDashboard = () => {
       filtered = filtered.filter(
         (entry) =>
           entry.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (entry.note && entry.note.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (entry.voucher && entry.voucher.toLowerCase().includes(searchTerm.toLowerCase())) ||
           (entry.category && entry.category.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
@@ -409,7 +409,7 @@ const TransactionsDashboard = () => {
       />
 
 
-      <NoteContentModal isOpen={isContentModalOpen} onClose={closeContentModal} noteContent={selectedNoteContent} />
+      <VoucherContentModal isOpen={isContentModalOpen} onClose={closeContentModal} voucherContent={selectedVoucherContent} />
     </div>
   );
 };

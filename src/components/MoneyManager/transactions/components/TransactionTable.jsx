@@ -119,7 +119,7 @@ const TransactionTable = ({
         },
         { 
             title: 'Comprobante', 
-            field: 'note',
+            field: 'voucher',
             width: '120px',
         },
         { 
@@ -229,11 +229,11 @@ const TransactionTable = ({
                                 )}
                             </td>
                             <td className="border-r border-gray-200 p-2 truncate">
-                                {entry.note ? (
+                                {entry.voucher ? (
                                     <Button
                                         type="link"
                                         size="small"
-                                        onClick={() => onOpenContentModal(entry.note)}
+                                        onClick={() => onOpenContentModal(entry.voucher)}
                                         icon={<FileTextOutlined />}
                                     >
                                         Ver

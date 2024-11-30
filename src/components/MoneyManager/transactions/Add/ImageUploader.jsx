@@ -5,7 +5,7 @@ import { IoClose } from "react-icons/io5";
 import Swal from "sweetalert2";
 import { uploadImage } from "../../../../services/apiService"; // Ajusta la ruta según tu estructura
 
-const ImageUploader = ({ imageUrls, setImageUrls, note, setNote }) => {
+const ImageUploader = ({ imageUrls, setImageUrls, voucher, setVoucher }) => {
   const [isUploading, setIsUploading] = React.useState(false);
 
   const handleImageUpload = async (e) => {
@@ -19,7 +19,7 @@ const ImageUploader = ({ imageUrls, setImageUrls, note, setNote }) => {
         }));
 
         setImageUrls((prevUrls) => [...prevUrls, ...uploadedImageUrls]);
-        setNote((prevNote) => `${prevNote}\n${uploadedImageUrls.join("\n")}`);
+        setVoucher((prevVoucher) => `${prevVoucher}\n${uploadedImageUrls.join("\n")}`);
       } catch (error) {
         console.error("Error al subir las imágenes:", error);
         Swal.fire({
@@ -36,7 +36,7 @@ const ImageUploader = ({ imageUrls, setImageUrls, note, setNote }) => {
 
   const handleRemoveImage = (index, url) => {
     setImageUrls(urls => urls.filter((_, i) => i !== index));
-    setNote(note => note.replace(url, '').trim());
+    setVoucher(voucher => voucher.replace(url, '').trim());
   };
 
   return (
