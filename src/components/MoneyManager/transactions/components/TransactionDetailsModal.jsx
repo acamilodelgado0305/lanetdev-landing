@@ -122,6 +122,7 @@ const TransactionDetailModal = ({
         // Llamamos a la función para obtener las categorías
         fetchCategories();
     }, [isOpen]);
+
     const fetchUserName = async (userId, token) => {
         try {
             const userData = await getUserById(userId, token);
