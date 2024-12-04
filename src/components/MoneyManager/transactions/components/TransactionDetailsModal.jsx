@@ -542,7 +542,7 @@ const TransactionDetailModal = ({
                 </p>
             </Modal>
             {/* Botones de acción */}
-            <div className=" sticky bottom-4 left-0 right-0 bg-white p-4 border-t flex justify-around">
+            <div className=" fixed bottom-4 left-0 right-0 bg-white p-4 border-t flex justify-around">
                 <Button
                     className="flex flex-col items-center text-blue-600 hover:text-blue-800"
                     icon={
