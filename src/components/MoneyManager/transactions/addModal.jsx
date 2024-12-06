@@ -30,7 +30,7 @@ const AddEntryModal = ({
   const [account, setAccount] = useState("");
   const [fromAccount, setFromAccount] = useState("");
   const [toAccount, setToAccount] = useState("");
-  const [note, setNote] = useState("");
+  const [voucher, setVpoucher] = useState("");
   const [description, setDescription] = useState("");
   const [categories, setCategories] = useState([]);
   const [accounts, setAccounts] = useState([]);
@@ -62,7 +62,7 @@ const AddEntryModal = ({
       setRawAmount(numericAmount);
       setAmount(new Intl.NumberFormat("es-CO").format(numericAmount));
 
-      setNote(transactionToEdit.note || "");
+      setVoucher(transactionToEdit.voucher || "");
       setDescription(transactionToEdit.description || "");
       setIsRecurring(transactionToEdit.recurrent || false);
       setDate(transactionToEdit.date ? dayjs(transactionToEdit.date) : dayjs());
@@ -117,7 +117,7 @@ const AddEntryModal = ({
         }));
 
         setImageUrls((prevUrls) => [...prevUrls, ...uploadedImageUrls]);
-        setNote((prevNote) => `${prevNote}\n${uploadedImageUrls.join("\n")}`);
+        setVoucher((prevVoucher) => `${prevVoucher}\n${uploadedImageUrls.join("\n")}`);
       } catch (error) {
         console.error("Error al subir las imágenes:", error);
         Swal.fire({
@@ -175,7 +175,7 @@ const AddEntryModal = ({
         toAccountId: parseInt(toAccount, 10),
         amount: parseFloat(rawAmount),
         date: localDate,
-        note: note,
+        voucher: voucher,
         description: description,
       };
       endpoint = `${apiUrl}/transfers`;
@@ -185,7 +185,7 @@ const AddEntryModal = ({
         amount: parseFloat(rawAmount),
         type: transactionType.toLowerCase(),
         date: localDate,
-        note: note,
+        voucher: voucher,
         description: description,
         accountId: parseInt(account, 10),
         categoryId: parseInt(category, 10),
@@ -258,7 +258,7 @@ const AddEntryModal = ({
     setAccount("");
     setFromAccount("");
     setToAccount("");
-    setNote("");
+    setVoucher("");
     setDescription("");
     setImageUrl("");
     setIsRecurring(false);
@@ -284,10 +284,10 @@ const AddEntryModal = ({
         setImageUrls(prevUrls => prevUrls.filter((_, i) => i !== index));
         
         // Eliminar la URL de la imagen de las notas
-        setNote(prevNote => {
-          const notes = prevNote.split('\n');
-          const filteredNotes = notes.filter(note => note !== urlToDelete);
-          return filteredNotes.join('\n');
+        setVoucher(prevVopucher => {
+          const vouchers = prevVoucher.split('\n');
+          const filteredVouchers = vouchers.filter(voucher => voucher !== urlToDelete);
+          return filteredVouchers.join('\n');
         });
 
         Swal.fire(
