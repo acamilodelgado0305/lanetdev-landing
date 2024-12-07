@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-import { Button, Tooltip, Dropdown, Menu, Modal, Drawer } from 'antd';
+import { Button, Tooltip, Dropdown, Menu } from 'antd';
 import { format as formatDate } from 'date-fns';
 import {
-    DeleteOutlined,
-    EditOutlined,
     FileTextOutlined,
     FilterOutlined,
     CaretDownOutlined
@@ -15,20 +13,12 @@ const TransactionTable = ({
     entries,
     categories = [],
     accounts = [],
-    onDelete,
-    onEdit,
     onOpenContentModal,
-    onOpenModal,
 }) => {
     const [columnFilters, setColumnFilters] = useState({});
     const [hoveredRow, setHoveredRow] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedEntry, setSelectedEntry] = useState(null);
-    const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-    const [selectedImage, setSelectedImage] = useState(null);
-    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-    const [selectedImages, setSelectedImages] = useState([]);
-
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat("en-US", {
             style: "currency",
@@ -128,11 +118,6 @@ const TransactionTable = ({
             field: 'voucher',
             width: '120px',
         },
-        {
-            title: 'Acciones',
-            field: 'actions',
-            width: '100px',
-        }
     ];
 
     const openModal = (entry) => {
@@ -145,15 +130,6 @@ const TransactionTable = ({
         setSelectedEntry(null);
     };
 
-    const openDrawer = (images) => {
-        setSelectedImages(images);
-        setIsDrawerOpen(true);
-    };
-
-    const closeDrawer = () => {
-        setIsDrawerOpen(false);
-        setSelectedImages([]);
-    };
 
     return (
         <>
@@ -254,7 +230,7 @@ const TransactionTable = ({
                                             <Button
                                                 type="link"
                                                 size="small"
-                                                onClick={() => onOpenContentModal(entry.note)}
+                                                onClick={(e) => { e.stopPropagation(); onOpenContentModal(entry.note) }}
                                                 icon={<FileTextOutlined />}
                                             >
                                                 Ver
@@ -262,27 +238,6 @@ const TransactionTable = ({
                                         ) : (
                                             "—"
                                         )}
-                                    </td>
-                                    <td className="p-2 text-center">
-                                        <div className="flex justify-center space-x-1">
-                                            <Tooltip title="Eliminar">
-                                                <Button
-                                                    type="text"
-                                                    size="small"
-                                                    danger
-                                                    icon={<DeleteOutlined />}
-                                                    onClick={() => onDelete(entry)}
-                                                />
-                                            </Tooltip>
-                                            <Tooltip title="Editar">
-                                                <Button
-                                                    type="text"
-                                                    size="small"
-                                                    icon={<EditOutlined />}
-                                                    onClick={() => onEdit(entry)}
-                                                />
-                                            </Tooltip>
-                                        </div>
                                     </td>
                                 </tr>
                             </Tooltip>

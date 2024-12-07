@@ -20,8 +20,11 @@ const ExpenseDetailModal = ({
         description: "",
         category_id: "",
         account_id: "",
+        type: "",
+        timerecurrent: "",
+        sub_type: "",
         provider_id: "",
-        base_amount: "",
+        //base_amount: "",
         tax_type: "",
         recurrent: false,
         tax_percentage: "",
@@ -56,8 +59,8 @@ const ExpenseDetailModal = ({
             setEditedEntry({
                 ...entry,
                 amount: parseFloat(entry.amount) || 0,
-                description: entry.description || "Sin descripción", // Valor predeterminado
-                base_amount: parseFloat(entry.base_amount) || 0,
+                description: entry.description || "Sin descripción",
+                //base_amount: parseFloat(entry.base_amount) || 0,
                 provider_id: entry.provider_id || "",
                 tax_type: entry.tax_type || "",
                 recurrent: entry.recurrent || false,
@@ -302,7 +305,31 @@ const ExpenseDetailModal = ({
                             </div>
                         )}
                     </div>
-
+                    {/* Categoría */}
+                    <div className="flex justify-between items-center mb-1">
+                        {isEditMode ? (
+                            <>
+                                <p className="text-sm text-gray-500">Categoría</p>
+                                <select
+                                    value={editedEntry.category_id || ""}
+                                    onChange={(e) => handleInputChange("category_id", e.target.value)}
+                                    className="form-select w-full h-12"
+                                >
+                                    <option value="">Seleccionar categoría...</option>
+                                    {categories.map((category) => (
+                                        <option key={category.id} value={category.id}>
+                                            {category.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </>
+                        ) : (
+                            <div className="flex justify-between w-full">
+                                <p className="font-medium text-gray-700">Categoría:</p>
+                                <p className="font-semibold text-gray-600">{getCategoryName(entry?.category_id || "")}</p>
+                            </div>
+                        )}
+                    </div>
                     {/* Cuenta */}
                     <div className="flex justify-between items-center mb-1">
                         {isEditMode ? (
@@ -375,7 +402,42 @@ const ExpenseDetailModal = ({
                             </div>
                         )}
                     </div>
-
+                    {/* Proveedor */}
+                    <div className="flex justify-between items-center">
+                        {isEditMode ? (
+                            <>
+                                <p className="text-sm text-gray-500">Proveedor</p>
+                                <Input
+                                    value={editedEntry.provider_id || "Sin descripción"}
+                                    onChange={(e) => handleInputChange("provider_id", e.target.value)}
+                                    className="w-full" // Asegura que el input ocupe todo el espacio disponible
+                                />
+                            </>
+                        ) : (
+                            <div className="flex justify-between w-full gap-20">
+                                <p className="font-medium text-gray-700">Proveedor:</p>
+                                <p className="font-semibold text-gray-600 justify-end">{entry?.provider_id || "Sin Proveedor"}</p>
+                            </div>
+                        )}
+                    </div>
+                    {/* Descripción */}
+                    <div className="flex justify-between items-center">
+                        {/* {isEditMode ? (
+                            <>
+                                <p className="text-sm text-gray-500">Monto base</p>
+                                <Input
+                                    value={editedEntry.base_amount || "Desconocido"}
+                                    onChange={(e) => handleInputChange("base_amount", e.target.value)}
+                                    className="w-full" // Asegura que el input ocupe todo el espacio disponible
+                                />
+                            </>
+                        ) : ( */}
+                        <div className="flex justify-between w-full gap-20">
+                            <p className="font-medium text-gray-700">Monto base:</p>
+                            <p className="font-semibold text-gray-600 justify-end">{entry?.base_amount || "Desconocido"}</p>
+                        </div>
+                        {/*  ) */}{/* } */}
+                    </div>
                     {/* Observaciones */}
                     <div className="flex justify-between items-center mb-1">
                         {isEditMode ? (

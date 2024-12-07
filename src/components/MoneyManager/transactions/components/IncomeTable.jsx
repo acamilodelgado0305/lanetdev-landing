@@ -10,8 +10,6 @@ const IncomeTable = ({ entries, categories = [], accounts = [] }) => {
     const [hoveredRow, setHoveredRow] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedEntry, setSelectedEntry] = useState(null);
-    const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-    const [selectedImage, setSelectedImage] = useState(null);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedImages, setSelectedImages] = useState([]);
 
