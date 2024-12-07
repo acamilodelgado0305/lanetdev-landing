@@ -93,14 +93,46 @@ const TransactionTable = ({
     );
 
     const columns = [
-        { title: 'Fecha', field: 'date', width: '100px' },
-        { title: 'Descripción', field: 'description', width: '200px' },
-        { title: 'Cuenta', field: 'account', width: '150px' },
-        { title: 'Categoría', field: 'category', width: '150px' },
-        { title: 'Monto', field: 'amount', width: '120px' },
-        { title: 'Impuestos', field: 'tax_type', width: '120px' },
-        { title: 'Comprobante', field: 'note', width: '120px' },
-        { title: 'Acciones', field: 'actions', width: '100px' }
+        {
+            title: 'Fecha',
+            field: 'date',
+            width: '100px',
+        },
+        {
+            title: 'Descripción',
+            field: 'description',
+            width: '200px',
+        },
+        {
+            title: 'Cuenta',
+            field: 'account',
+            width: '150px',
+        },
+        {
+            title: 'Categoría',
+            field: 'category',
+            width: '150px',
+        },
+        {
+            title: 'Monto',
+            field: 'amount',
+            width: '120px',
+        },
+        {
+            title: 'Impuestos',
+            field: 'tax_type',
+            width: '120px',
+        },
+        {
+            title: 'Comprobante',
+            field: 'voucher',
+            width: '120px',
+        },
+        {
+            title: 'Acciones',
+            field: 'actions',
+            width: '100px',
+        }
     ];
 
     const openModal = (entry) => {

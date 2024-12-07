@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Button, Modal, Input, message, Spin, Select } from "antd";
+import { Button, Modal, Input, message, Space, } from "antd";
 import { SaveOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined, CloseOutlined, PrinterOutlined, FileTextOutlined } from "@ant-design/icons";
 import axios from "axios";
 import { getUserById } from "../../../../services/apiService";
 import { useAuth } from "../../../Context/AuthProvider";
+import VoucherSection from "./VoucherSection";
 
 const ExpenseDetailModal = ({
     isOpen,
@@ -78,6 +79,13 @@ const ExpenseDetailModal = ({
         } catch (error) {
             console.error("Error fetching categories:", error);
         }
+    };
+
+    const handleVoucherUpdate = (updatedVouchers) => {
+        setEditedEntry(prev => ({
+            ...prev,
+            voucher: updatedVouchers
+        }));
     };
 
     // Fetch accounts
@@ -185,7 +193,7 @@ const ExpenseDetailModal = ({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-y-0 right-0 w-full md:w-[38em] bg-white shadow-lg z-50 transform transition-transform duration-300 overflow-y-auto">
+        <div className="fixed inset-y-0 right-0 w-full md:w-[38em] bg-white shadow-lg z-50 transform transition-transform duration-300 overflow-y-auto ">
             <div className="p-8">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-4">
@@ -212,7 +220,7 @@ const ExpenseDetailModal = ({
                     </div>
                 </div>
                 {/* Formulario editable */}
-                <div className="grid grid-cols-1 gap-4 bg-slate-50 px-8 py-4 ">
+                <div className="grid grid-cols-1 gap-4 bg-slate-50 px-8 py-4 mb-6 border border-gray-300 rounded-lg">
                     {/* Monto */}
                     <div className="flex justify-between items-center">
                         {isEditMode ? (
@@ -227,7 +235,7 @@ const ExpenseDetailModal = ({
                         ) : (
                             <div className="flex justify-between w-full">
                                 <p className="font-medium text-gray-700">Monto:</p>
-                                <p className="font-medium text-gray-600">{formatCurrency(entry?.amount || 0)}</p>
+                                <p className="font-semibold text-gray-600">{formatCurrency(entry?.amount || 0)}</p>
                             </div>
                         )}
                     </div>
@@ -246,7 +254,7 @@ const ExpenseDetailModal = ({
                         ) : (
                             <div className="flex justify-between w-full gap-20">
                                 <p className="font-medium text-gray-700">Descripción:</p>
-                                <p className="font-medium text-gray-600 justify-end">{entry?.description || "Sin descripción"}</p>
+                                <p className="font-semibold text-gray-600 justify-end">{entry?.description || "Sin descripción"}</p>
                             </div>
                         )}
                     </div>
@@ -264,7 +272,7 @@ const ExpenseDetailModal = ({
                         ) : (
                             <div className="flex justify-between w-full">
                                 <p className="font-medium text-gray-700">Fecha:</p>
-                                <p className="font-medium text-gray-600">{entry?.date || "No disponible"}</p>
+                                <p className="font-semibold text-gray-600">{entry?.date || "No disponible"}</p>
                             </div>
                         )}
                     </div>
@@ -290,7 +298,7 @@ const ExpenseDetailModal = ({
                         ) : (
                             <div className="flex justify-between w-full">
                                 <p className="font-medium text-gray-700">Categoría:</p>
-                                <p className="font-medium text-gray-600">{getCategoryName(entry?.category_id || "")}</p>
+                                <p className="font-semibold text-gray-600">{getCategoryName(entry?.category_id || "")}</p>
                             </div>
                         )}
                     </div>
@@ -316,7 +324,7 @@ const ExpenseDetailModal = ({
                         ) : (
                             <div className="flex justify-between w-full">
                                 <p className="font-medium text-gray-700">Cuenta:</p>
-                                <p className="font-medium text-gray-600">{getAccountName(entry?.account_id || "")}</p>
+                                <p className="font-semibold text-gray-600">{getAccountName(entry?.account_id || "")}</p>
                             </div>
                         )}
                     </div>
@@ -339,7 +347,7 @@ const ExpenseDetailModal = ({
                         ) : (
                             <div className="flex justify-between w-full">
                                 <p className="font-medium text-gray-700">Método de Pago:</p>
-                                <p className="font-medium text-gray-600">{entry?.payment_method || "No especificado"}</p>
+                                <p className="font-semibold text-gray-600">{entry?.payment_method || "No especificado"}</p>
                             </div>
                         )}
                     </div>
@@ -363,7 +371,7 @@ const ExpenseDetailModal = ({
                         ) : (
                             <div className="flex justify-between w-full">
                                 <p className="font-medium text-gray-700">Estado:</p>
-                                <p className="font-medium text-gray-600">{entry?.transaction_status || "Desconocido"}</p>
+                                <p className="font-semibold text-gray-600">{entry?.transaction_status || "Desconocido"}</p>
                             </div>
                         )}
                     </div>
@@ -382,74 +390,52 @@ const ExpenseDetailModal = ({
                         ) : (
                             <div className="flex justify-between w-full">
                                 <p className="font-medium text-gray-700">Observaciones:</p>
-                                <p className="font-medium text-gray-600">{entry?.notes || "Ninguna"}</p>
+                                <p className="font-semibold text-gray-600">{entry?.notes || "Ninguna"}</p>
                             </div>
                         )}
                     </div>
-
-                    {/* Archivos adjuntos */}
-                    <div className="flex justify-between items-center mb-1">
-                        {isEditMode ? (
-                            <>
-                                <p className="text-sm text-gray-500">Archivos adjuntos</p>
-                                <Input
-                                    type="file"
-                                    onChange={(e) => handleInputChange("attachments", e.target.files)}
-                                    className="w-full"
-                                />
-                            </>
-                        ) : (
-                            <div className="flex justify-between w-full">
-                                <p className="font-medium text-gray-700">Archivos:</p>
-                                <p className="font-medium text-gray-600">
-                                    {entry?.attachments?.length || 0} {entry?.attachments?.length === 1 ? "archivo" : "archivos"}
-                                </p>
-                            </div>
-                        )}
-                    </div>
-
                 </div>
-
+                {/*COMPROBANTES*/}
+                <VoucherSection
+                    entry={editedEntry}
+                    entryId={entry.id} // Pasamos el ID explícitamente
+                    onVoucherUpdate={handleVoucherUpdate}
+                    isEditMode={isEditMode}
+                />
 
                 {/* Botones de acción */}
-                <div className="fixed bottom-4 left-0 right-0 bg-white p-4 border-t flex justify-around">
-                    <Button
-                        className="flex flex-col items-center text-blue-600 hover:text-blue-800"
-                        icon={<PrinterOutlined style={{ fontSize: "2rem", color: "#2563eb" }} />}
-                    >
-                        <span className="text-sm mt-1 font-semibold">Imprimir</span>
-                    </Button>
-                    <Button
-                        className="flex flex-col items-center text-green-600 hover:text-green-800"
-                        icon={<FileTextOutlined style={{ fontSize: "2rem", color: "#16a34a" }} />}
-                    >
-                        <span className="text-sm mt-1 font-semibold">Comprobante</span>
-                    </Button>
-                    {isEditMode ? (
+                <div className="sticky bottom-4 left-0 right-0 bg-white p-4 border-t shadow-lg flex justify-center">
+                    <Space size="large">
+                        {isEditMode ? (
+                            <Button
+                                type="primary"
+                                icon={<SaveOutlined style={{ fontSize: "1.5rem" }} />}
+                                size="large"
+                                onClick={handleSaveChanges}
+                            >
+                                <span className="text-sm font-medium text-center">Guardar</span>
+                            </Button>
+                        ) : (
+                            <Button
+                                type="default"
+                                icon={<EditOutlined style={{ fontSize: "1.5rem", color: "gray" }} />}
+                                size="large"
+                                onClick={toggleEditMode}
+                            >
+                                <span className="text-sm font-medium text-gray-600 text-center">Editar</span>
+                            </Button>
+                        )}
+
+                        {/* Botón Eliminar */}
                         <Button
-                            className="flex flex-col items-center text-green-600 hover:text-green-800"
-                            icon={<SaveOutlined style={{ fontSize: "2rem", color: "#16a34a" }} />}
-                            onClick={handleSaveChanges}
+                            danger
+                            icon={<DeleteOutlined style={{ fontSize: "1.5rem" }} />}
+                            size="large"
+                            onClick={showDeleteModal}
                         >
-                            <span className="text-sm mt-1 font-semibold">Guardar</span>
+                            <span className="text-sm font-medium text-center">Eliminar</span>
                         </Button>
-                    ) : (
-                        <Button
-                            className="flex flex-col items-center text-yellow-600 bg-yellow-100 hover:bg-yellow-200"
-                            icon={<EditOutlined style={{ fontSize: "2rem", color: "#ca8a04" }} />}
-                            onClick={toggleEditMode}
-                        >
-                            <span className="text-sm mt-1 font-semibold text-yellow-600">Editar</span>
-                        </Button>
-                    )}
-                    <Button
-                        danger
-                        className="flex flex-col items-center text-red-600 hover:text-red-800"
-                        icon={<DeleteOutlined style={{ fontSize: "2rem", color: "#dc2626" }} />}
-                        onClick={showDeleteModal}
-                    >
-                        <span className="text-sm mt-1 font-semibold">Eliminar</span>
-                    </Button>
+                    </Space>
                 </div>
             </div>
 

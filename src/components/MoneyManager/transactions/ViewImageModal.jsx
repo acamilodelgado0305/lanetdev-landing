@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 
-const NoteContentModal = ({ isOpen, onClose, noteContent }) => {
+const VoucherContentModal = ({ isOpen, onClose, voucherContent }) => {
   const modalRef = useRef(null);
 
   useEffect(() => {
@@ -41,7 +41,7 @@ const NoteContentModal = ({ isOpen, onClose, noteContent }) => {
         </button>
         <div className="p-4">
           <img
-            src={noteContent}
+            src={voucherContent}
             alt="Contenido de la Nota"
             className="w-full h-auto object-contain max-h-[80vh]"
           />
@@ -51,4 +51,4 @@ const NoteContentModal = ({ isOpen, onClose, noteContent }) => {
   );
 };
 
-export default NoteContentModal;
+export default VoucherContentModal;
