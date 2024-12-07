@@ -117,6 +117,7 @@ const TransactionDetailModal = ({
         // Llamamos a la función para obtener las categorías
         fetchCategories();
     }, [isOpen]);
+
     const fetchUserName = async (userId, token) => {
         try {
             const userData = await getUserById(userId, token);
@@ -171,22 +172,12 @@ const TransactionDetailModal = ({
                 : value,
         }));
     };
-    const openImageModal = (imageUrl) => {
-        setCurrentImage(imageUrl);
-        setIsImageModalOpen(true);
-    };
+
 
     const closeImageModal = () => {
         setCurrentImage(null);
         setIsImageModalOpen(false);
     };
-
-
-
-
-
-
-
 
     const handleSaveChanges = async () => {
         try {
@@ -212,10 +203,6 @@ const TransactionDetailModal = ({
                     return uploadedImageUrl;
                 })
             );
-
-            // Concatenar URLs preexistentes con nuevas imágenes
-            const updatedVpucher = entry.voucher.trim() ? `${entry.voucher}\n${uploadedImageUrls.join("\n")}` : uploadedImageUrls.join("\n");
-
             const formattedEntry = {
                 ...editedEntry,
                 amount: parseFloat(editedEntry.amount),
@@ -482,6 +469,7 @@ const TransactionDetailModal = ({
                         <strong>{entry.description}</strong>?
                     </p>
                 </Modal>
+
                 {/* Botones de acción */}
                 <div className="sticky bottom-4 left-0 right-0 bg-white p-4 border-t shadow-lg flex justify-center">
                     <Space size="large">
