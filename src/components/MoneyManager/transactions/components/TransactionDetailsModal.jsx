@@ -19,6 +19,7 @@ import VoucherSection from "./VoucherSection";
 const TransactionDetailModal = ({
     isOpen,
     onClose,
+    onDelete,
     entry,
     getCategoryName,
     getAccountName,
@@ -140,18 +141,16 @@ const TransactionDetailModal = ({
 
     const handleDelete = async () => {
         try {
-            const response = await axios.delete(`${API_BASE_URL}/incomes/${entry.id}`, {
-            });
+            const response = await axios.delete(`${API_BASE_URL}/incomes/${entry.id}`);
             if (response.status === 200 || response.status === 204) {
                 message.success("Ingreso eliminado con éxito.");
                 setDeleteModalOpen(false);
                 onClose();
-            } else {
-                throw new Error("Error inesperado al eliminar el ingreso.");
+                onDelete(); // This will trigger the refresh in TransactionsDashboard
             }
         } catch (error) {
             console.error("Error eliminando el ingreso:", error);
-            message.error("Hubo un error al intentar eliminar el ingreso. Por favor, inténtalo de nuevo.");
+            message.error("Error al eliminar el ingreso");
         }
     };
 

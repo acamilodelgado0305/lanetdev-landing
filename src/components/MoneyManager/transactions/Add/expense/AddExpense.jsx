@@ -240,8 +240,8 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
 
   const ProviderSelector = ({ providers, selectedProvider, onProviderSelect }) => (
     <div className="">
-      <label className="block text-sm font-medium text-gray-700">
-        Proveedor
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Proveedor*
       </label>
       <Select
         value={selectedProvider}
@@ -274,7 +274,7 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
         <Switch
           checked={isRecurring}
           onChange={setIsRecurring}
-          className={isRecurring ? "bg-red-500" : "bg-gray-200"}
+          className={isRecurring ? "bg-red-500" : "bg-gray-400"}
         />
       </div>
 
@@ -317,7 +317,7 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-[80%] bg-white shadow-2xl rounded-lg max-h-[90%] flex flex-col">
+      <div className="w-full max-w-[80%] bg-white shadow-2xl rounded-lg max-h-[%] flex flex-col">
         <div className="sticky top-0 bg-white rounded-t-lg z-10">
           <div className="px-2">
             <div className="flex items-center justify-between">
@@ -341,11 +341,11 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
           <div className="h-1 bg-red-500" />
         </div>
 
-        {/* Content - Scrollable Area */}
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <div className="flex-1 px-6 py-1">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Main Form Section */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className=" space-y-2">
               {/* Essential Information Section */}
               <div className="bg-white p-4 rounded-lg border border-gray-500 shadow-sm">
                 <div className="flex justify-center">
@@ -354,73 +354,54 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
                   </h3>
                 </div>
 
+                <div className="block text-sm font-medium text-gray-700 mb-2">
+                  Titulo*
+                  <Input.TextArea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Breve descripción"
+                    rows={1}
+                    className="w-full text-base"
 
+                  />
+                </div>
 
-                <div className="mt-2 p-2  rounded-md flex items-center gap-4 w-full">
-                  {/* ProviderSelector con flex-grow para que tome el espacio disponible */}
-                  <div className="flex-grow">
-                    <ProviderSelector
-                      providers={providers}
-                      selectedProvider={provider}
-                      onProviderSelect={setProvider}
-                      className="w-full" // Asegura que el selector tome todo el ancho disponible
-                    />
-                  </div>
+                <div className="block text-sm font-medium text-gray-700 mb-2">
+                  Fecha*
 
-                  {/* DatePicker con un ancho fijo apropiado */}
                   <DatePicker
                     value={date}
                     onChange={(newDate) => setDate(newDate)}
                     format="YYYY-MM-DD"
-                    className="w-40" // Ancho fijo para el DatePicker
-                    style={{
-                      fontSize: '1rem',
-                    }}
+                    className="w-full" // Ancho fijo para el DatePicker
                   />
                 </div>
 
 
-                <div className="space-y-4 mt-4">
-                  <div className="p-3 bg-gray-50 rounded-md">
-                    <TypeSelector
-                      selectedType={type}
-                      onTypeChange={handleTypeChange}
-                      selectedSubType={subType}
-                      onSubTypeChange={setSubType}
-                    />
 
-                  </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-3 bg-gray-50 rounded-md">
-                      <Input.TextArea
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        placeholder="Descripción egreso"
-                        rows={2}
-                        className="w-full text-base"
-                        style={{
-                          fontSize: '1rem',
-                          padding: '8px',
-                          minHeight: '60px'
-                        }}
-                      />
-                    </div>
-                    <div className="p-3 bg-gray-50 rounded-md">
-
-                    </div>
-                  </div>
-
-                  <div className="h-0.5 bg-red-200" />
-
-                  <div className="p-3 bg-gray-50 rounded-md">
-                    <CategorySelector
-                      categories={categories}
-                      selectedCategory={category}
-                      onCategorySelect={setCategory}
-                    />
-                  </div>
+                {/* ProviderSelector con flex-grow para que tome el espacio disponible */}
+                <div className="block text-sm font-medium text-gray-700 mb-2">
+                  <ProviderSelector
+                    providers={providers}
+                    selectedProvider={provider}
+                    onProviderSelect={setProvider}
+                    className="w-full" // Asegura que el selector tome todo el ancho disponible
+                  />
                 </div>
+
+                <div className=" bg-gray-50 rounded-md pb-5">
+                  <CategorySelector
+                    categories={categories}
+                    selectedCategory={category}
+                    onCategorySelect={setCategory}
+                  />
+                </div>
+
+
+
+
+
 
                 <div className="h-0.5 bg-red-200" />
                 {/* Description and Notes Section */}
@@ -428,7 +409,7 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
                   <h3 className="font-bold text-gray-500 pb-2 border-b border-gray-200">
                     Detalles
                   </h3>
-                  <div className="mt-4 p-3 bg-gray-50 rounded-md">
+                  <div className="mt-4 bg-gray-50 rounded-md">
                     <ImageUploader
                       imageUrls={imageUrls}
                       setImageUrls={setImageUrls}
@@ -439,19 +420,40 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
                 </div>
 
 
+                <div className="bg-white  rounded-lg border border-gray-200 shadow-sm ">
+
+                  <div className="mt-4  bg-gray-50 rounded-md">
+                    <RecurringExpenseSelector />
+                  </div>
+                </div>
+
+
               </div>
             </div>
 
             {/* Right Column - Financial Details */}
             <div className="space-y-6">
               <div className="bg-white p-4 rounded-lg border border-gray-500 shadow-sm">
-                <h3 className="font-bold text-gray-500 pb-2 border-b border-gray-200">
-                  Detalles Financieros
-                </h3>
+                <div className="flex justify-center">
+                  <h3 className="font-bold text-gray-500 pb-2 border-b border-gray-200">
+                   Detalles Financieros
+                  </h3>
+                </div>
 
-                <div className="space-y-4 mt-4">
+                <div className="space-y-4 mt-1">
 
-                  <div className="p-3 bg-gray-50 rounded-md">
+                  <div className="bg-gray-50 rounded-md">
+                    <TypeSelector
+                      selectedType={type}
+                      onTypeChange={handleTypeChange}
+                      selectedSubType={subType}
+                      onSubTypeChange={setSubType}
+                    />
+
+                  </div>
+                  <div className="h-0.5 bg-red-200" />
+
+                  <div className=" bg-gray-50 rounded-md">
                     <AmountCalculator
                       baseAmount={amount}
                       onBaseAmountChange={setAmount}
@@ -470,7 +472,7 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
                   </div>
 
                   <div className="h-0.5 bg-red-200" />
-                  <div className="p-3 bg-gray-50 rounded-md">
+                  <div className=" bg-gray-50 rounded-md">
                     <AccountSelector
                       accounts={accounts}
                       selectedAccount={account}
@@ -481,14 +483,7 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
                 </div>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm border-gray-500">
-                <h3 className="font-bold text-gray-500 pb-2 border-b border-gray-200">
-                  Recurrencia
-                </h3>
-                <div className="mt-4 p-3 bg-gray-50 rounded-md">
-                  <RecurringExpenseSelector />
-                </div>
-              </div>
+
             </div>
           </div>
         </div>
@@ -501,7 +496,7 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
             size="large"
             className="w-full bg-red-500 hover:bg-red-600 h-12"
           >
-             Registrar Egreso
+            Registrar Egreso
           </Button>
         </div>
       </div>

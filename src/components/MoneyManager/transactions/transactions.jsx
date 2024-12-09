@@ -56,6 +56,7 @@ const TransactionsDashboard = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [selectedEndpoint, setSelectedEndpoint] = useState("/incomes");
   const { userRole } = useAuth();
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const openModal = () => {
     setEditTransaction(null);
@@ -167,11 +168,16 @@ const TransactionsDashboard = () => {
     fetchMonthlyData();
   };
 
+
+//carga de los datos 
   useEffect(() => {
     fetchCategories();
     fetchAccounts();
-    fetchData(selectedEndpoint); // Cargar datos iniciales según el endpoint seleccionado
-  }, [selectedEndpoint]);
+    fetchData(selectedEndpoint);
+  }, [selectedEndpoint, refreshTrigger]);
+
+
+
 
   const applyFilters = (entriesToFilter = entries) => {
     let filtered = entriesToFilter;
@@ -345,10 +351,13 @@ const TransactionsDashboard = () => {
           {error && <p className="text-red-500">{error}</p>}
           {selectedEndpoint === "/incomes" ? (
             <IncomeTable
-              entries={paginatedEntries} // Filtra para la paginación
+              entries={paginatedEntries}
               categories={categories}
               accounts={accounts}
-              onDelete={handleDelete}
+              onDelete={() => {
+                fetchData(selectedEndpoint);
+                fetchMonthlyData();
+              }}
               onEdit={openEditModal}
               onOpenContentModal={openContentModal}
               onOpenModal={openModal}

@@ -5,15 +5,14 @@ import { FilterOutlined, CaretDownOutlined } from "@ant-design/icons";
 import _ from "lodash";
 import TransactionDetailModal from "./TransactionDetailsModal";
 
-const IncomeTable = ({ entries, categories = [], accounts = [] }) => {
+const IncomeTable = ({ onDelete , entries, categories = [], accounts = [] }) => {
     const [columnFilters, setColumnFilters] = useState({});
     const [hoveredRow, setHoveredRow] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedEntry, setSelectedEntry] = useState(null);
-    const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-    const [selectedImage, setSelectedImage] = useState(null);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedImages, setSelectedImages] = useState([]);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat("es-CO", {
@@ -26,6 +25,10 @@ const IncomeTable = ({ entries, categories = [], accounts = [] }) => {
     const getCategoryName = (categoryId) => {
         const category = categories.find((cat) => cat.id === categoryId);
         return category ? category.name : "Sin categoría";
+    };
+
+    const handleTransactionDeleted = () => {
+        setRefreshTrigger(prev => prev + 1);
     };
 
     const getAccountName = (accountId) => {
@@ -276,6 +279,7 @@ const IncomeTable = ({ entries, categories = [], accounts = [] }) => {
                 getCategoryName={getCategoryName}
                 getAccountName={getAccountName}
                 formatCurrency={formatCurrency}
+                onDelete={onDelete}
             />
         </>
     );
