@@ -353,7 +353,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Importe
+              Importe*
             </label>
             <Input
               value={amount}
@@ -373,15 +373,14 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-40 overflow-y-auto"
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex justify-center items-center overflow-y-auto"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}>
-      <div className="fixed inset-y-0 right-0 w-full md:w-[32em] bg-white shadow-2xl transform 
-                      transition-transform duration-300 ease-in-out overflow-y-auto">
+      <div className="bg-white shadow-2xl rounded-lg  max-w-[80%] max-h-[90%] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-white z-10">
-          <div className="px-6 pt-4 ">
+        <div className="bg-white">
+          <div className="px-6 pt-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <span className="text-green-500">
@@ -391,7 +390,6 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
                   {transactionToEdit ? "Editar Ingreso" : "Nuevo Ingreso"}
                 </h2>
               </div>
-
               <Button
                 type="text"
                 icon={<CloseOutlined className="text-lg" />}
@@ -403,74 +401,42 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
           <div className="h-1 bg-green-500" />
         </div>
 
-        <div className="pt-3 px-4 space-y-6">
-          {/* Fecha e Importe */}
+        <div className="pt-3 px-4">
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Fecha
-              </label>
-              <DatePicker
-                value={date}
-                onChange={(newDate) => setDate(newDate)}
-                format="YYYY-MM-DD"
-                className="w-full"
-              />
-            </div>
+            {/* Columna de datos básicos */}
+            <div className="rounded-lg border border-gray-500 p-4 auto-rows-auto">
+              <div className="flex justify-center">
+                <h3 className="font-bold text-gray-500 pb-2 border-b border-gray-200">
+                  Información Básica
+                </h3>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Titulo*
+                </label>
+                <Input.TextArea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Añade una descripción"
+                  rows={2}
+                  className="w-full"
+                />
+              </div>
+              <div className="pb-8">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Fecha
+                </label>
+                <DatePicker
+                  value={date}
+                  onChange={(newDate) => setDate(newDate)}
+                  format="YYYY-MM-DD"
+                  className="w-full"
+                />
+              </div>
 
+              <div className="h-1 bg-green-300" />
 
-          </div>
-
-          {/* Métodos de Pago */}
-          <AccountSelector
-            accounts={accounts}
-            selectedAccount={account}
-            onAccountSelect={setAccount}
-            formatCurrency={formatCurrency}
-          />
-
-          {/* Categoría */}
-          <CategorySelector
-            categories={categories}
-            selectedCategory={category}
-            onCategorySelect={setCategory}
-            additionalInputs={(selectedCategory) => {
-              if (selectedCategory === arqueoCategoryId?.toString()) {
-                return renderArqueoInputs(selectedCategory);
-              } else if (selectedCategory === ventaCategoryId?.toString()) {
-                return renderVentaInputs(selectedCategory);
-              }
-              return null;
-            }}
-            onFevCheckChange={setIsFevChecked}
-            isFevChecked={isFevChecked}
-            ventaCategoryId={ventaCategoryId}
-          />
-          {/*------------------------IMPORTE------------------------------*/}
-
-
-
-          <div className="h-1 bg-green-500" /> {/* Línea verde decorativa */}
-
-
-          {/* Descripción */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Descripción
-            </label>
-            <Input.TextArea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Añade una descripción"
-              rows={3}
-              className="w-full"
-            />
-          </div>
-
-
-
-          {/* Adjuntos */}
-          <div className="space-y-4">
+              <div className="mt-6 space-y-4">
             <label className="block text-sm font-medium text-gray-700">
               Comprobantes
             </label>
@@ -512,6 +478,46 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
               </div>
             )}
           </div>
+            </div>
+
+
+
+            {/* Columna de datos financieros */}
+            <div className="rounded-lg border border-gray-500 p-4">
+              <div className="flex justify-center">
+                <h3 className="font-bold text-gray-500 pb-2 border-b border-gray-200">
+                  Detalles Financieros
+                </h3>
+              </div>
+              <CategorySelector
+                categories={categories}
+                selectedCategory={category}
+                onCategorySelect={setCategory}
+                additionalInputs={(selectedCategory) => {
+                  if (selectedCategory === arqueoCategoryId?.toString()) {
+                    return renderArqueoInputs(selectedCategory);
+                  } else if (selectedCategory === ventaCategoryId?.toString()) {
+                    return renderVentaInputs(selectedCategory);
+                  }
+                  return null;
+                }}
+                onFevCheckChange={setIsFevChecked}
+                isFevChecked={isFevChecked}
+                ventaCategoryId={ventaCategoryId}
+              />
+
+              {/* Métodos de Pago */}
+              <AccountSelector
+                accounts={accounts}
+                selectedAccount={account}
+                onAccountSelect={setAccount}
+                formatCurrency={formatCurrency}
+              />
+            </div>
+          </div>
+
+          {/* Adjuntos - Fuera del grid para mantener ancho completo */}
+          
         </div>
 
         {/* Footer */}

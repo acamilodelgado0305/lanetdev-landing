@@ -8,29 +8,29 @@ const TypeSelector = ({ selectedType, onTypeChange, selectedSubType, onSubTypeCh
       {/* Botón de Gasto */}
       <button
         onClick={() => onTypeChange("gasto")}
-        className={`p-2 rounded-lg border-2 transition-all ${selectedType === "gasto"
-            ? "border-red-500 bg-red-50"
-            : "border-gray-200 hover:border-red-300"
+        className={`p-1 rounded-md border transition-all text-sm ${selectedType === "gasto"
+          ? "border-red-500 bg-red-50"
+          : "border-gray-200 hover:border-red-300"
           }`}
       >
-        <CreditCardOutlined className="text-3xl text-red-500 mb-2" />
-        <div className="text-lg font-semibold">Gasto</div>
+        <CreditCardOutlined className="text-base text-red-500 mb-1" />
+        <div className="text-xs font-medium">Gasto</div>
       </button>
 
       {/* Botón de Compra */}
       <button
         onClick={() => onTypeChange("compra")}
-        className={`p-2 rounded-lg border-2 transition-all ${selectedType === "compra"
-            ? "border-red-500 bg-red-50"
-            : "border-gray-200 hover:border-red-300"
+        className={`p-1 rounded-md border transition-all text-sm ${selectedType === "compra"
+          ? "border-red-500 bg-red-50"
+          : "border-gray-200 hover:border-red-300"
           }`}
       >
-        <ShoppingOutlined className="text-3xl text-red-500 mb-2" />
-        <div className="text-lg font-semibold">Compra</div>
+        <ShoppingOutlined className="text-base text-red-500 mb-1" />
+        <div className="text-xs font-medium">Compra</div>
       </button>
 
 
-      <div className="col-span-2 mt-4">
+      <div className="col-span-2 mt-2">
         <label htmlFor="subType" className="block text-sm font-medium text-gray-700">
           Selecciona el tipo de egreso
         </label>
