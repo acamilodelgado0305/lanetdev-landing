@@ -9,30 +9,13 @@ import VoucherSection from "./VoucherSection";
 const ExpenseDetailModal = ({
     isOpen,
     onClose,
-    entry, // Aquí usamos `entry` como objeto de entrada
+    entry,
     getCategoryName,
     getAccountName,
 }) => {
     const [isEditMode, setEditMode] = useState(false);
     const [userName, setUserName] = useState("Cargando...");
-    const [editedEntry, setEditedEntry] = useState({
-        amount: "",
-        description: "",
-        category_id: "",
-        account_id: "",
-        type: "",
-        timerecurrent: "",
-        sub_type: "",
-        provider_id: "",
-        //base_amount: "",
-        tax_type: "",
-        recurrent: false,
-        tax_percentage: "",
-        tax_amount: "",
-        retention_type: "",
-        retention_percentage: "",
-        retention_amount: "",
-    });
+    const [editedEntry, setEditedEntry] = useState({});
     const [loading, setLoading] = useState(true);
     const [categories, setCategories] = useState([]);
     const [accounts, setAccounts] = useState([]);
