@@ -266,7 +266,7 @@ const TransactionDetailModal = ({
                                 <FileTextOutlined className="text-blue-500 text-xl" />
                             </div>
                             <h2 className="text-xl font-semibold">
-                                {isEditMode ? "Editar Transferencias" : "Detalle de la transferencia"}
+                                {isEditMode ? "Editar Ingreso" : "Detalle del Ingreso"}
                             </h2>
                         </div>
                         <div class="h-1 bg-blue-500"></div>
