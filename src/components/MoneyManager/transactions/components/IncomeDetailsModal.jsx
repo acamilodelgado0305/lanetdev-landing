@@ -27,30 +27,34 @@ const TransactionDetailModal = ({
 }) => {
     const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
     const [isEditMode, setEditMode] = useState(false);
+    const [isEditVoucherMode, setIsEditVoucherMode] = useState(false);
     const [editedEntry, setEditedEntry] = useState({});
     const [userName, setUserName] = useState("Cargando...");
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
     const [currentImage, setCurrentImage] = useState(null);
+
+    const [selectedImages, setSelectedImages] = useState([]);
     const [accounts, setAccounts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [ventaCategoryId, setVentaCategoryId] = useState(null);
     const [categories, setCategories] = useState([]);
     const [arqueoCategoryId, setArqueoCategoryId] = useState(null);
-
-
+    {/*Estados para comprobantes*/ }
+    const [isUploading, setIsUploading] = useState(false);
+    const [imageUrls, setImageUrls] = useState([]);
 
     const { authToken } = useAuth();
     const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
 
     useEffect(() => {
         if (!isOpen) {
-            setEditMode(false);
+            setEditMode(false); // Asegurarse de que el modo edición esté desactivado al cerrar
         }
     }, [isOpen]);
 
     useEffect(() => {
         if (isOpen && entry) {
-            setEditMode(false);
+            setEditMode(false); // Asegurarse de que el modo edición esté desactivado al abrir
             setEditedEntry({
                 ...entry,
                 amount: parseFloat(entry.amount) || 0,
@@ -191,11 +195,19 @@ const TransactionDetailModal = ({
                 return;
             }
 
+            // Subir imágenes seleccionadas al servidor y obtener sus URLs
+            const uploadedImageUrls = await Promise.all(
+                selectedImages.map(async (file) => {
+                    const uploadedImageUrl = await uploadImage(file);
+                    return uploadedImageUrl;
+                })
+            );
             const formattedEntry = {
                 ...editedEntry,
                 amount: parseFloat(editedEntry.amount),
                 amountfev: parseFloat(editedEntry.amountfev) || 0,
                 amountdiverse: parseFloat(editedEntry.amountdiverse) || 0,
+                voucher: updatedVoucher, // Reemplazar las imágenes anteriores por las nuevas
                 estado: editedEntry.estado === "Activo" || editedEntry.estado === true,
             };
 
@@ -254,7 +266,7 @@ const TransactionDetailModal = ({
                                 <FileTextOutlined className="text-blue-500 text-xl" />
                             </div>
                             <h2 className="text-xl font-semibold">
-                                {isEditMode ? "Editar Transferencias" : "Detalle de la transferencia"}
+                                {isEditMode ? "Editar Ingreso" : "Detalle del Ingreso"}
                             </h2>
                         </div>
                         <div class="h-1 bg-blue-500"></div>
@@ -417,7 +429,7 @@ const TransactionDetailModal = ({
                         {/*COMPROBANTES*/}
                         <VoucherSection
                             entry={editedEntry}
-                            entryId={entry.id}
+                            entryId={entry.id} // Pasamos el ID explícitamente
                             onVoucherUpdate={handleVoucherUpdate}
                             isEditMode={isEditMode}
                         />

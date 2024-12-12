@@ -7,9 +7,9 @@ import {
     CaretDownOutlined
 } from '@ant-design/icons';
 import _ from 'lodash';
-import TransactionDetailsModal from './TransactionDetailsModal';
+import ExpenseDetailModal from './ExpenseDetailModal';
 
-const TransactionTable = ({
+const ExpenseTable = ({
     entries,
     categories = [],
     accounts = [],
@@ -247,7 +247,7 @@ const TransactionTable = ({
             </div>
 
             {/* Modal de detalles */}
-            <TransactionDetailsModal
+            <ExpenseDetailModal
                 isOpen={isModalOpen}
                 onClose={closeModal}
                 entry={selectedEntry}
@@ -259,4 +259,4 @@ const TransactionTable = ({
     );
 };
 
-export default TransactionTable;
+export default ExpenseTable;

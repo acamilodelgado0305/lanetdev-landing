@@ -3,9 +3,9 @@ import { Button, Dropdown, Menu, Tooltip, Modal, Drawer } from "antd";
 import { format as formatDate } from "date-fns";
 import { FilterOutlined, CaretDownOutlined } from "@ant-design/icons";
 import _ from "lodash";
-import TransactionDetailModal from "./TransactionDetailsModal";
+import IncomeDetailModal from "./IncomeDetailsModal";
 
-const IncomeTable = ({ onDelete , entries, categories = [], accounts = [] }) => {
+const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
     const [columnFilters, setColumnFilters] = useState({});
     const [hoveredRow, setHoveredRow] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -272,7 +272,7 @@ const IncomeTable = ({ onDelete , entries, categories = [], accounts = [] }) => 
                     </Button>
                 </div>
             </Drawer>
-            <TransactionDetailModal
+            <IncomeDetailModal
                 isOpen={isModalOpen}
                 onClose={closeModal}
                 entry={selectedEntry}
