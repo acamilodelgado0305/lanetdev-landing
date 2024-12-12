@@ -1,24 +1,31 @@
-import React, { useState } from "react";
-import { Button, Dropdown, Menu, Tooltip, Modal, Drawer } from "antd";
-import { format as formatDate } from "date-fns";
-import { FilterOutlined, CaretDownOutlined } from "@ant-design/icons";
-import _ from "lodash";
-import IncomeDetailModal from "./IncomeDetailsModal";
+import React, { useState } from 'react';
+import { Button, Tooltip, Dropdown, Menu, Drawer } from 'antd';
+import { format as formatDate } from 'date-fns';
+import {
+    FileTextOutlined,
+    FilterOutlined,
+    CaretDownOutlined
+} from '@ant-design/icons';
+import _ from 'lodash';
+import ExpenseDetailModal from './ExpenseDetailModal';
 
-const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
+const ExpenseTable = ({
+    entries,
+    categories = [],
+    accounts = [],
+    onDelete,
+}) => {
     const [columnFilters, setColumnFilters] = useState({});
     const [hoveredRow, setHoveredRow] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedEntry, setSelectedEntry] = useState(null);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedImages, setSelectedImages] = useState([]);
-    const [refreshTrigger, setRefreshTrigger] = useState(0);
-
     const formatCurrency = (amount) => {
-        return new Intl.NumberFormat("es-CO", {
+        return new Intl.NumberFormat("en-US", {
             style: "currency",
-            currency: "COP",
-            minimumFractionDigits: 0,
+            currency: "USD",
+            minimumFractionDigits: 2,
         }).format(amount);
     };
 
@@ -27,56 +34,31 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
         return category ? category.name : "Sin categoría";
     };
 
-    const handleTransactionDeleted = () => {
-        setRefreshTrigger(prev => prev + 1);
-    };
-
     const getAccountName = (accountId) => {
         const account = accounts.find((acc) => acc.id === accountId);
         return account ? account.name : "Cuenta no encontrada";
     };
-    const downloadImage = async (url) => {
-        try {
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error("No se pudo descargar el archivo.");
-            }
-            const blob = await response.blob();
-
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = url.split("/").pop(); // Usa el nombre original de la imagen
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            // Limpia la URL temporal
-            URL.revokeObjectURL(link.href);
-        } catch (error) {
-            console.error("Error al descargar el archivo:", error);
-        }
-    };
-    const downloadAllImages = async (urls) => {
-        try {
-            await Promise.all(urls.map((url) => downloadImage(url))); // Llama a downloadImage para cada URL
-        } catch (error) {
-            console.error("Error al descargar las imágenes:", error);
-        }
-    };
 
     const getUniqueValues = (field) => {
-        return _.uniq(
-            entries.map((entry) => {
-                if (field === "category") return getCategoryName(entry.category_id);
-                if (field === "account") return getAccountName(entry.account_id);
-                return entry[field];
-            })
-        ).filter(Boolean);
+        return _.uniq(entries.map(entry => {
+            switch (field) {
+                case 'category':
+                    return getCategoryName(entry.category_id);
+                case 'account':
+                    return entry.entryType === "transfer"
+                        ? `${getAccountName(entry.from_account_id)} ➡️ ${getAccountName(entry.to_account_id)}`
+                        : getAccountName(entry.account_id);
+                case 'tax_type':
+                    return entry.tax_type || 'No aplica';
+                default:
+                    return entry[field];
+            }
+        })).filter(Boolean);
     };
 
     const getFilterMenu = (field) => (
         <Menu
-            items={getUniqueValues(field).map((value) => ({
+            items={getUniqueValues(field).map(value => ({
                 key: value,
                 label: (
                     <div className="flex items-center">
@@ -89,12 +71,9 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
                                 if (e.target.checked) {
                                     newFilters[field] = [...newFilters[field], value];
                                 } else {
-                                    newFilters[field] = newFilters[field].filter(
-                                        (v) => v !== value
-                                    );
+                                    newFilters[field] = newFilters[field].filter(v => v !== value);
                                 }
-                                if (newFilters[field].length === 0)
-                                    delete newFilters[field];
+                                if (newFilters[field].length === 0) delete newFilters[field];
                                 setColumnFilters(newFilters);
                             }}
                         />
@@ -105,6 +84,44 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
         />
     );
 
+    const columns = [
+        {
+            title: 'Fecha',
+            field: 'date',
+            width: '100px',
+        },
+        {
+            title: 'Descripción',
+            field: 'description',
+            width: '200px',
+        },
+        {
+            title: 'Cuenta',
+            field: 'account',
+            width: '150px',
+        },
+        {
+            title: 'Categoría',
+            field: 'category',
+            width: '150px',
+        },
+        {
+            title: 'Monto',
+            field: 'amount',
+            width: '120px',
+        },
+        {
+            title: 'Impuestos',
+            field: 'tax_type',
+            width: '120px',
+        },
+        {
+            title: 'Comprobante',
+            field: 'voucher',
+            width: '120px',
+        },
+    ];
+
     const openModal = (entry) => {
         setSelectedEntry(entry);
         setIsModalOpen(true);
@@ -114,29 +131,14 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
         setIsModalOpen(false);
         setSelectedEntry(null);
     };
-
-    const openDrawer = (images) => {
-        setSelectedImages(images);
-        setIsDrawerOpen(true);
-    };
-
     const closeDrawer = () => {
         setIsDrawerOpen(false);
         setSelectedImages([]);
     };
-
-
-    const columns = [
-        { title: "Fecha", field: "date", width: "100px" },
-        { title: "Descripción", field: "description", width: "200px" },
-        { title: "Cuenta", field: "account", width: "150px" },
-        { title: "Categoría", field: "category", width: "150px" },
-        { title: "Monto Total", field: "amount", width: "120px" },
-        { title: "Monto FEV", field: "amountfev", width: "120px" },
-        { title: "Monto Diverse", field: "amountdiverse", width: "120px" },
-        { title: "Tipo", field: "type", width: "100px" },
-        { title: "Comprobante", field: "voucher", width: "120px" },
-    ];
+    const openDrawer = (images) => {
+        setSelectedImages(images);
+        setIsDrawerOpen(true);
+    };
 
     return (
         <>
@@ -151,41 +153,56 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
                                     className="border-r border-gray-200 bg-gray-50 p-0"
                                 >
                                     <div className="flex items-center justify-between px-3 py-2">
-                                        <span className="text-xs font-medium text-gray-500">
-                                            {column.title}
-                                        </span>
-                                        <Dropdown
-                                            overlay={getFilterMenu(column.field)}
-                                            trigger={["click"]}
-                                        >
-                                            <Button
-                                                type="text"
-                                                size="small"
-                                                className="text-gray-400"
-                                                icon={<FilterOutlined />}
+                                        <span className="text-xs font-medium text-gray-500">{column.title}</span>
+                                        {column.field !== 'actions' && (
+                                            <Dropdown
+                                                overlay={getFilterMenu(column.field)}
+                                                trigger={['click']}
                                             >
-                                                <CaretDownOutlined style={{ fontSize: "10px" }} />
-                                            </Button>
-                                        </Dropdown>
+                                                <Button
+                                                    type="text"
+                                                    size="small"
+                                                    className={`flex items-center ${columnFilters[column.field]?.length ? 'text-blue-600' : 'text-gray-400'}`}
+                                                    icon={<FilterOutlined />}
+                                                >
+                                                    <CaretDownOutlined style={{ fontSize: '10px' }} />
+                                                </Button>
+                                            </Dropdown>
+                                        )}
                                     </div>
                                 </th>
                             ))}
                         </tr>
                     </thead>
                     <tbody>
-                        {entries.map((entry, rowIndex) => (
-                            <Tooltip
-                                key={rowIndex}
-                                title={`Fila: ${rowIndex + 1}, Descripción: ${entry.description}`}
-                                placement="top"
-                            >
+                        {entries.filter(entry => {
+                            return Object.entries(columnFilters).every(([field, values]) => {
+                                let cellValue;
+                                switch (field) {
+                                    case 'category':
+                                        cellValue = getCategoryName(entry.category_id);
+                                        break;
+                                    case 'account':
+                                        cellValue = entry.entryType === "transfer"
+                                            ? `${getAccountName(entry.from_account_id)} ➡️ ${getAccountName(entry.to_account_id)}`
+                                            : getAccountName(entry.account_id);
+                                        break;
+                                    case 'tax_type':
+                                        cellValue = entry.tax_type || 'No aplica';
+                                        break;
+                                    default:
+                                        cellValue = entry[field];
+                                }
+                                return values.includes(cellValue);
+                            });
+                        }).map((entry, rowIndex) => (
+                            <Tooltip key={rowIndex} title={`Fila: ${rowIndex + 1}, Descripción: ${entry.description}`} placement="top">
                                 <tr
-                                    style={{ cursor: "pointer" }}
-                                    className={`border-b hover:bg-gray-50 ${hoveredRow === rowIndex ? "bg-gray-50" : ""
-                                        }`}
+                                    className={`border-b hover:bg-gray-50 ${hoveredRow === rowIndex ? 'bg-gray-50' : ''}`}
                                     onMouseEnter={() => setHoveredRow(rowIndex)}
                                     onMouseLeave={() => setHoveredRow(null)}
                                     onClick={() => openModal(entry)}
+                                    style={{ cursor: "pointer" }}
                                 >
                                     <td className="border-r border-gray-200 p-2 truncate">
                                         {formatDate(new Date(entry.date), "d MMM yyyy")}
@@ -194,22 +211,28 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
                                         {entry.description}
                                     </td>
                                     <td className="border-r border-gray-200 p-2 truncate">
-                                        {getAccountName(entry.account_id)}
+                                        {entry.entryType === "transfer"
+                                            ? `${getAccountName(entry.from_account_id)} ➡️ ${getAccountName(entry.to_account_id)}`
+                                            : getAccountName(entry.account_id)}
                                     </td>
                                     <td className="border-r border-gray-200 p-2 truncate">
                                         {getCategoryName(entry.category_id)}
                                     </td>
-                                    <td className="border-r border-gray-200 p-2 truncate font-medium text-green-600">
-                                        +{formatCurrency(entry.amount)}
-                                    </td>
-                                    <td className="border-r border-gray-200 p-2 truncate text-blue-600">
-                                        +{formatCurrency(entry.amountfev)}
-                                    </td>
-                                    <td className="border-r border-gray-200 p-2 truncate text-blue-600">
-                                        +{formatCurrency(entry.amountdiverse)}
+                                    <td className={`border-r border-gray-200 p-2 truncate font-medium ${entry.type === "expense" ? "text-red-600" : "text-green-600"}`}>
+                                        {entry.type === "expense" ? "-" : "+"}
+                                        {formatCurrency(entry.amount)}
                                     </td>
                                     <td className="border-r border-gray-200 p-2 truncate">
-                                        {entry.type}
+                                        {entry.tax_type === "IVA" ? (
+                                            <div>
+                                                <span>IVA: </span>
+                                                <span className="text-green-600">
+                                                    {formatCurrency(entry.amount * 0.19)}
+                                                </span>
+                                            </div>
+                                        ) : (
+                                            "No aplica"
+                                        )}
                                     </td>
                                     <td className="border-r border-gray-200 p-2 truncate">
                                         {Array.isArray(entry.voucher) && entry.voucher.length > 0 ? (
@@ -218,8 +241,8 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
                                                     e.stopPropagation();
                                                     const voucherArray = entry.voucher.filter(
                                                         (voucherUrl) => typeof voucherUrl === "string" && voucherUrl.trim() !== ""
-                                                    ); // Asegurarse de que sean cadenas no vacías
-                                                    openDrawer(voucherArray); // Pasa las URLs al Drawer
+                                                    );
+                                                    openDrawer(voucherArray);
                                                 }}
                                                 className="text-blue-500 underline"
                                             >
@@ -229,7 +252,6 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
                                             "—"
                                         )}
                                     </td>
-
                                 </tr>
                             </Tooltip>
                         ))}
@@ -272,17 +294,17 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
                     </Button>
                 </div>
             </Drawer>
-            <IncomeDetailModal
+            {/* Modal de detalles */}
+            <ExpenseDetailModal
                 isOpen={isModalOpen}
                 onClose={closeModal}
                 entry={selectedEntry}
                 getCategoryName={getCategoryName}
                 getAccountName={getAccountName}
                 formatCurrency={formatCurrency}
-                onDelete={onDelete}
             />
         </>
     );
 };
 
-export default IncomeTable;
+export default ExpenseTable;

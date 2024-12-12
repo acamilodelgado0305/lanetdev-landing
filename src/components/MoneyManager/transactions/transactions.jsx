@@ -14,6 +14,7 @@ import {
 } from "../../../services/moneymanager/moneyService";
 import VoucherContentModal from "./ViewImageModal";
 import TransactionTable from "./components/TransactionTable";
+import ExpenseTable from "./components/ExpenseTable";
 import IncomeTable from "./components/IncomeTable";
 import { useAuth } from '../../Context/AuthProvider';
 import Header from "./components/Header";
@@ -169,7 +170,7 @@ const TransactionsDashboard = () => {
   };
 
 
-//carga de los datos 
+  //carga de los datos 
   useEffect(() => {
     fetchCategories();
     fetchAccounts();
@@ -346,10 +347,11 @@ const TransactionsDashboard = () => {
       </div>
 
       {/* Contenido principal */}
-      <div className="overflow-y-auto h[40em]">
-        <div className="border border-gray-200 rounded-lg h-full flex flex-col">
+      <div className="overflow-y-auto h-[40em]">
+        <div className="border border-gray-200 rounded-lg">
           {error && <p className="text-red-500">{error}</p>}
-          {selectedEndpoint === "/incomes" ? (
+          {/* Mostrar IncomeTable si selectedEndpoint es "/incomes" */}
+          {selectedEndpoint === "/incomes" && (
             <IncomeTable
               entries={paginatedEntries}
               categories={categories}
@@ -362,7 +364,23 @@ const TransactionsDashboard = () => {
               onOpenContentModal={openContentModal}
               onOpenModal={openModal}
             />
-          ) : (
+          )}
+
+          {/* Mostrar ExpenseTable si selectedEndpoint es "/expenses" */}
+          {selectedEndpoint === "/expenses" && (
+            <ExpenseTable
+              entries={paginatedEntries} // Filtra para la paginación
+              categories={categories}
+              accounts={accounts}
+              onDelete={handleDelete}
+              onEdit={openEditModal}
+              onOpenContentModal={openContentModal}
+              onOpenModal={openModal}
+            />
+          )}
+
+          {/* Mostrar TransactionTable si selectedEndpoint es "/transactions" */}
+          {selectedEndpoint === "/transactions" && (
             <TransactionTable
               entries={paginatedEntries} // Filtra para la paginación
               categories={categories}

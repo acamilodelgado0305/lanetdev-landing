@@ -9,30 +9,13 @@ import VoucherSection from "./VoucherSection";
 const ExpenseDetailModal = ({
     isOpen,
     onClose,
-    entry, // Aquí usamos `entry` como objeto de entrada
+    entry,
     getCategoryName,
     getAccountName,
 }) => {
     const [isEditMode, setEditMode] = useState(false);
     const [userName, setUserName] = useState("Cargando...");
-    const [editedEntry, setEditedEntry] = useState({
-        amount: "",
-        description: "",
-        category_id: "",
-        account_id: "",
-        type: "",
-        timerecurrent: "",
-        sub_type: "",
-        provider_id: "",
-        //base_amount: "",
-        tax_type: "",
-        recurrent: false,
-        tax_percentage: "",
-        tax_amount: "",
-        retention_type: "",
-        retention_percentage: "",
-        retention_amount: "",
-    });
+    const [editedEntry, setEditedEntry] = useState({});
     const [loading, setLoading] = useState(true);
     const [categories, setCategories] = useState([]);
     const [accounts, setAccounts] = useState([]);
@@ -436,25 +419,6 @@ const ExpenseDetailModal = ({
                             <p className="font-medium text-gray-700">Monto base:</p>
                             <p className="font-semibold text-gray-600 justify-end">{entry?.base_amount || "Desconocido"}</p>
                         </div>
-                        {/*  ) */}{/* } */}
-                    </div>
-                    {/* Observaciones */}
-                    <div className="flex justify-between items-center mb-1">
-                        {isEditMode ? (
-                            <>
-                                <p className="text-sm text-gray-500">Observaciones</p>
-                                <textarea
-                                    value={editedEntry.notes || ""}
-                                    onChange={(e) => handleInputChange("notes", e.target.value)}
-                                    className="form-textarea w-full h-24 border rounded-lg p-2"
-                                />
-                            </>
-                        ) : (
-                            <div className="flex justify-between w-full">
-                                <p className="font-medium text-gray-700">Observaciones:</p>
-                                <p className="font-semibold text-gray-600">{entry?.notes || "Ninguna"}</p>
-                            </div>
-                        )}
                     </div>
                 </div>
                 {/*COMPROBANTES*/}

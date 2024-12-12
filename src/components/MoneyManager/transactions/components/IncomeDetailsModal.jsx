@@ -19,6 +19,7 @@ import VoucherSection from "./VoucherSection";
 const TransactionDetailModal = ({
     isOpen,
     onClose,
+    onDelete,
     entry,
     getCategoryName,
     getAccountName,
@@ -26,38 +27,42 @@ const TransactionDetailModal = ({
 }) => {
     const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
     const [isEditMode, setEditMode] = useState(false);
+    const [isEditVoucherMode, setIsEditVoucherMode] = useState(false);
     const [editedEntry, setEditedEntry] = useState({});
     const [userName, setUserName] = useState("Cargando...");
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
     const [currentImage, setCurrentImage] = useState(null);
+
+    const [selectedImages, setSelectedImages] = useState([]);
     const [accounts, setAccounts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [ventaCategoryId, setVentaCategoryId] = useState(null);
     const [categories, setCategories] = useState([]);
     const [arqueoCategoryId, setArqueoCategoryId] = useState(null);
-
-
+    {/*Estados para comprobantes*/ }
+    const [isUploading, setIsUploading] = useState(false);
+    const [imageUrls, setImageUrls] = useState([]);
 
     const { authToken } = useAuth();
     const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
 
     useEffect(() => {
         if (!isOpen) {
-            setEditMode(false);
+            setEditMode(false); // Asegurarse de que el modo edición esté desactivado al cerrar
         }
     }, [isOpen]);
 
     useEffect(() => {
         if (isOpen && entry) {
-            setEditMode(false);
+            setEditMode(false); // Asegurarse de que el modo edición esté desactivado al abrir
             setEditedEntry({
                 ...entry,
                 amount: parseFloat(entry.amount) || 0,
+                amountfev: parseFloat(entry.amountfev) || 0,
+                amountdiverse: parseFloat(entry.amountdiverse) || 0,
                 voucher: entry.voucher || "",
                 description: entry.description || "",
                 estado: entry.estado,
-                tax_type: entry.tax_type,
-                recurrent: entry.recurrent
             });
             fetchUserName(entry.user_id, authToken);
         }
@@ -137,15 +142,16 @@ const TransactionDetailModal = ({
 
     const handleDelete = async () => {
         try {
-            const response = await axios.delete(`${API_BASE_URL}/transactions/${entry.id}`);
+            const response = await axios.delete(`${API_BASE_URL}/incomes/${entry.id}`);
             if (response.status === 200 || response.status === 204) {
-                message.success("Transferencia eliminada con éxito.");
+                message.success("Ingreso eliminado con éxito.");
                 setDeleteModalOpen(false);
                 onClose();
+                onDelete(); // This will trigger the refresh in TransactionsDashboard
             }
         } catch (error) {
-            console.error("Error eliminando la transferencia:", error);
-            message.error("Error al eliminar la transferencia");
+            console.error("Error eliminando el ingreso:", error);
+            message.error("Error al eliminar el ingreso");
         }
     };
 
@@ -189,9 +195,19 @@ const TransactionDetailModal = ({
                 return;
             }
 
+            // Subir imágenes seleccionadas al servidor y obtener sus URLs
+            const uploadedImageUrls = await Promise.all(
+                selectedImages.map(async (file) => {
+                    const uploadedImageUrl = await uploadImage(file);
+                    return uploadedImageUrl;
+                })
+            );
             const formattedEntry = {
                 ...editedEntry,
                 amount: parseFloat(editedEntry.amount),
+                amountfev: parseFloat(editedEntry.amountfev) || 0,
+                amountdiverse: parseFloat(editedEntry.amountdiverse) || 0,
+                voucher: updatedVoucher, // Reemplazar las imágenes anteriores por las nuevas
                 estado: editedEntry.estado === "Activo" || editedEntry.estado === true,
             };
 
@@ -250,7 +266,7 @@ const TransactionDetailModal = ({
                                 <FileTextOutlined className="text-blue-500 text-xl" />
                             </div>
                             <h2 className="text-xl font-semibold">
-                                {isEditMode ? "Editar Transferencias" : "Detalle de la transferencia"}
+                                {isEditMode ? "Editar Ingreso" : "Detalle del Ingreso"}
                             </h2>
                         </div>
                         <div class="h-1 bg-blue-500"></div>
@@ -353,32 +369,31 @@ const TransactionDetailModal = ({
                             </div>
 
                             <div className="flex justify-between items-center">
-                                <p className="text-sm text-gray-500">Recurrente</p>
+                                <p className="text-sm text-gray-500">Monto FEV</p>
                                 {isEditMode ? (
                                     <Input
-                                        value={editedEntry.recurrent}
-                                        onChange={(e) => handleInputChange("recurrent", e.target.value)}
+                                        value={editedEntry.amountfev}
+                                        onChange={(e) => handleInputChange("amountfev", e.target.value)}
                                         className="w-32"
                                     />
                                 ) : (
-                                    <p className={entry.recurrent ? "font-medium text-green-600" : "text-sm text-gray-500"}>
-                                        {entry.recurrent ? "Si" : "No"}
+                                    <p className="font-medium text-green-600">
+                                        {formatCurrency(entry.amountfev || 0)}
                                     </p>
                                 )}
                             </div>
 
                             <div className="flex justify-between items-center">
-                                <p className="text-sm text-gray-500">Impuesto</p>
+                                <p className="text-sm text-gray-500">Monto Diverse</p>
                                 {isEditMode ? (
                                     <Input
-                                        value={editedEntry.tax_type}
-                                        onChange={(e) => handleInputChange("tax_type", e.target.value)}
+                                        value={editedEntry.amountdiverse}
+                                        onChange={(e) => handleInputChange("amountdiverse", e.target.value)}
                                         className="w-32"
                                     />
                                 ) : (
-
                                     <p className="font-medium text-green-600">
-                                        {(entry.tax_type || "Sin impuesto")}
+                                        {formatCurrency(entry.amountdiverse || 0)}
                                     </p>
                                 )}
                             </div>
@@ -414,7 +429,7 @@ const TransactionDetailModal = ({
                         {/*COMPROBANTES*/}
                         <VoucherSection
                             entry={editedEntry}
-                            entryId={entry.id}
+                            entryId={entry.id} // Pasamos el ID explícitamente
                             onVoucherUpdate={handleVoucherUpdate}
                             isEditMode={isEditMode}
                         />
