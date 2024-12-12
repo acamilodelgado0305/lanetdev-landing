@@ -19,7 +19,6 @@ import VoucherSection from "./VoucherSection";
 const TransactionDetailModal = ({
     isOpen,
     onClose,
-    onDelete,
     entry,
     getCategoryName,
     getAccountName,
@@ -54,11 +53,11 @@ const TransactionDetailModal = ({
             setEditedEntry({
                 ...entry,
                 amount: parseFloat(entry.amount) || 0,
-                amountfev: parseFloat(entry.amountfev) || 0,
-                amountdiverse: parseFloat(entry.amountdiverse) || 0,
                 voucher: entry.voucher || "",
                 description: entry.description || "",
                 estado: entry.estado,
+                tax_type: entry.tax_type,
+                recurrent: entry.recurrent
             });
             fetchUserName(entry.user_id, authToken);
         }
@@ -138,16 +137,15 @@ const TransactionDetailModal = ({
 
     const handleDelete = async () => {
         try {
-            const response = await axios.delete(`${API_BASE_URL}/incomes/${entry.id}`);
+            const response = await axios.delete(`${API_BASE_URL}/transactions/${entry.id}`);
             if (response.status === 200 || response.status === 204) {
-                message.success("Ingreso eliminado con éxito.");
+                message.success("Transferencia eliminada con éxito.");
                 setDeleteModalOpen(false);
                 onClose();
-                onDelete(); // This will trigger the refresh in TransactionsDashboard
             }
         } catch (error) {
-            console.error("Error eliminando el ingreso:", error);
-            message.error("Error al eliminar el ingreso");
+            console.error("Error eliminando la transferencia:", error);
+            message.error("Error al eliminar la transferencia");
         }
     };
 
@@ -194,8 +192,6 @@ const TransactionDetailModal = ({
             const formattedEntry = {
                 ...editedEntry,
                 amount: parseFloat(editedEntry.amount),
-                amountfev: parseFloat(editedEntry.amountfev) || 0,
-                amountdiverse: parseFloat(editedEntry.amountdiverse) || 0,
                 estado: editedEntry.estado === "Activo" || editedEntry.estado === true,
             };
 
@@ -357,31 +353,32 @@ const TransactionDetailModal = ({
                             </div>
 
                             <div className="flex justify-between items-center">
-                                <p className="text-sm text-gray-500">Monto FEV</p>
+                                <p className="text-sm text-gray-500">Recurrente</p>
                                 {isEditMode ? (
                                     <Input
-                                        value={editedEntry.amountfev}
-                                        onChange={(e) => handleInputChange("amountfev", e.target.value)}
+                                        value={editedEntry.recurrent}
+                                        onChange={(e) => handleInputChange("recurrent", e.target.value)}
                                         className="w-32"
                                     />
                                 ) : (
-                                    <p className="font-medium text-green-600">
-                                        {formatCurrency(entry.amountfev || 0)}
+                                    <p className={entry.recurrent ? "font-medium text-green-600" : "text-sm text-gray-500"}>
+                                        {entry.recurrent ? "Si" : "No"}
                                     </p>
                                 )}
                             </div>
 
                             <div className="flex justify-between items-center">
-                                <p className="text-sm text-gray-500">Monto Diverse</p>
+                                <p className="text-sm text-gray-500">Impuesto</p>
                                 {isEditMode ? (
                                     <Input
-                                        value={editedEntry.amountdiverse}
-                                        onChange={(e) => handleInputChange("amountdiverse", e.target.value)}
+                                        value={editedEntry.tax_type}
+                                        onChange={(e) => handleInputChange("tax_type", e.target.value)}
                                         className="w-32"
                                     />
                                 ) : (
+
                                     <p className="font-medium text-green-600">
-                                        {formatCurrency(entry.amountdiverse || 0)}
+                                        {(entry.tax_type || "Sin impuesto")}
                                     </p>
                                 )}
                             </div>

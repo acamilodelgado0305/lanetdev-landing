@@ -419,25 +419,6 @@ const ExpenseDetailModal = ({
                             <p className="font-medium text-gray-700">Monto base:</p>
                             <p className="font-semibold text-gray-600 justify-end">{entry?.base_amount || "Desconocido"}</p>
                         </div>
-                        {/*  ) */}{/* } */}
-                    </div>
-                    {/* Observaciones */}
-                    <div className="flex justify-between items-center mb-1">
-                        {isEditMode ? (
-                            <>
-                                <p className="text-sm text-gray-500">Observaciones</p>
-                                <textarea
-                                    value={editedEntry.notes || ""}
-                                    onChange={(e) => handleInputChange("notes", e.target.value)}
-                                    className="form-textarea w-full h-24 border rounded-lg p-2"
-                                />
-                            </>
-                        ) : (
-                            <div className="flex justify-between w-full">
-                                <p className="font-medium text-gray-700">Observaciones:</p>
-                                <p className="font-semibold text-gray-600">{entry?.notes || "Ninguna"}</p>
-                            </div>
-                        )}
                     </div>
                 </div>
                 {/*COMPROBANTES*/}

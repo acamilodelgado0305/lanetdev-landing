@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Tooltip, Dropdown, Menu } from 'antd';
+import { Button, Tooltip, Dropdown, Menu, Drawer } from 'antd';
 import { format as formatDate } from 'date-fns';
 import {
     FileTextOutlined,
@@ -19,6 +19,8 @@ const TransactionTable = ({
     const [hoveredRow, setHoveredRow] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedEntry, setSelectedEntry] = useState(null);
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [selectedImages, setSelectedImages] = useState([]);
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat("en-US", {
             style: "currency",
@@ -129,7 +131,14 @@ const TransactionTable = ({
         setIsModalOpen(false);
         setSelectedEntry(null);
     };
-
+    const closeDrawer = () => {
+        setIsDrawerOpen(false);
+        setSelectedImages([]);
+    };
+    const openDrawer = (images) => {
+        setSelectedImages(images);
+        setIsDrawerOpen(true);
+    };
 
     return (
         <>
@@ -226,15 +235,19 @@ const TransactionTable = ({
                                         )}
                                     </td>
                                     <td className="border-r border-gray-200 p-2 truncate">
-                                        {entry.note ? (
-                                            <Button
-                                                type="link"
-                                                size="small"
-                                                onClick={(e) => { e.stopPropagation(); onOpenContentModal(entry.note) }}
-                                                icon={<FileTextOutlined />}
+                                        {Array.isArray(entry.voucher) && entry.voucher.length > 0 ? (
+                                            <a
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const voucherArray = entry.voucher.filter(
+                                                        (voucherUrl) => typeof voucherUrl === "string" && voucherUrl.trim() !== ""
+                                                    );
+                                                    openDrawer(voucherArray);
+                                                }}
+                                                className="text-blue-500 underline"
                                             >
-                                                Ver
-                                            </Button>
+                                                Ver comprobante
+                                            </a>
                                         ) : (
                                             "—"
                                         )}
@@ -245,7 +258,42 @@ const TransactionTable = ({
                     </tbody>
                 </table>
             </div>
-
+            <Drawer
+                visible={isDrawerOpen}
+                onClose={closeDrawer}
+                placement="right"
+                width={420}
+            >
+                <div className="flex flex-col items-center">
+                    <h1 className="mb-8">Comprobantes de ingresos</h1>
+                    <div className="flex flex-wrap gap-4 justify-center mb-4">
+                        {selectedImages.map((image, index) => (
+                            <div key={index} className="relative w-60 h-80">
+                                <img
+                                    src={image}
+                                    alt={`Comprobante ${index + 1}`}
+                                    className="w-full h-full object-cover border rounded-md"
+                                />
+                                <Button
+                                    type="link"
+                                    className="mx-20 absolute bottom-2   text-white bg-green-600"
+                                    onClick={() => downloadImage(image)} // Descarga individual
+                                >
+                                    Descargar
+                                </Button>
+                            </div>
+                        ))}
+                    </div>
+                    {selectedImages.length > 1 && (
+                        <Button type="primary" onClick={() => downloadAllImages(selectedImages)} className=" text-white bg-green-600">
+                            Descargar todas
+                        </Button>
+                    )}
+                    <Button key="close" onClick={closeDrawer} className="mt-4">
+                        Cerrar
+                    </Button>
+                </div>
+            </Drawer>
             {/* Modal de detalles */}
             <TransactionDetailsModal
                 isOpen={isModalOpen}
