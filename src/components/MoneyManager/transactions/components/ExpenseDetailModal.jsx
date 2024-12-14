@@ -288,31 +288,6 @@ const ExpenseDetailModal = ({
                             </div>
                         )}
                     </div>
-                    {/* Categoría */}
-                    <div className="flex justify-between items-center mb-1">
-                        {isEditMode ? (
-                            <>
-                                <p className="text-sm text-gray-500">Categoría</p>
-                                <select
-                                    value={editedEntry.category_id || ""}
-                                    onChange={(e) => handleInputChange("category_id", e.target.value)}
-                                    className="form-select w-full h-12"
-                                >
-                                    <option value="">Seleccionar categoría...</option>
-                                    {categories.map((category) => (
-                                        <option key={category.id} value={category.id}>
-                                            {category.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </>
-                        ) : (
-                            <div className="flex justify-between w-full">
-                                <p className="font-medium text-gray-700">Categoría:</p>
-                                <p className="font-semibold text-gray-600">{getCategoryName(entry?.category_id || "")}</p>
-                            </div>
-                        )}
-                    </div>
                     {/* Cuenta */}
                     <div className="flex justify-between items-center mb-1">
                         {isEditMode ? (
