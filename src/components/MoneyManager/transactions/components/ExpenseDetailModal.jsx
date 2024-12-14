@@ -4,7 +4,7 @@ import { SaveOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined, 
 import axios from "axios";
 import { getUserById } from "../../../../services/apiService";
 import { useAuth } from "../../../Context/AuthProvider";
-import VoucherSection from "./VoucherSection";
+import ExpenseVoucherSection from "./ExpenseVoucherSection";
 
 const ExpenseDetailModal = ({
     isOpen,
@@ -422,7 +422,7 @@ const ExpenseDetailModal = ({
                     </div>
                 </div>
                 {/*COMPROBANTES*/}
-                <VoucherSection
+                <ExpenseVoucherSection
                     entry={editedEntry}
                     entryId={entry.id} // Pasamos el ID explícitamente
                     onVoucherUpdate={handleVoucherUpdate}
