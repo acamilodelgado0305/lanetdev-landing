@@ -43,16 +43,16 @@ const ExpenseDetailModal = ({
             setEditedEntry({
                 ...entry,
                 amount: parseFloat(entry.amount) || 0,
+                base_amount: parseFloat(entry.base_amount) || 0,
+                tax_amount: parseFloat(entry.tax_amount) || 0,
                 description: entry.description || "Sin descripción",
-                //base_amount: parseFloat(entry.base_amount) || 0,
-                provider_id: entry.provider_id || "",
+                //provider_id: entry.provider_id || "",
                 tax_type: entry.tax_type || "",
                 recurrent: entry.recurrent || false,
-                tax_percentage: entry.tax_percentage || "",
-                tax_amount: entry.tax_amount || "",
+                tax_percentage: parseFloat(entry.tax_percentage) || 0,
                 retention_type: entry.retention_type || "",
-                retention_percentage: entry.retention_percentage || "",
-                retention_amount: entry.retention_amount || "",
+                retention_percentage: parseFloat(entry.retention_percentage) || 0,
+                retention_amount: parseFloat(entry.retention_amount) || 0,
             });
             fetchUserName(entry.user_id, authToken);
         }
@@ -177,6 +177,11 @@ const ExpenseDetailModal = ({
         setDeleteModalOpen(false);
     };
 
+    const handleCancelEdit = () => {
+        setEditMode(false);
+        setEditedEntry(entry); // Reset edited entry to the original one
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -188,8 +193,8 @@ const ExpenseDetailModal = ({
                         <div className="bg-red-100 p-2 rounded-full">
                             <ExclamationCircleOutlined className="text-red-500 text-xl" />
                         </div>
-                        <h2 className="text-xl font-semibold">
-                            {isEditMode ? "Editar Gasto" : "Detalle del Gasto"}
+                        <h2 className="text-xl font-semibold mx-2">
+                            {isEditMode ? "Editar Egreso" : "Detalle del Egreso"}
                         </h2>
                     </div>
                     <Button
@@ -247,7 +252,7 @@ const ExpenseDetailModal = ({
                     </div>
                     {/* Fecha */}
                     <div className="flex justify-between items-center mb-1">
-                        {isEditMode ? (
+                        {/* {isEditMode ? (
                             <>
                                 <p className="text-sm text-gray-500">Fecha</p>
                                 <Input
@@ -256,16 +261,16 @@ const ExpenseDetailModal = ({
                                     className="w-full h-12"
                                 />
                             </>
-                        ) : (
-                            <div className="flex justify-between w-full">
-                                <p className="font-medium text-gray-700">Fecha:</p>
-                                {entry?.date ? format(new Date(entry.date), "dd MMM yyyy") : "No disponible"}
-                            </div>
-                        )}
+                        ) : ( */}
+                        <div className="flex justify-between w-full">
+                            <p className="font-medium text-gray-700">Fecha:</p>
+                            {entry?.date ? format(new Date(entry.date), "dd MMM yyyy") : "No disponible"}
+                        </div>
+                        {/*  )} */}
                     </div>
                     {/* Recurente */}
                     <div className="flex justify-between items-center">
-                        {isEditMode ? (
+                        {/* {isEditMode ? (
                             <>
                                 <p className="text-sm text-gray-500">Recurrente</p>
                                 <Input
@@ -274,12 +279,31 @@ const ExpenseDetailModal = ({
                                     className="w-full" // Asegura que el input ocupe todo el espacio disponible
                                 />
                             </>
+                        ) : ( */}
+                        <div className="flex justify-between w-full gap-20">
+                            <p className="font-medium text-gray-700">Recurente:</p>
+                            <p className="font-semibold text-gray-600 justify-end">{entry?.recurrent ? "Si" : "No" || "Sin Información"}</p>
+                        </div>
+                        {/* )} */}
+                    </div>
+
+                    {/*  Tiempo de recurencia*/}
+                    <div className="flex justify-between items-center">
+                        {/* {isEditMode ? (
+                            <>
+                                <p className="text-sm text-gray-500">Tiempo de recurrencia</p>
+                                <Input
+                                    value={editedEntry.timerecurrent || "Sin Información"}
+                                    onChange={(e) => handleInputChange("timerecurrent", e.target.value)}
+                                    className="w-full" // Asegura que el input ocupe todo el espacio disponible
+                                />
+                            </>
                         ) : (
-                            <div className="flex justify-between w-full gap-20">
-                                <p className="font-medium text-gray-700">Recurente:</p>
-                                <p className="font-semibold text-gray-600 justify-end">{entry?.recurrent ? "Si" : "No" || "Sin Información"}</p>
-                            </div>
-                        )}
+                        */}     <div className="flex justify-between w-full gap-20">
+                            <p className="font-medium text-gray-700">Tiempo de recurrencia:</p>
+                            <p className="font-semibold text-gray-600 justify-end">{entry?.timerecurrent || "Sin Información"}</p>
+                        </div>
+                        {/* )} */}
                     </div>
                     {/* Impuesto */}
                     <div className="flex justify-between items-center">
@@ -296,24 +320,6 @@ const ExpenseDetailModal = ({
                             <div className="flex justify-between w-full gap-20">
                                 <p className="font-medium text-gray-700">Impuesto:</p>
                                 <p className="font-semibold text-gray-600 justify-end">{entry?.tax_type || "Sin Información"}</p>
-                            </div>
-                        )}
-                    </div>
-                    {/*  Tiempo de recurencia*/}
-                    <div className="flex justify-between items-center">
-                        {isEditMode ? (
-                            <>
-                                <p className="text-sm text-gray-500">Tiempo de recurrencia</p>
-                                <Input
-                                    value={editedEntry.timerecurrent || "Sin Información"}
-                                    onChange={(e) => handleInputChange("timerecurrent", e.target.value)}
-                                    className="w-full" // Asegura que el input ocupe todo el espacio disponible
-                                />
-                            </>
-                        ) : (
-                            <div className="flex justify-between w-full gap-20">
-                                <p className="font-medium text-gray-700">Tiempo de recurrencia:</p>
-                                <p className="font-semibold text-gray-600 justify-end">{entry?.timerecurrent || "Sin Información"}</p>
                             </div>
                         )}
                     </div>
@@ -389,24 +395,6 @@ const ExpenseDetailModal = ({
                             </div>
                         )}
                     </div>
-                    {/*  Monto base*/}
-                    <div className="flex justify-between items-center">
-                        {isEditMode ? (
-                            <>
-                                <p className="text-sm text-gray-500">Monto base</p>
-                                <Input
-                                    value={editedEntry.base_amount || "Sin Información"}
-                                    onChange={(e) => handleInputChange("base_amount", e.target.value)}
-                                    className="w-full" // Asegura que el input ocupe todo el espacio disponible
-                                />
-                            </>
-                        ) : (
-                            <div className="flex justify-between w-full gap-20">
-                                <p className="font-medium text-gray-700">Monto base:</p>
-                                <p className="font-semibold text-gray-600 justify-end">$ {entry?.base_amount || "Sin Información"}</p>
-                            </div>
-                        )}
-                    </div>
                     {/*  Sub Tipo*/}
                     <div className="flex justify-between items-center">
                         {isEditMode ? (
@@ -476,30 +464,6 @@ const ExpenseDetailModal = ({
                             </div>
                         )}
                     </div>
-
-                    {/* Método de Pago */}
-                    <div className="flex justify-between items-center mb-1">
-                        {isEditMode ? (
-                            <>
-                                <p className="text-sm text-gray-500">Método de Pago</p>
-                                <select
-                                    value={editedEntry.payment_method || ""}
-                                    onChange={(e) => handleInputChange("payment_method", e.target.value)}
-                                    className="form-select w-full h-12"
-                                >
-                                    <option value="">Seleccionar método de pago...</option>
-                                    <option value="credit_card">Tarjeta de crédito</option>
-                                    <option value="bank_transfer">Transferencia bancaria</option>
-                                </select>
-                            </>
-                        ) : (
-                            <div className="flex justify-between w-full">
-                                <p className="font-medium text-gray-700">Método de Pago:</p>
-                                <p className="font-semibold text-gray-600">{entry?.payment_method || "No especificado"}</p>
-                            </div>
-                        )}
-                    </div>
-
                     {/* Estado de la transacción */}
                     <div className="flex justify-between items-center mb-1">
                         {isEditMode ? (
@@ -525,7 +489,7 @@ const ExpenseDetailModal = ({
                     </div>
                     {/* Proveedor */}
                     <div className="flex justify-between items-center">
-                        {isEditMode ? (
+                        {/* {isEditMode ? (
                             <>
                                 <p className="text-sm text-gray-500">Proveedor</p>
                                 <Input
@@ -534,14 +498,14 @@ const ExpenseDetailModal = ({
                                     className="w-full" // Asegura que el input ocupe todo el espacio disponible
                                 />
                             </>
-                        ) : (
-                            <div className="flex justify-between w-full gap-20">
-                                <p className="font-medium text-gray-700">Proveedor:</p>
-                                <p className="font-semibold text-gray-600 justify-end">{entry?.provider_id || "Sin Proveedor"}</p>
-                            </div>
-                        )}
+                        ) : ( */}
+                        <div className="flex justify-between w-full gap-20">
+                            <p className="font-medium text-gray-700">Proveedor:</p>
+                            <p className="font-semibold text-gray-600 justify-end">{entry?.provider_id || "Sin Proveedor"}</p>
+                        </div>
+
                     </div>
-                    {/* Descripción */}
+                    {/* Monto Base */}
                     <div className="flex justify-between items-center">
                         {/* {isEditMode ? (
                             <>
@@ -569,13 +533,15 @@ const ExpenseDetailModal = ({
 
                 {/* Botones de acción */}
                 <div className="sticky bottom-4 left-0 right-0 bg-white p-4 border-t shadow-lg flex justify-center">
-                    <Space size="large">
+                    <Space size="large" >
+                        {/* Botón de Guardar o Editar */}
                         {isEditMode ? (
                             <Button
                                 type="primary"
                                 icon={<SaveOutlined style={{ fontSize: "1.5rem" }} />}
                                 size="large"
                                 onClick={handleSaveChanges}
+                            //className="w-1/3"
                             >
                                 <span className="text-sm font-medium text-center">Guardar</span>
                             </Button>
@@ -585,8 +551,22 @@ const ExpenseDetailModal = ({
                                 icon={<EditOutlined style={{ fontSize: "1.5rem", color: "gray" }} />}
                                 size="large"
                                 onClick={toggleEditMode}
+                            //className="w-1/3"
                             >
                                 <span className="text-sm font-medium text-gray-600 text-center">Editar</span>
+                            </Button>
+                        )}
+
+                        {/* Botón de Cancelar edición */}
+                        {isEditMode && (
+                            <Button
+                                type="default"
+                                icon={<CloseOutlined style={{ fontSize: "1.5rem" }} />}
+                                size="large"
+                                onClick={handleCancelEdit}
+                            //className="w-1/3"
+                            >
+                                <span className="text-sm font-medium text-center">Cancelar</span>
                             </Button>
                         )}
 
@@ -596,6 +576,7 @@ const ExpenseDetailModal = ({
                             icon={<DeleteOutlined style={{ fontSize: "1.5rem" }} />}
                             size="large"
                             onClick={showDeleteModal}
+                        //className="w-1/3"
                         >
                             <span className="text-sm font-medium text-center">Eliminar</span>
                         </Button>
