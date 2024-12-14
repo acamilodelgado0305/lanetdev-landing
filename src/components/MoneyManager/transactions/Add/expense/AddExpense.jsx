@@ -25,7 +25,7 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
   const [rawAmount, setRawAmount] = useState("");
   const [category, setCategory] = useState("");
   const [account, setAccount] = useState("");
-  const [note, setNote] = useState("");
+  const [voucher, setVoucher] = useState("");
   const [description, setDescription] = useState("");
   const [categories, setCategories] = useState([]);
   const [accounts, setAccounts] = useState([]);
@@ -136,7 +136,7 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
         type: type,
         sub_type: subType, // Adding subType to the request
         date: date.format("YYYY-MM-DD[T]HH:mm:ss[Z]"),
-        note: note,
+        voucher: voucher,
         description: description,
         provider_id: provider || null,
         recurrent: isRecurring,
@@ -207,7 +207,7 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
       setFinalAmount(0);
       setCategory("");
       setAccount("");
-      setNote("");
+      setVoucher("");
       setDescription("");
       setImageUrls([]);
       setDate(dayjs());
@@ -342,12 +342,12 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
         </div>
 
 
-        <div className="flex-1 px-6 py-1">
+        <div className="flex px-6 py-3">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Main Form Section */}
             <div className=" space-y-2">
               {/* Essential Information Section */}
-              <div className="bg-white p-4 rounded-lg border border-gray-500 shadow-sm">
+              <div className="bg-white p-4 rounded-lg border border-gray-500 shadow-sm ">
                 <div className="flex justify-center">
                   <h3 className="font-bold text-gray-500 pb-2 border-b border-gray-200">
                     Información Básica
@@ -404,8 +404,8 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
 
 
                 <div className="h-0.5 bg-red-200" />
-                {/* Description and Notes Section */}
-                <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                {/* Description and voucher Section */}
+                <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm ">
                   <h3 className="font-bold text-gray-500 pb-2 border-b border-gray-200">
                     Detalles
                   </h3>
@@ -413,8 +413,8 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
                     <ImageUploader
                       imageUrls={imageUrls}
                       setImageUrls={setImageUrls}
-                      note={note}
-                      setNote={setNote}
+                      voucher={voucher}
+                      setVoucher={setVoucher}
                     />
                   </div>
                 </div>
@@ -432,8 +432,8 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
             </div>
 
             {/* Right Column - Financial Details */}
-            <div className="space-y-6">
-              <div className="bg-white p-4 rounded-lg border border-gray-500 shadow-sm">
+            <div className="space-y-6 h-full ">
+              <div className="bg-white p-4 rounded-lg border border-gray-500 shadow-sm h-[42em] overflow-y-auto">
                 <div className="flex justify-center">
                   <h3 className="font-bold text-gray-500 pb-2 border-b border-gray-200">
                    Detalles Financieros
