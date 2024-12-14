@@ -5,6 +5,7 @@ import axios from "axios";
 import { getUserById } from "../../../../services/apiService";
 import { useAuth } from "../../../Context/AuthProvider";
 import VoucherSection from "./VoucherSection";
+import { format } from "date-fns";
 
 const ExpenseDetailModal = ({
     isOpen,
@@ -206,7 +207,7 @@ const ExpenseDetailModal = ({
                     </div>
                 </div>
                 {/* Formulario editable */}
-                <div className="grid grid-cols-1 gap-4 bg-slate-50 px-8 py-4 mb-6 border border-gray-300 rounded-lg">
+                <div className="grid grid-cols-1 gap-1 bg-slate-50 px-8 py-2 mb-6 border border-gray-300 rounded-lg">
                     {/* Monto */}
                     <div className="flex justify-between items-center">
                         {isEditMode ? (
@@ -258,7 +259,169 @@ const ExpenseDetailModal = ({
                         ) : (
                             <div className="flex justify-between w-full">
                                 <p className="font-medium text-gray-700">Fecha:</p>
-                                <p className="font-semibold text-gray-600">{entry?.date || "No disponible"}</p>
+                                {entry?.date ? format(new Date(entry.date), "dd MMM yyyy") : "No disponible"}
+                            </div>
+                        )}
+                    </div>
+                    {/* Recurente */}
+                    <div className="flex justify-between items-center">
+                        {isEditMode ? (
+                            <>
+                                <p className="text-sm text-gray-500">Recurrente</p>
+                                <Input
+                                    value={editedEntry.recurrent || "Sin Información"}
+                                    onChange={(e) => handleInputChange("recurrent", e.target.value)}
+                                    className="w-full" // Asegura que el input ocupe todo el espacio disponible
+                                />
+                            </>
+                        ) : (
+                            <div className="flex justify-between w-full gap-20">
+                                <p className="font-medium text-gray-700">Recurente:</p>
+                                <p className="font-semibold text-gray-600 justify-end">{entry?.recurrent ? "Si" : "No" || "Sin Información"}</p>
+                            </div>
+                        )}
+                    </div>
+                    {/* Impuesto */}
+                    <div className="flex justify-between items-center">
+                        {isEditMode ? (
+                            <>
+                                <p className="text-sm text-gray-500">Impuesto</p>
+                                <Input
+                                    value={editedEntry.tax_type || "Sin Información"}
+                                    onChange={(e) => handleInputChange("tax_type", e.target.value)}
+                                    className="w-full" // Asegura que el input ocupe todo el espacio disponible
+                                />
+                            </>
+                        ) : (
+                            <div className="flex justify-between w-full gap-20">
+                                <p className="font-medium text-gray-700">Impuesto:</p>
+                                <p className="font-semibold text-gray-600 justify-end">{entry?.tax_type || "Sin Información"}</p>
+                            </div>
+                        )}
+                    </div>
+                    {/*  Tiempo de recurencia*/}
+                    <div className="flex justify-between items-center">
+                        {isEditMode ? (
+                            <>
+                                <p className="text-sm text-gray-500">Tiempo de recurrencia</p>
+                                <Input
+                                    value={editedEntry.timerecurrent || "Sin Información"}
+                                    onChange={(e) => handleInputChange("timerecurrent", e.target.value)}
+                                    className="w-full" // Asegura que el input ocupe todo el espacio disponible
+                                />
+                            </>
+                        ) : (
+                            <div className="flex justify-between w-full gap-20">
+                                <p className="font-medium text-gray-700">Tiempo de recurrencia:</p>
+                                <p className="font-semibold text-gray-600 justify-end">{entry?.timerecurrent || "Sin Información"}</p>
+                            </div>
+                        )}
+                    </div>
+                    {/*  Porcentage de Impuesto*/}
+                    <div className="flex justify-between items-center">
+                        {isEditMode ? (
+                            <>
+                                <p className="text-sm text-gray-500">Porcentage de Impuesto</p>
+                                <Input
+                                    value={editedEntry.tax_percentage || "Sin Información"}
+                                    onChange={(e) => handleInputChange("tax_percentage", e.target.value)}
+                                    className="w-full" // Asegura que el input ocupe todo el espacio disponible
+                                />
+                            </>
+                        ) : (
+                            <div className="flex justify-between w-full gap-20">
+                                <p className="font-medium text-gray-700">Porcentage de Impuesto:</p>
+                                <p className="font-semibold text-gray-600 justify-end">{entry?.tax_percentage || "Sin Información"} %</p>
+                            </div>
+                        )}
+                    </div>
+                    {/*  Tipo de Retención*/}
+                    <div className="flex justify-between items-center">
+                        {isEditMode ? (
+                            <>
+                                <p className="text-sm text-gray-500">Tipo de Retención</p>
+                                <Input
+                                    value={editedEntry.retention_type || "Sin Información"}
+                                    onChange={(e) => handleInputChange("retention_type", e.target.value)}
+                                    className="w-full" // Asegura que el input ocupe todo el espacio disponible
+                                />
+                            </>
+                        ) : (
+                            <div className="flex justify-between w-full gap-20">
+                                <p className="font-medium text-gray-700">Tipo de Retención:</p>
+                                <p className="font-semibold text-gray-600 justify-end">{entry?.retention_type || "Sin Información"}</p>
+                            </div>
+                        )}
+                    </div>
+                    {/*  Porcentage de Retención*/}
+                    <div className="flex justify-between items-center">
+                        {isEditMode ? (
+                            <>
+                                <p className="text-sm text-gray-500">Porcentage de Retención</p>
+                                <Input
+                                    value={editedEntry.retention_percentage || "Sin Información"}
+                                    onChange={(e) => handleInputChange("retention_percentage", e.target.value)}
+                                    className="w-full" // Asegura que el input ocupe todo el espacio disponible
+                                />
+                            </>
+                        ) : (
+                            <div className="flex justify-between w-full gap-20">
+                                <p className="font-medium text-gray-700">Porcentage de Retención:</p>
+                                <p className="font-semibold text-gray-600 justify-end">{entry?.retention_percentage || "Sin Información"} %</p>
+                            </div>
+                        )}
+                    </div>
+                    {/*  Monto de Retención*/}
+                    <div className="flex justify-between items-center">
+                        {isEditMode ? (
+                            <>
+                                <p className="text-sm text-gray-500">Tipo de Retención</p>
+                                <Input
+                                    value={editedEntry.retention_amount || "Sin Información"}
+                                    onChange={(e) => handleInputChange("retention_amount", e.target.value)}
+                                    className="w-full" // Asegura que el input ocupe todo el espacio disponible
+                                />
+                            </>
+                        ) : (
+                            <div className="flex justify-between w-full gap-20">
+                                <p className="font-medium text-gray-700">Tipo de Retención:</p>
+                                <p className="font-semibold text-gray-600 justify-end">$ {entry?.retention_amount || "Sin Información"}</p>
+                            </div>
+                        )}
+                    </div>
+                    {/*  Monto base*/}
+                    <div className="flex justify-between items-center">
+                        {isEditMode ? (
+                            <>
+                                <p className="text-sm text-gray-500">Monto base</p>
+                                <Input
+                                    value={editedEntry.base_amount || "Sin Información"}
+                                    onChange={(e) => handleInputChange("base_amount", e.target.value)}
+                                    className="w-full" // Asegura que el input ocupe todo el espacio disponible
+                                />
+                            </>
+                        ) : (
+                            <div className="flex justify-between w-full gap-20">
+                                <p className="font-medium text-gray-700">Monto base:</p>
+                                <p className="font-semibold text-gray-600 justify-end">$ {entry?.base_amount || "Sin Información"}</p>
+                            </div>
+                        )}
+                    </div>
+                    {/*  Sub Tipo*/}
+                    <div className="flex justify-between items-center">
+                        {isEditMode ? (
+                            <>
+                                <p className="text-sm text-gray-500">Sub Tipo</p>
+                                <Input
+                                    value={editedEntry.sub_type || "Sin Información"}
+                                    onChange={(e) => handleInputChange("sub_type", e.target.value)}
+                                    className="w-full" // Asegura que el input ocupe todo el espacio disponible
+                                />
+                            </>
+                        ) : (
+                            <div className="flex justify-between w-full gap-20">
+                                <p className="font-medium text-gray-700">Sub Tipo:</p>
+                                <p className="font-semibold text-gray-600 justify-end">{entry?.sub_type || "Sin Información"}</p>
                             </div>
                         )}
                     </div>
@@ -343,7 +506,7 @@ const ExpenseDetailModal = ({
                             <>
                                 <p className="text-sm text-gray-500">Estado de la transacción</p>
                                 <select
-                                    value={editedEntry.transaction_status || ""}
+                                    value={editedEntry.estado || ""}
                                     onChange={(e) => handleInputChange("transaction_status", e.target.value)}
                                     className="form-select w-full h-12"
                                 >
@@ -356,7 +519,7 @@ const ExpenseDetailModal = ({
                         ) : (
                             <div className="flex justify-between w-full">
                                 <p className="font-medium text-gray-700">Estado:</p>
-                                <p className="font-semibold text-gray-600">{entry?.transaction_status || "Desconocido"}</p>
+                                <p className="font-semibold text-gray-600">{entry?.estado ? "Completado" : "Fallida" || "Desconocido"}</p>
                             </div>
                         )}
                     </div>
@@ -392,7 +555,7 @@ const ExpenseDetailModal = ({
                         ) : ( */}
                         <div className="flex justify-between w-full gap-20">
                             <p className="font-medium text-gray-700">Monto base:</p>
-                            <p className="font-semibold text-gray-600 justify-end">{entry?.base_amount || "Desconocido"}</p>
+                            <p className="font-semibold text-gray-600 justify-end">$ {entry?.base_amount || "Desconocido"}</p>
                         </div>
                     </div>
                 </div>
