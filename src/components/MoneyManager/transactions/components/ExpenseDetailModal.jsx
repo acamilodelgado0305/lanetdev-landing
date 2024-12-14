@@ -4,7 +4,7 @@ import { SaveOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined, 
 import axios from "axios";
 import { getUserById } from "../../../../services/apiService";
 import { useAuth } from "../../../Context/AuthProvider";
-import ExpenseVoucherSection from "./VoucherSection";
+import ExpenseVoucherSection from "./ExpenseVoucherSection";
 import { format } from "date-fns";
 
 const ExpenseDetailModal = ({
