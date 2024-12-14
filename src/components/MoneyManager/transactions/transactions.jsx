@@ -273,7 +273,7 @@ const TransactionsDashboard = () => {
   return (
     <div className="flex-1 bg-white]">
       {/* Barra superior de herramientas */}
-      <div className="py-2 border bg-white sticky top-0 shadow-sm">
+      <div className="py-2 border bg-white sticky top-0 shadow-sm z-10">
         {/* Botones de ingresos, egresos, etc. */}
         <div className="w-full flex items-end justify-end">
           <div className="flex gap-3">
@@ -347,7 +347,7 @@ const TransactionsDashboard = () => {
       </div>
 
       {/* Contenido principal */}
-      <div className="overflow-y-auto h-[40em]">
+      <div className="overflow-y-auto h-[40em]" style={{ maxHeight: 'calc(70vh - 180px)' }}>
         <div className="border border-gray-200 rounded-lg">
           {error && <p className="text-red-500">{error}</p>}
           {/* Mostrar IncomeTable si selectedEndpoint es "/incomes" */}
