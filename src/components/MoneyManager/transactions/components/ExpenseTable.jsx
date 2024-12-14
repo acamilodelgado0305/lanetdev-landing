@@ -116,10 +116,27 @@ const ExpenseTable = ({
             width: '120px',
         },
         {
+            title: 'Proveedor',
+            field: 'provider_id',
+            width: '150px',
+        },
+        {
+            title: 'Retención',
+            field: 'amount',
+            width: '120px',
+        },
+        {
+            title: 'Estado',
+            field: 'recurrent',
+            width: '120px',
+        },
+        {
             title: 'Comprobante',
             field: 'voucher',
             width: '120px',
         },
+
+
     ];
 
     const openModal = (entry) => {
@@ -233,6 +250,16 @@ const ExpenseTable = ({
                                         ) : (
                                             "No aplica"
                                         )}
+                                    </td>
+
+                                    <td className="border-r border-gray-200 p-2 truncate">
+                                        {entry.provider_id}
+                                    </td>
+                                    <td className="border-r border-gray-200 p-2 truncate">
+                                        {entry.retention_type}
+                                    </td>
+                                    <td className="border-r border-gray-200 p-2 truncate">
+                                        {entry.recurrent ? "Si" : "No"}
                                     </td>
                                     <td className="border-r border-gray-200 p-2 truncate">
                                         {Array.isArray(entry.voucher) && entry.voucher.length > 0 ? (
