@@ -235,8 +235,8 @@ const ExpenseTable = ({
                                     <td className="border-r border-gray-200 p-2 truncate">
                                         {getCategoryName(entry.category_id)}
                                     </td>
-                                    <td className={`border-r border-gray-200 p-2 truncate font-medium ${entry.type === "expense" ? "text-red-600" : "text-green-600"}`}>
-                                        {entry.type === "expense" ? "-" : "+"}
+                                    <td className={"border-r border-gray-200 p-2 truncate font-medium text-red-600"}>
+                                        {entry.type === "expense" ? "-" : "-"}
                                         {formatCurrency(entry.amount)}
                                     </td>
                                     <td className="border-r border-gray-200 p-2 truncate">
