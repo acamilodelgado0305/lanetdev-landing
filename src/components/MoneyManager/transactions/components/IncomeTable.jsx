@@ -12,7 +12,6 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
     const [selectedEntry, setSelectedEntry] = useState(null);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedImages, setSelectedImages] = useState([]);
-    const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat("es-CO", {
@@ -25,10 +24,6 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
     const getCategoryName = (categoryId) => {
         const category = categories.find((cat) => cat.id === categoryId);
         return category ? category.name : "Sin categoría";
-    };
-
-    const handleTransactionDeleted = () => {
-        setRefreshTrigger(prev => prev + 1);
     };
 
     const getAccountName = (accountId) => {

@@ -372,7 +372,10 @@ const TransactionsDashboard = () => {
               entries={paginatedEntries} // Filtra para la paginación
               categories={categories}
               accounts={accounts}
-              onDelete={handleDelete}
+              onDelete={() => {
+                fetchData(selectedEndpoint);
+                fetchMonthlyData();
+              }}
               onEdit={openEditModal}
               onOpenContentModal={openContentModal}
               onOpenModal={openModal}
@@ -385,7 +388,10 @@ const TransactionsDashboard = () => {
               entries={paginatedEntries} // Filtra para la paginación
               categories={categories}
               accounts={accounts}
-              onDelete={handleDelete}
+              onDelete={() => {
+                fetchData(selectedEndpoint);
+                fetchMonthlyData();
+              }}
               onEdit={openEditModal}
               onOpenContentModal={openContentModal}
               onOpenModal={openModal}
