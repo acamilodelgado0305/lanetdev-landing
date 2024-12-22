@@ -436,7 +436,7 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
               <div className="bg-white p-4 rounded-lg border border-gray-500 shadow-sm h-[42em] overflow-y-auto">
                 <div className="flex justify-center">
                   <h3 className="font-bold text-gray-500 pb-2 border-b border-gray-200">
-                   Detalles Financieros
+                    Detalles Financieros
                   </h3>
                 </div>
 
