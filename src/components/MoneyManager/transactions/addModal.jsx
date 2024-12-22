@@ -6,10 +6,17 @@ import InputField from "../transactions/components/InputField";
 import SelectField from "../transactions/components/SelectField";
 import { DatePicker } from "antd";
 import "antd/dist/reset.css";
+import {
+  DollarCircleOutlined,
+  CloseOutlined,
+  ShoppingOutlined,
+  CreditCardOutlined
+} from '@ant-design/icons';
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
-
+import AccountSelector from "../../MoneyManager/transactions/Add/AccountSelector ";
+import ImageUploader from "../../MoneyManager/transactions/Add/ImageUploader";
 // Extiende dayjs con los plugins
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -35,6 +42,8 @@ const TransferModal = ({
   const [isUploading, setIsUploading] = useState(false);
   const [date, setDate] = useState(dayjs());
   const [isEditing, setIsEditing] = useState(false);
+  const [account, setAccount] = useState("");
+  const [voucher, setVoucher] = useState("");
 
   useEffect(() => {
     // Si hay una transacción para editar, activamos el modo edición
@@ -111,6 +120,14 @@ const TransferModal = ({
     if (!fromAccount) errors.push("La 'Cuenta de Origen' es obligatoria para una transferencia.");
     if (!toAccount) errors.push("La 'Cuenta de Destino' es obligatoria para una transferencia.");
     return errors;
+  };
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
   };
 
   const handleSave = async () => {
@@ -219,21 +236,15 @@ const TransferModal = ({
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 z-40"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      <div
-        className="fixed inset-y-0 right-0 w-full md:w-1/2 lg:w-1/3 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 overflow-y-auto"
-        style={{
-          transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
-        }}
-      >
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex justify-center items-center">
+      <div className="w-full max-w-[80%] bg-white shadow-lg rounded-lg overflow-hidden">
         {/* Header */}
-        <div className="sticky top-0 bg-white z-10 border-b px-4 py-3 flex items-center justify-between">
-          <h2 className="text-xl font-semibold">
+        <div className="flex justify-between items-center px-6 py-4 border-b">
+
+          <h2 className="text-xl font-semibold ">
+            <span className="text-blue-700">
+              <DollarCircleOutlined className="text-2xl mx-2" />
+            </span>
             {isEditing ? "Editar Transferencia" : "Nueva Transferencia"}
           </h2>
           <button
@@ -243,10 +254,12 @@ const TransferModal = ({
             <IoClose size={24} />
           </button>
         </div>
-
+        <div className="h-1 bg-blue-700" />
         {/* Main Content */}
-        <div className="p-4 space-y-6">
-          <div className="space-y-4">
+        <div className="flex">
+          {/* Left Section */}
+          <div className="flex-1 p-4 space-y-6 bg-gray-50 border-r border-gray-300">
+            {/* Fecha */}
             <div>
               <label className="block mb-1 text-sm font-medium text-gray-700">
                 Fecha
@@ -263,6 +276,7 @@ const TransferModal = ({
               />
             </div>
 
+            {/* Importe */}
             <InputField
               label="Importe"
               id="amount"
@@ -271,6 +285,7 @@ const TransferModal = ({
               placeholder="0.00"
             />
 
+            {/* Descripción */}
             <InputField
               label="Descripción"
               id="description"
@@ -279,66 +294,50 @@ const TransferModal = ({
               placeholder="Añade una descripción"
             />
 
-            <SelectField
-              label="Cuenta de Origen"
-              id="fromAccount"
-              value={fromAccount}
-              onChange={(e) => setFromAccount(e.target.value)}
-              options={accounts}
-            />
-
-            <SelectField
-              label="Cuenta de Destino"
-              id="toAccount"
-              value={toAccount}
-              onChange={(e) => setToAccount(e.target.value)}
-              options={accounts}
-            />
-
-            {/* Image Upload Section */}
-            <div className="space-y-4 pt-4 border-t">
-              <div>
-                <label htmlFor="imageUpload" className="block mb-2 font-medium">
-                  Subir Imágenes
-                </label>
-                <input
-                  type="file"
-                  id="imageUpload"
-                  accept="image/*"
-                  multiple
-                  onChange={handleImageUpload}
-                  className="w-full p-2 bg-gray-100 rounded border"
-                  disabled={isUploading}
+            {/* Subir Imágenes */}
+            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm ">
+              <h3 className="font-bold text-gray-500 pb-2 border-b border-gray-200">
+                Detalles
+              </h3>
+              <div className="mt-4 bg-gray-50 rounded-md">
+                <ImageUploader
+                  imageUrls={imageUrls}
+                  setImageUrls={setImageUrls}
+                  voucher={voucher}
+                  setVoucher={setVoucher}
                 />
-                {isUploading && (
-                  <p className="text-sm text-gray-500 mt-2">Subiendo imágenes...</p>
-                )}
               </div>
-              {imageUrls.length > 0 && (
-                <div className="grid grid-cols-3 gap-4">
-                  {imageUrls.map((url, index) => (
-                    <div key={index} className="relative group">
-                      <img
-                        src={url}
-                        alt={`Imagen adjunta ${index + 1}`}
-                        className="rounded w-full h-24 object-cover"
-                      />
-                      <button
-                        onClick={() => handleDeleteImage(index, url)}
-                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                      >
-                        <IoClose size={16} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+            </div>
+          </div>
+
+          {/* Right Section */}
+          <div className="w-[50%] p-4 space-y-6 h-[42em] overflow-y-auto">
+            {/* Cuenta de Origen */}
+            <div>
+              <h1 className="mb-2 text-lg font-medium text-gray-700">Cuenta de Origen</h1>
+              <AccountSelector
+                accounts={accounts}
+                selectedAccount={fromAccount}
+                onAccountSelect={setFromAccount}
+                formatCurrency={formatCurrency}
+              />
+            </div>
+
+            {/* Cuenta de Destino */}
+            <div>
+              <h1 className="mb-2 text-lg font-medium text-gray-700">Cuenta de Destino</h1>
+              <AccountSelector
+                accounts={accounts}
+                selectedAccount={toAccount}
+                onAccountSelect={setToAccount}
+                formatCurrency={formatCurrency}
+              />
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-white border-t p-4 mt-6">
+        <div className="sticky bottom-0 bg-white border-t p-4">
           <button
             onClick={handleSave}
             className="w-full bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition-colors"
@@ -348,6 +347,7 @@ const TransferModal = ({
         </div>
       </div>
     </div>
+
   );
 };
 

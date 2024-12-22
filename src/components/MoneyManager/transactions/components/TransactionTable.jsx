@@ -277,7 +277,7 @@ const TransactionTable = ({
                                 <Button
                                     type="link"
                                     className="mx-20 absolute bottom-2   text-white bg-green-600"
-                                    onClick={() => downloadImage(image)} // Descarga individual
+                                    onClick={() => downloadImage(image)}
                                 >
                                     Descargar
                                 </Button>
