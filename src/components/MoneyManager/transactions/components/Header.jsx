@@ -20,7 +20,7 @@ const Header = ({ onNavClick }) => {
         { label: 'Ingresos', endpoint: '/incomes' },
         { label: 'Egresos', endpoint: '/expenses' },
         { label: 'Transferencias', endpoint: '/transactions' },
-        { label: 'Pagos Recurrentes', endpoint: '/recurring-payments' },
+        /*  { label: 'Pagos Recurrentes', endpoint: '/recurring-payments' }, */
     ];
 
     const handleNavClick = (index, endpoint) => {
