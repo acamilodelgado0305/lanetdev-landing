@@ -141,7 +141,7 @@ const TransactionsDashboard = () => {
     }
   };
 
-  const fetchMonthlyData = async () => {
+  /* const fetchMonthlyData = async () => {
     const monthYear = formatDate(currentMonth, "yyyy-MM");
     try {
       const [balanceResponse, incomeResponse, expensesResponse] =
@@ -162,6 +162,29 @@ const TransactionsDashboard = () => {
       setError("Error al cargar los datos mensuales");
       console.error("Error fetching monthly data:", err);
     }
+  }; */
+  const fetchMonthlyData = async () => {
+    try {
+      // Realizar la solicitud a la nueva ruta
+      const response = await axios.get(`${API_BASE_URL}/balance/general`);
+
+      // Extraer los datos de la respuesta
+      const { total_incomes, total_expenses, net_balance } = response.data;
+
+      // Asignar los valores a las variables correspondientes
+      const balanceValue = parseFloat(net_balance) || 0;
+      const incomeValue = parseFloat(total_incomes) || 0;
+      const expensesValue = parseFloat(total_expenses) || 0;
+
+      // Actualizar los estados con los valores obtenidos
+      setBalance(balanceValue);
+      setTotalIncome(incomeValue);
+      setTotalExpenses(expensesValue);
+    } catch (err) {
+      // Manejo de errores
+      setError("Error al cargar los datos generales");
+      console.error("Error fetching general balance data:", err);
+    }
   };
 
   const handleEntryAdded = () => {
@@ -174,6 +197,7 @@ const TransactionsDashboard = () => {
   useEffect(() => {
     fetchCategories();
     fetchAccounts();
+    fetchMonthlyData();
     fetchData(selectedEndpoint);
   }, [selectedEndpoint, refreshTrigger]);
 
