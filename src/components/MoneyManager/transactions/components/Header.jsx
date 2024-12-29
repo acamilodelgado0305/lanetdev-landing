@@ -29,7 +29,7 @@ const Header = ({ onNavClick }) => {
     };
 
     return (
-        <header className="bg-white shadow-sm w-full border-t-4 border-b-4 border-gray-300">
+        <header className="bg-white shadow-sm w-full border-t-4 border-b-4 ">
             <div className="flex justify-between py-1">
                 {navItems.map((item, index) => (
                     <NavItem

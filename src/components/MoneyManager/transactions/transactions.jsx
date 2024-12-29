@@ -273,7 +273,7 @@ const TransactionsDashboard = () => {
   return (
     <div className="flex-1 bg-white]">
       {/* Barra superior de herramientas */}
-      <div className="py-2 border bg-white sticky top-0 shadow-sm z-10">
+      <div className="py-2  bg-white sticky top-0 shadow-sm z-10">
         {/* Botones de ingresos, egresos, etc. */}
         <div className="w-full flex items-end justify-end">
           <div className="flex gap-3">
@@ -289,47 +289,7 @@ const TransactionsDashboard = () => {
           </div>
         </div>
 
-        {/* Resumen de datos financieros */}
-        <div className="w-full flex items-center justify-center">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-[17em] px-6 py-4">
-            {/* Resumen de datos financieros condicional por rol */}
-            {userRole === "superadmin" && (
-              <div className="flex items-center space-x-4">
-                <div className="bg-green-50 p-4 rounded-full">
-                  <TrendingUp className="h-6 w-6 text-green-600" />
-                </div>
-                <div>
-                  <div className="text-sm text-gray-500 mb-1">Balance</div>
-                  <div className="text-xl font-semibold text-gray-900">{formatCurrency(balance)}</div>
-                </div>
-              </div>
-            )}
-
-            {userRole === "superadmin" && (
-              <div className="flex items-center space-x-4">
-                <div className="bg-blue-50 p-4 rounded-full">
-                  <DollarSign className="h-6 w-6 text-blue-600" />
-                </div>
-                <div>
-                  <div className="text-sm text-gray-500 mb-1">Ventas totales</div>
-                  <div className="text-xl font-semibold text-green-600">{formatCurrency(totalIncome)}</div>
-                </div>
-              </div>
-            )}
-
-            {(userRole === "admin" || userRole === "superadmin") && (
-              <div className="flex items-center space-x-4">
-                <div className="bg-red-50 p-4 rounded-full">
-                  <CreditCard className="h-6 w-6 text-red-600" />
-                </div>
-                <div>
-                  <div className="text-sm text-gray-500 mb-1">Gastos totales</div>
-                  <div className="text-xl font-semibold text-red-600">{formatCurrency(totalExpenses)}</div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        
 
         {/* Input de búsqueda */}
         <div className="w-full flex items-center justify-center">

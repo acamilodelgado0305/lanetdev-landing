@@ -14,9 +14,7 @@ const CategorySelector = ({
   return (
     <div className="space-y-3">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Selecciona la categoría*
-        </label>
+       
         <Select
           value={selectedCategory}
           onChange={onCategorySelect}
