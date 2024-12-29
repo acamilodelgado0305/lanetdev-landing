@@ -96,23 +96,18 @@ const TransactionTable = ({
             width: '200px',
         },
         {
-            title: 'Cuenta',
-            field: 'account',
+            title: 'Cuenta de Origen',
+            field: 'from_account_id',
             width: '150px',
         },
         {
-            title: 'Categoría',
-            field: 'category',
+            title: 'Cuenta de Destino',
+            field: 'to_account_id',
             width: '150px',
         },
         {
             title: 'Monto',
             field: 'amount',
-            width: '120px',
-        },
-        {
-            title: 'Impuestos',
-            field: 'tax_type',
             width: '120px',
         },
         {
@@ -221,18 +216,6 @@ const TransactionTable = ({
                                     <td className={`border-r border-gray-200 p-2 truncate font-medium ${entry.type === "expense" ? "text-red-600" : "text-green-600"}`}>
                                         {entry.type === "expense" ? "-" : "+"}
                                         {formatCurrency(entry.amount)}
-                                    </td>
-                                    <td className="border-r border-gray-200 p-2 truncate">
-                                        {entry.tax_type === "IVA" ? (
-                                            <div>
-                                                <span>IVA: </span>
-                                                <span className="text-green-600">
-                                                    {formatCurrency(entry.amount * 0.19)}
-                                                </span>
-                                            </div>
-                                        ) : (
-                                            "No aplica"
-                                        )}
                                     </td>
                                     <td className="border-r border-gray-200 p-2 truncate">
                                         {Array.isArray(entry.voucher) && entry.voucher.length > 0 ? (
