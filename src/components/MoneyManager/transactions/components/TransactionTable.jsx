@@ -112,7 +112,7 @@ const TransactionTable = ({
         },
         {
             title: 'Comprobante',
-            field: 'voucher',
+            field: 'vouchers',
             width: '120px',
         },
     ];
@@ -133,6 +133,34 @@ const TransactionTable = ({
     const openDrawer = (images) => {
         setSelectedImages(images);
         setIsDrawerOpen(true);
+    };
+    const downloadImage = async (url) => {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error("No se pudo descargar el archivo.");
+            }
+            const blob = await response.blob();
+
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = url.split("/").pop(); // Usa el nombre original de la imagen
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Limpia la URL temporal
+            URL.revokeObjectURL(link.href);
+        } catch (error) {
+            console.error("Error al descargar el archivo:", error);
+        }
+    };
+    const downloadAllImages = async (urls) => {
+        try {
+            await Promise.all(urls.map((url) => downloadImage(url))); // Llama a downloadImage para cada URL
+        } catch (error) {
+            console.error("Error al descargar las imágenes:", error);
+        }
     };
 
     return (
@@ -218,14 +246,14 @@ const TransactionTable = ({
                                         {formatCurrency(entry.amount)}
                                     </td>
                                     <td className="border-r border-gray-200 p-2 truncate">
-                                        {Array.isArray(entry.voucher) && entry.voucher.length > 0 ? (
+                                        {Array.isArray(entry.vouchers) && entry.vouchers.length > 0 ? (
                                             <a
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    const voucherArray = entry.voucher.filter(
-                                                        (voucherUrl) => typeof voucherUrl === "string" && voucherUrl.trim() !== ""
+                                                    const vouchersArray = entry.vouchers.filter(
+                                                        (vouchersUrl) => typeof vouchersUrl === "string" && vouchersUrl.trim() !== ""
                                                     );
-                                                    openDrawer(voucherArray);
+                                                    openDrawer(vouchersArray);
                                                 }}
                                                 className="text-blue-500 underline"
                                             >
