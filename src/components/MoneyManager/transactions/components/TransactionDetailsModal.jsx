@@ -13,8 +13,7 @@ import {
 import { getUserById } from "../../../../services/apiService";
 import { useAuth } from "../../../Context/AuthProvider";
 import axios from "axios";
-import { uploadImage } from "../../../../services/apiService";
-import VoucherSection from "./VoucherSection";
+import TransactionVoucherSection from "./TransactionVoucherSection";
 
 const TransactionDetailModal = ({
     isOpen,
@@ -53,7 +52,7 @@ const TransactionDetailModal = ({
             setEditedEntry({
                 ...entry,
                 amount: parseFloat(entry.amount) || 0,
-                voucher: entry.voucher || "",
+                vouchers: entry.vouchers || "",
                 description: entry.description || "",
                 estado: entry.estado,
                 tax_type: entry.tax_type,
@@ -355,7 +354,7 @@ const TransactionDetailModal = ({
 
 
                         {/*COMPROBANTES*/}
-                        <VoucherSection
+                        <TransactionVoucherSection
                             entry={editedEntry}
                             entryId={entry.id}
                             onVoucherUpdate={handleVoucherUpdate}
