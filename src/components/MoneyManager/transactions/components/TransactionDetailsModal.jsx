@@ -19,8 +19,6 @@ const TransactionDetailModal = ({
     isOpen,
     onClose,
     entry,
-    getCategoryName,
-    getAccountName,
     formatCurrency,
 }) => {
     const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -31,11 +29,6 @@ const TransactionDetailModal = ({
     const [currentImage, setCurrentImage] = useState(null);
     const [accounts, setAccounts] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [ventaCategoryId, setVentaCategoryId] = useState(null);
-    const [categories, setCategories] = useState([]);
-    const [arqueoCategoryId, setArqueoCategoryId] = useState(null);
-
-
 
     const { authToken } = useAuth();
     const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
@@ -54,9 +47,6 @@ const TransactionDetailModal = ({
                 amount: parseFloat(entry.amount) || 0,
                 vouchers: entry.vouchers || "",
                 description: entry.description || "",
-                estado: entry.estado,
-                tax_type: entry.tax_type,
-                recurrent: entry.recurrent
             });
             fetchUserName(entry.user_id, authToken);
         }
@@ -67,8 +57,7 @@ const TransactionDetailModal = ({
         const fetchAccounts = async () => {
             try {
                 const response = await axios.get(`${API_BASE_URL}/accounts`);
-                const filteredAccounts = response.data.filter(account => account.type === "Banco");
-                setAccounts(filteredAccounts);
+                setAccounts(response.data);
                 setLoading(false);
             } catch (error) {
                 console.error("Error fetching accounts:", error);
@@ -79,39 +68,12 @@ const TransactionDetailModal = ({
         fetchAccounts();
     }, []);
 
-    useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                // Usamos axios para obtener las categorías
-                const response = await axios.get(`${API_BASE_URL}/categories`);
-
-                // Filtramos las categorías que son de tipo 'income' o 'ingreso'
-                const incomeCategories = response.data.filter(category =>
-                    category.type?.toLowerCase() === 'income' ||
-                    category.type?.toLowerCase() === 'ingreso'
-                );
-
-                // Actualizamos el estado con las categorías filtradas
-                setCategories(incomeCategories);
-
-                // Buscamos las categorías 'Arqueo' y 'Venta' para guardarlas
-                const arqueoCategory = incomeCategories.find(cat => cat.name === 'Arqueo');
-                const ventaCategory = incomeCategories.find(cat => cat.name === 'Venta');
-
-                if (arqueoCategory) {
-                    setArqueoCategoryId(arqueoCategory.id);
-                }
-                if (ventaCategory) {
-                    setVentaCategoryId(ventaCategory.id);
-                }
-            } catch (error) {
-                console.error("Error al obtener las categorías:", error);
-            }
-        };
-
-        // Llamamos a la función para obtener las categorías
-        fetchCategories();
-    }, [isOpen]);
+    const getAccountNameById = (accountId) => {
+        if (loading) return "Cargando...";
+        if (!accountId) return "Sin cuenta asignada";
+        const account = accounts.find((acc) => acc.id === accountId);
+        return account ? account.name : "Cuenta desconocida";
+    };
 
     const fetchUserName = async (userId, token) => {
         try {
@@ -182,11 +144,6 @@ const TransactionDetailModal = ({
                 return;
             }
 
-            if (!editedEntry.category_id) {
-                message.error("Por favor seleccione una categoría.");
-                return;
-            }
-
             if (!editedEntry.account_id) {
                 message.error("Por favor seleccione una cuenta.");
                 return;
@@ -195,7 +152,6 @@ const TransactionDetailModal = ({
             const formattedEntry = {
                 ...editedEntry,
                 amount: parseFloat(editedEntry.amount),
-                estado: editedEntry.estado === "Activo" || editedEntry.estado === true,
             };
 
             const response = await axios.put(
@@ -220,7 +176,10 @@ const TransactionDetailModal = ({
             message.error("Hubo un error al intentar actualizar el ingreso. Por favor, inténtalo de nuevo.");
         }
     };
-
+    const getAccountName = (accountId) => {
+        const account = accounts.find((acc) => acc.id === accountId);
+        return account ? account.name : "Cuenta desconocida";
+    };
     if (!isOpen) return null;
 
     if (!editedEntry) {
@@ -307,13 +266,13 @@ const TransactionDetailModal = ({
                                 <p className="text-sm text-gray-500">Cuenta de origen</p>
                                 {isEditMode ? (
                                     <select
-                                        value={editedEntry.account_id}
-                                        onChange={(e) => handleInputChange("account_id", e.target.value)}
+                                        value={editedEntry.from_account_id || ""}
+                                        onChange={(e) => handleInputChange("from_account_id", e.target.value)}
                                         className="form-select w-32 h-10"
                                     >
                                         <option value="">Seleccionar cuenta...</option>
                                         {loading ? (
-                                            <option>Loading...</option>
+                                            <option>Cargando...</option>
                                         ) : (
                                             accounts.map((account) => (
                                                 <option key={account.id} value={account.id}>
@@ -323,15 +282,15 @@ const TransactionDetailModal = ({
                                         )}
                                     </select>
                                 ) : (
-                                    <p className="font-medium">{getAccountName(entry.account_id)}</p>
+                                    <p className="font-medium">{getAccountNameById(entry.from_account_id)}</p>
                                 )}
                             </div>
                             <div className="flex justify-between items-center">
                                 <p className="text-sm text-gray-500">Cuenta de destino</p>
                                 {isEditMode ? (
                                     <select
-                                        value={editedEntry.account_id}
-                                        onChange={(e) => handleInputChange("account_id", e.target.value)}
+                                        value={editedEntry.to_account_id || ""}
+                                        onChange={(e) => handleInputChange("to_account_id", e.target.value)}
                                         className="form-select w-32 h-10"
                                     >
                                         <option value="">Seleccionar cuenta...</option>
@@ -346,10 +305,9 @@ const TransactionDetailModal = ({
                                         )}
                                     </select>
                                 ) : (
-                                    <p className="font-medium">{getAccountName(entry.account_id)}</p>
+                                    <p className="font-medium">{getAccountNameById(entry.to_account_id)}</p>
                                 )}
                             </div>
-
                         </div>
 
 
