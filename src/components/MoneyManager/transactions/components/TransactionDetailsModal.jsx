@@ -418,8 +418,6 @@ const TransactionDetailModal = ({
                 </div>
             </div>
         </div >
-
-
     );
 };
 
