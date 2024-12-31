@@ -34,7 +34,7 @@ const TransferModal = ({
   const [rawAmount, setRawAmount] = useState("");
   const [fromAccount, setFromAccount] = useState("");
   const [toAccount, setToAccount] = useState("");
-  const [note, setNote] = useState("");
+  const [vouchers, setvouchers] = useState(null);
   const [description, setDescription] = useState("");
   const [accounts, setAccounts] = useState([]);
   const [imageUrl, setImageUrl] = useState("");
@@ -57,7 +57,7 @@ const TransferModal = ({
       setRawAmount(numericAmount);
       setAmount(new Intl.NumberFormat("es-CO").format(numericAmount));
 
-      setNote(transactionToEdit.note || "");
+      setvouchers(transactionToEdit.vouchers || "");
       setDescription(transactionToEdit.description || "");
       setDate(transactionToEdit.date ? dayjs(transactionToEdit.date) : dayjs());
     } else {
@@ -84,32 +84,6 @@ const TransferModal = ({
     const numericValue = parseFloat(value) || 0;
     setRawAmount(numericValue);
     setAmount(new Intl.NumberFormat("es-CO").format(numericValue));
-  };
-
-  const handleImageUpload = async (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length > 0) {
-      setIsUploading(true);
-      try {
-        const uploadedImageUrls = await Promise.all(files.map(async (file) => {
-          const uploadedImageUrl = await uploadImage(file);
-          return uploadedImageUrl;
-        }));
-
-        setImageUrls((prevUrls) => [...prevUrls, ...uploadedImageUrls]);
-        setNote((prevNote) => `${prevNote}\n${uploadedImageUrls.join("\n")}`);
-      } catch (error) {
-        console.error("Error al subir las imágenes:", error);
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: "No se pudieron subir algunas imágenes. Por favor, intente de nuevo.",
-          confirmButtonColor: "#d33",
-        });
-      } finally {
-        setIsUploading(false);
-      }
-    }
   };
 
   const validateFields = () => {
@@ -154,7 +128,7 @@ const TransferModal = ({
       toAccountId: parseInt(toAccount, 10),
       amount: parseFloat(rawAmount),
       date: localDate,
-      note: note,
+      vouchers: imageUrls,
       description: description,
     };
 
@@ -198,39 +172,12 @@ const TransferModal = ({
     setRawAmount("");
     setFromAccount("");
     setToAccount("");
-    setNote("");
+    setvouchers("");
     setDescription("");
     setImageUrl("");
     setImageUrls([]);
     setDate(dayjs());
     setIsEditing(false);
-  };
-
-  const handleDeleteImage = (index, urlToDelete) => {
-    Swal.fire({
-      title: '¿Estás seguro?',
-      text: "No podrás revertir esta acción",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        setImageUrls(prevUrls => prevUrls.filter((_, i) => i !== index));
-        setNote(prevNote => {
-          const notes = prevNote.split('\n');
-          const filteredNotes = notes.filter(note => note !== urlToDelete);
-          return filteredNotes.join('\n');
-        });
-        Swal.fire(
-          'Eliminada',
-          'La imagen ha sido eliminada.',
-          'success'
-        );
-      }
-    });
   };
 
   if (!isOpen) return null;
@@ -303,8 +250,8 @@ const TransferModal = ({
                 <ImageUploader
                   imageUrls={imageUrls}
                   setImageUrls={setImageUrls}
-                  voucher={voucher}
-                  setVoucher={setVoucher}
+                  voucher={vouchers}
+                  setVoucher={setvouchers}
                 />
               </div>
             </div>

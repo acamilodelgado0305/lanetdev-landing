@@ -13,8 +13,7 @@ import {
 import { getUserById } from "../../../../services/apiService";
 import { useAuth } from "../../../Context/AuthProvider";
 import axios from "axios";
-import { uploadImage } from "../../../../services/apiService";
-import VoucherSection from "./VoucherSection";
+import TransactionVoucherSection from "./TransactionVoucherSection";
 
 const TransactionDetailModal = ({
     isOpen,
@@ -53,7 +52,7 @@ const TransactionDetailModal = ({
             setEditedEntry({
                 ...entry,
                 amount: parseFloat(entry.amount) || 0,
-                voucher: entry.voucher || "",
+                vouchers: entry.vouchers || "",
                 description: entry.description || "",
                 estado: entry.estado,
                 tax_type: entry.tax_type,
@@ -137,7 +136,7 @@ const TransactionDetailModal = ({
 
     const handleDelete = async () => {
         try {
-            const response = await axios.delete(`${API_BASE_URL}/transactions/${entry.id}`);
+            const response = await axios.delete(`${API_BASE_URL}/transfers/${entry.id}`);
             if (response.status === 200 || response.status === 204) {
                 message.success("Transferencia eliminada con éxito.");
                 setDeleteModalOpen(false);
@@ -170,6 +169,10 @@ const TransactionDetailModal = ({
     const closeImageModal = () => {
         setCurrentImage(null);
         setIsImageModalOpen(false);
+    };
+    const handleCancelEdit = () => {
+        setEditMode(false);
+        setEditedEntry(entry);
     };
 
     const handleSaveChanges = async () => {
@@ -265,19 +268,15 @@ const TransactionDetailModal = ({
 
                     {/* Formulario editable */}
                     <div className="flex flex-col items-center pt-5">
-                        <p className="text-xl font-semibold">{entry.description || "Desconocido"}</p>
+                        <p className="text-sm text-gray-500">Usuario</p>
+
+                        <p className="font-medium">{(userName)}</p>
                     </div>
 
 
                     <div className="bg-gray-50 p-1 rounded-lg my-4">
                         <div className="space-y-0.2 mb-4 border border-gray-300 p-4 ">
 
-                            <div className="flex justify-between items-center">
-                                <p className="text-sm text-gray-500">Usuario</p>
-
-                                <p className="font-medium">{(userName)}</p>
-
-                            </div>
                             <div className="flex justify-between items-center">
                                 <p className="text-sm text-gray-500">Monto</p>
                                 {isEditMode ? (
@@ -305,31 +304,30 @@ const TransactionDetailModal = ({
                             </div>
 
                             <div className="flex justify-between items-center">
-                                <p className="text-sm text-gray-500">Categoría</p>
+                                <p className="text-sm text-gray-500">Cuenta de origen</p>
                                 {isEditMode ? (
                                     <select
-                                        value={editedEntry.category_id}
-                                        onChange={(e) => handleInputChange("category_id", e.target.value)}
+                                        value={editedEntry.account_id}
+                                        onChange={(e) => handleInputChange("account_id", e.target.value)}
                                         className="form-select w-32 h-10"
                                     >
-                                        <option value="">Seleccionar categoría...</option>
+                                        <option value="">Seleccionar cuenta...</option>
                                         {loading ? (
-                                            <option>Cargando...</option>
+                                            <option>Loading...</option>
                                         ) : (
-                                            categories.map((category) => (
-                                                <option key={category.id} value={category.id}>
-                                                    {category.name}
+                                            accounts.map((account) => (
+                                                <option key={account.id} value={account.id}>
+                                                    {account.name}
                                                 </option>
                                             ))
                                         )}
                                     </select>
                                 ) : (
-                                    <p className="font-medium">{getCategoryName(entry.category_id)}</p>
+                                    <p className="font-medium">{getAccountName(entry.account_id)}</p>
                                 )}
                             </div>
-
                             <div className="flex justify-between items-center">
-                                <p className="text-sm text-gray-500">Cuenta</p>
+                                <p className="text-sm text-gray-500">Cuenta de destino</p>
                                 {isEditMode ? (
                                     <select
                                         value={editedEntry.account_id}
@@ -352,67 +350,11 @@ const TransactionDetailModal = ({
                                 )}
                             </div>
 
-                            <div className="flex justify-between items-center">
-                                <p className="text-sm text-gray-500">Recurrente</p>
-                                {isEditMode ? (
-                                    <Input
-                                        value={editedEntry.recurrent}
-                                        onChange={(e) => handleInputChange("recurrent", e.target.value)}
-                                        className="w-32"
-                                    />
-                                ) : (
-                                    <p className={entry.recurrent ? "font-medium text-green-600" : "text-sm text-gray-500"}>
-                                        {entry.recurrent ? "Si" : "No"}
-                                    </p>
-                                )}
-                            </div>
-
-                            <div className="flex justify-between items-center">
-                                <p className="text-sm text-gray-500">Impuesto</p>
-                                {isEditMode ? (
-                                    <Input
-                                        value={editedEntry.tax_type}
-                                        onChange={(e) => handleInputChange("tax_type", e.target.value)}
-                                        className="w-32"
-                                    />
-                                ) : (
-
-                                    <p className="font-medium text-green-600">
-                                        {(entry.tax_type || "Sin impuesto")}
-                                    </p>
-                                )}
-                            </div>
-
-                            <div className="flex justify-between items-center">
-                                <p className="text-sm text-gray-500">Tipo</p>
-                                {isEditMode ? (
-                                    <Input
-                                        value={editedEntry.type}
-                                        onChange={(e) => handleInputChange("type", e.target.value)}
-                                        className="w-32"
-                                    />
-                                ) : (
-                                    <p className="font-medium">{entry.type || "Desconocido"}</p>
-                                )}
-                            </div>
-
-                            <div className="flex justify-between items-center">
-                                <p className="text-sm text-gray-500">Estado</p>
-                                {isEditMode ? (
-                                    <Input
-                                        value={editedEntry.estado ? "Activo" : "Inactivo"}
-                                        onChange={(e) => handleInputChange("estado", e.target.value)}
-                                        className="w-32"
-                                    />
-                                ) : (
-                                    <p className="font-medium">{entry.estado ? "Activo" : "Inactivo"}</p>
-                                )}
-                            </div>
                         </div>
 
 
                         {/*COMPROBANTES*/}
-                        <VoucherSection
+                        <TransactionVoucherSection
                             entry={editedEntry}
                             entryId={entry.id}
                             onVoucherUpdate={handleVoucherUpdate}
@@ -456,38 +398,50 @@ const TransactionDetailModal = ({
 
                 {/* Botones de acción */}
                 <div className="sticky bottom-4 left-0 right-0 bg-white p-4 border-t shadow-lg flex justify-center">
-                    <Space size="large">
+                    <Space size="large" >
+                        {/* Botón de Guardar o Editar */}
                         {isEditMode ? (
                             <Button
                                 type="primary"
-
                                 icon={<SaveOutlined style={{ fontSize: "1.5rem" }} />}
                                 size="large"
                                 onClick={handleSaveChanges}
-
+                            //className="w-1/3"
                             >
                                 <span className="text-sm font-medium text-center">Guardar</span>
                             </Button>
                         ) : (
                             <Button
                                 type="default"
-
                                 icon={<EditOutlined style={{ fontSize: "1.5rem", color: "gray" }} />}
                                 size="large"
                                 onClick={toggleEditMode}
-
+                            //className="w-1/3"
                             >
                                 <span className="text-sm font-medium text-gray-600 text-center">Editar</span>
                             </Button>
                         )}
+
+                        {/* Botón de Cancelar edición */}
+                        {isEditMode && (
+                            <Button
+                                type="default"
+                                icon={<CloseOutlined style={{ fontSize: "1.5rem" }} />}
+                                size="large"
+                                onClick={handleCancelEdit}
+                            //className="w-1/3"
+                            >
+                                <span className="text-sm font-medium text-center">Cancelar</span>
+                            </Button>
+                        )}
+
+                        {/* Botón Eliminar */}
                         <Button
                             danger
-
-
                             icon={<DeleteOutlined style={{ fontSize: "1.5rem" }} />}
                             size="large"
                             onClick={showDeleteModal}
-
+                        //className="w-1/3"
                         >
                             <span className="text-sm font-medium text-center">Eliminar</span>
                         </Button>
