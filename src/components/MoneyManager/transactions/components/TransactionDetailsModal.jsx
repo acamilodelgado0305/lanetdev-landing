@@ -139,23 +139,36 @@ const TransactionDetailModal = ({
 
     const handleSaveChanges = async () => {
         try {
+            // Validaciones básicas
             if (!editedEntry.amount || parseFloat(editedEntry.amount) <= 0) {
                 message.error("El monto debe ser un número positivo.");
                 return;
             }
 
-            if (!editedEntry.account_id) {
-                message.error("Por favor seleccione una cuenta.");
+            if (!editedEntry.from_account_id || !editedEntry.to_account_id) {
+                message.error("Por favor seleccione tanto la cuenta de origen como la cuenta de destino.");
                 return;
             }
 
+            // Asegurarse de que la fecha está en el formato esperado
+            const localDate = new Date().toISOString();
+
+            // Preparar los datos para enviar
             const formattedEntry = {
-                ...editedEntry,
+                userId: entry.user_id || 1, // Usar el user_id existente o un valor por defecto
+                fromAccountId: parseInt(editedEntry.from_account_id, 10),
+                toAccountId: parseInt(editedEntry.to_account_id, 10),
                 amount: parseFloat(editedEntry.amount),
+                date: localDate, // Fecha actual o tomada del entry
+                vouchers: editedEntry.vouchers || [],
+                description: editedEntry.description || "",
             };
 
+            console.log("Datos que se envían al servidor al editar:", formattedEntry);
+
+            // Enviar la solicitud al servidor
             const response = await axios.put(
-                `${API_BASE_URL}/incomes/${entry.id}`,
+                `${API_BASE_URL}/transfers/${entry.id}`,
                 formattedEntry,
                 {
                     headers: {
@@ -164,22 +177,22 @@ const TransactionDetailModal = ({
                 }
             );
 
+            console.log("Respuesta del servidor:", response.data);
+
+            // Verificar la respuesta
             if (response.status === 200) {
-                message.success("Ingreso actualizado con éxito.");
+                message.success("Transferencia actualizada con éxito.");
                 setEditMode(false);
                 onClose();
             } else {
-                throw new Error("Error inesperado al actualizar el ingreso.");
+                throw new Error("Error inesperado al actualizar la transferencia.");
             }
         } catch (error) {
-            console.error("Error actualizando el ingreso:", error);
-            message.error("Hubo un error al intentar actualizar el ingreso. Por favor, inténtalo de nuevo.");
+            console.error("Error actualizando la transferencia:", error);
+            message.error("Hubo un error al intentar actualizar la transferencia. Por favor, inténtalo de nuevo.");
         }
     };
-    const getAccountName = (accountId) => {
-        const account = accounts.find((acc) => acc.id === accountId);
-        return account ? account.name : "Cuenta desconocida";
-    };
+
     if (!isOpen) return null;
 
     if (!editedEntry) {
@@ -237,32 +250,6 @@ const TransactionDetailModal = ({
                         <div className="space-y-0.2 mb-4 border border-gray-300 p-4 ">
 
                             <div className="flex justify-between items-center">
-                                <p className="text-sm text-gray-500">Monto</p>
-                                {isEditMode ? (
-                                    <Input
-                                        value={editedEntry.amount}
-                                        onChange={(e) => handleInputChange("amount", e.target.value)}
-                                        className="w-32"
-                                    />
-                                ) : (
-                                    <p className="font-medium">{formatCurrency(entry.amount)}</p>
-                                )}
-                            </div>
-
-                            <div className="flex justify-between items-center">
-                                <p className="text-sm text-gray-500">Descripción</p>
-                                {isEditMode ? (
-                                    <Input
-                                        value={editedEntry.description}
-                                        onChange={(e) => handleInputChange("description", e.target.value)}
-                                        className="w-32"
-                                    />
-                                ) : (
-                                    <p className="font-medium">{entry.description}</p>
-                                )}
-                            </div>
-
-                            <div className="flex justify-between items-center">
                                 <p className="text-sm text-gray-500">Cuenta de origen</p>
                                 {isEditMode ? (
                                     <select
@@ -295,7 +282,7 @@ const TransactionDetailModal = ({
                                     >
                                         <option value="">Seleccionar cuenta...</option>
                                         {loading ? (
-                                            <option>Loading...</option>
+                                            <option>Cargando...</option>
                                         ) : (
                                             accounts.map((account) => (
                                                 <option key={account.id} value={account.id}>
@@ -306,6 +293,30 @@ const TransactionDetailModal = ({
                                     </select>
                                 ) : (
                                     <p className="font-medium">{getAccountNameById(entry.to_account_id)}</p>
+                                )}
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <p className="text-sm text-gray-500">Monto</p>
+                                {isEditMode ? (
+                                    <Input
+                                        value={editedEntry.amount}
+                                        onChange={(e) => handleInputChange("amount", e.target.value)}
+                                        className="w-32"
+                                    />
+                                ) : (
+                                    <p className="font-medium">{formatCurrency(entry.amount)}</p>
+                                )}
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <p className="text-sm text-gray-500">Descripción</p>
+                                {isEditMode ? (
+                                    <Input
+                                        value={editedEntry.description}
+                                        onChange={(e) => handleInputChange("description", e.target.value)}
+                                        className="w-32"
+                                    />
+                                ) : (
+                                    <p className="font-medium">{entry.description}</p>
                                 )}
                             </div>
                         </div>
