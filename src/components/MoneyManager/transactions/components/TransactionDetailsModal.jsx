@@ -19,8 +19,6 @@ const TransactionDetailModal = ({
     isOpen,
     onClose,
     entry,
-    getCategoryName,
-    getAccountName,
     formatCurrency,
 }) => {
     const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -31,11 +29,6 @@ const TransactionDetailModal = ({
     const [currentImage, setCurrentImage] = useState(null);
     const [accounts, setAccounts] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [ventaCategoryId, setVentaCategoryId] = useState(null);
-    const [categories, setCategories] = useState([]);
-    const [arqueoCategoryId, setArqueoCategoryId] = useState(null);
-
-
 
     const { authToken } = useAuth();
     const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
@@ -54,9 +47,6 @@ const TransactionDetailModal = ({
                 amount: parseFloat(entry.amount) || 0,
                 vouchers: entry.vouchers || "",
                 description: entry.description || "",
-                estado: entry.estado,
-                tax_type: entry.tax_type,
-                recurrent: entry.recurrent
             });
             fetchUserName(entry.user_id, authToken);
         }
@@ -67,8 +57,7 @@ const TransactionDetailModal = ({
         const fetchAccounts = async () => {
             try {
                 const response = await axios.get(`${API_BASE_URL}/accounts`);
-                const filteredAccounts = response.data.filter(account => account.type === "Banco");
-                setAccounts(filteredAccounts);
+                setAccounts(response.data);
                 setLoading(false);
             } catch (error) {
                 console.error("Error fetching accounts:", error);
@@ -79,39 +68,12 @@ const TransactionDetailModal = ({
         fetchAccounts();
     }, []);
 
-    useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                // Usamos axios para obtener las categorías
-                const response = await axios.get(`${API_BASE_URL}/categories`);
-
-                // Filtramos las categorías que son de tipo 'income' o 'ingreso'
-                const incomeCategories = response.data.filter(category =>
-                    category.type?.toLowerCase() === 'income' ||
-                    category.type?.toLowerCase() === 'ingreso'
-                );
-
-                // Actualizamos el estado con las categorías filtradas
-                setCategories(incomeCategories);
-
-                // Buscamos las categorías 'Arqueo' y 'Venta' para guardarlas
-                const arqueoCategory = incomeCategories.find(cat => cat.name === 'Arqueo');
-                const ventaCategory = incomeCategories.find(cat => cat.name === 'Venta');
-
-                if (arqueoCategory) {
-                    setArqueoCategoryId(arqueoCategory.id);
-                }
-                if (ventaCategory) {
-                    setVentaCategoryId(ventaCategory.id);
-                }
-            } catch (error) {
-                console.error("Error al obtener las categorías:", error);
-            }
-        };
-
-        // Llamamos a la función para obtener las categorías
-        fetchCategories();
-    }, [isOpen]);
+    const getAccountNameById = (accountId) => {
+        if (loading) return "Cargando...";
+        if (!accountId) return "Sin cuenta asignada";
+        const account = accounts.find((acc) => acc.id === accountId);
+        return account ? account.name : "Cuenta desconocida";
+    };
 
     const fetchUserName = async (userId, token) => {
         try {
@@ -177,29 +139,36 @@ const TransactionDetailModal = ({
 
     const handleSaveChanges = async () => {
         try {
+            // Validaciones básicas
             if (!editedEntry.amount || parseFloat(editedEntry.amount) <= 0) {
                 message.error("El monto debe ser un número positivo.");
                 return;
             }
 
-            if (!editedEntry.category_id) {
-                message.error("Por favor seleccione una categoría.");
+            if (!editedEntry.from_account_id || !editedEntry.to_account_id) {
+                message.error("Por favor seleccione tanto la cuenta de origen como la cuenta de destino.");
                 return;
             }
 
-            if (!editedEntry.account_id) {
-                message.error("Por favor seleccione una cuenta.");
-                return;
-            }
+            // Asegurarse de que la fecha está en el formato esperado
+            const localDate = new Date().toISOString();
 
+            // Preparar los datos para enviar
             const formattedEntry = {
-                ...editedEntry,
+                userId: entry.user_id || 1, // Usar el user_id existente o un valor por defecto
+                fromAccountId: parseInt(editedEntry.from_account_id, 10),
+                toAccountId: parseInt(editedEntry.to_account_id, 10),
                 amount: parseFloat(editedEntry.amount),
-                estado: editedEntry.estado === "Activo" || editedEntry.estado === true,
+                date: localDate, // Fecha actual o tomada del entry
+                vouchers: editedEntry.vouchers || [],
+                description: editedEntry.description || "",
             };
 
+            console.log("Datos que se envían al servidor al editar:", formattedEntry);
+
+            // Enviar la solicitud al servidor
             const response = await axios.put(
-                `${API_BASE_URL}/incomes/${entry.id}`,
+                `${API_BASE_URL}/transfers/${entry.id}`,
                 formattedEntry,
                 {
                     headers: {
@@ -208,16 +177,19 @@ const TransactionDetailModal = ({
                 }
             );
 
+            console.log("Respuesta del servidor:", response.data);
+
+            // Verificar la respuesta
             if (response.status === 200) {
-                message.success("Ingreso actualizado con éxito.");
+                message.success("Transferencia actualizada con éxito.");
                 setEditMode(false);
                 onClose();
             } else {
-                throw new Error("Error inesperado al actualizar el ingreso.");
+                throw new Error("Error inesperado al actualizar la transferencia.");
             }
         } catch (error) {
-            console.error("Error actualizando el ingreso:", error);
-            message.error("Hubo un error al intentar actualizar el ingreso. Por favor, inténtalo de nuevo.");
+            console.error("Error actualizando la transferencia:", error);
+            message.error("Hubo un error al intentar actualizar la transferencia. Por favor, inténtalo de nuevo.");
         }
     };
 
@@ -278,6 +250,52 @@ const TransactionDetailModal = ({
                         <div className="space-y-0.2 mb-4 border border-gray-300 p-4 ">
 
                             <div className="flex justify-between items-center">
+                                <p className="text-sm text-gray-500">Cuenta de origen</p>
+                                {isEditMode ? (
+                                    <select
+                                        value={editedEntry.from_account_id || ""}
+                                        onChange={(e) => handleInputChange("from_account_id", e.target.value)}
+                                        className="form-select w-32 h-10"
+                                    >
+                                        <option value="">Seleccionar cuenta...</option>
+                                        {loading ? (
+                                            <option>Cargando...</option>
+                                        ) : (
+                                            accounts.map((account) => (
+                                                <option key={account.id} value={account.id}>
+                                                    {account.name}
+                                                </option>
+                                            ))
+                                        )}
+                                    </select>
+                                ) : (
+                                    <p className="font-medium">{getAccountNameById(entry.from_account_id)}</p>
+                                )}
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <p className="text-sm text-gray-500">Cuenta de destino</p>
+                                {isEditMode ? (
+                                    <select
+                                        value={editedEntry.to_account_id || ""}
+                                        onChange={(e) => handleInputChange("to_account_id", e.target.value)}
+                                        className="form-select w-32 h-10"
+                                    >
+                                        <option value="">Seleccionar cuenta...</option>
+                                        {loading ? (
+                                            <option>Cargando...</option>
+                                        ) : (
+                                            accounts.map((account) => (
+                                                <option key={account.id} value={account.id}>
+                                                    {account.name}
+                                                </option>
+                                            ))
+                                        )}
+                                    </select>
+                                ) : (
+                                    <p className="font-medium">{getAccountNameById(entry.to_account_id)}</p>
+                                )}
+                            </div>
+                            <div className="flex justify-between items-center">
                                 <p className="text-sm text-gray-500">Monto</p>
                                 {isEditMode ? (
                                     <Input
@@ -289,7 +307,6 @@ const TransactionDetailModal = ({
                                     <p className="font-medium">{formatCurrency(entry.amount)}</p>
                                 )}
                             </div>
-
                             <div className="flex justify-between items-center">
                                 <p className="text-sm text-gray-500">Descripción</p>
                                 {isEditMode ? (
@@ -302,54 +319,6 @@ const TransactionDetailModal = ({
                                     <p className="font-medium">{entry.description}</p>
                                 )}
                             </div>
-
-                            <div className="flex justify-between items-center">
-                                <p className="text-sm text-gray-500">Cuenta de origen</p>
-                                {isEditMode ? (
-                                    <select
-                                        value={editedEntry.account_id}
-                                        onChange={(e) => handleInputChange("account_id", e.target.value)}
-                                        className="form-select w-32 h-10"
-                                    >
-                                        <option value="">Seleccionar cuenta...</option>
-                                        {loading ? (
-                                            <option>Loading...</option>
-                                        ) : (
-                                            accounts.map((account) => (
-                                                <option key={account.id} value={account.id}>
-                                                    {account.name}
-                                                </option>
-                                            ))
-                                        )}
-                                    </select>
-                                ) : (
-                                    <p className="font-medium">{getAccountName(entry.account_id)}</p>
-                                )}
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <p className="text-sm text-gray-500">Cuenta de destino</p>
-                                {isEditMode ? (
-                                    <select
-                                        value={editedEntry.account_id}
-                                        onChange={(e) => handleInputChange("account_id", e.target.value)}
-                                        className="form-select w-32 h-10"
-                                    >
-                                        <option value="">Seleccionar cuenta...</option>
-                                        {loading ? (
-                                            <option>Loading...</option>
-                                        ) : (
-                                            accounts.map((account) => (
-                                                <option key={account.id} value={account.id}>
-                                                    {account.name}
-                                                </option>
-                                            ))
-                                        )}
-                                    </select>
-                                ) : (
-                                    <p className="font-medium">{getAccountName(entry.account_id)}</p>
-                                )}
-                            </div>
-
                         </div>
 
 
@@ -449,8 +418,6 @@ const TransactionDetailModal = ({
                 </div>
             </div>
         </div >
-
-
     );
 };
 
