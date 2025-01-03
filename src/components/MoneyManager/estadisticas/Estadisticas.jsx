@@ -149,69 +149,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header Section */}
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-800">Panel Financiero</h1>
-          <div className="flex space-x-2">
-            <button
-              onClick={() => setTimeRange('week')}
-              className={`px-4 py-2 rounded-lg ${timeRange === 'week' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600'
-                }`}
-            >
-              Semana
-            </button>
-            <button
-              onClick={() => setTimeRange('month')}
-              className={`px-4 py-2 rounded-lg ${timeRange === 'month' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600'
-                }`}
-            >
-              Mes
-            </button>
-            <button
-              onClick={() => setTimeRange('year')}
-              className={`px-4 py-2 rounded-lg ${timeRange === 'year' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600'
-                }`}
-            >
-              Año
-            </button>
-          </div>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatCard
-            title="Balance General"
-            value={generalBalance.net_balance}
-            trend={generalBalance.net_balance >= 0 ? "up" : "down"}
-            trendValue={Math.abs(calculateTrend(generalBalance.net_balance, 0))}
-            icon={DollarSign}
-            color="bg-indigo-600"
-          />
-          <StatCard
-            title="Ingresos Totales"
-            value={generalBalance.total_incomes}
-            trend="up"
-            trendValue={calculateTrend(generalBalance.total_incomes, 0)}
-            icon={TrendingUp}
-            color="bg-green-600"
-          />
-          <StatCard
-            title="Gastos Totales"
-            value={generalBalance.total_expenses}
-            trend="down"
-            trendValue={calculateTrend(generalBalance.total_expenses, 0)}
-            icon={TrendingUp}
-            color="bg-red-600"
-          />
-          <StatCard
-            title="Pagos Pendientes"
-            value={pendingPayments.reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0)}
-            trend="up"
-            trendValue="2"
-            icon={AlertCircle}
-            color="bg-amber-600"
-          />
-        </div>
+       
 
         {/* Main Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

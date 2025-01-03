@@ -4,7 +4,7 @@ import { Outlet, useNavigate } from "react-router-dom";
 import { Modal } from "antd";
 import { getTransactions } from "../../services/moneymanager/moneyService";
 import AddEntryModal from "./transactions/addModal";
-import Header from "./Header";
+
 
 const IndexMoneyManager = () => {
   const [events, setEvents] = useState({});
@@ -116,7 +116,7 @@ const IndexMoneyManager = () => {
 
   return (
     <div className="flex flex-col bg-gray-100">
-      <Header />
+ 
 
       <main className="flex-1 bg-gray-100 w-full">
         <div className="w-full h-auto">
