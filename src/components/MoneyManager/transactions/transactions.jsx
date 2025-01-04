@@ -407,7 +407,7 @@ const TransactionsDashboard = () => {
           )}
 
           {/* Mostrar TransactionTable si selectedEndpoint es "/transactions" */}
-          {selectedEndpoint === "/transactions" && (
+          {selectedEndpoint === "/transfers" && (
             <TransactionTable
               entries={paginatedEntries} // Filtra para la paginación
               categories={categories}

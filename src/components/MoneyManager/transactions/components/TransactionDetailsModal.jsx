@@ -13,15 +13,12 @@ import {
 import { getUserById } from "../../../../services/apiService";
 import { useAuth } from "../../../Context/AuthProvider";
 import axios from "axios";
-import { uploadImage } from "../../../../services/apiService";
-import VoucherSection from "./VoucherSection";
+import TransactionVoucherSection from "./TransactionVoucherSection";
 
 const TransactionDetailModal = ({
     isOpen,
     onClose,
     entry,
-    getCategoryName,
-    getAccountName,
     formatCurrency,
 }) => {
     const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -32,11 +29,6 @@ const TransactionDetailModal = ({
     const [currentImage, setCurrentImage] = useState(null);
     const [accounts, setAccounts] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [ventaCategoryId, setVentaCategoryId] = useState(null);
-    const [categories, setCategories] = useState([]);
-    const [arqueoCategoryId, setArqueoCategoryId] = useState(null);
-
-
 
     const { authToken } = useAuth();
     const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
@@ -53,11 +45,8 @@ const TransactionDetailModal = ({
             setEditedEntry({
                 ...entry,
                 amount: parseFloat(entry.amount) || 0,
-                voucher: entry.voucher || "",
+                vouchers: entry.vouchers || "",
                 description: entry.description || "",
-                estado: entry.estado,
-                tax_type: entry.tax_type,
-                recurrent: entry.recurrent
             });
             fetchUserName(entry.user_id, authToken);
         }
@@ -68,8 +57,7 @@ const TransactionDetailModal = ({
         const fetchAccounts = async () => {
             try {
                 const response = await axios.get(`${API_BASE_URL}/accounts`);
-                const filteredAccounts = response.data.filter(account => account.type === "Banco");
-                setAccounts(filteredAccounts);
+                setAccounts(response.data);
                 setLoading(false);
             } catch (error) {
                 console.error("Error fetching accounts:", error);
@@ -80,39 +68,12 @@ const TransactionDetailModal = ({
         fetchAccounts();
     }, []);
 
-    useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                // Usamos axios para obtener las categorías
-                const response = await axios.get(`${API_BASE_URL}/categories`);
-
-                // Filtramos las categorías que son de tipo 'income' o 'ingreso'
-                const incomeCategories = response.data.filter(category =>
-                    category.type?.toLowerCase() === 'income' ||
-                    category.type?.toLowerCase() === 'ingreso'
-                );
-
-                // Actualizamos el estado con las categorías filtradas
-                setCategories(incomeCategories);
-
-                // Buscamos las categorías 'Arqueo' y 'Venta' para guardarlas
-                const arqueoCategory = incomeCategories.find(cat => cat.name === 'Arqueo');
-                const ventaCategory = incomeCategories.find(cat => cat.name === 'Venta');
-
-                if (arqueoCategory) {
-                    setArqueoCategoryId(arqueoCategory.id);
-                }
-                if (ventaCategory) {
-                    setVentaCategoryId(ventaCategory.id);
-                }
-            } catch (error) {
-                console.error("Error al obtener las categorías:", error);
-            }
-        };
-
-        // Llamamos a la función para obtener las categorías
-        fetchCategories();
-    }, [isOpen]);
+    const getAccountNameById = (accountId) => {
+        if (loading) return "Cargando...";
+        if (!accountId) return "Sin cuenta asignada";
+        const account = accounts.find((acc) => acc.id === accountId);
+        return account ? account.name : "Cuenta desconocida";
+    };
 
     const fetchUserName = async (userId, token) => {
         try {
@@ -137,7 +98,7 @@ const TransactionDetailModal = ({
 
     const handleDelete = async () => {
         try {
-            const response = await axios.delete(`${API_BASE_URL}/transactions/${entry.id}`);
+            const response = await axios.delete(`${API_BASE_URL}/transfers/${entry.id}`);
             if (response.status === 200 || response.status === 204) {
                 message.success("Transferencia eliminada con éxito.");
                 setDeleteModalOpen(false);
@@ -171,32 +132,43 @@ const TransactionDetailModal = ({
         setCurrentImage(null);
         setIsImageModalOpen(false);
     };
+    const handleCancelEdit = () => {
+        setEditMode(false);
+        setEditedEntry(entry);
+    };
 
     const handleSaveChanges = async () => {
         try {
+            // Validaciones básicas
             if (!editedEntry.amount || parseFloat(editedEntry.amount) <= 0) {
                 message.error("El monto debe ser un número positivo.");
                 return;
             }
 
-            if (!editedEntry.category_id) {
-                message.error("Por favor seleccione una categoría.");
+            if (!editedEntry.from_account_id || !editedEntry.to_account_id) {
+                message.error("Por favor seleccione tanto la cuenta de origen como la cuenta de destino.");
                 return;
             }
 
-            if (!editedEntry.account_id) {
-                message.error("Por favor seleccione una cuenta.");
-                return;
-            }
+            // Asegurarse de que la fecha está en el formato esperado
+            const localDate = new Date().toISOString();
 
+            // Preparar los datos para enviar
             const formattedEntry = {
-                ...editedEntry,
+                userId: entry.user_id || 1, // Usar el user_id existente o un valor por defecto
+                fromAccountId: parseInt(editedEntry.from_account_id, 10),
+                toAccountId: parseInt(editedEntry.to_account_id, 10),
                 amount: parseFloat(editedEntry.amount),
-                estado: editedEntry.estado === "Activo" || editedEntry.estado === true,
+                date: localDate, // Fecha actual o tomada del entry
+                vouchers: editedEntry.vouchers || [],
+                description: editedEntry.description || "",
             };
 
+            console.log("Datos que se envían al servidor al editar:", formattedEntry);
+
+            // Enviar la solicitud al servidor
             const response = await axios.put(
-                `${API_BASE_URL}/incomes/${entry.id}`,
+                `${API_BASE_URL}/transfers/${entry.id}`,
                 formattedEntry,
                 {
                     headers: {
@@ -205,16 +177,19 @@ const TransactionDetailModal = ({
                 }
             );
 
+            console.log("Respuesta del servidor:", response.data);
+
+            // Verificar la respuesta
             if (response.status === 200) {
-                message.success("Ingreso actualizado con éxito.");
+                message.success("Transferencia actualizada con éxito.");
                 setEditMode(false);
                 onClose();
             } else {
-                throw new Error("Error inesperado al actualizar el ingreso.");
+                throw new Error("Error inesperado al actualizar la transferencia.");
             }
         } catch (error) {
-            console.error("Error actualizando el ingreso:", error);
-            message.error("Hubo un error al intentar actualizar el ingreso. Por favor, inténtalo de nuevo.");
+            console.error("Error actualizando la transferencia:", error);
+            message.error("Hubo un error al intentar actualizar la transferencia. Por favor, inténtalo de nuevo.");
         }
     };
 
@@ -265,7 +240,9 @@ const TransactionDetailModal = ({
 
                     {/* Formulario editable */}
                     <div className="flex flex-col items-center pt-5">
-                        <p className="text-xl font-semibold">{entry.description || "Desconocido"}</p>
+                        <p className="text-sm text-gray-500">Usuario</p>
+
+                        <p className="font-medium">{(userName)}</p>
                     </div>
 
 
@@ -273,10 +250,50 @@ const TransactionDetailModal = ({
                         <div className="space-y-0.2 mb-4 border border-gray-300 p-4 ">
 
                             <div className="flex justify-between items-center">
-                                <p className="text-sm text-gray-500">Usuario</p>
-
-                                <p className="font-medium">{(userName)}</p>
-
+                                <p className="text-sm text-gray-500">Cuenta de origen</p>
+                                {isEditMode ? (
+                                    <select
+                                        value={editedEntry.from_account_id || ""}
+                                        onChange={(e) => handleInputChange("from_account_id", e.target.value)}
+                                        className="form-select w-32 h-10"
+                                    >
+                                        <option value="">Seleccionar cuenta...</option>
+                                        {loading ? (
+                                            <option>Cargando...</option>
+                                        ) : (
+                                            accounts.map((account) => (
+                                                <option key={account.id} value={account.id}>
+                                                    {account.name}
+                                                </option>
+                                            ))
+                                        )}
+                                    </select>
+                                ) : (
+                                    <p className="font-medium">{getAccountNameById(entry.from_account_id)}</p>
+                                )}
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <p className="text-sm text-gray-500">Cuenta de destino</p>
+                                {isEditMode ? (
+                                    <select
+                                        value={editedEntry.to_account_id || ""}
+                                        onChange={(e) => handleInputChange("to_account_id", e.target.value)}
+                                        className="form-select w-32 h-10"
+                                    >
+                                        <option value="">Seleccionar cuenta...</option>
+                                        {loading ? (
+                                            <option>Cargando...</option>
+                                        ) : (
+                                            accounts.map((account) => (
+                                                <option key={account.id} value={account.id}>
+                                                    {account.name}
+                                                </option>
+                                            ))
+                                        )}
+                                    </select>
+                                ) : (
+                                    <p className="font-medium">{getAccountNameById(entry.to_account_id)}</p>
+                                )}
                             </div>
                             <div className="flex justify-between items-center">
                                 <p className="text-sm text-gray-500">Monto</p>
@@ -290,7 +307,6 @@ const TransactionDetailModal = ({
                                     <p className="font-medium">{formatCurrency(entry.amount)}</p>
                                 )}
                             </div>
-
                             <div className="flex justify-between items-center">
                                 <p className="text-sm text-gray-500">Descripción</p>
                                 {isEditMode ? (
@@ -303,116 +319,11 @@ const TransactionDetailModal = ({
                                     <p className="font-medium">{entry.description}</p>
                                 )}
                             </div>
-
-                            <div className="flex justify-between items-center">
-                                <p className="text-sm text-gray-500">Categoría</p>
-                                {isEditMode ? (
-                                    <select
-                                        value={editedEntry.category_id}
-                                        onChange={(e) => handleInputChange("category_id", e.target.value)}
-                                        className="form-select w-32 h-10"
-                                    >
-                                        <option value="">Seleccionar categoría...</option>
-                                        {loading ? (
-                                            <option>Cargando...</option>
-                                        ) : (
-                                            categories.map((category) => (
-                                                <option key={category.id} value={category.id}>
-                                                    {category.name}
-                                                </option>
-                                            ))
-                                        )}
-                                    </select>
-                                ) : (
-                                    <p className="font-medium">{getCategoryName(entry.category_id)}</p>
-                                )}
-                            </div>
-
-                            <div className="flex justify-between items-center">
-                                <p className="text-sm text-gray-500">Cuenta</p>
-                                {isEditMode ? (
-                                    <select
-                                        value={editedEntry.account_id}
-                                        onChange={(e) => handleInputChange("account_id", e.target.value)}
-                                        className="form-select w-32 h-10"
-                                    >
-                                        <option value="">Seleccionar cuenta...</option>
-                                        {loading ? (
-                                            <option>Loading...</option>
-                                        ) : (
-                                            accounts.map((account) => (
-                                                <option key={account.id} value={account.id}>
-                                                    {account.name}
-                                                </option>
-                                            ))
-                                        )}
-                                    </select>
-                                ) : (
-                                    <p className="font-medium">{getAccountName(entry.account_id)}</p>
-                                )}
-                            </div>
-
-                            <div className="flex justify-between items-center">
-                                <p className="text-sm text-gray-500">Recurrente</p>
-                                {isEditMode ? (
-                                    <Input
-                                        value={editedEntry.recurrent}
-                                        onChange={(e) => handleInputChange("recurrent", e.target.value)}
-                                        className="w-32"
-                                    />
-                                ) : (
-                                    <p className={entry.recurrent ? "font-medium text-green-600" : "text-sm text-gray-500"}>
-                                        {entry.recurrent ? "Si" : "No"}
-                                    </p>
-                                )}
-                            </div>
-
-                            <div className="flex justify-between items-center">
-                                <p className="text-sm text-gray-500">Impuesto</p>
-                                {isEditMode ? (
-                                    <Input
-                                        value={editedEntry.tax_type}
-                                        onChange={(e) => handleInputChange("tax_type", e.target.value)}
-                                        className="w-32"
-                                    />
-                                ) : (
-
-                                    <p className="font-medium text-green-600">
-                                        {(entry.tax_type || "Sin impuesto")}
-                                    </p>
-                                )}
-                            </div>
-
-                            <div className="flex justify-between items-center">
-                                <p className="text-sm text-gray-500">Tipo</p>
-                                {isEditMode ? (
-                                    <Input
-                                        value={editedEntry.type}
-                                        onChange={(e) => handleInputChange("type", e.target.value)}
-                                        className="w-32"
-                                    />
-                                ) : (
-                                    <p className="font-medium">{entry.type || "Desconocido"}</p>
-                                )}
-                            </div>
-
-                            <div className="flex justify-between items-center">
-                                <p className="text-sm text-gray-500">Estado</p>
-                                {isEditMode ? (
-                                    <Input
-                                        value={editedEntry.estado ? "Activo" : "Inactivo"}
-                                        onChange={(e) => handleInputChange("estado", e.target.value)}
-                                        className="w-32"
-                                    />
-                                ) : (
-                                    <p className="font-medium">{entry.estado ? "Activo" : "Inactivo"}</p>
-                                )}
-                            </div>
                         </div>
 
 
                         {/*COMPROBANTES*/}
-                        <VoucherSection
+                        <TransactionVoucherSection
                             entry={editedEntry}
                             entryId={entry.id}
                             onVoucherUpdate={handleVoucherUpdate}
@@ -456,38 +367,50 @@ const TransactionDetailModal = ({
 
                 {/* Botones de acción */}
                 <div className="sticky bottom-4 left-0 right-0 bg-white p-4 border-t shadow-lg flex justify-center">
-                    <Space size="large">
+                    <Space size="large" >
+                        {/* Botón de Guardar o Editar */}
                         {isEditMode ? (
                             <Button
                                 type="primary"
-
                                 icon={<SaveOutlined style={{ fontSize: "1.5rem" }} />}
                                 size="large"
                                 onClick={handleSaveChanges}
-
+                            //className="w-1/3"
                             >
                                 <span className="text-sm font-medium text-center">Guardar</span>
                             </Button>
                         ) : (
                             <Button
                                 type="default"
-
                                 icon={<EditOutlined style={{ fontSize: "1.5rem", color: "gray" }} />}
                                 size="large"
                                 onClick={toggleEditMode}
-
+                            //className="w-1/3"
                             >
                                 <span className="text-sm font-medium text-gray-600 text-center">Editar</span>
                             </Button>
                         )}
+
+                        {/* Botón de Cancelar edición */}
+                        {isEditMode && (
+                            <Button
+                                type="default"
+                                icon={<CloseOutlined style={{ fontSize: "1.5rem" }} />}
+                                size="large"
+                                onClick={handleCancelEdit}
+                            //className="w-1/3"
+                            >
+                                <span className="text-sm font-medium text-center">Cancelar</span>
+                            </Button>
+                        )}
+
+                        {/* Botón Eliminar */}
                         <Button
                             danger
-
-
                             icon={<DeleteOutlined style={{ fontSize: "1.5rem" }} />}
                             size="large"
                             onClick={showDeleteModal}
-
+                        //className="w-1/3"
                         >
                             <span className="text-sm font-medium text-center">Eliminar</span>
                         </Button>
@@ -495,8 +418,6 @@ const TransactionDetailModal = ({
                 </div>
             </div>
         </div >
-
-
     );
 };
 

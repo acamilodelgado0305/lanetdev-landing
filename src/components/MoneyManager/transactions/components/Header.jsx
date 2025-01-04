@@ -19,7 +19,7 @@ const Header = ({ onNavClick }) => {
     const navItems = [
         { label: 'Ingresos', endpoint: '/incomes' },
         { label: 'Egresos', endpoint: '/expenses' },
-        { label: 'Transferencias', endpoint: '/transactions' },
+        { label: 'Transferencias', endpoint: '/transfers' },
         /*  { label: 'Pagos Recurrentes', endpoint: '/recurring-payments' }, */
     ];
 
