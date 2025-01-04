@@ -11,35 +11,79 @@ import {
   MenuIcon,
   ChevronRightIcon,
   PinIcon,
-  PinOffIcon
+  PinOffIcon,
+  ChevronDownIcon
 } from "lucide-react";
 import Header from '../components/header/Header';
 import UserProfileHeader from './user/UserProfileHeader';
 import { useAuth } from '../components/Context/AuthProvider';
 
 // Componente SidebarLink mejorado
-const SidebarLink = ({ to, icon: Icon, label, isExpanded, isActive }) => (
-  <Link
-    to={to}
-    className={`
-      flex items-center p-3 my-1 text-sm rounded-xl transition-all duration-300
-      ${isActive
-        ? 'bg-white/10 text-white shadow-lg backdrop-blur-sm'
-        : 'text-gray-300 hover:bg-white/5 hover:text-white'
-      }
-      ${isExpanded ? 'justify-start mx-2' : 'justify-center mx-auto w-12'}
-      group relative
-    `}
-  >
-    <Icon className={`w-5 h-5 ${isExpanded ? '' : 'group-hover:scale-110 transition-transform duration-200'}`} />
-    {isExpanded && <span className="ml-3 font-medium">{label}</span>}
-    {!isExpanded && (
-      <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
-        {label}
+const SidebarLink = ({ to, icon: Icon, label, isExpanded, isActive, hasSubmenu, isSubmenuOpen, onSubmenuClick, submenuItems }) => {
+  const LinkContent = () => (
+    <>
+      <Icon className={`w-5 h-5 ${isExpanded ? '' : 'group-hover:scale-110 transition-transform duration-200'}`} />
+      {isExpanded && (
+        <span className="ml-3 font-medium flex-1">{label}</span>
+      )}
+      {isExpanded && hasSubmenu && (
+        <ChevronDownIcon
+          className={`w-4 h-4 transition-transform duration-200 ${isSubmenuOpen ? 'rotate-180' : ''}`}
+        />
+      )}
+      {!isExpanded && (
+        <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+          {label}
+        </div>
+      )}
+    </>
+  );
+
+  if (hasSubmenu) {
+    return (
+      <div>
+        <button
+          onClick={onSubmenuClick}
+          className={`
+            w-full flex items-center p-3 my-1 text-sm rounded-xl transition-all duration-300
+            ${isActive ? 'bg-white/10 text-white shadow-lg backdrop-blur-sm' : 'text-gray-300 hover:bg-white/5 hover:text-white'}
+            ${isExpanded ? 'justify-start mx-2' : 'justify-center mx-auto w-12'}
+            group relative
+          `}
+        >
+          <LinkContent />
+        </button>
+        {isExpanded && isSubmenuOpen && (
+          <div className="ml-4 pl-4 border-l border-white/10">
+            {submenuItems.map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                className="flex items-center p-2 my-1 text-sm text-gray-300 hover:text-white rounded-xl hover:bg-white/5 transition-all duration-200"
+              >
+                {item.icon && <item.icon className="w-4 h-4 mr-2" />}
+                <span>{item.label}</span>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
-    )}
-  </Link>
-);
+    );
+  }
+  return (
+    <Link
+      to={to}
+      className={`
+        flex items-center p-3 my-1 text-sm rounded-xl transition-all duration-300
+        ${isActive ? 'bg-white/10 text-white shadow-lg backdrop-blur-sm' : 'text-gray-300 hover:bg-white/5 hover:text-white'}
+        ${isExpanded ? 'justify-start mx-2' : 'justify-center mx-auto w-12'}
+        group relative
+      `}
+    >
+      <LinkContent />
+    </Link>
+  );
+};
 
 // Componente SidebarSection mejorado
 const SidebarSection = ({ title, children, isExpanded }) => (
@@ -62,6 +106,7 @@ export default function Root() {
   const [isPinned, setIsPinned] = useState(false);
   const [unreadEmailsCount, setUnreadEmailsCount] = useState(0);
   const [isUserProfileOpen, setIsUserProfileOpen] = useState(false);
+  const [isMoneyManagerOpen, setIsMoneyManagerOpen] = useState(false);
   const { userRole } = useAuth();
 
   const mainMenuLinks = useMemo(
@@ -74,10 +119,26 @@ export default function Root() {
     [userRole]
   );
 
+  const moneyManagerSubmenuItems = [
+    { to: "/index/moneymanager/estadisticas", label: "Dashboard", icon: ChevronRightIcon },
+    { to: "/index/moneymanager/transactions", label: "Transacciones", icon: ChevronRightIcon },
+    { to: "/index/moneymanager/informes", label: "Informes", icon: ChevronRightIcon },
+    { to: "/index/moneymanager/accounts", label: "Cuentas", icon: ChevronRightIcon },
+    { to: "/index/moneymanager/categorias", label: "Categorias", icon: ChevronRightIcon },
+    { to: "/index/moneymanager/proveedores", label: "Proveedores", icon: ChevronRightIcon },
+    { to: "/index/moneymanager/calendario", label: "Calendario", icon: ChevronRightIcon },
+    { to: "/index/moneymanager/Pagos-Pendientes", label: "Pagos Recurrentes", icon: ChevronRightIcon },
+    { to: "/index/moneymanager/configuracion", label: "Configuración", icon: ChevronRightIcon },
+  ];
+
   const resourcesMenuLinks = useMemo(
     () => [
-      (userRole === "admin" || userRole === "superadmin") &&
-      { to: "/index/moneymanager/estadisticas", label: "Money Manager", icon: BookIcon },
+      (userRole === "admin" || userRole === "superadmin") && {
+        label: "Money Manager",
+        icon: BookIcon,
+        hasSubmenu: true,
+        submenuItems: moneyManagerSubmenuItems
+      },
       { to: "/index/doc", label: "Documentación", icon: FileTextIcon },
       { to: "/index/communication", label: "Comunicación", icon: MessageCircleIcon },
     ].filter(Boolean),
@@ -126,7 +187,7 @@ export default function Root() {
         onMouseLeave={handleSidebarMouseLeave}
         className={`
           fixed inset-y-0 left-0 z-40 
-          ${isExpanded ? "w-64" : "w-20"} 
+          ${isExpanded ? "w-55" : "w-20"} 
           bg-gradient-to-b from-primary to-primary/90
           shadow-xl backdrop-blur-sm
           transition-all duration-300 ease-in-out 
@@ -202,19 +263,26 @@ export default function Root() {
           <SidebarSection title="Recursos" isExpanded={isExpanded}>
             {resourcesMenuLinks.map(link => (
               <SidebarLink
-                key={link.to}
+                key={link.hasSubmenu ? link.label : link.to}
                 {...link}
                 isExpanded={isExpanded}
                 isActive={window.location.pathname === link.to}
+                isSubmenuOpen={link.label === "Money Manager" ? isMoneyManagerOpen : false}
+                onSubmenuClick={() => {
+                  if (link.label === "Money Manager") {
+                    setIsMoneyManagerOpen(!isMoneyManagerOpen);
+                  }
+                }}
               />
             ))}
           </SidebarSection>
         </nav>
 
+
         {/* Sidebar Footer */}
         <div className={`p-4 border-t border-white/10 bg-black/20 ${isExpanded ? 'text-center' : 'text-center'}`}>
           {isExpanded ? (
-            <p className="text-xs text-gray-400">© 2024 Lanet</p>
+            <p className="text-xs text-gray-400">© 2024 IspSuite</p>
           ) : (
             <span className="text-gray-400 text-lg">•••</span>
           )}
@@ -239,7 +307,7 @@ export default function Root() {
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setIsOpen(false)}
           />
-          <aside className="absolute inset-y-0 left-0 w-64 bg-primary shadow-2xl animate-slide-in">
+          <aside className="absolute inset-y-0 left-0 w-64 bg-primary shadow-2xl animate-slide-in z-10">
             <UserProfileHeader
               onToggle={() => setIsOpen(false)}
               isUserProfileOpen={isUserProfileOpen}
