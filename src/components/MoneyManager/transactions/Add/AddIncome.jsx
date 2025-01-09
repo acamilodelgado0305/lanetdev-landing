@@ -384,7 +384,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
           <div className="px-6 pt-4 ">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <span className="text-green-500">
+                <span className="text-green-700">
                   <DollarCircleOutlined className="text-xl" />
                 </span>
                 <h2 className="text-xl font-semibold text-gray-800">
@@ -400,7 +400,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
               />
             </div>
           </div>
-          <div className="h-1 bg-green-500" />
+          <div className="h-1 bg-green-700" />
         </div>
 
         <div className="pt-3 px-4 space-y-6">
@@ -450,7 +450,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
 
 
 
-          <div className="h-1 bg-green-500" /> {/* Línea verde decorativa */}
+          <div className="h-1 bg-green-700" /> {/* Línea verde decorativa */}
 
 
           {/* Descripción */}
@@ -520,7 +520,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
             type="primary"
             onClick={handleSave}
             size="large"
-            className="w-full bg-green-500 hover:bg-green-600 h-12"
+            className="w-full bg-green-700 hover:bg-green-600 h-12"
           >
             {transactionToEdit ? "Actualizar Ingreso" : "Registrar Ingreso"}
           </Button>

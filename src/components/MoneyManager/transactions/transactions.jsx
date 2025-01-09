@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { PlusOutlined, SearchOutlined, LeftOutlined, RightOutlined } from "@ant-design/icons";
 import { format as formatDate, startOfMonth, endOfMonth, subMonths, addMonths } from "date-fns";
 import axios from "axios";
-import { Modal, message, Input, Select, Button } from "antd";
+import { Modal, message, Input, Select, Button, Card} from "antd";
 import AddEntryModal from "./addModal";
 import AddIncome from "./Add/Income/AddIncome";
 import AddExpense from "./Add/expense/AddExpense";
@@ -18,7 +18,16 @@ import ExpenseTable from "./components/ExpenseTable";
 import IncomeTable from "./components/IncomeTable";
 import { useAuth } from '../../Context/AuthProvider';
 import Header from "./components/Header";
-import { TrendingUp, DollarSign, CreditCard } from 'lucide-react';
+import {
+  TrendingUp,
+  DollarSign,
+  CreditCard,
+  ChevronLeft,
+  ChevronRight,
+  AlertCircle,
+  ArrowLeftRight,
+  Search
+} from 'lucide-react';
 
 const { Option } = Select;
 const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
@@ -295,178 +304,241 @@ const TransactionsDashboard = () => {
   };
 
   return (
-    <div className="flex-1 bg-white]">
+    <div className="flex-1 bg-gray-50 min-h-screen">
       {/* Barra superior de herramientas */}
-      <div className="py-2 border bg-white sticky top-0 shadow-sm z-10">
-        {/* Botones de ingresos, egresos, etc. */}
-        <div className="w-full flex items-end justify-end">
-          <div className="flex gap-3">
-            <Button onClick={openIncomeModal} className="bg-green-500 hover:bg-green-600 text-white h-12 px-6">
-              Nuevo Ingreso
-            </Button>
-            <Button onClick={openExpenseModal} className="bg-red-500 hover:bg-red-600 text-white h-12 px-6">
-              Nuevo Egreso
-            </Button>
-            <Button onClick={openTransferModal} className="bg-blue-500 hover:bg-blue-600 text-white h-12 px-6">
-              Nueva Transferencia
-            </Button>
+      <div className="bg-white border-b sticky top-0 z-20 shadow-sm">
+        {/* Sección superior con botones de acción */}
+        <div className="max-w-7xl mx-auto py-2 px-3">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-4">
+              <h1 className="text-2xl font-semibold text-gray-800">Control Financiero</h1>
+            </div>
+            <div className="flex gap-3">
+              <Button
+                onClick={openIncomeModal}
+                type="primary"
+                className="bg-emerald-600 hover:bg-emerald-700 border-none h-11"
+                icon={<TrendingUp className="w-4 h-4 mr-2" />}
+              >
+                Nuevo Ingreso
+              </Button>
+              <Button
+                onClick={openExpenseModal}
+                type="primary"
+                className="bg-red-500 hover:bg-red-600 border-none h-11"
+                icon={<CreditCard className="w-4 h-4 mr-2" />}
+              >
+                Nuevo Egreso
+              </Button>
+              <Button
+                onClick={openTransferModal}
+                type="primary"
+                className="bg-blue-500 hover:bg-blue-600 border-none h-11"
+                icon={<ArrowLeftRight className="w-4 h-4 mr-2" />}
+              >
+                Nueva Transferencia
+              </Button>
+            </div>
           </div>
-        </div>
-
-        {/* Resumen de datos financieros */}
-        <div className="w-full flex items-center justify-center">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-[17em] px-6 py-4">
-            {/* Resumen de datos financieros condicional por rol */}
+  
+          {/* Resumen financiero */}
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
             {userRole === "superadmin" && (
-              <div className="flex items-center space-x-4">
-                <div className="bg-green-50 p-4 rounded-full">
-                  <TrendingUp className="h-6 w-6 text-green-600" />
-                </div>
-                <div>
-                  <div className="text-sm text-gray-500 mb-1">Balance</div>
-                  <div className="text-xl font-semibold text-gray-900">{formatCurrency(balance)}</div>
-                </div>
-              </div>
+              <>
+                <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-none shadow-sm">
+                  <div className="flex items-center space-x-4">
+                    <div className="bg-emerald-100 p-3 rounded-full">
+                      <TrendingUp className="h-6 w-6 text-emerald-600" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-gray-500">Balance Total</div>
+                      <div className="text-xl font-bold text-gray-900">{formatCurrency(balance)}</div>
+                    </div>
+                  </div>
+                </Card>
+  
+                <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-none shadow-sm">
+                  <div className="flex items-center space-x-4">
+                    <div className="bg-blue-100 p-3 rounded-full">
+                      <DollarSign className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-gray-500">Ingresos Totales</div>
+                      <div className="text-xl font-bold text-emerald-600">{formatCurrency(totalIncome)}</div>
+                    </div>
+                  </div>
+                </Card>
+              </>
             )}
-
-            {userRole === "superadmin" && (
-              <div className="flex items-center space-x-4">
-                <div className="bg-blue-50 p-4 rounded-full">
-                  <DollarSign className="h-6 w-6 text-blue-600" />
-                </div>
-                <div>
-                  <div className="text-sm text-gray-500 mb-1">Ventas totales</div>
-                  <div className="text-xl font-semibold text-green-600">{formatCurrency(totalIncome)}</div>
-                </div>
-              </div>
-            )}
-
+  
             {(userRole === "admin" || userRole === "superadmin") && (
-              <div className="flex items-center space-x-4">
-                <div className="bg-red-50 p-4 rounded-full">
-                  <CreditCard className="h-6 w-6 text-red-600" />
+              <Card className="bg-gradient-to-br from-red-50 to-orange-50 border-none shadow-sm">
+                <div className="flex items-center space-x-4">
+                  <div className="bg-red-100 p-3 rounded-full">
+                    <CreditCard className="h-6 w-6 text-red-600" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-gray-500">Gastos Totales</div>
+                    <div className="text-xl font-bold text-red-600">{formatCurrency(totalExpenses)}</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="text-sm text-gray-500 mb-1">Gastos totales</div>
-                  <div className="text-xl font-semibold text-red-600">{formatCurrency(totalExpenses)}</div>
-                </div>
-              </div>
+              </Card>
             )}
           </div>
-        </div>
-
-        {/* Input de búsqueda */}
-        <div className="w-full flex items-center justify-center">
-          <div className="w-[25em]">
-            <div className="relative">
-              <Input placeholder="Buscar" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 h-10" />
+  
+          {/* Barra de búsqueda */}
+          <div className="mt-6 flex justify-center">
+            <div className="w-full max-w-2xl">
+              <Input
+                prefix={<Search className="h-4 w-4 text-gray-400" />}
+                placeholder="Buscar transacciones..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="h-10 rounded-lg"
+              />
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Header de navegación entre categorías */}
-      <div className="my-1">
-        <Header onNavClick={handleNavClick} />
-      </div>
-
-      {/* Contenido principal */}
-      <div className="overflow-y-auto h-[40em]" style={{ maxHeight: 'calc(70vh - 180px)' }}>
-        <div className="border border-gray-200 rounded-lg">
-          {error && <p className="text-red-500">{error}</p>}
-          {/* Mostrar IncomeTable si selectedEndpoint es "/incomes" */}
-          {selectedEndpoint === "/incomes" && (
-            <IncomeTable
-              entries={paginatedEntries}
-              categories={categories}
-              accounts={accounts}
-              onDelete={() => {
-                fetchData(selectedEndpoint);
-                fetchMonthlyData();
-              }}
-              onEdit={openEditModal}
-              onOpenContentModal={openContentModal}
-              onOpenModal={openModal}
-            />
-          )}
-
-          {/* Mostrar ExpenseTable si selectedEndpoint es "/expenses" */}
-          {selectedEndpoint === "/expenses" && (
-            <ExpenseTable
-              entries={paginatedEntries} // Filtra para la paginación
-              categories={categories}
-              accounts={accounts}
-              onDelete={() => {
-                fetchData(selectedEndpoint);
-                fetchMonthlyData();
-              }}
-              onEdit={openEditModal}
-              onOpenContentModal={openContentModal}
-              onOpenModal={openModal}
-            />
-          )}
-
-          {/* Mostrar TransactionTable si selectedEndpoint es "/transactions" */}
-          {selectedEndpoint === "/transfers" && (
-            <TransactionTable
-              entries={paginatedEntries} // Filtra para la paginación
-              categories={categories}
-              accounts={accounts}
-              onDelete={() => {
-                fetchData(selectedEndpoint);
-                fetchMonthlyData();
-              }}
-              onEdit={openEditModal}
-              onOpenContentModal={openContentModal}
-              onOpenModal={openModal}
-            />
-          )}
-        </div>
-      </div>
-
-      {/* Navegación de meses estilo Google Sheets */}
-      <div className="fixed bottom-0 mx-0 w-full bg-gray-50 border-t border-gray-200 flex justify-center items-center py-2 z-4">
-        <div className="flex items-center space-x-4">
-          <Button type="text" size="small" icon={<LeftOutlined />} onClick={handlePreviousMonth} />
-
-          <div className="flex overflow-x-auto space-x-1 px-2">
-            {getMonthsArray().map((date) => (
-              <button
-                key={date.getTime()}
-                onClick={() => setCurrentMonth(date)}
-                className={`px-4 py-1 text-xs rounded-t border-t-2 min-w-max ${formatDate(date, "yyyy-MM") === formatDate(currentMonth, "yyyy-MM")
-                  ? "bg-white text-blue-600 border-blue-600 font-medium"
-                  : "text-gray-600 hover:bg-gray-100 border-transparent"
-                  }`}
-              >
-                {formatDate(date, "MMMM yyyy")}
-              </button>
-            ))}
+  
+        {/* Navegación entre categorías */}
+        <div className="border-t">
+          <div className="max-w-7xl mx-auto">
+            <Header onNavClick={handleNavClick} />
           </div>
-
-          <Button type="text" size="small" icon={<RightOutlined />} onClick={handleNextMonth} />
         </div>
       </div>
-
+  
+      {/* Contenido principal */}
+      <div className="max-w-full py-4 mx-auto  ">
+        <div className="bg-white rounded-lg shadow-sm border">
+          <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 450px)' }}>
+            {error && (
+              <div className="p-2 bg-red-50 border-l-4 border-red-500 text-red-700">
+                <p className="flex items-center">
+                  <AlertCircle className="w-5 h-5 mr-2" />
+                  {error}
+                </p>
+              </div>
+            )}
+  
+            {selectedEndpoint === "/incomes" && (
+              <IncomeTable
+                entries={paginatedEntries}
+                categories={categories}
+                accounts={accounts}
+                onDelete={() => {
+                  fetchData(selectedEndpoint);
+                  fetchMonthlyData();
+                }}
+                onEdit={openEditModal}
+                onOpenContentModal={openContentModal}
+                onOpenModal={openModal}
+              />
+            )}
+  
+            {selectedEndpoint === "/expenses" && (
+              <ExpenseTable
+                entries={paginatedEntries}
+                categories={categories}
+                accounts={accounts}
+                onDelete={() => {
+                  fetchData(selectedEndpoint);
+                  fetchMonthlyData();
+                }}
+                onEdit={openEditModal}
+                onOpenContentModal={openContentModal}
+                onOpenModal={openModal}
+              />
+            )}
+  
+            {selectedEndpoint === "/transfers" && (
+              <TransactionTable
+                entries={paginatedEntries}
+                categories={categories}
+                accounts={accounts}
+                onDelete={() => {
+                  fetchData(selectedEndpoint);
+                  fetchMonthlyData();
+                }}
+                onEdit={openEditModal}
+                onOpenContentModal={openContentModal}
+                onOpenModal={openModal}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+  
+      {/* Navegación de meses */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-md">
+        <div className="max-w-7xl mx-auto px-6 py-2">
+          <div className="flex items-center justify-center space-x-4">
+            <Button
+              type="text"
+              icon={<ChevronLeft className="w-4 h-4" />}
+              onClick={handlePreviousMonth}
+              className="hover:bg-gray-100"
+            />
+  
+            <div className="flex overflow-x-auto space-x-2 px-2">
+              {getMonthsArray().map((date) => {
+                const isCurrentMonth = formatDate(date, "yyyy-MM") === formatDate(currentMonth, "yyyy-MM");
+                return (
+                  <button
+                    key={date.getTime()}
+                    onClick={() => setCurrentMonth(date)}
+                    className={`
+                      px-4 py-2 rounded-md text-sm font-medium transition-all
+                      ${isCurrentMonth
+                        ? "bg-blue-50 text-blue-600 border border-blue-200"
+                        : "text-gray-600 hover:bg-gray-50"
+                      }
+                    `}
+                  >
+                    {formatDate(date, "MMMM yyyy")}
+                  </button>
+                );
+              })}
+            </div>
+  
+            <Button
+              type="text"
+              icon={<ChevronRight className="w-4 h-4" />}
+              onClick={handleNextMonth}
+              className="hover:bg-gray-100"
+            />
+          </div>
+        </div>
+      </div>
+  
       {/* Modales */}
-      <AddEntryModal isOpen={isModalOpen} onClose={closeModal} onTransactionAdded={handleEntryAdded} transactionToEdit={editTransaction} transactionType={transactionType} />
-
+      <AddEntryModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        onTransactionAdded={handleEntryAdded}
+        transactionToEdit={editTransaction}
+        transactionType={transactionType}
+      />
+  
       <AddIncome
         isOpen={isIncomeModalOpen}
         onClose={closeIncomeModal}
         onTransactionAdded={handleEntryAdded}
         transactionToEdit={editTransaction}
       />
-
+  
       <AddExpense
         isOpen={isExpenseModalOpen}
         onClose={closeExpenseModal}
         onTransactionAdded={handleEntryAdded}
         transactionToEdit={editTransaction}
       />
-
-
-      <VoucherContentModal isOpen={isContentModalOpen} onClose={closeContentModal} voucherContent={selectedVoucherContent} />
+  
+      <VoucherContentModal
+        isOpen={isContentModalOpen}
+        onClose={closeContentModal}
+        voucherContent={selectedVoucherContent}
+      />
     </div>
   );
 };

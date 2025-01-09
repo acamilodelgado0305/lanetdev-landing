@@ -122,12 +122,12 @@ export default function Root() {
   const moneyManagerSubmenuItems = [
     { to: "/index/moneymanager/estadisticas", label: "Dashboard", icon: ChevronRightIcon },
     { to: "/index/moneymanager/transactions", label: "Transacciones", icon: ChevronRightIcon },
+    { to: "/index/moneymanager/Pagos-Pendientes", label: "Pagos Recurrentes", icon: ChevronRightIcon },
     { to: "/index/moneymanager/informes", label: "Informes", icon: ChevronRightIcon },
     { to: "/index/moneymanager/accounts", label: "Cuentas", icon: ChevronRightIcon },
     { to: "/index/moneymanager/categorias", label: "Categorias", icon: ChevronRightIcon },
     { to: "/index/moneymanager/proveedores", label: "Proveedores", icon: ChevronRightIcon },
     { to: "/index/moneymanager/calendario", label: "Calendario", icon: ChevronRightIcon },
-    { to: "/index/moneymanager/Pagos-Pendientes", label: "Pagos Recurrentes", icon: ChevronRightIcon },
     { to: "/index/moneymanager/configuracion", label: "Configuración", icon: ChevronRightIcon },
   ];
 

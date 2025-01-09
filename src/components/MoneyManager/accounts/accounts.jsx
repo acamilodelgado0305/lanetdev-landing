@@ -6,12 +6,14 @@ import {
   Edit,
   ChevronDown,
   ChevronUp,
+  DollarSign,
+  Building2,
+  Landmark,
+  HandCoins
 } from "lucide-react";
 import AddAccountModal from "./addAccount";
-import {
-  getAccounts,
-  deleteAccount,
-} from "../../../services/moneymanager/moneyService";
+import { getAccounts, deleteAccount } from "../../../services/moneymanager/moneyService";
+import { Card, Button, Tooltip } from 'antd';
 import Swal from "sweetalert2";
 
 const formatCurrency = (amount) => {
@@ -122,64 +124,83 @@ const AccountContent = () => {
     setIsModalOpen(true);
   };
 
-  const renderAccountSection = (title, accounts, totalAmount) => (
-    <div className="mb-8">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold text-indigo-600">{title}</h2>
-        <p className="text-lg font-semibold text-green-600">
-          {formatCurrency(totalAmount)}
-        </p>
-      </div>
-      <div className="space-y-4">
-        {accounts.map((cuenta) => (
-          <div
-            key={cuenta.id}
-            className={`bg-white shadow rounded-lg p-4 flex justify-between items-center hover:shadow-md transition duration-300 ${!cuenta.plus ? "opacity-70" : ""
-              }`}
-          >
-            <div className="flex items-center">
-              <Wallet className="text-indigo-500 mr-3" size={24} />
-              <div>
-                <h3 className="text-xl font-semibold text-gray-800">
-                  {cuenta.name}
-                </h3>
-                <p className="text-sm text-gray-500">
-                  {cuenta.type || "Cuenta"}
-                </p>
-                {!cuenta.plus && (
-                  <p className="text-xs text-red-500">No se suma al total</p>
-                )}
-              </div>
-            </div>
-            <div className="flex items-center">
-              <div
-                className={`text-right ${parseFloat(cuenta.balance) >= 0
-                    ? "text-green-600"
-                    : "text-red-500"
-                  } font-bold text-xl mr-4`}
-              >
-                {cuenta.balance !== null && cuenta.balance !== undefined
-                  ? formatCurrency(parseFloat(cuenta.balance))
-                  : "No disponible"}
-              </div>
-              <button
-                onClick={() => openEditModal(cuenta)}
-                className="text-blue-500 hover:text-blue-700 transition-colors duration-300"
-                aria-label="Editar cuenta"
-              >
-                <Edit size={20} />
-              </button>
-              <button
-                onClick={() => handleDeleteAccount(cuenta.id)}
-                className="text-red-500 hover:text-red-700 transition-colors duration-300"
-                aria-label="Eliminar cuenta"
-              >
-                <Trash2 size={20} />
-              </button>
-            </div>
+
+  const renderAccount = (cuenta) => (
+    <Card
+      key={cuenta.id}
+      className="mb-4 hover:shadow-lg transition-all duration-300 border border-gray-100"
+      bodyStyle={{ padding: "16px" }}
+    >
+      <div className="flex justify-between items-center">
+        <div className="flex items-center space-x-4">
+          <div className={`p-3 rounded-full ${
+            cuenta.type === "Dinero en Efectivo" ? "bg-emerald-50" :
+            cuenta.type === "Banco" ? "bg-blue-50" : "bg-orange-50"
+          }`}>
+            {cuenta.type === "Dinero en Efectivo" ? (
+              <DollarSign className="w-6 h-6 text-emerald-600" />
+            ) : cuenta.type === "Banco" ? (
+              <Building2 className="w-6 h-6 text-blue-600" />
+            ) : (
+              <HandCoins className="w-6 h-6 text-orange-600" />
+            )}
           </div>
-        ))}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800">{cuenta.name}</h3>
+            <p className="text-sm text-gray-500">{cuenta.type}</p>
+            {!cuenta.plus && (
+              <span className="text-xs px-2 py-1 bg-red-50 text-red-600 rounded-full">
+                No suma al total
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center space-x-4">
+          <span className={`text-xl font-bold ${
+            parseFloat(cuenta.balance) >= 0 ? "text-emerald-600" : "text-red-600"
+          }`}>
+            {formatCurrency(parseFloat(cuenta.balance))}
+          </span>
+          <div className="flex space-x-2">
+            <Tooltip title="Editar cuenta">
+              <Button 
+                type="text" 
+                icon={<Edit className="w-4 h-4 text-blue-600" />}
+                onClick={() => openEditModal(cuenta)}
+              />
+            </Tooltip>
+            <Tooltip title="Eliminar cuenta">
+              <Button 
+                type="text" 
+                icon={<Trash2 className="w-4 h-4 text-red-600" />}
+                onClick={() => handleDeleteAccount(cuenta.id)}
+              />
+            </Tooltip>
+          </div>
+        </div>
       </div>
+    </Card>
+  );
+
+  const renderAccountSection = (title, accounts, totalAmount, icon) => (
+    <div className="mb-8">
+      <Card className="bg-white shadow-sm border-0">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center space-x-3">
+            {icon}
+            <h2 className="text-xl font-bold text-gray-800">{title}</h2>
+          </div>
+          <div className="bg-gray-50 px-4 py-2 rounded-lg">
+            <span className="text-sm text-gray-500 mr-2">Total:</span>
+            <span className="text-lg font-semibold text-emerald-600">
+              {formatCurrency(totalAmount)}
+            </span>
+          </div>
+        </div>
+        <div className="space-y-4">
+          {accounts.map(renderAccount)}
+        </div>
+      </Card>
     </div>
   );
 
@@ -196,65 +217,88 @@ const AccountContent = () => {
   );
 
   return (
-    <div className="h-[auto] bg-gray-100 min-h-screen w-full p-4">
-      <main className="max-full mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-6 relative">
-          <h1 className="text-3xl font-bold mb-6 text-indigo-600">
-            Dashboard de Cuentas
-          </h1>
-
-          <div className="bg-indigo-50 p-4 rounded-lg mb-6">
-            <p className="text-sm text-gray-600 mb-1">Balance Total</p>
-            <p className="text-2xl font-bold text-indigo-600">
-              {formatCurrency(totalBalance)}
-            </p>
-          </div>
-
-          <div className="space-y-4 max-h-[auto] overflow-y-auto">
-            {renderAccountSection(
-              "Dinero en Efectivo",
-              efectivoCuentas,
-              categoryTotals.efectivo
-            )}
-            {renderAccountSection("Bancos", bancoCuentas, categoryTotals.banco)}
-
-            <div className="mb-8">
-              <button
-                onClick={() => setShowPrestamos(!showPrestamos)}
-                className="flex items-center text-2xl font-bold text-indigo-600 mb-4"
-              >
-                Préstamos
-                {showPrestamos ? (
-                  <ChevronUp className="ml-2" />
-                ) : (
-                  <ChevronDown className="ml-2" />
-                )}
-              </button>
-              {showPrestamos && (
-                <>
-                  {renderAccountSection("", prestamoCuentas, categoryTotals.prestamos)}
-                </>
-              )}
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header y Balance Total */}
+        <Card className="mb-6 border-0 shadow-sm">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800 mb-2">
+                Control de Cuentas
+              </h1>
+              <p className="text-gray-500">
+                Gestiona tus cuentas y monitorea tus balances
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-gray-500 mb-1">Balance Total</p>
+              <p className="text-3xl font-bold text-emerald-600">
+                {formatCurrency(totalBalance)}
+              </p>
             </div>
           </div>
+        </Card>
 
-          <button
-            onClick={openModal}
-            className="fixed bottom-11 right-11 bg-[#FE6256] hover:bg-[#FFA38E] text-white rounded-full p-3 shadow-lg transition-colors duration-300"
-            aria-label="Añadir entrada"
+        {/* Secciones de Cuentas */}
+        {renderAccountSection(
+          "Efectivo",
+          efectivoCuentas,
+          categoryTotals.efectivo,
+          <DollarSign className="w-6 h-6 text-emerald-600" />
+        )}
+
+        {renderAccountSection(
+          "Cuentas Bancarias",
+          bancoCuentas,
+          categoryTotals.banco,
+          <Landmark className="w-6 h-6 text-blue-600" />
+        )}
+
+        <Card className="mb-8 border-0 shadow-sm">
+          <Button
+            type="text"
+            onClick={() => setShowPrestamos(!showPrestamos)}
+            className="flex items-center w-full justify-between px-4"
           >
-            <PlusCircle size={30} />
-          </button>
-          <AddAccountModal
-            isOpen={isModalOpen}
-            onClose={closeModal}
-            onAccountAdded={handleAccountAdded}
-            accountToEdit={editAccount}
-          />
-        </div>
-      </main>
+            <div className="flex items-center space-x-3">
+              <HandCoins className="w-6 h-6 text-orange-600" />
+              <span className="text-xl font-bold text-gray-800">Préstamos</span>
+            </div>
+            {showPrestamos ? <ChevronUp /> : <ChevronDown />}
+          </Button>
+          
+          {showPrestamos && (
+            <div className="mt-6">
+              {renderAccountSection(
+                "",
+                prestamoCuentas,
+                categoryTotals.prestamos,
+                null
+              )}
+            </div>
+          )}
+        </Card>
+
+        {/* Botón Flotante */}
+        <Button
+          type="primary"
+          shape="circle"
+          size="large"
+          className="fixed bottom-8 right-8 w-14 h-14 flex items-center justify-center bg-blue-600 hover:bg-blue-700 border-none shadow-lg"
+          onClick={openModal}
+          icon={<PlusCircle className="w-6 h-6" />}
+        />
+
+        <AddAccountModal
+          isOpen={isModalOpen}
+          onClose={closeModal}
+          onAccountAdded={handleAccountAdded}
+          accountToEdit={editAccount}
+        />
+      </div>
     </div>
   );
+
 };
 
 export default AccountContent;

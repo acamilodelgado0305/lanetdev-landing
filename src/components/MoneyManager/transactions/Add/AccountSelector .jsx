@@ -69,7 +69,7 @@ const AccountSelector = ({
                   key={acc.id}
                   onClick={() => onAccountSelect(acc.id.toString())}
                   className={`cursor-pointer transition-all hover:shadow-sm ${selectedAccount === acc.id.toString()
-                    ? 'border-green-500 border-2 bg-green-50'
+                    ? 'border-green-700 border-2 bg-green-50'
                     : 'hover:border-gray-300'
                     }`}
                   bodyStyle={{ padding: '8px' }}
@@ -86,7 +86,7 @@ const AccountSelector = ({
                       </div>
                     </div>
                     {selectedAccount === acc.id.toString() && (
-                      <div className="flex-shrink-0 text-green-500">
+                      <div className="flex-shrink-0 text-green-700">
                         <CheckCircleOutlined />
                       </div>
                     )}

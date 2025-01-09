@@ -83,7 +83,7 @@ const Categories = () => {
             <Card
               key={type}
               title={type === "income" ? "Ingresos" : "Gastos"}
-              extra={<TagOutlined className={type === "income" ? "text-green-500" : "text-red-500"} />}
+              extra={<TagOutlined className={type === "income" ? "text-green-700" : "text-red-500"} />}
               className="w-full"
             >
               <List
@@ -106,7 +106,7 @@ const Categories = () => {
                   >
                     <List.Item.Meta
                       avatar={
-                        <TagOutlined className={type === "income" ? "text-green-500" : "text-red-500"} />
+                        <TagOutlined className={type === "income" ? "text-green-700" : "text-red-500"} />
                       }
                       title={category.name}
                     />

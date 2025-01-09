@@ -28,7 +28,7 @@ const CategorySelector = ({
               <div className="flex items-center justify-between py-1">
                 <span className="text-sm">{cat.name}</span>
                 {selectedCategory === cat.id.toString() && (
-                  <CheckCircleOutlined className="text-green-500" />
+                  <CheckCircleOutlined className="text-green-700" />
                 )}
               </div>
             </Select.Option>
