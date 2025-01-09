@@ -400,7 +400,6 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
           </div>
           <div className="h-1 bg-green-700" />
         </div>
-
         <div className="pt-3 px-4">
           <div className="grid grid-cols-2 gap-4">
             {/* Columna de datos básicos */}
@@ -437,47 +436,47 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
               <div className="h-1 bg-green-700" />
 
               <div className="mt-6 space-y-4">
-            <label className="block text-sm font-medium text-gray-700">
-              Comprobantes
-            </label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleImageUpload}
-                className="w-full"
-                disabled={isUploading}
-              />
-              {isUploading && (
-                <div className="text-sm text-gray-500 mt-2">Subiendo imágenes...</div>
-              )}
-            </div>
-            {imageUrls.length > 0 && (
-              <div className="grid grid-cols-3 gap-4">
-                {imageUrls.map((url, index) => (
-                  <div key={index} className="relative group">
-                    <img
-                      src={url}
-                      alt={`Comprobante ${index + 1}`}
-                      className="rounded-lg w-full h-24 object-cover"
-                    />
-                    <Button
-                      type="primary"
-                      danger
-                      size="small"
-                      icon={<IoClose />}
-                      onClick={() => {
-                        setImageUrls(urls => urls.filter((_, i) => i !== index));
-                        setVoucher(voucher => voucher.replace(url, '').trim());
-                      }}
-                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                    />
+                <label className="block text-sm font-medium text-gray-700">
+                  Comprobantes
+                </label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageUpload}
+                    className="w-full"
+                    disabled={isUploading}
+                  />
+                  {isUploading && (
+                    <div className="text-sm text-gray-500 mt-2">Subiendo imágenes...</div>
+                  )}
+                </div>
+                {imageUrls.length > 0 && (
+                  <div className="grid grid-cols-3 gap-4">
+                    {imageUrls.map((url, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={url}
+                          alt={`Comprobante ${index + 1}`}
+                          className="rounded-lg w-full h-24 object-cover"
+                        />
+                        <Button
+                          type="primary"
+                          danger
+                          size="small"
+                          icon={<IoClose />}
+                          onClick={() => {
+                            setImageUrls(urls => urls.filter((_, i) => i !== index));
+                            setVoucher(voucher => voucher.replace(url, '').trim());
+                          }}
+                          className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        />
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
-            )}
-          </div>
             </div>
 
 
@@ -518,7 +517,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
           </div>
 
           {/* Adjuntos - Fuera del grid para mantener ancho completo */}
-          
+
         </div>
 
         {/* Footer */}
