@@ -347,9 +347,9 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
             {/* Main Form Section */}
             <div className=" space-y-2">
               {/* Essential Information Section */}
-              <div className="bg-white p-4 rounded-lg border border-gray-500 shadow-sm ">
+              <div className="bg-white p-4 rounded-lg border-right-width ">
                 <div className="flex justify-center">
-                  <h3 className="font-bold text-gray-500 pb-2 border-b border-gray-200">
+                  <h3 className="font-bold text-gray-500 pb-2 border-right-width">
                     Información Básica
                   </h3>
                 </div>
@@ -433,9 +433,9 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
 
             {/* Right Column - Financial Details */}
             <div className="space-y-6 h-full ">
-              <div className="bg-white p-4 rounded-lg border border-gray-500 shadow-sm h-[42em] overflow-y-auto">
+            <div className="bg-white p-3  border-l border-gray-300 shadow-sm h-[42em] overflow-y-auto">
                 <div className="flex justify-center">
-                  <h3 className="font-bold text-gray-500 pb-2 border-b border-gray-200">
+                  <h3 className="font-bold text-gray-500 pb-2 ">
                     Detalles Financieros
                   </h3>
                 </div>

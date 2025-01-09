@@ -302,7 +302,7 @@ const TaskComponent = () => {
                                             title={<Text delete>{task.title}</Text>}
                                             description={
                                                 <Space size="small">
-                                                    <CheckCircleOutlined className="text-green-500" />
+                                                    <CheckCircleOutlined className="text-green-700" />
                                                     <Text type="secondary">
                                                         Completada el {dayjs(task.date).format('DD MMM')}
                                                     </Text>

@@ -383,7 +383,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
           <div className="px-6 pt-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <span className="text-green-500">
+                <span className="text-green-700">
                   <DollarCircleOutlined className="text-xl" />
                 </span>
                 <h2 className="text-xl font-semibold text-gray-800">
@@ -398,14 +398,14 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
               />
             </div>
           </div>
-          <div className="h-1 bg-green-500" />
+          <div className="h-1 bg-green-700" />
         </div>
         <div className="pt-3 px-4">
           <div className="grid grid-cols-2 gap-4">
             {/* Columna de datos básicos */}
-            <div className="rounded-lg border border-gray-500 p-4 auto-rows-auto">
+            <div className="rounded-lg border  p-4 auto-rows-auto">
               <div className="flex justify-center">
-                <h3 className="font-bold text-gray-500 pb-2 border-b border-gray-200">
+                <h3 className="font-bold text-gray-500 pb-2 ">
                   Información Básica
                 </h3>
               </div>
@@ -433,7 +433,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
                 />
               </div>
 
-              <div className="h-1 bg-green-300" />
+              <div className="h-1 bg-green-700" />
 
               <div className="mt-6 space-y-4">
                 <label className="block text-sm font-medium text-gray-700">
@@ -482,9 +482,10 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
 
 
             {/* Columna de datos financieros */}
-            <div className="rounded-lg border border-gray-500 p-4">
+            <div className="bg-white p-4 rounded-lg border-l border-gray-500 shadow-sm h-[42em] overflow-y-auto">
+
               <div className="flex justify-center">
-                <h3 className="font-bold text-gray-500 pb-2 border-b border-gray-200">
+                <h3 className="font-bold text-gray-500 pb-2">
                   Detalles Financieros
                 </h3>
               </div>
@@ -525,7 +526,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
             type="primary"
             onClick={handleSave}
             size="large"
-            className="w-full bg-green-500 hover:bg-green-600 h-12"
+            className="w-full bg-green-700 hover:bg-green-700 h-12"
           >
             {transactionToEdit ? "Actualizar Ingreso" : "Registrar Ingreso"}
           </Button>
