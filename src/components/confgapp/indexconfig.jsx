@@ -11,6 +11,8 @@ import {
   Modal,
   Card,
   Avatar,
+  Form,
+  Input,
 } from "antd";
 import {
   UserOutlined,
@@ -29,7 +31,7 @@ import {
 import { Link } from "react-router-dom";
 import SignUpModal from "../auth/SignUpForm";
 import { useAuth } from '../../components/Context/AuthProvider';
-
+import ImageUploader from "../../components/user/ImageUpload"
 const { Header, Content, Sider } = Layout;
 const { Title } = Typography;
 
@@ -41,6 +43,11 @@ const IndexConfig = () => {
   const [editingUser, setEditingUser] = useState(null);
   const [selectedMenuKey, setSelectedMenuKey] = useState("collaborators"); // Controla el menú activo
   const { user, userRole } = useAuth(); // Obtén los datos del usuario
+  const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
+  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
+  const [profilePictureUrl, setProfilePictureUrl] = useState(user?.profilepictureurl || defaultProfilePictureUrl);
+  const [form] = Form.useForm();
+
   const defaultProfilePictureUrl =
     "https://i.pinimg.com/736x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg";
 
@@ -94,6 +101,36 @@ const IndexConfig = () => {
     setEditingUser(record);
     setIsModalOpen(true);
   };
+
+  const handleUploadSuccess = (url) => {
+    setProfilePictureUrl(url); // Actualiza el estado de la imagen cargada
+    form.setFieldsValue({ profilepictureurl: url }); // Actualiza el valor en el formulario
+    message.success("Imagen de perfil actualizada correctamente");
+  };
+
+  const handleEditProfile = async (values) => {
+    try {
+      await updateUser(user.id, values, authToken);
+      message.success("Perfil actualizado con éxito");
+      setIsEditProfileModalOpen(false);
+    } catch (error) {
+      message.error("Error al actualizar el perfil");
+    }
+  };
+
+  const handleChangePassword = async (values) => {
+    try {
+      // Simula un llamado a la API para cambiar la contraseña
+      console.log("Nueva contraseña:", values.password);
+      message.success("Contraseña cambiada con éxito");
+      setIsChangePasswordModalOpen(false);
+    } catch (error) {
+      message.error("Error al cambiar la contraseña");
+    }
+  };
+
+
+
   const columns = [
     {
       title: "Nombre",
@@ -221,10 +258,150 @@ const IndexConfig = () => {
               <p>Rol: {userRole || "No asignado"}</p>
               <p>Dirección: {user?.address || "No disponible"}</p>
               <p>Teléfono: {user?.phone || "No disponible"}</p>
+              <Button
+                type="primary"
+                onClick={() => setIsEditProfileModalOpen(true)}
+                style={{ marginTop: 16 }}
+              >
+                Editar Perfil
+              </Button>
+              <Button
+                danger
+                onClick={() => setIsChangePasswordModalOpen(true)}
+                style={{ marginTop: 8 }}
+              >
+                Cambiar Contraseña
+              </Button>
             </Card>
           )}
         </Content>
       </Layout>
+
+      {/* Modal para editar perfil */}
+      <Modal
+        title="Editar Perfil"
+        visible={isEditProfileModalOpen}
+        onCancel={() => setIsEditProfileModalOpen(false)}
+        footer={null}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleEditProfile}
+          initialValues={{
+            username: user?.username,
+            email: user?.email,
+            address: user?.address,
+            phone: user?.phone,
+          }}
+        >
+          {/* Imagen de perfil con opciones de borrar y cargar nueva */}
+          <div style={{ marginBottom: "16px", textAlign: "center" }}>
+            <Avatar
+              size={100}
+              src={profilePictureUrl}
+              style={{ marginBottom: "16px" }}
+            />
+            <div>
+              <Button
+                type="default"
+                onClick={() => setProfilePictureUrl(defaultProfilePictureUrl)}
+                style={{ marginRight: "8px" }}
+              >
+                Borrar Imagen
+              </Button>
+              <ImageUploader
+                userId={user?.id}
+                userInfo={user}
+                onUploadSuccess={handleUploadSuccess}
+              />
+            </div>
+          </div>
+
+          {/* Campos del formulario */}
+          <Form.Item
+            label="Nombre"
+            name="username"
+            rules={[
+              { required: true, message: "Por favor ingresa tu nombre" },
+            ]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            label="Email"
+            name="email"
+            rules={[
+              { required: true, message: "Por favor ingresa tu email" },
+              { type: "email", message: "Por favor ingresa un email válido" },
+            ]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            label="Dirección"
+            name="address"
+            rules={[{ required: true, message: "Por favor ingresa tu dirección" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            label="Teléfono"
+            name="phone"
+            rules={[{ required: true, message: "Por favor ingresa tu teléfono" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Button type="primary" htmlType="submit">
+            Guardar Cambios
+          </Button>
+        </Form>
+      </Modal>
+
+
+      {/* Modal para cambiar contraseña */}
+      <Modal
+        title="Cambiar Contraseña"
+        visible={isChangePasswordModalOpen}
+        onCancel={() => setIsChangePasswordModalOpen(false)}
+        footer={null}
+      >
+        <Form layout="vertical" onFinish={handleChangePassword}>
+          <Form.Item
+            label="Nueva Contraseña"
+            name="password"
+            rules={[
+              { required: true, message: "Por favor ingresa una contraseña" },
+            ]}
+          >
+            <Input.Password />
+          </Form.Item>
+          <Form.Item
+            label="Confirmar Contraseña"
+            name="confirmPassword"
+            dependencies={["password"]}
+            rules={[
+              {
+                required: true,
+                message: "Por favor confirma tu contraseña",
+              },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue("password") === value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject("Las contraseñas no coinciden");
+                },
+              }),
+            ]}
+          >
+            <Input.Password />
+          </Form.Item>
+          <Button type="primary" htmlType="submit">
+            Cambiar Contraseña
+          </Button>
+        </Form>
+      </Modal>
     </Layout>
   );
 };
