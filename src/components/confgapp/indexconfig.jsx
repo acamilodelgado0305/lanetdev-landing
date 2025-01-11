@@ -9,6 +9,8 @@ import {
   message,
   Typography,
   Modal,
+  Card,
+  Avatar,
 } from "antd";
 import {
   UserOutlined,
@@ -17,6 +19,7 @@ import {
   EditOutlined,
   DeleteOutlined,
   PlusOutlined,
+  ProfileOutlined,
 } from "@ant-design/icons";
 import {
   getUsers,
@@ -36,10 +39,16 @@ const IndexConfig = () => {
   const [loading, setLoading] = useState(false);
   const { authToken } = useAuth();
   const [editingUser, setEditingUser] = useState(null);
+  const [selectedMenuKey, setSelectedMenuKey] = useState("collaborators"); // Controla el menú activo
+  const { user, userRole } = useAuth(); // Obtén los datos del usuario
+  const defaultProfilePictureUrl =
+    "https://i.pinimg.com/736x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg";
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    if (selectedMenuKey === "collaborators") {
+      fetchUsers();
+    }
+  }, [selectedMenuKey]);
 
   const openModal = () => {
     setEditingUser(null);
@@ -60,7 +69,6 @@ const IndexConfig = () => {
       setLoading(false);
     }
   };
-
   const handleDeleteCollaborator = (id) => {
     // Mostrar modal de confirmación antes de eliminar
     Modal.confirm({
@@ -86,7 +94,6 @@ const IndexConfig = () => {
     setEditingUser(record);
     setIsModalOpen(true);
   };
-
   const columns = [
     {
       title: "Nombre",
@@ -136,12 +143,16 @@ const IndexConfig = () => {
           mode="inline"
           defaultSelectedKeys={["collaborators"]}
           style={{ height: "100%", borderRight: 0 }}
+          onClick={(e) => setSelectedMenuKey(e.key)} // Cambia la sección activa
         >
           <Menu.Item key="settings" icon={<SettingOutlined />}>
             Configuraciones
           </Menu.Item>
           <Menu.Item key="collaborators" icon={<TeamOutlined />}>
             Colaboradores
+          </Menu.Item>
+          <Menu.Item key="profile" icon={<ProfileOutlined />}>
+            Perfil
           </Menu.Item>
         </Menu>
       </Sider>
@@ -159,34 +170,59 @@ const IndexConfig = () => {
             background: "#fff",
           }}
         >
-          <Link>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={openModal}
-              style={{ marginBottom: 16 }}
+          {selectedMenuKey === "collaborators" && (
+            <>
+              <Link>
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={openModal}
+                  style={{ marginBottom: 16 }}
+                >
+                  Agregar Colaborador
+                </Button>
+              </Link>
+
+              <Table
+                columns={columns}
+                dataSource={collaborators}
+                rowKey="id"
+                loading={loading}
+              />
+
+              <SignUpModal
+                isOpen={isModalOpen}
+                onClose={closeModal}
+                user={editingUser}
+                onSave={async (updatedUserData) => {
+                  await updateUser(editingUser.id, updatedUserData, authToken);
+                  fetchUsers();
+                  closeModal();
+                }}
+              />
+            </>
+          )}
+          {selectedMenuKey === "profile" && (
+            <Card
+              style={{
+                maxWidth: "400px",
+                margin: "0 auto",
+                textAlign: "center",
+                padding: "20px",
+              }}
             >
-              Agregar Colaborador
-            </Button>
-          </Link>
-
-          <Table
-            columns={columns}
-            dataSource={collaborators}
-            rowKey="id"
-            loading={loading}
-          />
-
-          <SignUpModal
-            isOpen={isModalOpen}
-            onClose={closeModal}
-            user={editingUser}
-            onSave={async (updatedUserData) => {
-              await updateUser(editingUser.id, updatedUserData, authToken);
-              fetchUsers();
-              closeModal();
-            }}
-          />
+              <Avatar
+                size={100}
+                src={user?.profilepictureurl || defaultProfilePictureUrl}
+                style={{ marginBottom: "16px" }}
+              />
+              <Title level={4}>{user?.username || "Usuario"}</Title>
+              <p>Email: {user?.email || "No disponible"}</p>
+              <p>Rol: {userRole || "No asignado"}</p>
+              <p>Dirección: {user?.address || "No disponible"}</p>
+              <p>Teléfono: {user?.phone || "No disponible"}</p>
+            </Card>
+          )}
         </Content>
       </Layout>
     </Layout>
