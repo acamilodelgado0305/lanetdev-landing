@@ -27,7 +27,8 @@ import {
   getUsers,
   updateUser,
   deleteUser,
-  updateUserInfo
+  updateUserInfo,
+  getUserById
 } from "../../services/apiService";
 import { Link } from "react-router-dom";
 import SignUpModal from "../auth/SignUpForm";
@@ -39,7 +40,7 @@ const IndexConfig = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [collaborators, setCollaborators] = useState([]);
   const [loading, setLoading] = useState(false);
-  const { authToken } = useAuth();
+  const { authToken, setUser } = useAuth();
   const [editingUser, setEditingUser] = useState(null);
   const [selectedMenuKey, setSelectedMenuKey] = useState("collaborators");
   const { user, userRole } = useAuth();
@@ -66,6 +67,16 @@ const IndexConfig = () => {
   };
 
   const closeModal = () => setIsModalOpen(false);
+
+  const fetchUser = async () => {
+    try {
+      const updatedUser = await getUserById(user.id, authToken); // Llama a la API para obtener los datos actualizados.
+      setUser(updatedUser); // Actualiza los datos del usuario en el contexto.
+    } catch (error) {
+      console.error("Error al obtener los datos del usuario:", error);
+      message.error("Error al actualizar los datos del usuario");
+    }
+  };
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -109,6 +120,7 @@ const IndexConfig = () => {
   const handleEditProfile = async (values) => {
     try {
       await updateUserInfo(user.id, values, authToken);
+      await fetchUser();
       message.success("Datos personales actualizados correctamente");
       setIsEditProfileModalOpen(false);
     } catch (error) {
