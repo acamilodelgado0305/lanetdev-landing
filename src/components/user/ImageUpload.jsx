@@ -1,12 +1,11 @@
 import React, { useState, useRef } from 'react';
-import { uploadImage, updateUserInfo } from '../../services/apiService';
+import { uploadImage, updateProfilePicture } from '../../services/apiService';
 
-const ImageUploader = ({ userId, userInfo, onUploadSuccess }) => {
+const ImageUploader = ({ userId, authToken, onUploadSuccess }) => {
     const [selectedFile, setSelectedFile] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
-    const fileInputRef = useRef(null); // Usar referencia para el input de archivo
+    const fileInputRef = useRef(null);
 
-    // Manejar la selección de la imagen
     const handleFileChange = (event) => {
         const file = event.target.files[0];
         if (file) {
@@ -14,31 +13,26 @@ const ImageUploader = ({ userId, userInfo, onUploadSuccess }) => {
         }
     };
 
-    // Subir la imagen al backend y actualizar la información del usuario
     const handleUpload = async () => {
         if (!selectedFile) return;
 
         setIsUploading(true);
 
         try {
-            // Subir la imagen
-            const imageUrl = await uploadImage(selectedFile);
+            const imageUrl = await uploadImage(selectedFile); // Subir la imagen
             console.log("URL de la imagen subida:", imageUrl);
 
-            // Actualizar la información del usuario con la nueva URL de la imagen
-            const updatedUserInfo = { ...userInfo, profilepictureurl: imageUrl };
-            await updateUserInfo(userId, updatedUserInfo);
+            // Llamar al backend para actualizar la URL de la imagen
+            await updateProfilePicture(userId, imageUrl, authToken);
 
-            // Notificar al componente padre con la nueva URL de la imagen
-            onUploadSuccess(imageUrl);
+            onUploadSuccess(imageUrl); // Notificar al padre
 
-            // Limpiar el archivo seleccionado después de subir
             setSelectedFile(null);
             if (fileInputRef.current) {
                 fileInputRef.current.value = '';
             }
         } catch (error) {
-            console.error('Error al subir la imagen y actualizar la información del usuario:', error);
+            console.error('Error al subir la imagen:', error);
         } finally {
             setIsUploading(false);
         }
@@ -46,36 +40,25 @@ const ImageUploader = ({ userId, userInfo, onUploadSuccess }) => {
 
     return (
         <div className="flex flex-col items-center">
-            {/* Input para seleccionar la imagen */}
             <input
                 type="file"
                 onChange={handleFileChange}
                 className="hidden"
                 ref={fileInputRef}
-                aria-label="Seleccionar imagen para subir"
             />
-
-            {/* Botón para seleccionar la imagen */}
             {!isUploading && !selectedFile && (
                 <button
                     onClick={() => fileInputRef.current.click()}
-                    className="mt-4 px-4 py-2 rounded-full bg-blue-500 text-white font-semibold hover:bg-blue-600 focus:outline-none transition duration-200"
-                    aria-label="Seleccionar imagen"
+                    className="btn btn-primary"
                 >
                     Actualizar Imagen
                 </button>
             )}
-
-            {/* Botón para subir la imagen después de seleccionarla */}
             {selectedFile && (
                 <button
                     onClick={handleUpload}
                     disabled={isUploading}
-                    className={`mt-4 px-4 py-2 rounded-full text-white font-semibold focus:outline-none transition duration-200 ${isUploading
-                        ? 'bg-gray-400 cursor-not-allowed'
-                        : 'bg-blue-500 hover:bg-blue-600'
-                        }`}
-                    aria-label="Subir imagen seleccionada"
+                    className="btn btn-secondary"
                 >
                     {isUploading ? 'Subiendo...' : 'Subir Imagen'}
                 </button>
@@ -83,5 +66,4 @@ const ImageUploader = ({ userId, userInfo, onUploadSuccess }) => {
         </div>
     );
 };
-
 export default ImageUploader;

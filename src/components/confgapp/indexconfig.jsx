@@ -27,6 +27,7 @@ import {
   getUsers,
   updateUser,
   deleteUser,
+  updateUserInfo
 } from "../../services/apiService";
 import { Link } from "react-router-dom";
 import SignUpModal from "../auth/SignUpForm";
@@ -48,8 +49,11 @@ const IndexConfig = () => {
   const [profilePictureUrl, setProfilePictureUrl] = useState(user?.profilepictureurl || defaultProfilePictureUrl);
   const [form] = Form.useForm();
 
-  const defaultProfilePictureUrl =
-    "https://i.pinimg.com/736x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg";
+  const defaultProfilePictureUrl = "https://i.pinimg.com/736x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg";
+
+  useEffect(() => {
+    setProfilePictureUrl(user?.profilePicture || defaultProfilePictureUrl);
+  }, [user]);
 
   useEffect(() => {
     if (selectedMenuKey === "collaborators") {
@@ -102,21 +106,18 @@ const IndexConfig = () => {
     setIsModalOpen(true);
   };
 
-  const handleUploadSuccess = (url) => {
-    setProfilePictureUrl(url); // Actualiza el estado de la imagen cargada
-    form.setFieldsValue({ profilepictureurl: url }); // Actualiza el valor en el formulario
-    message.success("Imagen de perfil actualizada correctamente");
-  };
 
   const handleEditProfile = async (values) => {
     try {
-      await updateUser(user.id, values, authToken);
-      message.success("Perfil actualizado con éxito");
+      await updateUserInfo(user.id, values, authToken);
+      message.success("Datos personales actualizados correctamente");
       setIsEditProfileModalOpen(false);
     } catch (error) {
-      message.error("Error al actualizar el perfil");
+      console.error("Error al actualizar los datos:", error);
+      message.error("Error al actualizar los datos personales");
     }
   };
+
 
   const handleChangePassword = async (values) => {
     try {
@@ -277,7 +278,21 @@ const IndexConfig = () => {
         </Content>
       </Layout>
 
-      {/* Modal para editar perfil */}
+      <div style={{ textAlign: "center", marginBottom: "16px" }}>
+        <Avatar
+          size={100}
+          src={profilePictureUrl} // Mostrar la imagen actual del usuario
+          style={{ marginBottom: "16px" }}
+        />
+        <ImageUploader
+          userId={user?.id}
+          authToken={authToken} // Asegúrate de pasar el token
+          onUploadSuccess={(uploadedUrl) => {
+            setProfilePictureUrl(uploadedUrl);
+            message.success("Imagen de perfil actualizada correctamente");
+          }}
+        />
+      </div>
       <Modal
         title="Editar Perfil"
         visible={isEditProfileModalOpen}
@@ -290,51 +305,14 @@ const IndexConfig = () => {
           onFinish={handleEditProfile}
           initialValues={{
             username: user?.username,
-            email: user?.email,
             address: user?.address,
             phone: user?.phone,
           }}
         >
-          {/* Imagen de perfil con opciones de borrar y cargar nueva */}
-          <div style={{ marginBottom: "16px", textAlign: "center" }}>
-            <Avatar
-              size={100}
-              src={profilePictureUrl}
-              style={{ marginBottom: "16px" }}
-            />
-            <div>
-              <Button
-                type="default"
-                onClick={() => setProfilePictureUrl(defaultProfilePictureUrl)}
-                style={{ marginRight: "8px" }}
-              >
-                Borrar Imagen
-              </Button>
-              <ImageUploader
-                userId={user?.id}
-                userInfo={user}
-                onUploadSuccess={handleUploadSuccess}
-              />
-            </div>
-          </div>
-
-          {/* Campos del formulario */}
           <Form.Item
             label="Nombre"
             name="username"
-            rules={[
-              { required: true, message: "Por favor ingresa tu nombre" },
-            ]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            label="Email"
-            name="email"
-            rules={[
-              { required: true, message: "Por favor ingresa tu email" },
-              { type: "email", message: "Por favor ingresa un email válido" },
-            ]}
+            rules={[{ required: true, message: "Por favor ingresa tu nombre" }]}
           >
             <Input />
           </Form.Item>
@@ -352,6 +330,7 @@ const IndexConfig = () => {
           >
             <Input />
           </Form.Item>
+
           <Button type="primary" htmlType="submit">
             Guardar Cambios
           </Button>
