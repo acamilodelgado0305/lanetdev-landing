@@ -255,18 +255,34 @@ const IndexConfig = () => {
           {selectedMenuKey === "profile" && (
             <Card
               style={{
-                maxWidth: "400px",
-                margin: "0 auto",
+                maxWidth: "600px",
+                margin: "20px auto",
                 textAlign: "center",
-                padding: "20px",
+                padding: "30px",
+                boxShadow: "0px 8px 20px rgba(0, 0, 0, 0.1)",
+                borderRadius: "15px",
+                backgroundColor: "#ffffff",
+                border: "1px solid #eaeaea",
               }}
             >
               {/* Sección para mostrar y actualizar la imagen */}
-              <div style={{ textAlign: "center", marginBottom: "16px" }}>
+              <div
+                style={{
+                  textAlign: "center",
+                  marginBottom: "20px",
+                  padding: "20px",
+                  backgroundColor: "#f0f2f5",
+                  borderRadius: "10px",
+                }}
+              >
                 <Avatar
                   size={100}
                   src={profilePictureUrl}
-                  style={{ marginBottom: "16px" }}
+                  style={{
+                    marginBottom: "16px",
+                    boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.15)",
+                    border: "3px solid #1890ff",
+                  }}
                 />
                 <ImageUploader
                   userId={user?.id}
@@ -274,23 +290,43 @@ const IndexConfig = () => {
                   onUploadSuccess={handleUploadSuccess}
                 />
               </div>
-              {/* Fin de la sección para la imagen */}
-              <Title level={4}>{user?.username || "Usuario"}</Title>
-              <p>Email: {user?.email || "No disponible"}</p>
-              <p>Rol: {userRole || "No asignado"}</p>
-              <p>Dirección: {user?.address || "No disponible"}</p>
-              <p>Teléfono: {user?.phone || "No disponible"}</p>
+              <Title level={3} style={{ marginBottom: "20px", color: "#1890ff" }}>
+                {user?.username || "Usuario"}
+              </Title>
+
+              <p style={{ fontSize: "18px", color: "#555", marginBottom: "15px" }}>
+                <strong>Email:</strong> {user?.email || "No disponible"}
+              </p>
+              <p style={{ fontSize: "18px", color: "#555", marginBottom: "15px" }}>
+                <strong>Rol:</strong> {userRole || "No asignado"}
+              </p>
+              <p style={{ fontSize: "18px", color: "#555", marginBottom: "15px" }}>
+                <strong>Dirección:</strong> {user?.address || "No disponible"}
+              </p>
+              <p style={{ fontSize: "18px", color: "#555", marginBottom: "15px" }}>
+                <strong>Teléfono:</strong> {user?.phone || "No disponible"}
+              </p>
               <Button
                 type="primary"
                 onClick={() => setIsEditProfileModalOpen(true)}
-                style={{ marginTop: 16 }}
+                style={{
+                  padding: "12px 24px",
+                  fontSize: "16px",
+                  borderRadius: "8px",
+                  fontWeight: "bold",
+                }}
               >
                 Editar Perfil
               </Button>
               <Button
                 danger
                 onClick={() => setIsChangePasswordModalOpen(true)}
-                style={{ marginTop: 8 }}
+                style={{
+                  padding: "12px 24px",
+                  fontSize: "16px",
+                  borderRadius: "8px",
+                  fontWeight: "bold",
+                }}
               >
                 Cambiar Contraseña
               </Button>
