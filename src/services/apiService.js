@@ -151,3 +151,20 @@ export const uploadImage = async (file, token) => {
         throw error;
     }
 };
+export const updateProfilePicture = async (userId, profilePictureUrl, authToken) => {
+    try {
+        const response = await authApi.put(
+            `/${userId}/profile-picture`,
+            { profilepictureurl: profilePictureUrl },
+            {
+                headers: {
+                    Authorization: `Bearer ${authToken}`,
+                },
+            }
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error al actualizar la imagen de perfil:', error);
+        throw error;
+    }
+};
