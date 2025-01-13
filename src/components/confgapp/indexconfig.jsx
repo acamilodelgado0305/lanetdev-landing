@@ -35,15 +35,14 @@ import { useAuth } from '../../components/Context/AuthProvider';
 import ImageUploader from "../../components/user/ImageUpload"
 const { Header, Content, Sider } = Layout;
 const { Title } = Typography;
-
 const IndexConfig = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [collaborators, setCollaborators] = useState([]);
   const [loading, setLoading] = useState(false);
   const { authToken } = useAuth();
   const [editingUser, setEditingUser] = useState(null);
-  const [selectedMenuKey, setSelectedMenuKey] = useState("collaborators"); // Controla el menú activo
-  const { user, userRole } = useAuth(); // Obtén los datos del usuario
+  const [selectedMenuKey, setSelectedMenuKey] = useState("collaborators");
+  const { user, userRole } = useAuth();
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
   const [profilePictureUrl, setProfilePictureUrl] = useState(user?.profilepictureurl || defaultProfilePictureUrl);
@@ -52,7 +51,7 @@ const IndexConfig = () => {
   const defaultProfilePictureUrl = "https://i.pinimg.com/736x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg";
 
   useEffect(() => {
-    setProfilePictureUrl(user?.profilePicture || defaultProfilePictureUrl);
+    setProfilePictureUrl(user?.profilepictureurl || defaultProfilePictureUrl);
   }, [user]);
 
   useEffect(() => {
@@ -71,7 +70,7 @@ const IndexConfig = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const data = await getUsers(1, 10, '', authToken);
+      const data = await getUsers(1, 10, "", authToken);
       setCollaborators(data);
     } catch (err) {
       message.error("Error al cargar los colaboradores");
@@ -118,10 +117,8 @@ const IndexConfig = () => {
     }
   };
 
-
   const handleChangePassword = async (values) => {
     try {
-      // Simula un llamado a la API para cambiar la contraseña
       console.log("Nueva contraseña:", values.password);
       message.success("Contraseña cambiada con éxito");
       setIsChangePasswordModalOpen(false);
@@ -130,8 +127,10 @@ const IndexConfig = () => {
     }
   };
 
-
-
+  const handleUploadSuccess = (uploadedUrl) => {
+    setProfilePictureUrl(uploadedUrl);
+    message.success("Imagen de perfil actualizada correctamente");
+  };
   const columns = [
     {
       title: "Nombre",
@@ -174,6 +173,7 @@ const IndexConfig = () => {
     },
   ];
 
+
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Sider width={200} theme="light">
@@ -181,7 +181,7 @@ const IndexConfig = () => {
           mode="inline"
           defaultSelectedKeys={["collaborators"]}
           style={{ height: "100%", borderRight: 0 }}
-          onClick={(e) => setSelectedMenuKey(e.key)} // Cambia la sección activa
+          onClick={(e) => setSelectedMenuKey(e.key)}
         >
           <Menu.Item key="settings" icon={<SettingOutlined />}>
             Configuraciones
@@ -249,11 +249,20 @@ const IndexConfig = () => {
                 padding: "20px",
               }}
             >
-              <Avatar
-                size={100}
-                src={user?.profilepictureurl || defaultProfilePictureUrl}
-                style={{ marginBottom: "16px" }}
-              />
+              {/* Sección para mostrar y actualizar la imagen */}
+              <div style={{ textAlign: "center", marginBottom: "16px" }}>
+                <Avatar
+                  size={100}
+                  src={profilePictureUrl}
+                  style={{ marginBottom: "16px" }}
+                />
+                <ImageUploader
+                  userId={user?.id}
+                  authToken={authToken}
+                  onUploadSuccess={handleUploadSuccess}
+                />
+              </div>
+              {/* Fin de la sección para la imagen */}
               <Title level={4}>{user?.username || "Usuario"}</Title>
               <p>Email: {user?.email || "No disponible"}</p>
               <p>Rol: {userRole || "No asignado"}</p>
@@ -277,22 +286,6 @@ const IndexConfig = () => {
           )}
         </Content>
       </Layout>
-
-      <div style={{ textAlign: "center", marginBottom: "16px" }}>
-        <Avatar
-          size={100}
-          src={profilePictureUrl} // Mostrar la imagen actual del usuario
-          style={{ marginBottom: "16px" }}
-        />
-        <ImageUploader
-          userId={user?.id}
-          authToken={authToken} // Asegúrate de pasar el token
-          onUploadSuccess={(uploadedUrl) => {
-            setProfilePictureUrl(uploadedUrl);
-            message.success("Imagen de perfil actualizada correctamente");
-          }}
-        />
-      </div>
       <Modal
         title="Editar Perfil"
         visible={isEditProfileModalOpen}
