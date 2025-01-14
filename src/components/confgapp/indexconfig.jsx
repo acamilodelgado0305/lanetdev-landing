@@ -28,7 +28,8 @@ import {
   updateUser,
   deleteUser,
   updateUserInfo,
-  getUserById
+  getUserById,
+  changePassword
 } from "../../services/apiService";
 import { Link } from "react-router-dom";
 import SignUpModal from "../auth/SignUpForm";
@@ -131,11 +132,18 @@ const IndexConfig = () => {
 
   const handleChangePassword = async (values) => {
     try {
-      console.log("Nueva contraseña:", values.password);
+      setLoading(true); // Muestra un estado de carga mientras se realiza la solicitud
+
+      // Llama al servicio para cambiar la contraseña
+      await changePassword(user.id, values.currentPassword, values.newPassword, authToken);
+
       message.success("Contraseña cambiada con éxito");
+      form.resetFields(); // Limpia los campos del formulario
+      setLoading(false);
       setIsChangePasswordModalOpen(false);
     } catch (error) {
-      message.error("Error al cambiar la contraseña");
+      message.error("Error al cambiar la contraseña: " + (error.response?.data?.message || error.message));
+      setLoading(false);
     }
   };
 
@@ -383,43 +391,42 @@ const IndexConfig = () => {
       <Modal
         title="Cambiar Contraseña"
         visible={isChangePasswordModalOpen}
-        onCancel={() => setIsChangePasswordModalOpen(false)}
         footer={null}
+        onCancel={() => {
+          form.resetFields();
+          setIsChangePasswordModalOpen(false);
+        }}
       >
-        <Form layout="vertical" onFinish={handleChangePassword}>
+        <Form
+          form={form} // Vincula el formulario con su instancia
+          layout="vertical"
+          onFinish={handleChangePassword}
+          initialValues={{ currentPassword: "", newPassword: "" }}
+        >
           <Form.Item
-            label="Nueva Contraseña"
-            name="password"
+            label="Contraseña actual"
+            name="currentPassword"
             rules={[
-              { required: true, message: "Por favor ingresa una contraseña" },
+              { required: true, message: "Por favor, introduce tu contraseña actual" },
             ]}
           >
-            <Input.Password />
+            <Input.Password placeholder="Contraseña actual" />
           </Form.Item>
           <Form.Item
-            label="Confirmar Contraseña"
-            name="confirmPassword"
-            dependencies={["password"]}
+            label="Nueva contraseña"
+            name="newPassword"
             rules={[
-              {
-                required: true,
-                message: "Por favor confirma tu contraseña",
-              },
-              ({ getFieldValue }) => ({
-                validator(_, value) {
-                  if (!value || getFieldValue("password") === value) {
-                    return Promise.resolve();
-                  }
-                  return Promise.reject("Las contraseñas no coinciden");
-                },
-              }),
+              { required: true, message: "Por favor, introduce tu nueva contraseña" },
+              { min: 6, message: "La contraseña debe tener al menos 6 caracteres" },
             ]}
           >
-            <Input.Password />
+            <Input.Password placeholder="Nueva contraseña" />
           </Form.Item>
-          <Button type="primary" htmlType="submit">
-            Cambiar Contraseña
-          </Button>
+          <Form.Item>
+            <Button type="primary" htmlType="submit" loading={loading} block>
+              Cambiar contraseña
+            </Button>
+          </Form.Item>
         </Form>
       </Modal>
     </Layout>

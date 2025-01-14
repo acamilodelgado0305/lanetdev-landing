@@ -168,3 +168,20 @@ export const updateProfilePicture = async (userId, profilePictureUrl, authToken)
         throw error;
     }
 };
+export const changePassword = async (userId, currentPassword, newPassword, token) => {
+    try {
+        const response = await authApi.put(
+            `/users/${userId}/change-password`,
+            { currentPassword, newPassword },
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`, // Pasar el token directamente
+                },
+            }
+        );
+        return response.data; // Respuesta del backend
+    } catch (error) {
+        console.error('Error al cambiar la contraseña:', error.response ? error.response.data : error.message);
+        throw error;
+    }
+};
