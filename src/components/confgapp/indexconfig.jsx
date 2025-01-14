@@ -132,13 +132,13 @@ const IndexConfig = () => {
 
   const handleChangePassword = async (values) => {
     try {
-      setLoading(true); // Muestra un estado de carga mientras se realiza la solicitud
+      setLoading(true);
 
       // Llama al servicio para cambiar la contraseña
       await changePassword(user.id, values.currentPassword, values.newPassword, authToken);
 
       message.success("Contraseña cambiada con éxito");
-      form.resetFields(); // Limpia los campos del formulario
+      form.resetFields();
       setLoading(false);
       setIsChangePasswordModalOpen(false);
     } catch (error) {
