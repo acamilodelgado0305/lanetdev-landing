@@ -185,3 +185,24 @@ export const changePassword = async (userId, currentPassword, newPassword, token
         throw error;
     }
 };
+// Función para solicitar la recuperación de contraseña
+export const requestPasswordRecovery = async (email) => {
+    try {
+        const response = await authApi.post('/forgot-password', { email });
+        return response.data; // Mensaje de éxito o confirmación
+    } catch (error) {
+        console.error('Error al solicitar recuperación de contraseña:', error.response ? error.response.data : error.message);
+        throw error;
+    }
+};
+
+// Función para confirmar el cambio de contraseña con el token enviado al correo
+export const confirmPasswordChange = async (token, newPassword) => {
+    try {
+        const response = await authApi.put('/reset-password', { token, newPassword });
+        return response.data; // Mensaje de éxito o confirmación
+    } catch (error) {
+        console.error('Error al confirmar cambio de contraseña:', error.response ? error.response.data : error.message);
+        throw error;
+    }
+};
