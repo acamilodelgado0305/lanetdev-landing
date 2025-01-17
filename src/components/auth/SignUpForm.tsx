@@ -64,7 +64,7 @@ const SignUpModal: React.FC<SignUpModalProps> = ({ isOpen, onClose }) => {
                     <Controller
                         name="email"
                         control={control}
-                        rules={{ 
+                        rules={{
                             required: 'El correo electrónico es requerido',
                             pattern: {
                                 value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,

@@ -5,6 +5,7 @@ import "./index.css";
 
 import ErrorPage from "./error-page";
 import LoginForm from "./components/auth/LoginForm";
+import ResetPassword from "./components/auth/ResetPassword.jsx"
 import SignUpForm from "./components/auth/SignUpForm";
 import Landing from "./components/landing/landing";
 import Index from "./components/";
@@ -38,6 +39,11 @@ const router = createBrowserRouter([
     path: "/login",
     element: <LoginForm />,
   },
+  {
+    path: "/reset-password",
+    element: <ResetPassword />,
+  },
+
   {
     path: "/signup",
     element: <SignUpForm />,
