@@ -1,13 +1,10 @@
 import React, { useState } from "react";
-import { Button, Dropdown, Menu, Tooltip, Modal, Drawer } from "antd";
+import { Table, Button, Drawer, Tooltip } from "antd";
 import { format as formatDate } from "date-fns";
-import { FilterOutlined, CaretDownOutlined } from "@ant-design/icons";
-import _ from "lodash";
 import IncomeDetailModal from "./IncomeDetailsModal";
 
+
 const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
-    const [columnFilters, setColumnFilters] = useState({});
-    const [hoveredRow, setHoveredRow] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedEntry, setSelectedEntry] = useState(null);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -40,7 +37,7 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
 
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.download = url.split("/").pop(); // Usa el nombre original de la imagen
+            link.download = url.split("/").pop();
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -58,47 +55,6 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
             console.error("Error al descargar las imágenes:", error);
         }
     };
-
-    const getUniqueValues = (field) => {
-        return _.uniq(
-            entries.map((entry) => {
-                if (field === "category") return getCategoryName(entry.category_id);
-                if (field === "account") return getAccountName(entry.account_id);
-                return entry[field];
-            })
-        ).filter(Boolean);
-    };
-
-    const getFilterMenu = (field) => (
-        <Menu
-            items={getUniqueValues(field).map((value) => ({
-                key: value,
-                label: (
-                    <div className="flex items-center">
-                        <input
-                            type="checkbox"
-                            checked={columnFilters[field]?.includes(value)}
-                            onChange={(e) => {
-                                let newFilters = { ...columnFilters };
-                                if (!newFilters[field]) newFilters[field] = [];
-                                if (e.target.checked) {
-                                    newFilters[field] = [...newFilters[field], value];
-                                } else {
-                                    newFilters[field] = newFilters[field].filter(
-                                        (v) => v !== value
-                                    );
-                                }
-                                if (newFilters[field].length === 0)
-                                    delete newFilters[field];
-                                setColumnFilters(newFilters);
-                            }}
-                        />
-                        <span className="ml-2">{value}</span>
-                    </div>
-                ),
-            }))}
-        />
-    );
 
     const openModal = (entry) => {
         setSelectedEntry(entry);
@@ -120,117 +76,112 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
         setSelectedImages([]);
     };
 
-
+    // Definición de las columnas con filtros, búsqueda y ordenación
     const columns = [
-        { title: "Fecha", field: "date", width: "100px" },
-        { title: "Descripción", field: "description", width: "200px" },
-        { title: "Cuenta", field: "account", width: "150px" },
-        { title: "Categoría", field: "category", width: "150px" },
-        { title: "Monto Total", field: "amount", width: "120px" },
-        { title: "Monto FEV", field: "amountfev", width: "120px" },
-        { title: "Monto Diverse", field: "amountdiverse", width: "120px" },
-        { title: "Tipo", field: "type", width: "100px" },
-        { title: "Comprobante", field: "voucher", width: "120px" },
+        {
+            title: "Fecha",
+            dataIndex: "date",
+            key: "date",
+            filterSearch: true,
+            filters: [...new Set(entries.map((entry) => formatDate(new Date(entry.date), "d MMM yyyy")))].map((formattedDate) => ({
+                text: formattedDate,
+                value: formattedDate,
+            })),
+            render: (text) => formatDate(new Date(text), "d MMM yyyy"),
+            sorter: (a, b) => new Date(a.date) - new Date(b.date), // Orden cronológico
+            sortDirections: ["descend", "ascend"], // De más reciente a más antiguo
+        },
+        {
+            title: "Descripción",
+            dataIndex: "description",
+            key: "description",
+            filterSearch: true,
+            filters: [...new Set(entries.map((entry) => entry.description))].map((desc) => ({
+                text: desc,
+                value: desc,
+            })),
+            onFilter: (value, record) => record.description.includes(value), // Filtro por texto
+            sorter: (a, b) => a.description.localeCompare(b.description), // A-Z
+            sortDirections: ["ascend", "descend"], // Orden alfabético
+        },
+        {
+            title: "Cuenta",
+            dataIndex: "account_id",
+            key: "account_id",
+            filterSearch: true,
+            render: (id) => getAccountName(id),
+            filters: [...new Set(entries.map((entry) => getAccountName(entry.account_id)))].map((name) => ({
+                text: name,
+                value: name,
+            })),
+            onFilter: (value, record) => getAccountName(record.account_id) === value, // Filtro exacto
+            sorter: (a, b) => getAccountName(a.account_id).localeCompare(getAccountName(b.account_id)), // A-Z
+            sortDirections: ["ascend", "descend"],
+        },
+        {
+            title: "Categoría",
+            dataIndex: "category_id",
+            key: "category_id",
+            filterSearch: true,
+            render: (id) => getCategoryName(id),
+            filters: [...new Set(entries.map((entry) => getCategoryName(entry.category_id)))].map((name) => ({
+                text: name,
+                value: name,
+            })),
+
+            onFilter: (value, record) => getCategoryName(record.category_id) === value,
+            sorter: (a, b) => getCategoryName(a.category_id).localeCompare(getCategoryName(b.category_id)),
+            sortDirections: ["ascend", "descend"],
+        },
+        {
+            title: "Monto Total",
+            dataIndex: "amount",
+            key: "amount",
+            filterSearch: true,
+            filters: [...new Set(entries.map((entry) => entry.amount))].map((amount) => ({
+                text: formatCurrency(amount),
+                value: amount,
+            })),
+            onFilter: (value, record) => record.amount === value,
+            render: (amount) => formatCurrency(amount),
+            sorter: (a, b) => a.amount - b.amount,
+            sortDirections: ["descend", "ascend"],
+        },
+        {
+            title: "Comprobante",
+            dataIndex: "voucher",
+            key: "voucher",
+            filterSearch: true,
+            render: (vouchers) =>
+                Array.isArray(vouchers) && vouchers.length > 0 ? (
+                    <a
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            openDrawer(vouchers);
+                        }}
+                        className="text-blue-500 underline"
+                    >
+                        Ver comprobante
+                    </a>
+                ) : (
+                    "—"
+                ),
+        },
     ];
 
     return (
         <>
-            <div className="overflow-auto h-[39em]">
-                <table className="w-full relative table-fixed border-collapse">
-                    <thead className="sticky top-0 z-5 bg-white">
-                        <tr className="border-b border-gray-200">
-                            {columns.map((column) => (
-                                <th
-                                    key={column.field}
-                                    style={{ width: column.width }}
-                                    className="border-r border-gray-200 bg-gray-50 p-0"
-                                >
-                                    <div className="flex items-center justify-between px-3 py-2">
-                                        <span className="text-xs font-medium text-gray-500">
-                                            {column.title}
-                                        </span>
-                                        <Dropdown
-                                            overlay={getFilterMenu(column.field)}
-                                            trigger={["click"]}
-                                        >
-                                            <Button
-                                                type="text"
-                                                size="small"
-                                                className="text-gray-400"
-                                                icon={<FilterOutlined />}
-                                            >
-                                                <CaretDownOutlined style={{ fontSize: "10px" }} />
-                                            </Button>
-                                        </Dropdown>
-                                    </div>
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {entries.map((entry, rowIndex) => (
-                            <Tooltip
-                                key={rowIndex}
-                                title={`Fila: ${rowIndex + 1}, Descripción: ${entry.description}`}
-                                placement="top"
-                            >
-                                <tr
-                                    style={{ cursor: "pointer" }}
-                                    className={`border-b hover:bg-gray-50 ${hoveredRow === rowIndex ? "bg-gray-50" : ""
-                                        }`}
-                                    onMouseEnter={() => setHoveredRow(rowIndex)}
-                                    onMouseLeave={() => setHoveredRow(null)}
-                                    onClick={() => openModal(entry)}
-                                >
-                                    <td className="border-r border-gray-200 p-2 truncate">
-                                        {formatDate(new Date(entry.date), "d MMM yyyy")}
-                                    </td>
-                                    <td className="border-r border-gray-200 p-2 truncate">
-                                        {entry.description}
-                                    </td>
-                                    <td className="border-r border-gray-200 p-2 truncate">
-                                        {getAccountName(entry.account_id)}
-                                    </td>
-                                    <td className="border-r border-gray-200 p-2 truncate">
-                                        {getCategoryName(entry.category_id)}
-                                    </td>
-                                    <td className="border-r border-gray-200 p-2 truncate font-medium text-green-600">
-                                        +{formatCurrency(entry.amount)}
-                                    </td>
-                                    <td className="border-r border-gray-200 p-2 truncate text-blue-600">
-                                        +{formatCurrency(entry.amountfev)}
-                                    </td>
-                                    <td className="border-r border-gray-200 p-2 truncate text-blue-600">
-                                        +{formatCurrency(entry.amountdiverse)}
-                                    </td>
-                                    <td className="border-r border-gray-200 p-2 truncate">
-                                        {entry.type}
-                                    </td>
-                                    <td className="border-r border-gray-200 p-2 truncate">
-                                        {Array.isArray(entry.voucher) && entry.voucher.length > 0 ? (
-                                            <a
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    const voucherArray = entry.voucher.filter(
-                                                        (voucherUrl) => typeof voucherUrl === "string" && voucherUrl.trim() !== ""
-                                                    ); // Asegurarse de que sean cadenas no vacías
-                                                    openDrawer(voucherArray); // Pasa las URLs al Drawer
-                                                }}
-                                                className="text-blue-500 underline"
-                                            >
-                                                Ver comprobante
-                                            </a>
-                                        ) : (
-                                            "—"
-                                        )}
-                                    </td>
+            <Table
+                dataSource={entries}
+                columns={columns}
+                rowKey={(record) => record.id}
+                pagination={{ pageSize: 10 }}
+                bordered
+                onRow={(record) => ({
+                    onClick: () => openModal(record),
+                })}
 
-                                </tr>
-                            </Tooltip>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+            />
             <Drawer
                 visible={isDrawerOpen}
                 onClose={closeDrawer}
@@ -249,8 +200,8 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
                                 />
                                 <Button
                                     type="link"
-                                    className="mx-20 absolute bottom-2   text-white bg-green-600"
-                                    onClick={() => downloadImage(image)} // Descarga individual
+                                    className="mx-20 absolute bottom-2 text-white bg-green-600"
+                                    onClick={() => downloadImage(image)}
                                 >
                                     Descargar
                                 </Button>
@@ -258,7 +209,11 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
                         ))}
                     </div>
                     {selectedImages.length > 1 && (
-                        <Button type="primary" onClick={() => downloadAllImages(selectedImages)} className=" text-white bg-green-600">
+                        <Button
+                            type="primary"
+                            onClick={() => downloadAllImages(selectedImages)}
+                            className="text-white bg-green-600"
+                        >
                             Descargar todas
                         </Button>
                     )}
