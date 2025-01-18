@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import axios from 'axios';
 
@@ -8,6 +8,7 @@ const ResetPassword = () => {
     const token = searchParams.get('token');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -24,6 +25,7 @@ const ResetPassword = () => {
             });
 
             Swal.fire('Éxito', 'Tu contraseña ha sido restablecida correctamente', 'success');
+            navigate('/login');
         } catch (error) {
             Swal.fire('Error', error.response.data.message || 'Hubo un problema al restablecer la contraseña', 'error');
         }

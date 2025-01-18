@@ -4,7 +4,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./index.css";
 
 import ErrorPage from "./error-page";
-import LoginForm from "./components/auth/LoginForm";
+import LoginForm from "./components/auth/LoginForm.jsx";
 import ResetPassword from "./components/auth/ResetPassword.jsx"
 import SignUpForm from "./components/auth/SignUpForm";
 import Landing from "./components/landing/landing";
