@@ -3,6 +3,7 @@ import { Table, Button, Drawer, Tooltip } from "antd";
 import { format as formatDate } from "date-fns";
 import IncomeDetailModal from "./IncomeDetailsModal";
 
+
 const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedEntry, setSelectedEntry] = useState(null);
@@ -36,7 +37,7 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
 
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.download = url.split("/").pop(); // Usa el nombre original de la imagen
+            link.download = url.split("/").pop();
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -54,7 +55,6 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
             console.error("Error al descargar las imágenes:", error);
         }
     };
-
 
     const openModal = (entry) => {
         setSelectedEntry(entry);
@@ -76,14 +76,20 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
         setSelectedImages([]);
     };
 
-    // Definición de las columnas con filtros y ordenación
+    // Definición de las columnas con filtros, búsqueda y ordenación
     const columns = [
         {
             title: "Fecha",
             dataIndex: "date",
             key: "date",
+            filterSearch: true,
+            filters: [...new Set(entries.map((entry) => formatDate(new Date(entry.date), "d MMM yyyy")))].map((formattedDate) => ({
+                text: formattedDate,
+                value: formattedDate,
+            })),
             render: (text) => formatDate(new Date(text), "d MMM yyyy"),
-            sorter: (a, b) => new Date(a.date) - new Date(b.date),
+            sorter: (a, b) => new Date(a.date) - new Date(b.date), // Orden cronológico
+            sortDirections: ["descend", "ascend"], // De más reciente a más antiguo
         },
         {
             title: "Descripción",
@@ -94,41 +100,58 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
                 text: desc,
                 value: desc,
             })),
-            onFilter: (value, record) => record.description.includes(value),
+            onFilter: (value, record) => record.description.includes(value), // Filtro por texto
+            sorter: (a, b) => a.description.localeCompare(b.description), // A-Z
+            sortDirections: ["ascend", "descend"], // Orden alfabético
         },
         {
             title: "Cuenta",
             dataIndex: "account_id",
             key: "account_id",
+            filterSearch: true,
             render: (id) => getAccountName(id),
             filters: [...new Set(entries.map((entry) => getAccountName(entry.account_id)))].map((name) => ({
                 text: name,
                 value: name,
             })),
-            onFilter: (value, record) => getAccountName(record.account_id) === value,
+            onFilter: (value, record) => getAccountName(record.account_id) === value, // Filtro exacto
+            sorter: (a, b) => getAccountName(a.account_id).localeCompare(getAccountName(b.account_id)), // A-Z
+            sortDirections: ["ascend", "descend"],
         },
         {
             title: "Categoría",
             dataIndex: "category_id",
             key: "category_id",
+            filterSearch: true,
             render: (id) => getCategoryName(id),
             filters: [...new Set(entries.map((entry) => getCategoryName(entry.category_id)))].map((name) => ({
                 text: name,
                 value: name,
             })),
+
             onFilter: (value, record) => getCategoryName(record.category_id) === value,
+            sorter: (a, b) => getCategoryName(a.category_id).localeCompare(getCategoryName(b.category_id)),
+            sortDirections: ["ascend", "descend"],
         },
         {
             title: "Monto Total",
             dataIndex: "amount",
             key: "amount",
+            filterSearch: true,
+            filters: [...new Set(entries.map((entry) => entry.amount))].map((amount) => ({
+                text: formatCurrency(amount),
+                value: amount,
+            })),
+            onFilter: (value, record) => record.amount === value,
             render: (amount) => formatCurrency(amount),
             sorter: (a, b) => a.amount - b.amount,
+            sortDirections: ["descend", "ascend"],
         },
         {
             title: "Comprobante",
             dataIndex: "voucher",
             key: "voucher",
+            filterSearch: true,
             render: (vouchers) =>
                 Array.isArray(vouchers) && vouchers.length > 0 ? (
                     <a
@@ -153,10 +176,11 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
                 columns={columns}
                 rowKey={(record) => record.id}
                 pagination={{ pageSize: 10 }}
+                bordered
                 onRow={(record) => ({
                     onClick: () => openModal(record),
                 })}
-                bordered
+
             />
             <Drawer
                 visible={isDrawerOpen}
