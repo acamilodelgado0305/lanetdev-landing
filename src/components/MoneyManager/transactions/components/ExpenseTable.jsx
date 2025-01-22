@@ -149,15 +149,16 @@ const ExpenseTable = ({
         },
         {
             title: 'Estado',
-            dataIndex: 'recurrent',
+            dataIndex: 'estado',
+            key: 'estado',
             width: '120px',
             filterSearch: true,
-            filters: [...new Set(entries.map((entry) => entry.recurrent))].map((status) => ({
+            filters: [...new Set(entries.map((entry) => entry.estado))].map((status) => ({
                 text: status,
                 value: status,
             })),
-            onFilter: (value, record) => (record.recurrent ? 'Sí' : 'No') === value,
-            sorter: (a, b) => a.amount - b.amount,
+            onFilter: (value, record) => (record.estado ? 'Sí' : 'No') === value,
+            sorter: (a, b) => a.estado - b.estado,
             sortDirections: ["ascend", "descend"],
         },
         {
