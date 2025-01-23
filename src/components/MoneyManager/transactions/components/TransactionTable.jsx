@@ -1,17 +1,11 @@
 import React, { useState } from 'react';
-import { Button, Tooltip, Dropdown, Menu, Drawer } from 'antd';
+import { Button, Table, Tooltip, Drawer } from 'antd';
 import { format as formatDate } from 'date-fns';
-import {
-    FileTextOutlined,
-    FilterOutlined,
-    CaretDownOutlined
-} from '@ant-design/icons';
 import _ from 'lodash';
 import TransactionDetailsModal from './TransactionDetailsModal';
 
 const TransactionTable = ({ entries, categories = [], accounts = [], onOpenContentModal }) => {
-    const [columnFilters, setColumnFilters] = useState({});
-    const [hoveredRow, setHoveredRow] = useState(null);
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedEntry, setSelectedEntry] = useState(null);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -24,101 +18,103 @@ const TransactionTable = ({ entries, categories = [], accounts = [], onOpenConte
             minimumFractionDigits: 2,
         }).format(amount);
     };
+
     const getCategoryName = (categoryId) => {
         const category = categories.find((cat) => cat.id === categoryId);
         return category ? category.name : "Sin categoría";
     };
 
-
     const getAccountName = (accountId) => {
         const account = accounts.find((acc) => acc.id === accountId);
         return account ? account.name : 'Cuenta no encontrada';
     };
-    const getUniqueValues = (field) => {
-        return _.uniq(entries.map(entry => {
-            switch (field) {
-                case 'category':
-                    return getCategoryName(entry.category_id);
-                case 'account':
-                    return entry.entryType === "transfer"
-                        ? `${getAccountName(entry.from_account_id)} ➡️ ${getAccountName(entry.to_account_id)}`
-                        : getAccountName(entry.account_id);
-                case 'tax_type':
-                    return entry.tax_type || 'No aplica';
-                default:
-                    return entry[field];
-            }
-        })).filter(Boolean);
-    };
-    const getFilterMenu = (field) => (
-        <Menu
-            items={getUniqueValues(field).map(value => ({
-                key: value,
-                label: (
-                    <div className="flex items-center">
-                        <input
-                            type="checkbox"
-                            checked={columnFilters[field]?.includes(value)}
-                            onChange={(e) => {
-                                let newFilters = { ...columnFilters };
-                                if (!newFilters[field]) newFilters[field] = [];
-                                if (e.target.checked) {
-                                    newFilters[field] = [...newFilters[field], value];
-                                } else {
-                                    newFilters[field] = newFilters[field].filter(v => v !== value);
-                                }
-                                if (newFilters[field].length === 0) delete newFilters[field];
-                                setColumnFilters(newFilters);
-                            }}
-                        />
-                        <span className="ml-2">{value}</span>
-                    </div>
-                ),
-            }))}
-        />
-    );
 
     const columns = [
         {
             title: 'Fecha',
-            field: 'date',
-            width: '100px',
-            render: (entry) => formatDate(new Date(entry.date), 'd MMM yyyy'),
+            dataIndex: 'date',
+            key: 'date',
+
+            filterSearch: true,
+            filters: [...new Set(entries.map((entry) => formatDate(new Date(entry.date), "d MMM yyyy")))].map((formattedDate) => ({
+                text: formattedDate,
+                value: formattedDate,
+            })),
+            render: (text) => formatDate(new Date(text), "d MMM yyyy"),
+            sorter: (a, b) => new Date(a.date) - new Date(b.date),
+            sortDirections: ["descend", "ascend"],
         },
         {
             title: 'Descripción',
-            field: 'description',
-            width: '200px',
-            render: (entry) => entry.description,
+            dataIndex: "description",
+            key: "description",
+
+            filterSearch: true,
+            filters: [...new Set(entries.map((entry) => entry.description))].map((description) => ({
+                text: description,
+                value: description,
+            })),
+            onFilter: (value, record) => record.description === value,
+            sorter: (a, b) => a.amount - b.amount,
+            sortDirections: ["ascend", "descend"],
         },
         {
             title: 'Cuenta de Origen',
-            field: 'from_account_id',
-            width: '150px',
-            render: (entry) => getAccountName(entry.from_account_id),
+            dataIndex: "from_account_id",
+            key: "from_account_id",
+
+            filterSearch: true,
+            render: (id) => getAccountName(id),
+            filters: [...new Set(entries.map((entry) => getAccountName(entry.from_account_id)))].map((name) => ({
+                text: name,
+                value: name,
+            })),
+            onFilter: (value, record) => getAccountName(record.from_account_id) === value,
+            sorter: (a, b) => getAccountName(a.from_account_id).localeCompare(getAccountName(b.from_account_id)),
+            sortDirections: ["ascend", "descend"],
         },
         {
             title: 'Cuenta de Destino',
-            field: 'to_account_id',
-            width: '150px',
-            render: (entry) => getAccountName(entry.to_account_id),
+            dataIndex: "to_account_id",
+            key: "to_account_id",
+
+            filterSearch: true,
+            render: (id) => getAccountName(id),
+            filters: [...new Set(entries.map((entry) => getAccountName(entry.to_account_id)))].map((name) => ({
+                text: name,
+                value: name,
+            })),
+            onFilter: (value, record) => getAccountName(record.to_account_id) === value,
+            sorter: (a, b) => getAccountName(a.to_account_id).localeCompare(getAccountName(b.to_account_id)),
+            sortDirections: ["ascend", "descend"],
         },
         {
             title: 'Monto',
-            field: 'amount',
-            width: '120px',
-            render: (entry) => formatCurrency(entry.amount),
+            dataIndex: 'amount',
+            key: "amount",
+
+            filterSearch: true,
+            filters: [...new Set(entries.map((entry) => entry.amount))].map((amount) => ({
+                text: formatCurrency(amount),
+                value: amount,
+            })),
+            onFilter: (value, record) => record.amount === value,
+            render: (amount) => formatCurrency(amount),
+            sorter: (a, b) => a.amount - b.amount,
+            sortDirections: ["descend", "ascend"],
         },
+
         {
-            title: 'Comprobante',
-            field: 'vouchers',
-            width: '120px',
-            render: (entry) =>
-                Array.isArray(entry.vouchers) && entry.vouchers.length > 0 ? (
+            title: "Comprobante",
+            dataIndex: "vouchers",
+            key: "vouchers",
+            filterSearch: true,
+            render: (vouchers) =>
+                vouchers && Array.isArray(vouchers) && vouchers.length > 0 ? (
                     <a
                         onClick={(e) => {
                             e.stopPropagation();
-                            openDrawer(entry.vouchers);
+                            openDrawer(vouchers);
                         }}
                         className="text-blue-500 underline"
                     >
@@ -127,7 +123,7 @@ const TransactionTable = ({ entries, categories = [], accounts = [], onOpenConte
                 ) : (
                     '—'
                 ),
-        },
+        }
     ];
 
     const openDrawer = (images) => {
@@ -148,7 +144,6 @@ const TransactionTable = ({ entries, categories = [], accounts = [], onOpenConte
     const closeModal = () => {
         setSelectedEntry(null);
         setIsModalOpen(false);
-
     };
     const downloadImage = async (url) => {
         try {
@@ -182,81 +177,18 @@ const TransactionTable = ({ entries, categories = [], accounts = [], onOpenConte
     return (
         <>
             <div className="overflow-auto h-[39em]">
-                <table className="w-full relative table-fixed border-collapse">
-                    <thead className="sticky top-0 z-5 bg-white">
-                        <tr className="border-b border-gray-200">
-                            {columns.map((column) => (
-                                <th
-                                    key={column.field}
-                                    style={{ width: column.width }}
-                                    className="border-r border-gray-200 bg-gray-50 p-0"
-                                >
-                                    <div className="flex items-center justify-between px-3 py-2">
-                                        <span className="text-xs font-medium text-gray-500">{column.title}</span>
-                                        {column.field !== 'actions' && (
-                                            <Dropdown
-                                                overlay={getFilterMenu(column.field)}
-                                                trigger={['click']}
-                                            >
-                                                <Button
-                                                    type="text"
-                                                    size="small"
-                                                    className={`flex items-center ${columnFilters[column.field]?.length ? 'text-blue-600' : 'text-gray-400'}`}
-                                                    icon={<FilterOutlined />}
-                                                >
-                                                    <CaretDownOutlined style={{ fontSize: '10px' }} />
-                                                </Button>
-                                            </Dropdown>
-                                        )}
-                                    </div>
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {entries.filter(entry => {
-                            return Object.entries(columnFilters).every(([field, values]) => {
-                                let cellValue;
-                                switch (field) {
-                                    case 'category':
-                                        cellValue = getCategoryName(entry.category_id);
-                                        break;
-                                    case 'account':
-                                        cellValue = entry.entryType === "transfer"
-                                            ? `${getAccountName(entry.from_account_id)} ➡️ ${getAccountName(entry.to_account_id)}`
-                                            : getAccountName(entry.account_id);
-                                        break;
-                                    case 'tax_type':
-                                        cellValue = entry.tax_type || 'No aplica';
-                                        break;
-                                    default:
-                                        cellValue = entry[field];
-                                }
-                                return values.includes(cellValue);
-                            });
-                        }).map((entry, rowIndex) => (
-                            <Tooltip key={rowIndex} title={`Fila: ${rowIndex + 1}, Descripción: ${entry.description}`} placement="top">
-                                <tr
-                                    className={`border-b hover:bg-gray-50 ${hoveredRow === rowIndex ? 'bg-gray-50' : ''}`}
-                                    onMouseEnter={() => setHoveredRow(rowIndex)}
-                                    onMouseLeave={() => setHoveredRow(null)}
-                                    onClick={() => openModal(entry)}
-                                    style={{ cursor: 'pointer' }}
-                                >
-                                    {columns.map((column) => (
-                                        <td
-                                            key={column.field}
-                                            style={{ width: column.width }}
-                                            className="border-r border-gray-200 p-2 truncate"
-                                        >
-                                            {column.render ? column.render(entry) : entry[column.field]}
-                                        </td>
-                                    ))}
-                                </tr>
-                            </Tooltip>
-                        ))}
-                    </tbody>
-                </table>
+                <Table
+                    dataSource={entries}
+                    columns={columns}
+                    rowKey={(record) => record.id}
+                    pagination={{ pageSize: 10 }}
+                    bordered
+                    rowClassName="clickable-row"
+                    onRow={(record) => ({
+                        onClick: () => openModal(record),
+                    })}
+                />
+                <style jsx>{`.clickable-row {cursor: pointer;}`}</style>
             </div>
 
             <Drawer
@@ -277,7 +209,7 @@ const TransactionTable = ({ entries, categories = [], accounts = [], onOpenConte
                                 />
                                 <Button
                                     type="link"
-                                    className="mx-20 absolute bottom-2   text-white bg-green-600"
+                                    className="mx-20 absolute bottom-2 text-white bg-green-600"
                                     onClick={() => downloadImage(image)}
                                 >
                                     Descargar
