@@ -67,7 +67,7 @@ const ExpenseTable = ({
             title: 'Cuenta',
             dataIndex: "account_id",
             key: "account_id",
-            width: '170px',
+            width: '220px',
             filterSearch: true,
             render: (id) => getAccountName(id),
             filters: [...new Set(entries.map((entry) => getAccountName(entry.account_id)))].map((name) => ({
@@ -82,7 +82,7 @@ const ExpenseTable = ({
             title: 'Categoría',
             dataIndex: 'category_id',
             key: 'category_id',
-            width: '170px',
+            width: '220px',
             filterSearch: true,
             render: (id) => getCategoryName(id),
             filters: [...new Set(entries.map((entry) => getCategoryName(entry.category_id)))].map((name) => ({
