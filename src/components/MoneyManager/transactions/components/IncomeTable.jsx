@@ -180,8 +180,9 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
                 onRow={(record) => ({
                     onClick: () => openModal(record),
                 })}
-
+                rowClassName="clickable-row"
             />
+            <style jsx>{`.clickable-row {cursor: pointer;}`}</style>
             <Drawer
                 visible={isDrawerOpen}
                 onClose={closeDrawer}

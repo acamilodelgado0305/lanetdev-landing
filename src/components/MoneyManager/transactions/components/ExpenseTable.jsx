@@ -39,7 +39,7 @@ const ExpenseTable = ({
             title: 'Fecha',
             dataIndex: 'date',
             key: 'date',
-            width: '100px',
+            width: '130px',
             filterSearch: true,
             filters: [...new Set(entries.map((entry) => formatDate(new Date(entry.date), "d MMM yyyy")))].map((formattedDate) => ({
                 text: formattedDate,
@@ -53,21 +53,21 @@ const ExpenseTable = ({
             title: 'Descripción',
             dataIndex: "description",
             key: "description",
-            width: '250px',
+            width: '230px',
             filterSearch: true,
             filters: [...new Set(entries.map((entry) => entry.description))].map((description) => ({
                 text: description,
                 value: description,
             })),
-            onFilter: (value, record) => record.description.includes(value),
-            sorter: (a, b) => getAccountName(a.description).localeCompare(getAccountName(b.description)),
+            onFilter: (value, record) => record.description === value,
+            sorter: (a, b) => a.amount - b.amount,
             sortDirections: ["ascend", "descend"],
         },
         {
             title: 'Cuenta',
             dataIndex: "account_id",
             key: "account_id",
-            width: '150px',
+            width: '170px',
             filterSearch: true,
             render: (id) => getAccountName(id),
             filters: [...new Set(entries.map((entry) => getAccountName(entry.account_id)))].map((name) => ({
@@ -75,13 +75,14 @@ const ExpenseTable = ({
                 value: name,
             })),
             onFilter: (value, record) => getAccountName(record.account_id) === value,
+            sorter: (a, b) => getAccountName(a.account_id).localeCompare(getAccountName(b.account_id)),
             sortDirections: ["ascend", "descend"],
         },
         {
             title: 'Categoría',
             dataIndex: 'category_id',
             key: 'category_id',
-            width: '150px',
+            width: '170px',
             filterSearch: true,
             render: (id) => getCategoryName(id),
             filters: [...new Set(entries.map((entry) => getCategoryName(entry.category_id)))].map((name) => ({
@@ -89,6 +90,7 @@ const ExpenseTable = ({
                 value: name,
             })),
             onFilter: (value, record) => getCategoryName(record.category_id) === value,
+            sorter: (a, b) => getAccountName(a.category_id).localeCompare(getAccountName(b.category_id)),
             sortDirections: ["ascend", "descend"],
         },
         {
@@ -110,7 +112,7 @@ const ExpenseTable = ({
             title: 'Impuestos',
             dataIndex: 'tax_type',
             key: 'tax_type',
-            width: '120px',
+            width: '150px',
             filterSearch: true,
             filters: [...new Set(entries.map((entry) => entry.tax_type))].map((taxType) => ({
                 text: taxType,
@@ -137,14 +139,24 @@ const ExpenseTable = ({
             title: 'Retención',
             dataIndex: 'retention_type',
             key: 'retention_type',
-            width: '120px',
+            width: '150px',
             filterSearch: true,
-            filters: [...new Set(entries.map((entry) => entry.retention_type))].map((retention) => ({
-                text: retention,
-                value: retention,
+            filters: [
+                ...new Set(entries.map((entry) => entry.retention_type || 'Sin información'))
+            ].map((retention) => ({
+                text: retention || 'Sin información',
+                value: retention || 'Sin información',
             })),
-            onFilter: (value, record) => record.retention_type === value,
-            sorter: (a, b) => a.amount - b.amount,
+            onFilter: (value, record) => (record.retention_type || 'Sin información') === value,
+            render: (retention) => (
+                <span>{retention || 'Sin información'}</span> // Muestra 'Sin información' si retention_type es null
+            ),
+            sorter: (a, b) => {
+                // Aseguramos que el ordenamiento funcione correctamente
+                if (!a.retention_type) return 1;
+                if (!b.retention_type) return -1;
+                return a.retention_type.localeCompare(b.retention_type);
+            },
             sortDirections: ["ascend", "descend"],
         },
         {
@@ -153,11 +165,14 @@ const ExpenseTable = ({
             key: 'estado',
             width: '120px',
             filterSearch: true,
-            filters: [...new Set(entries.map((entry) => entry.estado))].map((status) => ({
-                text: status,
-                value: status,
-            })),
-            onFilter: (value, record) => (record.estado ? 'Sí' : 'No') === value,
+            filters: [
+                { text: 'Activo', value: true },
+                { text: 'Inactivo', value: false },
+            ],
+            onFilter: (value, record) => record.estado === value,
+            render: (estado) => (
+                <span>{estado ? 'Activo' : 'Inactivo'}</span> // Muestra 'Activo' si estado es true, 'Inactivo' si es false
+            ),
             sorter: (a, b) => a.estado - b.estado,
             sortDirections: ["ascend", "descend"],
         },
@@ -213,8 +228,9 @@ const ExpenseTable = ({
                     onRow={(record) => ({
                         onClick: () => openModal(record),
                     })}
-
+                    rowClassName="clickable-row"
                 />
+                <style jsx>{`.clickable-row {cursor: pointer;}`}</style>
             </div>
             <Drawer
                 visible={isDrawerOpen}
