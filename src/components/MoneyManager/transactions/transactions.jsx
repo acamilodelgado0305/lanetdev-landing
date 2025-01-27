@@ -306,7 +306,7 @@ const TransactionsDashboard = () => {
   return (
     <div className="flex-1 bg-gray-50 min-h-screen">
       {/* Barra superior de herramientas */}
-      <div className="bg-white border-b sticky top-0 z-20 shadow-sm">
+      <div className="bg-white border-b sticky top-0 z-0 shadow-sm">
         {/* Sección superior con botones de acción */}
         <div className="max-w-7xl mx-auto py-2 px-3">
           <div className="flex justify-between items-center">
