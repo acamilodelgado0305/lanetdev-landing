@@ -12,19 +12,34 @@ import {
   ChevronRightIcon,
   PinIcon,
   PinOffIcon,
-  ChevronDownIcon
+  ChevronDownIcon,
+  WaypointsIcon,
+  DotIcon
 } from "lucide-react";
 import Header from '../components/header/Header';
 import UserProfileHeader from './user/UserProfileHeader';
 import { useAuth } from '../components/Context/AuthProvider';
 
 // Componente SidebarLink mejorado
-const SidebarLink = ({ to, icon: Icon, label, isExpanded, isActive, hasSubmenu, isSubmenuOpen, onSubmenuClick, submenuItems }) => {
+const SidebarLink = ({ to, icon: Icon, label, isExpanded, hasSubmenu, isSubmenuOpen, onSubmenuClick, submenuItems }) => {
+  // Check if the current route is active or is a child route
+  const isActive = window.location.pathname === to;
+  const isNestedRouteActive = hasSubmenu && submenuItems 
+    ? submenuItems.some(item => window.location.pathname.startsWith(item.to)) 
+    : false;
+
   const LinkContent = () => (
     <>
-      <Icon className={`w-5 h-5 ${isExpanded ? '' : 'group-hover:scale-110 transition-transform duration-200'}`} />
+      <Icon className={`w-5 h-5 
+        ${(isActive || isNestedRouteActive) ? 'text-green-500' : ''}
+        ${isExpanded ? '' : 'group-hover:scale-110 transition-transform duration-200'}
+      `} />
       {isExpanded && (
-        <span className="ml-3 font-medium flex-1">{label}</span>
+        <span className={`ml-2 font-medium flex-1 
+          ${(isActive || isNestedRouteActive) ? 'text-white' : 'text-gray-300'}
+        `}>
+          {label}
+        </span>
       )}
       {isExpanded && hasSubmenu && (
         <ChevronDownIcon
@@ -32,7 +47,7 @@ const SidebarLink = ({ to, icon: Icon, label, isExpanded, isActive, hasSubmenu, 
         />
       )}
       {!isExpanded && (
-        <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+        <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
           {label}
         </div>
       )}
@@ -46,7 +61,9 @@ const SidebarLink = ({ to, icon: Icon, label, isExpanded, isActive, hasSubmenu, 
           onClick={onSubmenuClick}
           className={`
             w-full flex items-center p-3 my-1 text-sm rounded-xl transition-all duration-300
-            ${isActive ? 'bg-white/10 text-white shadow-lg backdrop-blur-sm' : 'text-gray-300 hover:bg-white/5 hover:text-white'}
+            ${(isActive || isNestedRouteActive)
+              ? 'bg-gray-700 text-white shadow-lg backdrop-blur-sm' 
+              : 'text-gray-300 hover:bg-gray-700 hover:text-white'}
             ${isExpanded ? 'justify-start mx-2' : 'justify-center mx-auto w-12'}
             group relative
           `}
@@ -59,9 +76,17 @@ const SidebarLink = ({ to, icon: Icon, label, isExpanded, isActive, hasSubmenu, 
               <Link
                 key={item.to}
                 to={item.to}
-                className="flex items-center p-2 my-1 text-sm text-gray-300 hover:text-white rounded-xl hover:bg-white/5 transition-all duration-200"
+                className={`
+                  flex items-center p-1 text-sm 
+                  ${window.location.pathname === item.to 
+                    ? 'bg-gray-700 text-white' 
+                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'}
+                  transition-all duration-200
+                `}
               >
-                {item.icon && <item.icon className="w-4 h-4 mr-2" />}
+                {item.icon && <item.icon className={`w-4 h-4 mr-2 
+                  ${window.location.pathname === item.to ? 'text-green-500' : ''}
+                `} />}
                 <span>{item.label}</span>
               </Link>
             ))}
@@ -74,8 +99,10 @@ const SidebarLink = ({ to, icon: Icon, label, isExpanded, isActive, hasSubmenu, 
     <Link
       to={to}
       className={`
-        flex items-center p-3 my-1 text-sm rounded-xl transition-all duration-300
-        ${isActive ? 'bg-white/10 text-white shadow-lg backdrop-blur-sm' : 'text-gray-300 hover:bg-white/5 hover:text-white'}
+        flex items-center p-2 my-1 text-sm transition-all duration-300
+        ${isActive 
+          ? 'bg-gray-700 text-white shadow-lg backdrop-blur-sm' 
+          : 'text-gray-300 hover:bg-gray-700 hover:text-white'}
         ${isExpanded ? 'justify-start mx-2' : 'justify-center mx-auto w-12'}
         group relative
       `}
@@ -87,7 +114,7 @@ const SidebarLink = ({ to, icon: Icon, label, isExpanded, isActive, hasSubmenu, 
 
 // Componente SidebarSection mejorado
 const SidebarSection = ({ title, children, isExpanded }) => (
-  <div className="mb-6">
+  <div className="relative group">
     {isExpanded && (
       <div className="px-4 mb-2 flex items-center">
         <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">{title}</h3>
@@ -111,8 +138,9 @@ export default function Root() {
 
   const mainMenuLinks = useMemo(
     () => [
-      { to: "/index", label: "Dashboard", icon: HomeIcon },
-      { to: "/index/new", label: "Finanzas", icon: DollarSignIcon },
+      { to: "/index", label: "Inicio", icon: HomeIcon },
+      { to: "/index/network", label: "Gestion de Red", icon: WaypointsIcon },
+
       userRole === "superadmin" && { to: "/index/clientes", label: "Clientes", icon: UsersIcon },
       { to: "/productos", label: "Productos", icon: ShoppingCartIcon },
     ].filter(Boolean),
@@ -120,22 +148,22 @@ export default function Root() {
   );
 
   const moneyManagerSubmenuItems = [
-    { to: "/index/moneymanager/estadisticas", label: "Dashboard", icon: ChevronRightIcon },
-    { to: "/index/moneymanager/transactions", label: "Transacciones", icon: ChevronRightIcon },
-    { to: "/index/moneymanager/Pagos-Pendientes", label: "Pagos Recurrentes", icon: ChevronRightIcon },
-    { to: "/index/moneymanager/informes", label: "Informes", icon: ChevronRightIcon },
-    { to: "/index/moneymanager/accounts", label: "Cuentas", icon: ChevronRightIcon },
-    { to: "/index/moneymanager/categorias", label: "Categorias", icon: ChevronRightIcon },
-    { to: "/index/moneymanager/proveedores", label: "Proveedores", icon: ChevronRightIcon },
-    { to: "/index/moneymanager/calendario", label: "Calendario", icon: ChevronRightIcon },
-    { to: "/index/moneymanager/configuracion", label: "Configuración", icon: ChevronRightIcon },
+    { to: "/index/moneymanager/estadisticas", label: "Dashboard", icon: DotIcon },
+    { to: "/index/moneymanager/transactions", label: "Transacciones", icon: DotIcon },
+    { to: "/index/moneymanager/Pagos-Pendientes", label: "Pagos Recurrentes", icon: DotIcon },
+    { to: "/index/moneymanager/informes", label: "Informes", icon: DotIcon },
+    { to: "/index/moneymanager/accounts", label: "Cuentas", icon: DotIcon },
+    { to: "/index/moneymanager/categorias", label: "Categorias", icon: DotIcon },
+    { to: "/index/moneymanager/proveedores", label: "Proveedores", icon: DotIcon },
+    { to: "/index/moneymanager/calendario", label: "Calendario", icon: DotIcon },
+    { to: "/index/moneymanager/configuracion", label: "Configuración", icon: DotIcon },
   ];
 
   const resourcesMenuLinks = useMemo(
     () => [
       (userRole === "admin" || userRole === "superadmin") && {
-        label: "Money Manager",
-        icon: BookIcon,
+        label: "Gestion de Dinero",
+        icon: DollarSignIcon,
         hasSubmenu: true,
         submenuItems: moneyManagerSubmenuItems
       },
@@ -228,18 +256,6 @@ export default function Root() {
           )}
         </div>
 
-        {/* Estado del pin */}
-        {isExpanded && (
-          <div className="absolute top-4 right-4 flex items-center gap-2 text-xs text-white/70">
-            <span>{isPinned ? "Fijo" : "Auto"}</span>
-            {isPinned ? (
-              <PinIcon className="w-3 h-3" />
-            ) : (
-              <PinOffIcon className="w-3 h-3" />
-            )}
-          </div>
-        )}
-
         <UserProfileHeader
           onToggle={() => setIsOpen(false)}
           isUserProfileOpen={isUserProfileOpen}
@@ -248,8 +264,8 @@ export default function Root() {
         />
 
         {/* Sidebar Content */}
-        <nav className="flex-1 py-6">
-          <SidebarSection title="Menú principal" isExpanded={isExpanded}>
+        <nav className="flex-1 py-4">
+          <SidebarSection title={<span className="capitalize">menú</span>} isExpanded={isExpanded}>
             {mainMenuLinks.map(link => (
               <SidebarLink
                 key={link.to}
@@ -260,22 +276,24 @@ export default function Root() {
             ))}
           </SidebarSection>
 
-          <SidebarSection title="Recursos" isExpanded={isExpanded}>
-            {resourcesMenuLinks.map(link => (
-              <SidebarLink
-                key={link.hasSubmenu ? link.label : link.to}
-                {...link}
-                isExpanded={isExpanded}
-                isActive={window.location.pathname === link.to}
-                isSubmenuOpen={link.label === "Money Manager" ? isMoneyManagerOpen : false}
-                onSubmenuClick={() => {
-                  if (link.label === "Money Manager") {
-                    setIsMoneyManagerOpen(!isMoneyManagerOpen);
-                  }
-                }}
-              />
-            ))}
-          </SidebarSection>
+
+
+
+          {resourcesMenuLinks.map(link => (
+            <SidebarLink
+              key={link.hasSubmenu ? link.label : link.to}
+              {...link}
+              isExpanded={isExpanded}
+              isActive={window.location.pathname === link.to}
+              isSubmenuOpen={link.label === "Gestion de Dinero" ? isMoneyManagerOpen : false}
+              onSubmenuClick={() => {
+                if (link.label === "Gestion de Dinero") {
+                  setIsMoneyManagerOpen(!isMoneyManagerOpen);
+                }
+              }}
+            />
+          ))}
+
         </nav>
 
 

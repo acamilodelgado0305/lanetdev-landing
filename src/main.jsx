@@ -27,6 +27,7 @@ import RenderPaymentsList from "./components/MoneyManager/transactions/component
 import Indexconfig from "./components/confgapp/indexconfig";
 import Clientes from "./components/clientes/clientes"
 import SearchResults from "./components/search/SearchResults";
+import Network from "./components/Network/Network.jsx";
 import 'antd/dist/reset.css';
 
 const router = createBrowserRouter([
@@ -124,9 +125,14 @@ const router = createBrowserRouter([
           </PrivateRoute>
         ),
       },
+      
       {
         path: "config",
         element: <Indexconfig />,
+      },
+      {
+        path: "network",
+        element: <Network />,
       },
       {
         path: "search",

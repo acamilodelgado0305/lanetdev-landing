@@ -21,10 +21,6 @@ const IndexMoneyManager = () => {
     fetchTransactions();
   }, []);
 
-  useEffect(() => {
-    navigate("/index/moneymanager/estadisticas");
-  }, [navigate]);
-
   const fetchTransactions = async () => {
     try {
       const transactions = await getTransactions();
