@@ -1,17 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { TagOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
-import { Layout, Typography, Card, Button, List, Modal, message } from "antd";
+import { Layout, Typography, Card, Button, Table, Tag, message, Modal } from "antd";
 import {
   getCategories,
   deleteCategory,
 } from "../../../services/moneymanager/moneyService";
 import AddCategoriesModal from "./addCategories";
-import {
-  PlusCircle,
-} from "lucide-react";
+import { PlusCircle } from "lucide-react";
 
 const { Content } = Layout;
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 const Categories = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -22,6 +20,7 @@ const Categories = () => {
     setEditCategory(null);
     setIsModalOpen(true);
   };
+  
   const closeModal = () => setIsModalOpen(false);
 
   const fetchCategories = async () => {
@@ -67,70 +66,115 @@ const Categories = () => {
     setIsModalOpen(true);
   };
 
-  const groupedCategories = categories.reduce((acc, category) => {
-    if (!acc[category.type]) {
-      acc[category.type] = [];
-    }
-    acc[category.type].push(category);
-    return acc;
-  }, {});
+  const columns = [
+    {
+      title: 'Nombre',
+      dataIndex: 'name',
+      key: 'name',
+      render: (text, record) => (
+        <div className="flex items-center gap-2">
+          <TagOutlined className={record.type === "income" ? "text-green-600" : "text-red-500"} />
+          <span>{text}</span>
+        </div>
+      ),
+    },
+    {
+      title: 'Tipo',
+      dataIndex: 'type',
+      key: 'type',
+      render: (type) => (
+        <Tag color={type === "income" ? "success" : "error"}>
+          {type === "income" ? "Ingreso" : "Gasto"}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Acciones',
+      key: 'actions',
+      width: 120,
+      align: 'center',
+      render: (_, record) => (
+        <div className="flex justify-center space-x-2">
+          <Button
+            type="text"
+            icon={<EditOutlined className="text-blue-600" />}
+            onClick={() => openEditModal(record)}
+          />
+          <Button
+            type="text"
+            icon={<DeleteOutlined className="text-red-600" />}
+            onClick={() => handleDeleteCategory(record.id, record.name)}
+          />
+        </div>
+      ),
+    },
+  ];
+
+  const ingresos = categories.filter(cat => cat.type === "income");
+  const gastos = categories.filter(cat => cat.type === "expense");
 
   return (
-    <Layout className="min-h-screen">
-      <Content className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {Object.entries(groupedCategories).map(([type, categoryList]) => (
-            <Card
-              key={type}
-              title={type === "income" ? "Ingresos" : "Gastos"}
-              extra={<TagOutlined className={type === "income" ? "text-green-700" : "text-red-500"} />}
-              className="w-full"
-            >
-              <List
-                dataSource={categoryList}
-                renderItem={(category) => (
-                  <List.Item
-                    actions={[
-                      <Button
-                        icon={<EditOutlined />}
-                        onClick={() => openEditModal(category)}
-                        type="link"
-                      />,
-                      <Button
-                        icon={<DeleteOutlined />}
-                        onClick={() => handleDeleteCategory(category.id, category.name)}
-                        type="link"
-                        danger
-                      />,
-                    ]}
-                  >
-                    <List.Item.Meta
-                      avatar={
-                        <TagOutlined className={type === "income" ? "text-green-700" : "text-red-500"} />
-                      }
-                      title={category.name}
-                    />
-                  </List.Item>
-                )}
-              />
-            </Card>
-          ))}
-        </div>
-        <button
+    <div className="p-6">
+      <Card className="border-0 shadow-sm">
+        {/* Header con título y botón de agregar */}
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <Title level={4} className="m-0">Gestion de Categorías</Title>
+            <Text type="secondary">Gestiona las categorías de ingresos y gastos</Text>
+          </div>
+          <Button
+            type="primary"
+            icon={<PlusCircle className="w-4 h-4" />}
             onClick={openModal}
-            className="fixed bottom-11 right-11 bg-[#FE6256] hover:bg-[#FFA38E] text-white rounded-full p-3 shadow-lg transition-colors duration-300"
-            aria-label="Añadir entrada"
+            className="bg-blue-600"
           >
-            <PlusCircle size={30} />
-          </button>
+            Agregar Nueva Categoría
+          </Button>
+        </div>
+
+        {/* Cards de resumen */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <Card className="bg-green-50">
+            <div className="flex items-center justify-between">
+              <div>
+                <Text type="secondary">Categorías de Ingresos</Text>
+                <Title level={4} className="m-0 text-green-600">
+                  {ingresos.length} categorías
+                </Title>
+              </div>
+              <TagOutlined className="text-2xl text-green-600" />
+            </div>
+          </Card>
+          <Card className="bg-red-50">
+            <div className="flex items-center justify-between">
+              <div>
+                <Text type="secondary">Categorías de Gastos</Text>
+                <Title level={4} className="m-0 text-red-600">
+                  {gastos.length} categorías
+                </Title>
+              </div>
+              <TagOutlined className="text-2xl text-red-600" />
+            </div>
+          </Card>
+        </div>
+
+        {/* Tabla de categorías */}
+        <Table
+          columns={columns}
+          dataSource={categories}
+          rowKey="id"
+          pagination={false}
+          className="border rounded-lg"
+        />
+
         <AddCategoriesModal
           isOpen={isModalOpen}
           onClose={closeModal}
           onCategorieAdded={handleCategorieAdded}
           categoryToEdit={editCategory}
         />
-      </Content>
-    </Layout>
+      </Card>
+    </div>
   );
 };
 

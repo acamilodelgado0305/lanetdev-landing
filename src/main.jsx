@@ -28,7 +28,9 @@ import Indexconfig from "./components/confgapp/indexconfig";
 import Clientes from "./components/clientes/clientes"
 import SearchResults from "./components/search/SearchResults";
 import Network from "./components/Network/Network.jsx";
+import Configuracion from "./components/MoneyManager/configuracion/Configuracion.jsx";
 import 'antd/dist/reset.css';
+
 
 const router = createBrowserRouter([
   {
@@ -96,6 +98,10 @@ const router = createBrowserRouter([
           {
             path: "estadisticas",
             element: <Estadisticas />,
+          },
+          {
+            path: "config",
+            element: <Configuracion />,
           }
         ],
       },

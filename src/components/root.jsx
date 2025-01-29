@@ -148,26 +148,23 @@ export default function Root() {
   );
 
   const moneyManagerSubmenuItems = [
-    { to: "/index/moneymanager/estadisticas", label: "Dashboard", icon: DotIcon },
+    { to: "/index/moneymanager/estadisticas", label: "Resumen", icon: DotIcon },
     { to: "/index/moneymanager/transactions", label: "Transacciones", icon: DotIcon },
     { to: "/index/moneymanager/Pagos-Pendientes", label: "Pagos Recurrentes", icon: DotIcon },
     { to: "/index/moneymanager/informes", label: "Informes", icon: DotIcon },
-    { to: "/index/moneymanager/accounts", label: "Cuentas", icon: DotIcon },
-    { to: "/index/moneymanager/categorias", label: "Categorias", icon: DotIcon },
-    { to: "/index/moneymanager/proveedores", label: "Proveedores", icon: DotIcon },
     { to: "/index/moneymanager/calendario", label: "Calendario", icon: DotIcon },
-    { to: "/index/moneymanager/configuracion", label: "Configuración", icon: DotIcon },
+    { to: "/index/moneymanager/config", label: "Configuración", icon: DotIcon },
   ];
 
   const resourcesMenuLinks = useMemo(
     () => [
       (userRole === "admin" || userRole === "superadmin") && {
-        label: "Gestion de Dinero",
+        label: "Contabilidad",
         icon: DollarSignIcon,
         hasSubmenu: true,
         submenuItems: moneyManagerSubmenuItems
       },
-      { to: "/index/doc", label: "Documentación", icon: FileTextIcon },
+      { to: "/index/doc", label: "Documentación", icon: FileTextIcon },   
       { to: "/index/communication", label: "Comunicación", icon: MessageCircleIcon },
     ].filter(Boolean),
     [userRole]
@@ -285,9 +282,9 @@ export default function Root() {
               {...link}
               isExpanded={isExpanded}
               isActive={window.location.pathname === link.to}
-              isSubmenuOpen={link.label === "Gestion de Dinero" ? isMoneyManagerOpen : false}
+              isSubmenuOpen={link.label === "Contabilidad" ? isMoneyManagerOpen : false}
               onSubmenuClick={() => {
-                if (link.label === "Gestion de Dinero") {
+                if (link.label === "Contabilidad") {
                   setIsMoneyManagerOpen(!isMoneyManagerOpen);
                 }
               }}
