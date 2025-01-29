@@ -85,13 +85,14 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
 
   const fetchProviders = async () => {
     try {
-      const response = await fetch(`${apiUrl}/providers`);
-      const data = await response.json();
-      setProviders(data);
+        const response = await fetch(`${apiUrl}/providers`);
+        const data = await response.json();
+        console.log("Proveedores obtenidos:", data); // Mostrar en consola
+        setProviders(data);
     } catch (error) {
-      console.error("Error al obtener los proveedores:", error);
+        console.error("Error al obtener los proveedores:", error);
     }
-  };
+};
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('es-CO', {
@@ -256,7 +257,7 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
         }
       >
         {providers.map((provider) => (
-          <Select.Option key={provider.nombre_comercial} value={provider.nombre_comercial}>
+          <Select.Option key={provider.razon_social} value={provider.razon_social}>
             {provider.name}
           </Select.Option>
         ))}

@@ -201,7 +201,7 @@ const AccountContent = () => {
   }
 
   return (
-    <div className="p-6">
+    <div >
       <Card className="border-0 shadow-sm">
         {/* Header con totales y botón de agregar */}
         <div className="flex justify-between items-center mb-6">
