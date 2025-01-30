@@ -29,6 +29,7 @@ import Clientes from "./components/clientes/clientes"
 import SearchResults from "./components/search/SearchResults";
 import Network from "./components/Network/Network.jsx";
 import Configuracion from "./components/MoneyManager/configuracion/Configuracion.jsx";
+import Terceros from "./components/MoneyManager/Terceros/Terceros.jsx";
 import 'antd/dist/reset.css';
 
 
@@ -90,6 +91,10 @@ const router = createBrowserRouter([
           {
             path: "calendario",
             element: <Calendario />,
+          },
+          {
+            path: "terceros",
+            element: <Terceros />,
           },
           {
             path: "Pagos-Pendientes",

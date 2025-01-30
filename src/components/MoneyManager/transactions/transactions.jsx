@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 
 import { format as formatDate, startOfMonth, endOfMonth, subMonths, addMonths } from "date-fns";
 import axios from "axios";
@@ -6,6 +6,7 @@ import { Modal, message, Input, Select, Button, Card } from "antd";
 import AddEntryModal from "./addModal";
 import AddIncome from "./Add/Income/AddIncome";
 import AddExpense from "./Add/expense/AddExpense";
+import PlusModal from "./PlusModal";
 import {
   getAccounts,
   getCategories,
@@ -50,6 +51,9 @@ const TransactionsDashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isIncomeModalOpen, setIsIncomeModalOpen] = useState(false);
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [isPlusModalOpen, setIsPlusModalOpen] = useState(false);
+  const [buttonPosition, setButtonPosition] = useState({ top: 0, left: 0, width: 0 });
+  const createButtonRef = useRef(null);
   const [transactionType, setTransactionType] = useState(null);
   const [error, setError] = useState(null);
   const [entries, setEntries] = useState([]);
@@ -99,6 +103,17 @@ const TransactionsDashboard = () => {
     setIsExpenseModalOpen(true);
     setEditTransaction(null);
   };
+  const openPlusModal = () => {
+    if (createButtonRef.current) {
+      const rect = createButtonRef.current.getBoundingClientRect();
+      setButtonPosition({
+        top: rect.top,
+        left: rect.left,
+        width: rect.width,
+      });
+    }
+    setIsPlusModalOpen(true);
+  };
 
   const openTransferModal = () => {
     setTransactionType('transfer');
@@ -120,6 +135,12 @@ const TransactionsDashboard = () => {
     setIsExpenseModalOpen(false);
     setEditTransaction(null);
   };
+
+  const closePlusModal = () => {
+    setIsPlusModalOpen(false);
+  };
+
+
 
   // Consolidar la función para cargar datos de acuerdo con el endpoint
   const fetchData = async (endpoint) => {
@@ -313,7 +334,7 @@ const TransactionsDashboard = () => {
         <div className="max-full mx-auto py-2 px-3">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-semibold text-gray-800">Control Financiero</h1>
+              <h1 className="text-3xl pl-8 font-semibold text-gray-800">Finanzas</h1>
             </div>
             <div className="flex gap-3">
               <Button
@@ -342,8 +363,9 @@ const TransactionsDashboard = () => {
               </Button>
 
               <button
-                onClick={openExpenseModal}
-                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-red-600 flex items-center space-x-2"
+                ref={createButtonRef}
+                onClick={openPlusModal}
+                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center space-x-2"
               >
                 <Plus className="w-4 h-4" />
                 <span>Crear</span>
@@ -396,22 +418,12 @@ const TransactionsDashboard = () => {
             )}
           </div>
 
-          {/* Barra de búsqueda */}
-          <div className="mt-6 flex justify-center">
-            <div className="w-full max-w-2xl">
-              <Input
-                prefix={<Search className="h-4 w-4 text-gray-400" />}
-                placeholder="Buscar transacciones..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-10 rounded-lg"
-              />
-            </div>
-          </div>
+
+
         </div>
 
         {/* Navegación entre categorías */}
-        <div className="border-t">
+        <div className="bg-white border-b">
           <div className="max-w-7xl mx-auto">
             <Header onNavClick={handleNavClick} />
           </div>
@@ -528,6 +540,12 @@ const TransactionsDashboard = () => {
         onTransactionAdded={handleEntryAdded}
         transactionToEdit={editTransaction}
         transactionType={transactionType}
+      />
+
+      <PlusModal
+        isOpen={isPlusModalOpen}
+        onClose={closePlusModal}
+        buttonPosition={buttonPosition}
       />
 
       <AddIncome
