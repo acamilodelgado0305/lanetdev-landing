@@ -140,6 +140,7 @@ export default function Root() {
     () => [
       { to: "/index", label: "Inicio", icon: HomeIcon },
       { to: "/index/network", label: "Gestion de Red", icon: WaypointsIcon },
+      
 
       userRole === "superadmin" && { to: "/index/clientes", label: "Clientes", icon: UsersIcon },
       { to: "/productos", label: "Productos", icon: ShoppingCartIcon },
@@ -150,6 +151,7 @@ export default function Root() {
   const moneyManagerSubmenuItems = [
     { to: "/index/moneymanager/estadisticas", label: "Resumen", icon: DotIcon },
     { to: "/index/moneymanager/transactions", label: "Transacciones", icon: DotIcon },
+    { to: "/index/moneymanager/terceros", label: "Terceros", icon: DotIcon },
     { to: "/index/moneymanager/Pagos-Pendientes", label: "Pagos Recurrentes", icon: DotIcon },
     { to: "/index/moneymanager/informes", label: "Informes", icon: DotIcon },
     { to: "/index/moneymanager/calendario", label: "Calendario", icon: DotIcon },
