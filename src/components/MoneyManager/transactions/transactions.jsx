@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { PlusOutlined, SearchOutlined, LeftOutlined, RightOutlined } from "@ant-design/icons";
+import React, { useEffect, useState, useRef } from "react";
+
 import { format as formatDate, startOfMonth, endOfMonth, subMonths, addMonths } from "date-fns";
 import axios from "axios";
-import { Modal, message, Input, Select, Button, Card} from "antd";
+import { Modal, message, Input, Select, Button, Card } from "antd";
 import AddEntryModal from "./addModal";
 import AddIncome from "./Add/Income/AddIncome";
 import AddExpense from "./Add/expense/AddExpense";
+import PlusModal from "./PlusModal";
 import {
   getAccounts,
   getCategories,
@@ -26,7 +27,9 @@ import {
   ChevronRight,
   AlertCircle,
   ArrowLeftRight,
-  Search
+  Search,
+  Plus,
+  Menu
 } from 'lucide-react';
 
 const { Option } = Select;
@@ -48,6 +51,9 @@ const TransactionsDashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isIncomeModalOpen, setIsIncomeModalOpen] = useState(false);
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [isPlusModalOpen, setIsPlusModalOpen] = useState(false);
+  const [buttonPosition, setButtonPosition] = useState({ top: 0, left: 0, width: 0 });
+  const createButtonRef = useRef(null);
   const [transactionType, setTransactionType] = useState(null);
   const [error, setError] = useState(null);
   const [entries, setEntries] = useState([]);
@@ -97,6 +103,17 @@ const TransactionsDashboard = () => {
     setIsExpenseModalOpen(true);
     setEditTransaction(null);
   };
+  const openPlusModal = () => {
+    if (createButtonRef.current) {
+      const rect = createButtonRef.current.getBoundingClientRect();
+      setButtonPosition({
+        top: rect.top,
+        left: rect.left,
+        width: rect.width,
+      });
+    }
+    setIsPlusModalOpen(true);
+  };
 
   const openTransferModal = () => {
     setTransactionType('transfer');
@@ -118,6 +135,12 @@ const TransactionsDashboard = () => {
     setIsExpenseModalOpen(false);
     setEditTransaction(null);
   };
+
+  const closePlusModal = () => {
+    setIsPlusModalOpen(false);
+  };
+
+
 
   // Consolidar la función para cargar datos de acuerdo con el endpoint
   const fetchData = async (endpoint) => {
@@ -308,10 +331,10 @@ const TransactionsDashboard = () => {
       {/* Barra superior de herramientas */}
       <div className="bg-white border-b sticky top-0 z-0 shadow-sm">
         {/* Sección superior con botones de acción */}
-        <div className="max-w-7xl mx-auto py-2 px-3">
+        <div className="max-full mx-auto py-2 px-3">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-semibold text-gray-800">Control Financiero</h1>
+              <h1 className="text-3xl pl-8 font-semibold text-gray-800">Finanzas</h1>
             </div>
             <div className="flex gap-3">
               <Button
@@ -338,76 +361,75 @@ const TransactionsDashboard = () => {
               >
                 Nueva Transferencia
               </Button>
+
+              <button
+                ref={createButtonRef}
+                onClick={openPlusModal}
+                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center space-x-2"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Crear</span>
+              </button>
             </div>
           </div>
-  
+
           {/* Resumen financiero */}
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
             {userRole === "superadmin" && (
               <>
-                <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-none shadow-sm">
+                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
                   <div className="flex items-center space-x-4">
-                    <div className="bg-emerald-100 p-3 rounded-full">
-                      <TrendingUp className="h-6 w-6 text-emerald-600" />
+                    <div className="p-3 bg-blue-100 rounded-full">
+                      <DollarSign className="w-6 h-6 text-blue-600" />
                     </div>
                     <div>
-                      <div className="text-sm font-medium text-gray-500">Balance Total</div>
-                      <div className="text-xl font-bold text-gray-900">{formatCurrency(balance)}</div>
+                      <p className="text-sm text-gray-500">Balance Total</p>
+                      <p className="text-2xl font-semibold text-gray-900">{formatCurrency(balance)}</p>
                     </div>
-                  </div>
-                </Card>
-  
-                <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-none shadow-sm">
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-blue-100 p-3 rounded-full">
-                      <DollarSign className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium text-gray-500">Ingresos Totales</div>
-                      <div className="text-xl font-bold text-emerald-600">{formatCurrency(totalIncome)}</div>
-                    </div>
-                  </div>
-                </Card>
-              </>
-            )}
-  
-            {(userRole === "admin" || userRole === "superadmin") && (
-              <Card className="bg-gradient-to-br from-red-50 to-orange-50 border-none shadow-sm">
-                <div className="flex items-center space-x-4">
-                  <div className="bg-red-100 p-3 rounded-full">
-                    <CreditCard className="h-6 w-6 text-red-600" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-gray-500">Gastos Totales</div>
-                    <div className="text-xl font-bold text-red-600">{formatCurrency(totalExpenses)}</div>
                   </div>
                 </div>
-              </Card>
+
+                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                  <div className="flex items-center space-x-4">
+                    <div className="p-3 bg-green-100 rounded-full">
+                      <TrendingUp className="w-6 h-6 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Ingresos Totales</p>
+                      <p className="text-2xl font-semibold text-green-600">{formatCurrency(totalIncome)}</p>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {(userRole === "admin" || userRole === "superadmin") && (
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 bg-red-100 rounded-full">
+                    <CreditCard className="w-6 h-6 text-red-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Gastos Totales</p>
+                    <p className="text-2xl font-semibold text-red-600">{formatCurrency(totalExpenses)}</p>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
-  
-          {/* Barra de búsqueda */}
-          <div className="mt-6 flex justify-center">
-            <div className="w-full max-w-2xl">
-              <Input
-                prefix={<Search className="h-4 w-4 text-gray-400" />}
-                placeholder="Buscar transacciones..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-10 rounded-lg"
-              />
-            </div>
-          </div>
+
+
+
         </div>
-  
+
         {/* Navegación entre categorías */}
-        <div className="border-t">
+        <div className="bg-white border-b">
           <div className="max-w-7xl mx-auto">
             <Header onNavClick={handleNavClick} />
           </div>
         </div>
       </div>
-  
+
       {/* Contenido principal */}
       <div className="max-w-full py-4 mx-auto  ">
         <div className="bg-white rounded-lg shadow-sm border">
@@ -420,7 +442,7 @@ const TransactionsDashboard = () => {
                 </p>
               </div>
             )}
-  
+
             {selectedEndpoint === "/incomes" && (
               <IncomeTable
                 entries={paginatedEntries}
@@ -435,7 +457,7 @@ const TransactionsDashboard = () => {
                 onOpenModal={openModal}
               />
             )}
-  
+
             {selectedEndpoint === "/expenses" && (
               <ExpenseTable
                 entries={paginatedEntries}
@@ -450,7 +472,7 @@ const TransactionsDashboard = () => {
                 onOpenModal={openModal}
               />
             )}
-  
+
             {selectedEndpoint === "/transfers" && (
               <TransactionTable
                 entries={paginatedEntries}
@@ -468,7 +490,7 @@ const TransactionsDashboard = () => {
           </div>
         </div>
       </div>
-  
+
       {/* Navegación de meses */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-md">
         <div className="max-w-7xl mx-auto px-6 py-2">
@@ -479,7 +501,7 @@ const TransactionsDashboard = () => {
               onClick={handlePreviousMonth}
               className="hover:bg-gray-100"
             />
-  
+
             <div className="flex overflow-x-auto space-x-2 px-2">
               {getMonthsArray().map((date) => {
                 const isCurrentMonth = formatDate(date, "yyyy-MM") === formatDate(currentMonth, "yyyy-MM");
@@ -500,7 +522,7 @@ const TransactionsDashboard = () => {
                 );
               })}
             </div>
-  
+
             <Button
               type="text"
               icon={<ChevronRight className="w-4 h-4" />}
@@ -510,7 +532,7 @@ const TransactionsDashboard = () => {
           </div>
         </div>
       </div>
-  
+
       {/* Modales */}
       <AddEntryModal
         isOpen={isModalOpen}
@@ -519,21 +541,27 @@ const TransactionsDashboard = () => {
         transactionToEdit={editTransaction}
         transactionType={transactionType}
       />
-  
+
+      <PlusModal
+        isOpen={isPlusModalOpen}
+        onClose={closePlusModal}
+        buttonPosition={buttonPosition}
+      />
+
       <AddIncome
         isOpen={isIncomeModalOpen}
         onClose={closeIncomeModal}
         onTransactionAdded={handleEntryAdded}
         transactionToEdit={editTransaction}
       />
-  
+
       <AddExpense
         isOpen={isExpenseModalOpen}
         onClose={closeExpenseModal}
         onTransactionAdded={handleEntryAdded}
         transactionToEdit={editTransaction}
       />
-  
+
       <VoucherContentModal
         isOpen={isContentModalOpen}
         onClose={closeContentModal}

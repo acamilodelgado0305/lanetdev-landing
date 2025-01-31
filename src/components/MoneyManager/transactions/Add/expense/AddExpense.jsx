@@ -37,7 +37,7 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
   const [providers, setProviders] = useState([]);
   const [finalAmount, setFinalAmount] = useState(0);
   const [isRecurring, setIsRecurring] = useState(false);
-  const [recurringDuration, setRecurringDuration] = useState(3);
+  const [recurringDuration, setRecurringDuration] = useState(0);
   const [subType, setSubType] = useState("");
 
   // Nuevos estados para IVA y retención
@@ -87,6 +87,7 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
     try {
       const response = await fetch(`${apiUrl}/providers`);
       const data = await response.json();
+      console.log("Proveedores obtenidos:", data); // Mostrar en consola
       setProviders(data);
     } catch (error) {
       console.error("Error al obtener los proveedores:", error);
@@ -140,7 +141,7 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
         description: description,
         provider_id: provider || null,
         recurrent: isRecurring,
-        timerecurrent: isRecurring ? (recurringDuration === 'indefinido' ? 999999 : parseInt(recurringDuration)) : null,
+        timerecurrent: isRecurring ? (recurringDuration === 'indefinido' ? 999999 : parseInt(recurringDuration)) : 1,
         estado: true,
         // Campos de impuestos
         tax_type: hasIva ? 'IVA' : null,
@@ -256,13 +257,14 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
         }
       >
         {providers.map((provider) => (
-          <Select.Option key={provider.nombre_comercial} value={provider.nombre_comercial}>
-            {provider.name}
+          <Select.Option key={provider.id} value={provider.id}>
+            {provider.razon_social}
           </Select.Option>
         ))}
       </Select>
     </div>
   );
+
 
 
   const RecurringExpenseSelector = () => (
@@ -433,7 +435,7 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
 
             {/* Right Column - Financial Details */}
             <div className="space-y-6 h-full ">
-            <div className="bg-white p-3  border-l border-gray-300 shadow-sm h-[42em] overflow-y-auto">
+              <div className="bg-white p-3  border-l border-gray-300 shadow-sm h-[42em] overflow-y-auto">
                 <div className="flex justify-center">
                   <h3 className="font-bold text-gray-500 pb-2 ">
                     Detalles Financieros
