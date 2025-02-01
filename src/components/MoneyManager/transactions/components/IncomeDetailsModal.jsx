@@ -194,20 +194,12 @@ const TransactionDetailModal = ({
                 message.error("Por favor seleccione una cuenta.");
                 return;
             }
-
-            // Subir imágenes seleccionadas al servidor y obtener sus URLs
-            const uploadedImageUrls = await Promise.all(
-                selectedImages.map(async (file) => {
-                    const uploadedImageUrl = await uploadImage(file);
-                    return uploadedImageUrl;
-                })
-            );
             const formattedEntry = {
                 ...editedEntry,
                 amount: parseFloat(editedEntry.amount),
                 amountfev: parseFloat(editedEntry.amountfev) || 0,
                 amountdiverse: parseFloat(editedEntry.amountdiverse) || 0,
-                voucher: updatedVoucher, // Reemplazar las imágenes anteriores por las nuevas
+                //voucher: updatedVoucher, // Reemplazar las imágenes anteriores por las nuevas
                 estado: editedEntry.estado === "Activo" || editedEntry.estado === true,
             };
 

@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
-import { Button, Table, Tooltip, Dropdown, Menu, Drawer } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Button, Table, Input, Tooltip, Dropdown, Menu, Drawer } from 'antd';
 import { format as formatDate } from 'date-fns';
-import { FilterOutlined, CaretDownOutlined } from '@ant-design/icons';
 import _ from 'lodash';
 import ExpenseDetailModal from './ExpenseDetailModal';
-
+import axios from "axios";
 const ExpenseTable = ({
     entries,
     categories = [],
@@ -15,6 +14,35 @@ const ExpenseTable = ({
     const [selectedEntry, setSelectedEntry] = useState(null);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedImages, setSelectedImages] = useState([]);
+    const [providers, setProviders] = useState({});
+    const [searchText, setSearchText] = useState({});
+    const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
+
+    useEffect(() => {
+        const fetchProviders = async () => {
+            try {
+                const response = await axios.get(`${API_BASE_URL}/providers`);
+                const data = response.data;
+                const providerMap = data.reduce((acc, provider) => {
+                    acc[provider.id] = provider.razon_social || provider.nombre_comercial || "Proveedor no encontrado";
+                    return acc;
+                }, {});
+                setProviders(providerMap);
+            } catch (error) {
+                console.error('Error obteniendo proveedores:', error);
+            }
+        };
+
+        fetchProviders();
+    }, []);
+
+    const handleSearch = (value, dataIndex) => {
+        setSearchText((prev) => ({
+            ...prev,
+            [dataIndex]: value.toLowerCase(),
+        }));
+    };
+
 
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat("en-US", {
@@ -36,151 +64,196 @@ const ExpenseTable = ({
 
     const columns = [
         {
-            title: 'Fecha',
+            title: (
+                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Fecha
+                    <Input
+                        placeholder="Buscar"
+                        onChange={(e) => handleSearch(e.target.value, "date")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                    />
+                </div>
+            ),
             dataIndex: 'date',
             key: 'date',
-            width: '130px',
             filterSearch: true,
-            filters: [...new Set(entries.map((entry) => formatDate(new Date(entry.date), "d MMM yyyy")))].map((formattedDate) => ({
-                text: formattedDate,
-                value: formattedDate,
-            })),
             render: (text) => formatDate(new Date(text), "d MMM yyyy"),
-            sorter: (a, b) => new Date(a.date) - new Date(b.date), // Orden cronológico
-            sortDirections: ["descend", "ascend"], // De más reciente a más antiguo
+            sorter: (a, b) => new Date(a.date) - new Date(b.date),
+            sortDirections: ["descend", "ascend"],
+            onFilter: (value, record) =>
+                record.date && record.date.toLowerCase().includes(searchText["date"] || ""),
         },
         {
-            title: 'Descripción',
+            title: (
+                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Descripción
+                    <Input
+                        placeholder="Buscar"
+                        onChange={(e) => handleSearch(e.target.value, "description")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                    />
+                </div>
+            ),
             dataIndex: "description",
             key: "description",
-            width: '230px',
-            filterSearch: true,
-            filters: [...new Set(entries.map((entry) => entry.description))].map((description) => ({
-                text: description,
-                value: description,
-            })),
-            onFilter: (value, record) => record.description === value,
             sorter: (a, b) => a.amount - b.amount,
             sortDirections: ["ascend", "descend"],
+            onFilter: (value, record) =>
+                record.description &&
+                record.description.toLowerCase().includes(searchText["description"] || ""),
         },
         {
-            title: 'Cuenta',
+            title: (
+                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Cuenta
+                    <Input
+                        placeholder="Buscar"
+                        onChange={(e) => handleSearch(e.target.value, "account_id")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                    />
+                </div>
+            ),
             dataIndex: "account_id",
             key: "account_id",
-            width: '220px',
-            filterSearch: true,
-            render: (id) => getAccountName(id),
-            filters: [...new Set(entries.map((entry) => getAccountName(entry.account_id)))].map((name) => ({
-                text: name,
-                value: name,
-            })),
-            onFilter: (value, record) => getAccountName(record.account_id) === value,
             sorter: (a, b) => getAccountName(a.account_id).localeCompare(getAccountName(b.account_id)),
             sortDirections: ["ascend", "descend"],
+            onFilter: (value, record) =>
+                record.account_id &&
+                record.account_id.toLowerCase().includes(searchText["account_id"] || ""),
         },
         {
-            title: 'Categoría',
+            title: (
+                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Categoría
+                    <Input
+                        placeholder="Buscar"
+                        onChange={(e) => handleSearch(e.target.value, "category_id")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                    />
+                </div>
+            ),
             dataIndex: 'category_id',
             key: 'category_id',
-            width: '220px',
-            filterSearch: true,
-            render: (id) => getCategoryName(id),
-            filters: [...new Set(entries.map((entry) => getCategoryName(entry.category_id)))].map((name) => ({
-                text: name,
-                value: name,
-            })),
-            onFilter: (value, record) => getCategoryName(record.category_id) === value,
             sorter: (a, b) => getAccountName(a.category_id).localeCompare(getAccountName(b.category_id)),
             sortDirections: ["ascend", "descend"],
+            onFilter: (value, record) =>
+                record.category_id &&
+                record.category_id.toLowerCase().includes(searchText["category_id"] || ""),
         },
         {
-            title: 'Monto',
+            title: (
+                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Monto
+                    <Input
+                        placeholder="Buscar"
+                        onChange={(e) => handleSearch(e.target.value, "amount")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                    />
+                </div>
+            ),
             dataIndex: 'amount',
             key: "amount",
-            width: '150px',
-            filterSearch: true,
-            filters: [...new Set(entries.map((entry) => entry.amount))].map((amount) => ({
-                text: formatCurrency(amount),
-                value: amount,
-            })),
-            onFilter: (value, record) => record.amount === value,
             render: (amount) => formatCurrency(amount),
             sorter: (a, b) => a.amount - b.amount,
             sortDirections: ["descend", "ascend"],
+            onFilter: (value, record) =>
+                record.amount &&
+                record.amount.toLowerCase().includes(searchText["amount"] || ""),
         },
         {
-            title: 'Impuestos',
+            title: (
+                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Impuestos
+                    <Input
+                        placeholder="Buscar"
+                        onChange={(e) => handleSearch(e.target.value, "tax_type")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                    />
+                </div>
+            ),
             dataIndex: 'tax_type',
             key: 'tax_type',
-            width: '150px',
-            filterSearch: true,
-            filters: [...new Set(entries.map((entry) => entry.tax_type))].map((taxType) => ({
-                text: taxType,
-                value: taxType,
-            })),
-            onFilter: (value, record) => record.tax_type === value,
             sorter: (a, b) => a.amount - b.amount,
             sortDirections: ["ascend", "descend"],
+            onFilter: (value, record) =>
+                record.tax_type &&
+                record.tax_type.toLowerCase().includes(searchText["tax_type"] || ""),
         },
         {
-            title: 'Proveedor',
+            title: (
+                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Proveedor
+                    <Input
+                        placeholder="Buscar"
+                        onChange={(e) => handleSearch(e.target.value, "provider_id")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                    />
+                </div>
+            ),
             dataIndex: 'provider_id',
-            width: '150px',
-            filterSearch: true,
-            filters: [...new Set(entries.map((entry) => entry.provider_id))].map((provider) => ({
-                text: provider,
-                value: provider,
-            })),
-            onFilter: (value, record) => record.provider_id === value,
-            sorter: (a, b) => a.amount - b.amount,
+            render: (id) => providers[id] || "Proveedor no encontrado",
+            sorter: (a, b) => a.provider_id - b.provider_id,
             sortDirections: ["ascend", "descend"],
+            onFilter: (value, record) =>
+                record.provider_id &&
+                record.provider_id.toLowerCase().includes(searchText["provider_id"] || ""),
         },
         {
-            title: 'Retención',
+            title: (
+                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Retención
+                    <Input
+                        placeholder="Buscar"
+                        onChange={(e) => handleSearch(e.target.value, "retention_type")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                    />
+                </div>
+            ),
             dataIndex: 'retention_type',
             key: 'retention_type',
-            width: '150px',
-            filterSearch: true,
-            filters: [
-                ...new Set(entries.map((entry) => entry.retention_type || 'Sin información'))
-            ].map((retention) => ({
-                text: retention || 'Sin información',
-                value: retention || 'Sin información',
-            })),
-            onFilter: (value, record) => (record.retention_type || 'Sin información') === value,
             render: (retention) => (
-                <span>{retention || 'Sin información'}</span> // Muestra 'Sin información' si retention_type es null
+                <span>{retention || 'Sin información'}</span>
             ),
             sorter: (a, b) => {
-                // Aseguramos que el ordenamiento funcione correctamente
                 if (!a.retention_type) return 1;
                 if (!b.retention_type) return -1;
                 return a.retention_type.localeCompare(b.retention_type);
             },
             sortDirections: ["ascend", "descend"],
+            onFilter: (value, record) =>
+                record.retention_type &&
+                record.retention_type.toLowerCase().includes(searchText["retention_type"] || ""),
         },
         {
-            title: 'Estado',
+            title: (
+                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Estado
+                    <Input
+                        placeholder="Buscar"
+                        onChange={(e) => handleSearch(e.target.value, "estado")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                    />
+                </div>
+            ),
             dataIndex: 'estado',
             key: 'estado',
-            width: '120px',
-            filterSearch: true,
-            filters: [
-                { text: 'Activo', value: true },
-                { text: 'Inactivo', value: false },
-            ],
-            onFilter: (value, record) => record.estado === value,
             render: (estado) => (
                 <span>{estado ? 'Activo' : 'Inactivo'}</span> // Muestra 'Activo' si estado es true, 'Inactivo' si es false
             ),
             sorter: (a, b) => a.estado - b.estado,
             sortDirections: ["ascend", "descend"],
+            onFilter: (value, record) =>
+                record.estado &&
+                record.estado.toLowerCase().includes(searchText["estado"] || ""),
         },
         {
-            title: "Comprobante",
+            title: (
+                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Comprobante
+                </div>
+            ),
             dataIndex: "voucher",
             key: "voucher",
-            filterSearch: true,
             render: (vouchers) =>
                 Array.isArray(vouchers) && vouchers.length > 0 ? (
                     <a
@@ -220,7 +293,11 @@ const ExpenseTable = ({
         <>
             <div className="overflow-auto h-[39em]">
                 <Table
-                    dataSource={entries}
+                    dataSource={entries.filter((entry) =>
+                        Object.keys(searchText).every((key) =>
+                            entry[key] ? entry[key].toString().toLowerCase().includes(searchText[key]) : true
+                        )
+                    )}
                     columns={columns}
                     rowKey={(record) => record.id}
                     pagination={{ pageSize: 10 }}
@@ -230,7 +307,20 @@ const ExpenseTable = ({
                     })}
                     rowClassName="clickable-row"
                 />
+                <style>
+                    {`
+                .ant-table-cell {
+                    padding: 8px !important;  /* 🔹 Reduce el padding de las celdas */
+                    font-size: 14px; /* 🔹 Reduce el tamaño del texto */
+                }
+
+                .compact-row {
+                    height: 24px !important; /* 🔹 Reduce la altura de la fila */
+                }
+                `}
+                </style>
                 <style jsx>{`.clickable-row {cursor: pointer;}`}</style>
+
             </div>
             <Drawer
                 visible={isDrawerOpen}
