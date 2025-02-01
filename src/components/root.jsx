@@ -24,8 +24,8 @@ import { useAuth } from '../components/Context/AuthProvider';
 const SidebarLink = ({ to, icon: Icon, label, isExpanded, hasSubmenu, isSubmenuOpen, onSubmenuClick, submenuItems }) => {
   // Check if the current route is active or is a child route
   const isActive = window.location.pathname === to;
-  const isNestedRouteActive = hasSubmenu && submenuItems 
-    ? submenuItems.some(item => window.location.pathname.startsWith(item.to)) 
+  const isNestedRouteActive = hasSubmenu && submenuItems
+    ? submenuItems.some(item => window.location.pathname.startsWith(item.to))
     : false;
 
   const LinkContent = () => (
@@ -62,7 +62,7 @@ const SidebarLink = ({ to, icon: Icon, label, isExpanded, hasSubmenu, isSubmenuO
           className={`
             w-full flex items-center p-3 my-1 text-sm rounded-xl transition-all duration-300
             ${(isActive || isNestedRouteActive)
-              ? 'bg-gray-700 text-white shadow-lg backdrop-blur-sm' 
+              ? 'bg-gray-700 text-white shadow-lg backdrop-blur-sm'
               : 'text-gray-300 hover:bg-gray-700 hover:text-white'}
             ${isExpanded ? 'justify-start mx-2' : 'justify-center mx-auto w-12'}
             group relative
@@ -78,8 +78,8 @@ const SidebarLink = ({ to, icon: Icon, label, isExpanded, hasSubmenu, isSubmenuO
                 to={item.to}
                 className={`
                   flex items-center p-1 text-sm 
-                  ${window.location.pathname === item.to 
-                    ? 'bg-gray-700 text-white' 
+                  ${window.location.pathname === item.to
+                    ? 'bg-gray-700 text-white'
                     : 'text-gray-300 hover:bg-gray-700 hover:text-white'}
                   transition-all duration-200
                 `}
@@ -100,8 +100,8 @@ const SidebarLink = ({ to, icon: Icon, label, isExpanded, hasSubmenu, isSubmenuO
       to={to}
       className={`
         flex items-center p-2 my-1 text-sm transition-all duration-300
-        ${isActive 
-          ? 'bg-gray-700 text-white shadow-lg backdrop-blur-sm' 
+        ${isActive
+          ? 'bg-gray-700 text-white shadow-lg backdrop-blur-sm'
           : 'text-gray-300 hover:bg-gray-700 hover:text-white'}
         ${isExpanded ? 'justify-start mx-2' : 'justify-center mx-auto w-12'}
         group relative
@@ -140,7 +140,7 @@ export default function Root() {
     () => [
       { to: "/index", label: "Inicio", icon: HomeIcon },
       { to: "/index/network", label: "Gestion de Red", icon: WaypointsIcon },
-      
+
 
       userRole === "superadmin" && { to: "/index/clientes", label: "Clientes", icon: UsersIcon },
       { to: "/productos", label: "Productos", icon: ShoppingCartIcon },
@@ -166,7 +166,7 @@ export default function Root() {
         hasSubmenu: true,
         submenuItems: moneyManagerSubmenuItems
       },
-      { to: "/index/doc", label: "Documentación", icon: FileTextIcon },   
+      { to: "/index/doc", label: "Documentación", icon: FileTextIcon },
       { to: "/index/communication", label: "Comunicación", icon: MessageCircleIcon },
     ].filter(Boolean),
     [userRole]
@@ -199,20 +199,26 @@ export default function Root() {
   }, [isExpanded]);
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Botón de menú móvil */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-primary rounded-xl shadow-lg backdrop-blur-sm bg-opacity-90 text-white hover:bg-opacity-100 transition-all duration-300"
-      >
-        <MenuIcon className="w-6 h-6" />
-      </button>
+    <>
 
-      {/* Sidebar mejorado con pin */}
-      <aside
-        onMouseEnter={handleSidebarMouseEnter}
-        onMouseLeave={handleSidebarMouseLeave}
-        className={`
+      <Header unreadEmailsCount={unreadEmailsCount} />
+
+
+      <div className="flex h-screen bg-gray-100">
+
+        {/* Botón de menú móvil */}
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-primary rounded-xl shadow-lg backdrop-blur-sm bg-opacity-90 text-white hover:bg-opacity-100 transition-all duration-300"
+        >
+          <MenuIcon className="w-6 h-6" />
+        </button>
+
+        {/* Sidebar mejorado con pin */}
+        <aside
+          onMouseEnter={handleSidebarMouseEnter}
+          onMouseLeave={handleSidebarMouseLeave}
+          className={`mt-[59px]
           fixed inset-y-0 left-0 z-40 
           ${isExpanded ? "w-55" : "w-20"} 
           bg-gradient-to-b from-primary to-primary/90
@@ -221,158 +227,159 @@ export default function Root() {
           hidden lg:flex flex-col
           border-r border-white/10
         `}
-      >
-        {/* Contenedor de botones de control */}
-        <div className="absolute -right-3 flex flex-col gap-2 top-20">
-          {/* Botón de pin */}
-          <button
-            onClick={togglePin}
-            className={`
+        >
+          {/* Contenedor de botones de control */}
+          <div className="absolute -right-3 flex flex-col gap-2 top-20">
+            {/* Botón de pin */}
+            <button
+              onClick={togglePin}
+              className={`
               bg-primary p-1.5 rounded-full shadow-lg 
               hover:bg-primary-dark transition-colors duration-200
               ${isPinned ? 'ring-2 ring-white ring-opacity-50' : ''}
             `}
-            title={isPinned ? "Desfijar sidebar" : "Fijar sidebar"}
-          >
-            {isPinned ? (
-              <PinIcon className="w-4 h-4 text-white" />
-            ) : (
-              <PinOffIcon className="w-4 h-4 text-white" />
-            )}
-          </button>
-
-          {/* Botón de expandir/contraer */}
-          {isPinned && (
-            <button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="bg-primary p-1.5 rounded-full shadow-lg hover:bg-primary-dark transition-colors duration-200"
-              title={isExpanded ? "Contraer sidebar" : "Expandir sidebar"}
+              title={isPinned ? "Desfijar sidebar" : "Fijar sidebar"}
             >
-              <ChevronRightIcon
-                className={`w-4 h-4 text-white transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
-              />
+              {isPinned ? (
+                <PinIcon className="w-4 h-4 text-white" />
+              ) : (
+                <PinOffIcon className="w-4 h-4 text-white" />
+              )}
             </button>
-          )}
-        </div>
 
-        <UserProfileHeader
-          onToggle={() => setIsOpen(false)}
-          isUserProfileOpen={isUserProfileOpen}
-          setIsUserProfileOpen={setIsUserProfileOpen}
-          isExpanded={isExpanded}
-        />
+            {/* Botón de expandir/contraer */}
+            {isPinned && (
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="bg-primary p-1.5 rounded-full shadow-lg hover:bg-primary-dark transition-colors duration-200"
+                title={isExpanded ? "Contraer sidebar" : "Expandir sidebar"}
+              >
+                <ChevronRightIcon
+                  className={`w-4 h-4 text-white transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+                />
+              </button>
+            )}
+          </div>
 
-        {/* Sidebar Content */}
-        <nav className="flex-1 py-4">
-          <SidebarSection title={<span className="capitalize">menú</span>} isExpanded={isExpanded}>
-            {mainMenuLinks.map(link => (
+          <UserProfileHeader
+            onToggle={() => setIsOpen(false)}
+            isUserProfileOpen={isUserProfileOpen}
+            setIsUserProfileOpen={setIsUserProfileOpen}
+            isExpanded={isExpanded}
+          />
+
+          {/* Sidebar Content */}
+          <nav className="flex-1 py-4">
+            <SidebarSection title={<span className="capitalize">menú</span>} isExpanded={isExpanded}>
+              {mainMenuLinks.map(link => (
+                <SidebarLink
+                  key={link.to}
+                  {...link}
+                  isExpanded={isExpanded}
+                  isActive={window.location.pathname === link.to}
+                />
+              ))}
+            </SidebarSection>
+
+
+
+
+            {resourcesMenuLinks.map(link => (
               <SidebarLink
-                key={link.to}
+                key={link.hasSubmenu ? link.label : link.to}
                 {...link}
                 isExpanded={isExpanded}
                 isActive={window.location.pathname === link.to}
+                isSubmenuOpen={link.label === "Contabilidad" ? isMoneyManagerOpen : false}
+                onSubmenuClick={() => {
+                  if (link.label === "Contabilidad") {
+                    setIsMoneyManagerOpen(!isMoneyManagerOpen);
+                  }
+                }}
               />
             ))}
-          </SidebarSection>
+
+          </nav>
 
 
-
-
-          {resourcesMenuLinks.map(link => (
-            <SidebarLink
-              key={link.hasSubmenu ? link.label : link.to}
-              {...link}
-              isExpanded={isExpanded}
-              isActive={window.location.pathname === link.to}
-              isSubmenuOpen={link.label === "Contabilidad" ? isMoneyManagerOpen : false}
-              onSubmenuClick={() => {
-                if (link.label === "Contabilidad") {
-                  setIsMoneyManagerOpen(!isMoneyManagerOpen);
-                }
-              }}
-            />
-          ))}
-
-        </nav>
-
-
-        {/* Sidebar Footer */}
-        <div className={`p-4 border-t border-white/10 bg-black/20 ${isExpanded ? 'text-center' : 'text-center'}`}>
-          {isExpanded ? (
-            <p className="text-xs text-gray-400">© 2024 IspSuite</p>
-          ) : (
-            <span className="text-gray-400 text-lg">•••</span>
-          )}
-        </div>
-      </aside>
-
-      {/* Contenido principal */}
-      <div className={`flex-1 transition-all duration-300 ${isExpanded ? 'lg:ml-64' : 'lg:ml-20'}`}>
-        <Header unreadEmailsCount={unreadEmailsCount} />
-        <main className="overflow-x-hidden overflow-y-auto">
-          <div className="">
-            <Outlet context={{ setUnreadEmailsCount }} />
+          {/* Sidebar Footer */}
+          <div className={`p-4 border-t border-white/10 bg-black/20 ${isExpanded ? 'text-center' : 'text-center'}`}>
+            {isExpanded ? (
+              <p className="text-xs text-gray-400">© 2024 IspSuite</p>
+            ) : (
+              <span className="text-gray-400 text-lg">•••</span>
+            )}
           </div>
-        </main>
-      </div>
+        </aside>
+
+        {/* Contenido principal */}
+        <div className={`flex-1 transition-all duration-300 ${isExpanded ? 'lg:ml-64' : 'lg:ml-20'}`}>
+
+          <main className="overflow-x-hidden overflow-y-auto mt-24">
+            <div className="">
+              <Outlet context={{ setUnreadEmailsCount }} />
+            </div>
+          </main>
+        </div>
 
 
-      {/* Overlay móvil mejorado */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setIsOpen(false)}
-          />
-          <aside className="absolute inset-y-0 left-0 w-64 bg-primary shadow-2xl animate-slide-in z-10">
-            <UserProfileHeader
-              onToggle={() => setIsOpen(false)}
-              isUserProfileOpen={isUserProfileOpen}
-              setIsUserProfileOpen={setIsUserProfileOpen}
-              isExpanded={true}
+        {/* Overlay móvil mejorado */}
+        {isOpen && (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <div
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              onClick={() => setIsOpen(false)}
             />
-            <nav className="p-4">
-              <SidebarSection title="Menú principal" isExpanded={true}>
-                {mainMenuLinks.map(link => (
-                  <SidebarLink
-                    key={link.to}
-                    {...link}
-                    isExpanded={true}
-                    isActive={window.location.pathname === link.to}
-                  />
-                ))}
-              </SidebarSection>
-              <SidebarSection title="Recursos" isExpanded={true}>
-                {resourcesMenuLinks.map(link => (
-                  <SidebarLink
-                    key={link.to}
-                    {...link}
-                    isExpanded={true}
-                    isActive={window.location.pathname === link.to}
-                  />
-                ))}
-              </SidebarSection>
-            </nav>
-          </aside>
+            <aside className="absolute inset-y-0 left-0 w-64 bg-primary shadow-2xl animate-slide-in z-10">
+              <UserProfileHeader
+                onToggle={() => setIsOpen(false)}
+                isUserProfileOpen={isUserProfileOpen}
+                setIsUserProfileOpen={setIsUserProfileOpen}
+                isExpanded={true}
+              />
+              <nav className="p-4">
+                <SidebarSection title="Menú principal" isExpanded={true}>
+                  {mainMenuLinks.map(link => (
+                    <SidebarLink
+                      key={link.to}
+                      {...link}
+                      isExpanded={true}
+                      isActive={window.location.pathname === link.to}
+                    />
+                  ))}
+                </SidebarSection>
+                <SidebarSection title="Recursos" isExpanded={true}>
+                  {resourcesMenuLinks.map(link => (
+                    <SidebarLink
+                      key={link.to}
+                      {...link}
+                      isExpanded={true}
+                      isActive={window.location.pathname === link.to}
+                    />
+                  ))}
+                </SidebarSection>
+              </nav>
+            </aside>
 
-          <div
-            className={`
+            <div
+              className={`
           flex-1 transition-all duration-300
           ${isPinned
-                ? isExpanded ? 'lg:ml-64' : 'lg:ml-20'
-                : isExpanded ? 'lg:ml-64' : 'lg:ml-20'
-              }
+                  ? isExpanded ? 'lg:ml-64' : 'lg:ml-20'
+                  : isExpanded ? 'lg:ml-64' : 'lg:ml-20'
+                }
         `}
-          >
-            <Header unreadEmailsCount={unreadEmailsCount} />
-            <main className=" overflow-x-hidden overflow-y-auto">
+            >
+              <Header unreadEmailsCount={unreadEmailsCount} />
+              <main className=" overflow-x-hidden overflow-y-auto">
 
-              <Outlet context={{ setUnreadEmailsCount }} />
+                <Outlet context={{ setUnreadEmailsCount }} />
 
-            </main>
+              </main>
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </>
   );
 }

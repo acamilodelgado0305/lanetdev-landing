@@ -46,11 +46,7 @@ const UserProfileHeader = ({ onToggle, isUserProfileOpen, setIsUserProfileOpen }
     return (
         <div className="border-b border-gray-200" ref={dropdownRef}>
             <div className="flex items-center justify-between h-16 px-4">
-                <img
-                    src="https://res.cloudinary.com/djbe9agfz/image/upload/v1726013391/LOGO_i1vjvs.png"
-                    alt="Logo Lanet"
-                    className="ml-4 h-10 rounded-full"
-                />
+
                 <button
                     onClick={onToggle}
                     className="p-1 text-gray-600 rounded-md lg:hidden hover:bg-gray-100"
