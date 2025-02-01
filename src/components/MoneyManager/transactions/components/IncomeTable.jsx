@@ -1,14 +1,24 @@
 import React, { useState } from "react";
-import { Table, Button, Drawer, Tooltip } from "antd";
+import { Table, Input, Drawer, Button } from "antd";
 import { format as formatDate } from "date-fns";
 import IncomeDetailModal from "./IncomeDetailsModal";
 
 
 const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedEntry, setSelectedEntry] = useState(null);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedImages, setSelectedImages] = useState([]);
+
+    const [searchText, setSearchText] = useState({});
+
+    const handleSearch = (value, dataIndex) => {
+        setSearchText((prev) => ({
+            ...prev,
+            [dataIndex]: value.toLowerCase(),
+        }));
+    };
 
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat("es-CO", {
@@ -76,79 +86,113 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
         setSelectedImages([]);
     };
 
-    // Definición de las columnas con filtros, búsqueda y ordenación
     const columns = [
         {
-            title: "Fecha",
+            title: (
+                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Fecha
+                    <Input
+                        placeholder="Buscar"
+                        onChange={(e) => handleSearch(e.target.value, "date")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                    />
+                </div>
+            ),
             dataIndex: "date",
             key: "date",
-            filterSearch: true,
-            filters: [...new Set(entries.map((entry) => formatDate(new Date(entry.date), "d MMM yyyy")))].map((formattedDate) => ({
-                text: formattedDate,
-                value: formattedDate,
-            })),
             render: (text) => formatDate(new Date(text), "d MMM yyyy"),
-            sorter: (a, b) => new Date(a.date) - new Date(b.date), // Orden cronológico
-            sortDirections: ["descend", "ascend"], // De más reciente a más antiguo
+            sorter: (a, b) => new Date(a.date) - new Date(b.date),
+            sortDirections: ["descend", "ascend"],
+            onFilter: (value, record) =>
+                record.date && record.date.toLowerCase().includes(searchText["date"] || ""),
         },
         {
-            title: "Descripción",
+            title: (
+                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Descripción
+                    <Input
+                        placeholder="Buscar"
+                        onChange={(e) => handleSearch(e.target.value, "description")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                    />
+                </div>
+            ),
             dataIndex: "description",
             key: "description",
-            filterSearch: true,
-            filters: [...new Set(entries.map((entry) => entry.description))].map((desc) => ({
-                text: desc,
-                value: desc,
-            })),
-            onFilter: (value, record) => record.description.includes(value), // Filtro por texto
-            sorter: (a, b) => a.description.localeCompare(b.description), // A-Z
-            sortDirections: ["ascend", "descend"], // Orden alfabético
+            sorter: (a, b) => a.description.localeCompare(b.description),
+            sortDirections: ["ascend", "descend"],
+            onFilter: (value, record) =>
+                record.description &&
+                record.description.toLowerCase().includes(searchText["description"] || ""),
         },
         {
-            title: "Cuenta",
+            title: (
+                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Cuenta
+                    <Input
+                        placeholder="Buscar"
+                        onChange={(e) => handleSearch(e.target.value, "account_id")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                    />
+                </div>
+            ),
             dataIndex: "account_id",
             key: "account_id",
-            filterSearch: true,
             render: (id) => getAccountName(id),
-            filters: [...new Set(entries.map((entry) => getAccountName(entry.account_id)))].map((name) => ({
-                text: name,
-                value: name,
-            })),
-            onFilter: (value, record) => getAccountName(record.account_id) === value, // Filtro exacto
-            sorter: (a, b) => getAccountName(a.account_id).localeCompare(getAccountName(b.account_id)), // A-Z
+            sorter: (a, b) => getAccountName(a.account_id).localeCompare(getAccountName(b.account_id)),
             sortDirections: ["ascend", "descend"],
+            onFilter: (value, record) =>
+                getAccountName(record.account_id)
+                    .toLowerCase()
+                    .includes(searchText["account_id"] || ""),
         },
         {
-            title: "Categoría",
+            title: (
+                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Categoría
+                    <Input
+                        placeholder="Buscar"
+                        onChange={(e) => handleSearch(e.target.value, "category_id")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                    />
+                </div>
+            ),
             dataIndex: "category_id",
             key: "category_id",
-            filterSearch: true,
             render: (id) => getCategoryName(id),
-            filters: [...new Set(entries.map((entry) => getCategoryName(entry.category_id)))].map((name) => ({
-                text: name,
-                value: name,
-            })),
-
-            onFilter: (value, record) => getCategoryName(record.category_id) === value,
             sorter: (a, b) => getCategoryName(a.category_id).localeCompare(getCategoryName(b.category_id)),
             sortDirections: ["ascend", "descend"],
+            onFilter: (value, record) =>
+                getCategoryName(record.category_id)
+                    .toLowerCase()
+                    .includes(searchText["category_id"] || ""),
         },
         {
-            title: "Monto Total",
+            title: (
+                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Monto Total
+                    <Input
+                        placeholder="Buscar"
+                        onChange={(e) => handleSearch(e.target.value, "amount")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                    />
+                </div>
+            ),
             dataIndex: "amount",
             key: "amount",
-            filterSearch: true,
-            filters: [...new Set(entries.map((entry) => entry.amount))].map((amount) => ({
-                text: formatCurrency(amount),
-                value: amount,
-            })),
-            onFilter: (value, record) => record.amount === value,
             render: (amount) => formatCurrency(amount),
             sorter: (a, b) => a.amount - b.amount,
             sortDirections: ["descend", "ascend"],
+            onFilter: (value, record) =>
+                record.amount.toString().toLowerCase().includes(searchText["amount"] || ""),
         },
         {
-            title: "Comprobante",
+
+            title: (
+                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Comprobante
+                </div>
+            ),
             dataIndex: "voucher",
             key: "voucher",
             filterSearch: true,
@@ -172,7 +216,11 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
     return (
         <>
             <Table
-                dataSource={entries}
+                dataSource={entries.filter((entry) =>
+                    Object.keys(searchText).every((key) =>
+                        entry[key] ? entry[key].toString().toLowerCase().includes(searchText[key]) : true
+                    )
+                )}
                 columns={columns}
                 rowKey={(record) => record.id}
                 pagination={{ pageSize: 10 }}
@@ -180,8 +228,20 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
                 onRow={(record) => ({
                     onClick: () => openModal(record),
                 })}
-                rowClassName="clickable-row"
+                rowClassName="clickable-row "
             />
+            <style>
+                {`
+                .ant-table-cell {
+                    padding: 8px !important;  /* 🔹 Reduce el padding de las celdas */
+                    font-size: 14px; /* 🔹 Reduce el tamaño del texto */
+                }
+
+                .compact-row {
+                    height: 24px !important; /* 🔹 Reduce la altura de la fila */
+                }
+                `}
+            </style>
             <style jsx>{`.clickable-row {cursor: pointer;}`}</style>
             <Drawer
                 visible={isDrawerOpen}
@@ -189,7 +249,7 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
                 placement="right"
                 width={420}
             >
-                <div className="flex flex-col items-center">
+                <div className="flex flex-col ">
                     <h1 className="mb-8">Comprobantes de ingresos</h1>
                     <div className="flex flex-wrap gap-4 justify-center mb-4">
                         {selectedImages.map((image, index) => (
