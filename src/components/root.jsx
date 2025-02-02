@@ -313,9 +313,9 @@ export default function Root() {
         </aside>
 
         {/* Contenido principal */}
-        <div className={`flex-1 transition-all duration-300 ${isExpanded ? 'lg:ml-64' : 'lg:ml-20'}`}>
+        <div className={`flex-1 transition-all duration-300 ${isExpanded ? 'lg:ml-64' : 'lg:ml-24'}`}>
 
-          <main className="overflow-x-hidden overflow-y-auto mt-20">
+          <main className="overflow-x-hidden overflow-y-auto mt-14">
             <div className="">
               <Outlet context={{ setUnreadEmailsCount }} />
             </div>
