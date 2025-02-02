@@ -54,7 +54,7 @@ const Header = ({ unreadEmailsCount }) => {
     };
 
     return (
-        <div className="fixed top-0 left-0 w-full bg-gray-200 shadow-sm z-50">
+        <div className="fixed top-0 left-0 w-full bg-gray-400 shadow-sm z-50">
             <div className="flex items-center justify-between w-full p-0">
                 <Link to="/index" className="ml-4">
                     <img
