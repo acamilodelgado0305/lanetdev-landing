@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { IoClose } from "react-icons/io5";
 import AccountSelector from "../AccountSelector ";
 import CategorySelector from '../CategorySelector';
-import { DatePicker, Input, Button, Tabs, Card, Radio } from "antd";
+import { DatePicker, Input, Button, Row, Col, Tabs, Card, Radio, Typography, Space, Checkbox } from "antd";
 import {
   BankOutlined,
   WalletOutlined,
@@ -14,6 +14,9 @@ import { uploadImage } from "../../../../../services/apiService";
 import dayjs from "dayjs";
 
 const apiUrl = import.meta.env.VITE_API_FINANZAS;
+
+const { Title, Text } = Typography;
+
 
 const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) => {
   const [transactionType, setTransactionType] = useState("expense");
@@ -345,8 +348,6 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
     }
     return null;
   };
-
-
   const renderVentaInputs = (selectedCategory) => {
     if (selectedCategory === ventaCategoryId?.toString()) {
       return (
@@ -371,167 +372,140 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
   };
 
   if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex justify-center items-center overflow-y-auto"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}>
-      <div className="bg-white shadow-2xl rounded-lg  max-w-[80%] max-h-[90%] overflow-y-auto">
-        {/* Header */}
-        <div className="bg-white">
-          <div className="px-6 pt-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <span className="text-green-700">
-                  <DollarCircleOutlined className="text-xl" />
-                </span>
-                <h2 className="text-xl font-semibold text-gray-800">
-                  {transactionToEdit ? "Editar Ingreso" : "Nuevo Ingreso"}
-                </h2>
-              </div>
-              <Button
-                type="text"
-                icon={<CloseOutlined className="text-lg" />}
-                onClick={onClose}
-                className="hover:bg-gray-100 rounded-full h-8 w-8 flex items-center justify-center"
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+      <div className="bg-white shadow-lg w-full max-w-4xl p-6 relative self-start">
+
+        {/* Encabezado */}
+        <div className="flex justify-between items-center mb-3">
+          <Title level={3} className="mb-0">
+            Crear un Ingreso
+          </Title>
+          <Space>
+            <Button onClick={onClose} type="default" className="border-gray-300 text-gray-600">
+              Cancelar
+            </Button>
+            <Button onClick={handleSave} type="primary" className="bg-green-500 text-white">
+              Guardar
+            </Button>
+          </Space>
+        </div>
+        <Card
+          className="mb-6"
+          bordered={false}
+
+        >
+
+          <div className="flex justify-between items-start mb-4">
+            {/* Descripción a la izquierda */}
+            <div className="w-2/3">
+              <label className="block text-sm font-medium text-gray-700">Descripción*</label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Añade una descripción"
+                rows={1}
+                className="w-[20em] border  p-1"
+              />
+            </div>
+
+            {/* Fecha a la derecha */}
+            <div className="w-1/4">
+              <label className="block text-sm font-medium text-gray-700">Fecha</label>
+              <DatePicker
+                value={date}
+                onChange={(newDate) => setDate(newDate)}
+                format="YYYY-MM-DD"
+                className="w-full"
               />
             </div>
           </div>
-          <div className="h-1 bg-green-700" />
-        </div>
-        <div className="pt-3 px-4">
-          <div className="grid grid-cols-2 gap-4">
-            {/* Columna de datos básicos */}
-            <div className="rounded-lg border  p-4 auto-rows-auto">
-              <div className="flex justify-center">
-                <h3 className="font-bold text-gray-500 pb-2 ">
-                  Información Básica
-                </h3>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Titulo*
-                </label>
-                <Input.TextArea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Añade una descripción"
-                  rows={2}
-                  className="w-full"
-                />
-              </div>
-              <div className="pb-8">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Fecha
-                </label>
-                <DatePicker
-                  value={date}
-                  onChange={(newDate) => setDate(newDate)}
-                  format="YYYY-MM-DD"
-                  className="w-full"
-                />
-              </div>
+          <Title level={5}>Tipo de Ingreso</Title>
+          <Space direction="vertical" className="w-full flex justify-center">
+            <Checkbox.Group className="w-full">
+              <Row gutter={[24, 16]} justify="center">
+                <Col span={8} className="flex justify-center">
+                  <Checkbox value="venta">
+                    <div className="font-medium">Venta</div>
+                  </Checkbox>
+                </Col>
+                <Col span={8} className="flex justify-center">
+                  <Checkbox value="arqueo">
+                    <div className="font-medium">Arqueo</div>
+                  </Checkbox>
+                </Col>
+              </Row>
+            </Checkbox.Group>
+          </Space>
+        </Card>
 
-              <div className="h-1 bg-green-700" />
+        <Card
+          className="mb-6"
+          bordered={false}>
 
-              <div className="mt-6 space-y-4">
-                <label className="block text-sm font-medium text-gray-700">
-                  Comprobantes
-                </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleImageUpload}
-                    className="w-full"
-                    disabled={isUploading}
-                  />
-                  {isUploading && (
-                    <div className="text-sm text-gray-500 mt-2">Subiendo imágenes...</div>
-                  )}
+            
+
+        </Card>
+
+        {/* Cuerpo */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Columna Izquierda: Detalles Básicos */}
+          <div className="space-y-4">
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Comprobantes</label>
+              <input
+                type="file"
+                multiple
+                onChange={handleImageUpload}
+                className="w-full border rounded-md p-2"
+              />
+              {isUploading && <p className="text-sm text-gray-500">Subiendo imágenes...</p>}
+              {imageUrls.length > 0 && (
+                <div className="mt-2 space-y-2">
+                  {imageUrls.map((url, index) => (
+                    <div key={index} className="relative group">
+                      <img src={url} alt={`Comprobante ${index}`} className="w-full h-24 object-cover rounded-md" />
+                      <button
+                        onClick={() => {
+                          setImageUrls((urls) => urls.filter((_, i) => i !== index));
+                          setVoucher((voucher) => voucher.replace(url, "").trim());
+                        }}
+                        className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 text-white rounded-full h-6 w-6 flex items-center justify-center"
+                      >
+                        <CloseOutlined />
+                      </button>
+                    </div>
+                  ))}
                 </div>
-                {imageUrls.length > 0 && (
-                  <div className="grid grid-cols-3 gap-4">
-                    {imageUrls.map((url, index) => (
-                      <div key={index} className="relative group">
-                        <img
-                          src={url}
-                          alt={`Comprobante ${index + 1}`}
-                          className="rounded-lg w-full h-24 object-cover"
-                        />
-                        <Button
-                          type="primary"
-                          danger
-                          size="small"
-                          icon={<IoClose />}
-                          onClick={() => {
-                            setImageUrls(urls => urls.filter((_, i) => i !== index));
-                            setVoucher(voucher => voucher.replace(url, '').trim());
-                          }}
-                          className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-
-
-            {/* Columna de datos financieros */}
-            <div className="bg-white p-4 rounded-lg border-l border-gray-500 shadow-sm h-[42em] overflow-y-auto">
-
-              <div className="flex justify-center">
-                <h3 className="font-bold text-gray-500 pb-2">
-                  Detalles Financieros
-                </h3>
-              </div>
-              <CategorySelector
-                categories={categories}
-                selectedCategory={category}
-                onCategorySelect={setCategory}
-                additionalInputs={(selectedCategory) => {
-                  if (selectedCategory === arqueoCategoryId?.toString()) {
-                    return renderArqueoInputs(selectedCategory);
-                  } else if (selectedCategory === ventaCategoryId?.toString()) {
-                    return renderVentaInputs(selectedCategory);
-                  }
-                  return null;
-                }}
-                onFevCheckChange={setIsFevChecked}
-                isFevChecked={isFevChecked}
-                ventaCategoryId={ventaCategoryId}
-              />
-
-              {/* Métodos de Pago */}
-              <AccountSelector
-                accounts={accounts}
-                selectedAccount={account}
-                onAccountSelect={setAccount}
-                formatCurrency={formatCurrency}
-              />
+              )}
             </div>
           </div>
 
-          {/* Adjuntos - Fuera del grid para mantener ancho completo */}
-
+          {/* Columna Derecha: Detalles Financieros */}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Categoría*</label>
+              <CategorySelector
+                value={category}
+                onChange={(value) => setCategory(value)}
+                categories={categories}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Cuenta*</label>
+              <AccountSelector
+                value={account}
+                onChange={(value) => setAccount(value)}
+                accounts={accounts}
+              />
+            </div>
+            {renderArqueoInputs(category)}
+            {renderVentaInputs(category)}
+          </div>
         </div>
+        <div className="mt-6 text-center text-sm text-gray-500 border-t border-dashed border-gray-400 pt-2"></div></div>
 
-        {/* Footer */}
-        <div className="sticky bottom-0 bg-white border-t p-6">
-          <Button
-            type="primary"
-            onClick={handleSave}
-            size="large"
-            className="w-full bg-green-700 hover:bg-green-700 h-12"
-          >
-            {transactionToEdit ? "Actualizar Ingreso" : "Registrar Ingreso"}
-          </Button>
-        </div>
-      </div>
     </div>
   );
 };
