@@ -167,6 +167,131 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
                     .toLowerCase()
                     .includes(searchText["category_id"] || ""),
         },
+
+        {
+            title: (
+                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Cajero
+                    <Input
+                        placeholder="Buscar"
+                        onChange={(e) => handleSearch(e.target.value, "category_id")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                    />
+                </div>
+            ),
+            dataIndex: "cashier_name",
+            key: "cashier_name",
+            sorter: (a, b) => a.cashier_name.localeCompare(b.cashier_name),
+            render: (text) => text || "No disponible",
+            onFilter: (value, record) =>
+                record.cashier_name.toString().toLowerCase().includes(searchText["cashier_name"] || ""),
+        },
+        {
+            title: (
+                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    N° de Arqueo
+                    <Input
+                        placeholder="Buscar"
+                        onChange={(e) => handleSearch(e.target.value, "category_id")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                    />
+                </div>
+            ),
+            dataIndex: "cashier_number",
+            key: "cashier_number",
+            sorter: (a, b) => a.cashier_number - b.cashier_number,
+            render: (text) => text || "No disponible",
+            onFilter: (value, record) =>
+                record.cashier_number.toString().toLowerCase().includes(searchText["cashier_number"] || ""),
+        },
+        {
+            title: (
+                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Otros Ingresos
+                    <Input
+                        placeholder="Buscar"
+                        onChange={(e) => handleSearch(e.target.value, "category_id")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                    />
+                </div>
+            ),
+            dataIndex: "other_income",
+            key: "other_income",
+            sorter: (a, b) => a.other_income - b.other_income,
+            render: (amount) => formatCurrency(amount),
+            onFilter: (value, record) =>
+                record.other_income.toString().toLowerCase().includes(searchText["other_income"] || ""),
+        },
+        {
+            title: (
+                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Dinero Recibido
+                    <Input
+                        placeholder="Buscar"
+                        onChange={(e) => handleSearch(e.target.value, "category_id")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                    />
+                </div>
+            ),
+            dataIndex: "cash_received",
+            key: "cash_received",
+            sorter: (a, b) => a.cash_received - b.cash_received,
+            render: (amount) => formatCurrency(amount),
+            onFilter: (value, record) =>
+                record.cash_received.toString().toLowerCase().includes(searchText["cash_received"] || ""),
+        },
+        {
+            title: (
+                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Comisión Cajero
+                    <Input
+                        placeholder="Buscar"
+                        onChange={(e) => handleSearch(e.target.value, "category_id")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                    />
+                </div>
+            ),
+            dataIndex: "cashier_commission",
+            key: "cashier_commission",
+            sorter: (a, b) => a.cashier_commission - b.cashier_commission,
+            render: (amount) => formatCurrency(amount),
+            onFilter: (value, record) =>
+                record.cashier_commission.toString().toLowerCase().includes(searchText["cashier_commission"] || ""),
+        },
+        {
+            title: (
+                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Inicio del Periodo
+                    <Input
+                        placeholder="Buscar"
+                        onChange={(e) => handleSearch(e.target.value, "category_id")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                    />
+                </div>
+            ),
+            dataIndex: "start_period",
+            key: "start_period",
+            render: (text) => formatDate(new Date(text), "d MMM yyyy"),
+            onFilter: (value, record) =>
+                record.start_period.toString().toLowerCase().includes(searchText["start_period"] || ""),
+        },
+        {
+            title: (
+                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Fin del Periodo
+                    <Input
+                        placeholder="Buscar"
+                        onChange={(e) => handleSearch(e.target.value, "category_id")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                    />
+                </div>
+            ),
+            dataIndex: "end_period",
+            key: "end_period",
+            render: (text) => formatDate(new Date(text), "d MMM yyyy"),
+            onFilter: (value, record) =>
+                record.end_period.toString().toLowerCase().includes(searchText["end_period"] || ""),
+        },
         {
             title: (
                 <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
