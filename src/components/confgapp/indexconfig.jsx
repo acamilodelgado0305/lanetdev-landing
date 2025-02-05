@@ -50,7 +50,7 @@ const IndexConfig = () => {
   const [profilePictureUrl, setProfilePictureUrl] = useState(user?.profilepictureurl || defaultProfilePictureUrl);
   const [form] = Form.useForm();
 
-  const defaultProfilePictureUrl = "https://i.pinimg.com/736x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg";
+  const defaultProfilePictureUrl = "IndexConfighttps://res.cloudinary.com/dybws2ubw/image/upload/v1726015542/ayqfjv1wj5a9vbbqcrz3.png";
 
   useEffect(() => {
     setProfilePictureUrl(user?.profilepictureurl || defaultProfilePictureUrl);

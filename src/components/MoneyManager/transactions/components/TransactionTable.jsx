@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Table, Tooltip, Drawer } from 'antd';
+import { Button, Table, Input, Tooltip, Drawer } from 'antd';
 import { format as formatDate } from 'date-fns';
 import _ from 'lodash';
 import TransactionDetailsModal from './TransactionDetailsModal';
@@ -10,6 +10,15 @@ const TransactionTable = ({ entries, categories = [], accounts = [], onOpenConte
     const [selectedEntry, setSelectedEntry] = useState(null);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedImages, setSelectedImages] = useState([]);
+
+    const [searchText, setSearchText] = useState({});
+
+    const handleSearch = (value, dataIndex) => {
+        setSearchText((prev) => ({
+            ...prev,
+            [dataIndex]: value.toLowerCase(),
+        }));
+    };
 
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('en-US', {
@@ -31,86 +40,115 @@ const TransactionTable = ({ entries, categories = [], accounts = [], onOpenConte
 
     const columns = [
         {
-            title: 'Fecha',
+            title: (
+                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Fecha
+                    <Input
+                        placeholder="Buscar"
+                        onChange={(e) => handleSearch(e.target.value, "date")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                    />
+                </div>
+            ),
             dataIndex: 'date',
             key: 'date',
-
-            filterSearch: true,
-            filters: [...new Set(entries.map((entry) => formatDate(new Date(entry.date), "d MMM yyyy")))].map((formattedDate) => ({
-                text: formattedDate,
-                value: formattedDate,
-            })),
             render: (text) => formatDate(new Date(text), "d MMM yyyy"),
             sorter: (a, b) => new Date(a.date) - new Date(b.date),
             sortDirections: ["descend", "ascend"],
+            onFilter: (value, record) =>
+                record.date && record.date.toLowerCase().includes(searchText["date"] || ""),
         },
         {
-            title: 'Descripción',
+            title: (
+                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Descripción
+                    <Input
+                        placeholder="Buscar"
+                        onChange={(e) => handleSearch(e.target.value, "description")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                    />
+                </div>
+            ),
             dataIndex: "description",
             key: "description",
-
-            filterSearch: true,
-            filters: [...new Set(entries.map((entry) => entry.description))].map((description) => ({
-                text: description,
-                value: description,
-            })),
-            onFilter: (value, record) => record.description === value,
-            sorter: (a, b) => a.amount - b.amount,
+            sorter: (a, b) => a.description.localeCompare(b.description),
             sortDirections: ["ascend", "descend"],
+            onFilter: (value, record) =>
+                record.description && record.description.toLowerCase().includes(searchText["description"] || ""),
         },
         {
-            title: 'Cuenta de Origen',
+            title: (
+                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Cuenta de Origen
+                    <Input
+                        placeholder="Buscar"
+                        onChange={(e) => handleSearch(e.target.value, "from_account_id")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                    />
+                </div>
+            ),
             dataIndex: "from_account_id",
             key: "from_account_id",
 
             filterSearch: true,
             render: (id) => getAccountName(id),
-            filters: [...new Set(entries.map((entry) => getAccountName(entry.from_account_id)))].map((name) => ({
-                text: name,
-                value: name,
-            })),
-            onFilter: (value, record) => getAccountName(record.from_account_id) === value,
             sorter: (a, b) => getAccountName(a.from_account_id).localeCompare(getAccountName(b.from_account_id)),
             sortDirections: ["ascend", "descend"],
+            onFilter: (value, record) =>
+                record.from_account_id && record.from_account_id.toLowerCase().includes(searchText["from_account_id"] || ""),
         },
+
         {
-            title: 'Cuenta de Destino',
+            title: (
+                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Cuenta de Destino
+                    <Input
+                        placeholder="Buscar"
+                        onChange={(e) => handleSearch(e.target.value, "to_account_id")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                    />
+                </div>
+            ),
             dataIndex: "to_account_id",
             key: "to_account_id",
-
-            filterSearch: true,
             render: (id) => getAccountName(id),
-            filters: [...new Set(entries.map((entry) => getAccountName(entry.to_account_id)))].map((name) => ({
-                text: name,
-                value: name,
-            })),
-            onFilter: (value, record) => getAccountName(record.to_account_id) === value,
             sorter: (a, b) => getAccountName(a.to_account_id).localeCompare(getAccountName(b.to_account_id)),
             sortDirections: ["ascend", "descend"],
+            onFilter: (value, record) =>
+                record.to_account_id && record.to_account_id.toLowerCase().includes(searchText["to_account_id"] || ""),
         },
         {
-            title: 'Monto',
+            title: (
+                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Monto
+                    <Input
+                        placeholder="Buscar"
+                        onChange={(e) => handleSearch(e.target.value, "amount")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                    />
+                </div>
+            ),
             dataIndex: 'amount',
             key: "amount",
-
-            filterSearch: true,
-            filters: [...new Set(entries.map((entry) => entry.amount))].map((amount) => ({
-                text: formatCurrency(amount),
-                value: amount,
-            })),
-            onFilter: (value, record) => record.amount === value,
             render: (amount) => formatCurrency(amount),
             sorter: (a, b) => a.amount - b.amount,
             sortDirections: ["descend", "ascend"],
+            onFilter: (value, record) =>
+                record.amount && record.amount.toLowerCase().includes(searchText["amount"] || ""),
         },
 
         {
-            title: "Comprobante",
-            dataIndex: "vouchers",
-            key: "vouchers",
+
+            title: (
+                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Comprobante
+                </div>
+            ),
+            dataIndex: "voucher",
+            key: "voucher",
             filterSearch: true,
             render: (vouchers) =>
-                vouchers && Array.isArray(vouchers) && vouchers.length > 0 ? (
+                Array.isArray(vouchers) && vouchers.length > 0 ? (
                     <a
                         onClick={(e) => {
                             e.stopPropagation();
@@ -121,9 +159,9 @@ const TransactionTable = ({ entries, categories = [], accounts = [], onOpenConte
                         Ver comprobante
                     </a>
                 ) : (
-                    '—'
+                    "—"
                 ),
-        }
+        },
     ];
 
     const openDrawer = (images) => {
@@ -178,7 +216,11 @@ const TransactionTable = ({ entries, categories = [], accounts = [], onOpenConte
         <>
             <div className="overflow-auto h-[39em]">
                 <Table
-                    dataSource={entries}
+                    dataSource={entries.filter((entry) =>
+                        Object.keys(searchText).every((key) =>
+                            entry[key] ? entry[key].toString().toLowerCase().includes(searchText[key]) : true
+                        )
+                    )}
                     columns={columns}
                     rowKey={(record) => record.id}
                     pagination={{ pageSize: 10 }}
@@ -188,7 +230,20 @@ const TransactionTable = ({ entries, categories = [], accounts = [], onOpenConte
                         onClick: () => openModal(record),
                     })}
                 />
+                <style>
+                    {`
+                .ant-table-cell {
+                    padding: 8px !important;  /* 🔹 Reduce el padding de las celdas */
+                    font-size: 14px; /* 🔹 Reduce el tamaño del texto */
+                }
+
+                .compact-row {
+                    height: 24px !important; /* 🔹 Reduce la altura de la fila */
+                }
+                `}
+                </style>
                 <style jsx>{`.clickable-row {cursor: pointer;}`}</style>
+
             </div>
 
             <Drawer

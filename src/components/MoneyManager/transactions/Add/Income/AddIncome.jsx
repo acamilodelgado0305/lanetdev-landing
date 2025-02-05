@@ -4,14 +4,13 @@ import AccountSelector from "../AccountSelector ";
 import CategorySelector from '../CategorySelector';
 import { DatePicker, Input, Button, Row, Col, Tabs, Card, Radio, Typography, Space, Checkbox } from "antd";
 import {
-  BankOutlined,
-  WalletOutlined,
-  CreditCardOutlined,
-  DollarOutlined, DollarCircleOutlined, CloseOutlined, CheckCircleOutlined
+  DollarCircleOutlined, CloseOutlined
 } from '@ant-design/icons';
 import Swal from "sweetalert2";
 import { uploadImage } from "../../../../../services/apiService";
 import dayjs from "dayjs";
+import { UploadOutlined } from "@ant-design/icons";
+import axios from "axios";
 
 const apiUrl = import.meta.env.VITE_API_FINANZAS;
 
@@ -39,7 +38,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
   const [isEditing, setIsEditing] = useState(false);
   const [ventaCategoryId, setVentaCategoryId] = useState(null);
   const [isFevChecked, setIsFevChecked] = useState(false);
-
+  const [loading, setLoading] = useState(false);
 
 
   const [arqueoCategoryId, setArqueoCategoryId] = useState(null);
@@ -103,6 +102,30 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
       setAccounts(filteredAccounts);
     } catch (error) {
       console.error("Error al obtener las cuentas:", error);
+    }
+  };
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setLoading(true);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await axios.post(`${apiUrl}/incomes/bulk-upload`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      message.success("Carga masiva completada exitosamente!");
+      if (onTransactionAdded) onTransactionAdded(); // Recargar la lista de ingresos
+    } catch (error) {
+      message.error("Error al procesar la carga masiva.");
+      console.error("Error en la carga masiva:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
