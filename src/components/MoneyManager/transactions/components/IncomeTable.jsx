@@ -86,6 +86,22 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
         setSelectedImages([]);
     };
 
+    const renderDate = (date) => {
+        try {
+            // Asegurarse de que la fecha sea válida
+            const parsedDate = new Date(date);
+
+            if (isNaN(parsedDate.getTime())) {
+                return "Fecha inválida"; // Retorna "Fecha inválida" si la fecha es inválida
+            }
+
+            return formatDate(parsedDate, "d MMM yyyy"); // Formatea la fecha solo si es válida
+        } catch (error) {
+            console.error("Error al formatear la fecha:", error);
+            return "Fecha inválida"; // Valor predeterminado en caso de error
+        }
+    };
+
     const columns = [
         {
             title: (
@@ -100,7 +116,7 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
             ),
             dataIndex: "date",
             key: "date",
-            render: (text) => formatDate(new Date(text), "d MMM yyyy"),
+            render: (text) => renderDate(text),
             sorter: (a, b) => new Date(a.date) - new Date(b.date),
             sortDirections: ["descend", "ascend"],
             onFilter: (value, record) =>
@@ -264,34 +280,36 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
                     Inicio del Periodo
                     <Input
                         placeholder="Buscar"
-                        onChange={(e) => handleSearch(e.target.value, "category_id")}
+                        onChange={(e) => handleSearch(e.target.value, "start_period")}
                         style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
                     />
                 </div>
             ),
             dataIndex: "start_period",
             key: "start_period",
-            render: (text) => formatDate(new Date(text), "d MMM yyyy"),
+            render: (text) => renderDate(text), // Usamos la función renderDate para validación y formato
             onFilter: (value, record) =>
-                record.start_period.toString().toLowerCase().includes(searchText["start_period"] || ""),
+                record.start_period && record.start_period.toString().toLowerCase().includes(searchText["start_period"] || ""),
         },
+
         {
             title: (
                 <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
                     Fin del Periodo
                     <Input
                         placeholder="Buscar"
-                        onChange={(e) => handleSearch(e.target.value, "category_id")}
+                        onChange={(e) => handleSearch(e.target.value, "end_period")}
                         style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
                     />
                 </div>
             ),
             dataIndex: "end_period",
             key: "end_period",
-            render: (text) => formatDate(new Date(text), "d MMM yyyy"),
+            render: (text) => renderDate(text), // Usamos la función renderDate para validación y formato
             onFilter: (value, record) =>
-                record.end_period.toString().toLowerCase().includes(searchText["end_period"] || ""),
+                record.end_period && record.end_period.toString().toLowerCase().includes(searchText["end_period"] || ""),
         },
+
         {
             title: (
                 <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
