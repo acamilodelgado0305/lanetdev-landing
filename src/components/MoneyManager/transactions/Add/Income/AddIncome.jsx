@@ -20,11 +20,9 @@ const { Title, Text } = Typography;
 const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) => {
   const [transactionType, setTransactionType] = useState("expense");
   const [amount, setAmount] = useState("");
-  const [rawAmount, setRawAmount] = useState("");
+
   const [fevAmount, setFevAmount] = useState("");
-  const [rawFevAmount, setRawFevAmount] = useState("");
   const [diversoAmount, setDiversoAmount] = useState("");
-  const [rawDiversoAmount, setRawDiversoAmount] = useState("");
   const [category, setCategory] = useState("");
   const [account, setAccount] = useState("");
   const [voucher, setVoucher] = useState("");
@@ -59,17 +57,6 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
     fetchCategories();
     fetchAccounts();
   }, []);
-
-  useEffect(() => {
-    // Cuando cambie alguno de los importes, actualizar el importe total si la categoría es Arque
-    if (category === arqueoCategoryId?.toString()) {
-      const fev = parseFloat(rawFevAmount) || 0;
-      const diverso = parseFloat(rawDiversoAmount) || 0;
-      const total = fev + diverso;
-      setRawAmount(total);
-      setAmount(new Intl.NumberFormat("es-CO").format(total));
-    }
-  }, [rawFevAmount, rawDiversoAmount, category, arqueoCategoryId]);
 
 
   //---------------------------FETCH---------------------------//
@@ -213,69 +200,46 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
         return;
       }
 
-      // Verificar que el monto no sea 0 o vacío
-      if (!rawAmount && category !== arqueoCategoryId?.toString()) {
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: "Por favor ingrese un monto válido",
-          confirmButtonColor: "#d33",
-        });
-        return;
-      }
+      const totalAmount = isArqueoChecked ?
+        (parseFloat(fevAmount) || 0) +
+        (parseFloat(diversoAmount) || 0) +
+        (parseFloat(otherIncome) || 0) :
+        parseFloat(amount);
 
-      // Si es categoría Arqueo, verificar que al menos uno de los montos no sea 0
-      if (category === arqueoCategoryId?.toString() && !rawFevAmount && !rawDiversoAmount) {
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: "Por favor ingrese al menos un monto para el arqueo",
-          confirmButtonColor: "#d33",
-        });
-        return;
-      }
-
-      let transactionType;
-      // Determinar el tipo de transacción
-      if (category === ventaCategoryId?.toString()) {
-        transactionType = isFevChecked ? "FEV*" : "arqueo";
-      } else {
-        transactionType = "arqueo"; // tipo por defecto para otras categorías
-      }
-
-
-      let requestBody = {
-        user_id: sessionStorage.getItem('userId'),
+      const baseRequestBody = {
+        user_id: parseInt(sessionStorage.getItem('userId')),
         account_id: parseInt(account),
         category_id: parseInt(category),
-        type: transactionType, // Usar el tipo determinado por la condición
+        type: isArqueoChecked ? "arqueo" : "income",
         date: date.format("YYYY-MM-DD[T]HH:mm:ss[Z]"),
         voucher: voucher,
         description: description,
-        estado: true
+        estado: true,
+        amount: totalAmount // Add the total amount here
       };
 
+      let requestBody;
+      if (isArqueoChecked) {
+        const commission = totalAmount * 0.02;
 
-      if (category === ventaCategoryId?.toString()) {
         requestBody = {
-          ...requestBody,
-          amount: rawAmount
-        };
-      } else if (category === arqueoCategoryId?.toString()) {
-        requestBody = {
-          ...requestBody,
-          amountfev: rawFevAmount || 0,
-          amountdiverse: rawDiversoAmount || 0
+          ...baseRequestBody,
+          amountfev: parseFloat(fevAmount) || 0,
+          amountdiverse: parseFloat(diversoAmount) || 0,
+          cashier_name: cashierName,
+          arqueo_number: parseInt(arqueoNumber),
+          other_income: parseFloat(otherIncome) || 0,
+          cash_received: parseFloat(cashReceived) || 0,
+          cashier_commission: commission,
+          start_period: startPeriod?.format("YYYY-MM-DD"),
+          end_period: endPeriod?.format("YYYY-MM-DD")
         };
       } else {
-        requestBody = {
-          ...requestBody,
-          amount: rawAmount
-        };
+        requestBody = baseRequestBody;
       }
 
       const response = await fetch(`${apiUrl}/incomes`, {
-        method: isEditing ? "PUT" : "POST",
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
@@ -286,33 +250,18 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const result = await response.json();
+      await response.json();
 
       Swal.fire({
         icon: "success",
-        title: isEditing ? "Ingreso Actualizado" : "Ingreso Registrado",
-        text: isEditing
-          ? "El ingreso se ha actualizado correctamente"
-          : "El ingreso se ha registrado correctamente",
+        title: "Ingreso Registrado",
+        text: "El ingreso se ha registrado correctamente",
         confirmButtonColor: "#3085d6",
       });
 
-      // Limpiar el formulario
-      setAmount("");
-      setRawAmount("");
-      setFevAmount("");
-      setRawFevAmount("");
-      setDiversoAmount("");
-      setRawDiversoAmount("");
-      setCategory("");
-      setAccount("");
-      setVoucher("");
-      setDescription("");
-      setImageUrls([]);
-      setDate(dayjs());
-
-      // Cerrar el modal y actualizar la lista
+      resetForm();
       onClose();
+      fetchAccounts();
       if (onTransactionAdded) {
         onTransactionAdded();
       }
@@ -328,11 +277,28 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
     }
   };
 
+  const resetForm = () => {
+    setAmount("");
+    setFevAmount("");
+    setDiversoAmount("");
+    setCategory("");
+    setAccount("");
+    setVoucher("");
+    setDescription("");
+    setImageUrls([]);
+    setDate(dayjs());
+    setCashierName("");
+    setArqueoNumber("");
+    setOtherIncome("");
+    setCashReceived("");
+    setCashierCommission("");
+    setStartPeriod(null);
+    setEndPeriod(null);
+  };
 
   //----------------------RENDERS-------------------------------//
-  const renderArqueoInputs = (isArqueoChecked) => {
+  const renderArqueoInputs = () => {
     if (isArqueoChecked) {
-
       const calculateTotalAmount = () => {
         const fev = parseFloat(fevAmount) || 0;
         const diverso = parseFloat(diversoAmount) || 0;
@@ -342,14 +308,14 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
 
 
       // Calcular el importe total
-      const totalAmount = calculateTotalAmount();
+      const amount = calculateTotalAmount();
 
       // Verificar si el dinero recibido en efectivo coincide con el importe total
       const cashReceivedValue = parseFloat(cashReceived) || 0;
-      const isCashMatch = cashReceivedValue === totalAmount;
+      const isCashMatch = cashReceivedValue === amount;
 
       // Calcular la comisión del cajero (2% del importe total)
-      const commission = totalAmount * 0.02;
+      const commission = amount * 0.02;
       return (
         <div className="space-y-4 mt-2">
 
@@ -379,13 +345,13 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
                 value={cashierName}
                 onChange={(e) => setCashierName(e.target.value)}
               >
-                <option value="">Seleccione un cajero</option>
-                <option value="cajero1">Seg-Rafael Urdaneta</option>
-                <option value="cajero2">Seg-Ragonvalia Oficina</option>
-                <option value="cajero3">Seg-Ragonvalia Casa</option>
-                <option value="cajero3">Seg-AsoFranco</option>
-                <option value="cajero3">Seg-Bancolombia Rocely</option>
-                <option value="cajero3">Seg-Bancolombia LANET</option>
+                <option value="">Selecciona una opcion</option>
+                <option value="Seg-Rafael Urdaneta">Seg-Rafael Urdaneta</option>
+                <option value="Seg-Ragonvalia Oficina">Seg-Ragonvalia Oficina</option>
+                <option value="Seg-Ragonvalia Casa">Seg-Ragonvalia Casa</option>
+                <option value="Seg-AsoFranco">Seg-AsoFranco</option>
+                <option value="Seg-AsoFranco">Seg-Bancolombia Rocely</option>
+                <option value="cSeg-AsoFranco">Seg-Bancolombia LANET</option>
               </select>
             </div>
           </div>
@@ -466,7 +432,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
             <div className="flex flex-col items-center">
               <div className="font-medium text-gray-700 text-sm">Importe Total</div>
               <Input
-                value={formatCurrency(totalAmount)} // Mostrar el total calculado con 2 decimales
+                value={formatCurrency(amount)} // Mostrar el total calculado con 2 decimales
 
                 size="small"
                 className="w-40 text-lg px-2 bg-green-100 text-green-700 font-semibold border-none cursor-not-allowed"
@@ -504,16 +470,15 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
   };
 
 
-  const renderVentaInputs = (isVentaChecked) => {
 
-    return (
-      <div className="space-y-4">
+
+  const renderVentaInputs = () => {
+    if (isVentaChecked) {
+      return (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Importe*
-          </label>
+          {/* Campos específicos de Venta */}
+          <div>Importe*</div>
           <Input
-            value={amount}
             onChange={(e) => handleAmountChange(e, 'venta')}
             prefix="$"
             size="large"
@@ -521,25 +486,31 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
             placeholder="Ingrese el importe de la venta"
           />
         </div>
-      </div>
-    );
-
+      );
+    }
     return null;
   };
 
   const handleCheckboxChange = (checkedValues) => {
-    setIsArqueoChecked(checkedValues.includes('arqueo'));
-    setCategory(''); // Reset category when checkbox changes
+    const isArqueoSelected = checkedValues.includes('arqueo');
+    const isVentaSelected = checkedValues.includes('venta');
+
+    // Si se selecciona Arqueo, desactivar Venta y viceversa
+    setIsArqueoChecked(isArqueoSelected);
+    setIsVentaChecked(isVentaSelected && !isArqueoSelected);
+
+    // Resetear la categoría cuando cambia el tipo de ingreso
+    setCategory('');
   };
 
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white shadow-lg w-full max-w-4xl p-6 relative self-start overflow-y-auto max-h-full">
+      <div className="bg-white shadow-lg w-full max-w-4xl p-6 pt-0 relative self-start overflow-y-auto max-h-full">
 
 
         {/* Encabezado */}
-        <div className="flex justify-between items-center mb-3">
+        <div className=" bg-white flex justify-between items-center mb-3 sticky top-0 bg-white z-50">
           <Title level={3} className="mb-0">
             Crear un Ingreso
           </Title>
@@ -569,10 +540,9 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
             <Button onClick={handleSave} type="primary" className="bg-green-500 text-white">
               Guardar
             </Button>
-
-
           </Space>
         </div>
+
         <Card
           className="mb-6"
           bordered={false}
@@ -603,35 +573,24 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
               />
             </div>
           </div>
-          <Title level={5}>Tipo de Ingreso</Title>
-          <Space direction="vertical" className="w-full flex justify-center">
-            <Checkbox.Group
-              className="w-full"
-              onChange={handleCheckboxChange}
-            >
-              <Row gutter={[24, 16]} justify="center">
-                <Col span={8} className="flex justify-center">
-                  <Checkbox value="venta">
-                    <div className="font-medium">Venta</div>
-                  </Checkbox>
-                </Col>
-                <Col span={8} className="flex justify-center">
-                  <Checkbox value="arqueo">
-                    <div className="font-medium">Arqueo</div>
-                  </Checkbox>
-                </Col>
-              </Row>
-            </Checkbox.Group>
-          </Space>
-        </Card>
+          <div >
+            <div className="mb-6">
+              {/* Tipo de Ingreso */}
+              <div>Tipo de Ingreso</div>
+              <Radio.Group
+                value={isArqueoChecked ? 'arqueo' : isVentaChecked ? 'venta' : null}
+                onChange={(e) => handleCheckboxChange([e.target.value])}
+              >
+                <Radio value="arqueo">Arqueo</Radio>
+                <Radio value="venta">Venta</Radio>
+              </Radio.Group>
 
-        <Card
-          className="mb-6"
-          bordered={false}>
+            </div>
 
-          {renderArqueoInputs(isArqueoChecked)}
-          {renderVentaInputs(!isVentaChecked)}
 
+            {renderArqueoInputs()}
+            {renderVentaInputs()}
+          </div>
         </Card>
 
         <div className="mt-6 text-center text-sm text-gray-500 border-t border-dashed border-gray-400 pt-2"></div>
@@ -641,17 +600,17 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
           bordered={false}>
           <div className="mb-6">
             <AccountSelector
-
-              value={account}
-              onChange={(value) => setAccount(value)}
+              selectedAccount={account}  // Cambiar 'value' por 'selectedAccount'
+              onAccountSelect={(value) => setAccount(value)}  // Cambiar 'onChange' por 'onAccountSelect'
               accounts={accounts}
             />
+
           </div>
 
           <div className="mb-4">
             <CategorySelector
-              value={category}
-              onChange={(value) => setCategory(value)}
+              selectedCategory={category}  // Cambiar 'value' por 'selectedCategory'
+              onCategorySelect={(value) => setCategory(value)}  // Cambiar 'onChange' por 'onCategorySelect'
               categories={categories}
             />
 
