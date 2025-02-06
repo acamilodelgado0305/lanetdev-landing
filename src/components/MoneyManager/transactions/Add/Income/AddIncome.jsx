@@ -42,6 +42,15 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
 
 
   const [arqueoCategoryId, setArqueoCategoryId] = useState(null);
+  const [isArqueoChecked, setIsArqueoChecked] = useState(false);
+
+  const [startPeriod, setStartPeriod] = useState(null);
+  const [endPeriod, setEndPeriod] = useState(null);
+  const [cashierName, setCashierName] = useState("");
+  const [arqueoNumber, setArqueoNumber] = useState("");
+  const [otherIncome, setOtherIncome] = useState("");
+  const [cashReceived, setCashReceived] = useState("");
+  const [cashierCommission, setCashierCommission] = useState("");
 
   //------------USE EFECTS--------------------------
 
@@ -326,51 +335,176 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
 
 
   //----------------------RENDERS-------------------------------//
-  const renderArqueoInputs = (selectedCategory) => {
-    if (selectedCategory === arqueoCategoryId?.toString()) {
+  const renderArqueoInputs = (isArqueoChecked) => {
+    if (isArqueoChecked) {
+
+      const calculateTotalAmount = () => {
+        const fev = parseFloat(fevAmount) || 0;
+        const diverso = parseFloat(diversoAmount) || 0;
+        const otros = parseFloat(otherIncome) || 0;
+        return fev + diverso + otros;
+      };
+
+
+      // Calcular el importe total
+      const totalAmount = calculateTotalAmount();
+
+      // Verificar si el dinero recibido en efectivo coincide con el importe total
+      const cashReceivedValue = parseFloat(cashReceived) || 0;
+      const isCashMatch = cashReceivedValue === totalAmount;
+
+      // Calcular la comisión del cajero (2% del importe total)
+      const commission = totalAmount * 0.02;
       return (
-        <div className="col-span-2 space-y-4 mt-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Importe FEV
-            </label>
-            <Input
-              value={fevAmount}
-              onChange={(e) => handleAmountChange(e, 'fev')}
-              prefix="$"
-              size="large"
-              className="text-lg"
-            />
+        <div className="space-y-4 mt-2">
+
+          <div className="flex items-center space-x-6">
+            <div className="w-full font-medium text-gray-700 text-sm">Periodo de Arqueo</div>
+            <div className="flex space-x-2">
+              <DatePicker
+                value={startPeriod}
+                onChange={(date) => setStartPeriod(date)}
+                placeholder="Fecha Inicio"
+                className="w-40"
+              />
+              <DatePicker
+                value={endPeriod}
+                onChange={(date) => setEndPeriod(date)}
+                placeholder="Fecha Fin"
+                className="w-40"
+              />
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Importe Diverso
-            </label>
-            <Input
-              value={diversoAmount}
-              onChange={(e) => handleAmountChange(e, 'diverso')}
-              prefix="$"
-              size="large"
-              className="text-lg"
-            />
+
+          <div className="flex items-center space-x-6">
+            <div className="w-full font-medium text-gray-700 text-sm">Cajero</div>
+            <div>
+              <select
+                className="w-45 text-sm py-1 px-2 border border-gray-300 rounded"
+                value={cashierName}
+                onChange={(e) => setCashierName(e.target.value)}
+              >
+                <option value="">Seleccione un cajero</option>
+                <option value="cajero1">Seg-Rafael Urdaneta</option>
+                <option value="cajero2">Seg-Ragonvalia Oficina</option>
+                <option value="cajero3">Seg-Ragonvalia Casa</option>
+                <option value="cajero3">Seg-AsoFranco</option>
+                <option value="cajero3">Seg-Bancolombia Rocely</option>
+                <option value="cajero3">Seg-Bancolombia LANET</option>
+              </select>
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Importe Total
-            </label>
-            <Input
-              value={amount}
-              disabled
-              prefix="$"
-              size="large"
-              className="text-lg bg-gray-50"
-            />
+          <div className="flex items-center space-x-6">
+            <div className="w-full font-medium text-gray-700 text-sm">Numero de Arqueo</div>
+            <div>
+              <Input
+                value={arqueoNumber}
+                onChange={(e) => setArqueoNumber(e.target.value)}
+                prefix="#"
+                size="small"
+                className="w-32 text-lg px-2"
+                placeholder="Número de Arqueo"
+              />
+            </div>
+          </div>
+          <div className="flex items-center space-x-6">
+            <div className="w-full font-medium text-gray-700 text-sm">Importe FEV</div>
+            <div>
+              <Input
+                value={fevAmount}
+                onChange={(e) => handleAmountChange(e, 'fev')}
+                prefix="$"
+                size="small"
+                className="w-32 text-lg  px-2"
+                placeholder="Ingrese importe"
+              />
+            </div>
+          </div>
+          <div className="flex items-center space-x-6">
+            <div className="w-full font-medium text-gray-700 text-sm">Importe Diverso</div>
+            <div>
+              <Input
+                value={diversoAmount}
+                onChange={(e) => handleAmountChange(e, 'diverso')}
+                prefix="$"
+                size="small"
+                className="w-32 text-lg  px-2"
+                placeholder="Ingrese importe"
+              />
+            </div>
+          </div>
+          <div className="flex items-center space-x-6">
+            <div className="w-full font-medium text-gray-700 text-sm">Otros Ingresos</div>
+            <div>
+              <Input
+                value={otherIncome}
+                onChange={(e) => setOtherIncome(e.target.value)}
+                prefix="$"
+                size="small"
+                className="w-32 text-lg px-2"
+                placeholder="Otros ingresos"
+              />
+            </div>
+          </div>
+          <div className="mt-6 text-center text-sm text-gray-500 border-t border-dashed border-gray-400 pt-2"></div>
+
+          <div className="flex justify-between space-x-6">
+            {/* Importe Total */}
+
+
+            {/* Dinero recibido en Efectivo */}
+            <div className="flex flex-col items-center">
+              <div className="font-medium text-gray-700 text-sm">Dinero recibido en Efectivo</div>
+              <Input
+                value={cashReceived}
+                onChange={(e) => setCashReceived(e.target.value)}
+                prefix="$"
+                size="small"
+                className="w-40 text-lg px-2"
+                placeholder="Dinero recibido"
+              />
+            </div>
+
+            <div className="flex flex-col items-center">
+              <div className="font-medium text-gray-700 text-sm">Importe Total</div>
+              <Input
+                value={totalAmount.toFixed(2)} // Mostrar el total calculado con 2 decimales
+                disabled
+                prefix="$"
+                size="small"
+                className="w-40 text-lg px-2 bg-gray-50"
+                placeholder="Total calculado"
+              />
+            </div>
+          </div>
+
+          {/* Mensaje de coincidencia */}
+          {isCashMatch && (
+            <div className="text-center text-green-600 font-semibold">
+              Los valores coinciden.
+            </div>
+          )}
+
+          <div className="flex items-center space-x-6">
+            <div className="w-full font-medium text-gray-700 text-sm">Comision del Cajero</div>
+            <div>
+              <Input
+                value={commission.toFixed(2)} // Mostrar la comisión con 2 decimales
+                disabled
+                prefix="$"
+                size="small"
+                className="w-40 text-lg px-2 bg-gray-50"
+                placeholder="Comisión"
+              />
+            </div>
           </div>
         </div>
       );
     }
     return null;
   };
+
+
   const renderVentaInputs = (selectedCategory) => {
     if (selectedCategory === ventaCategoryId?.toString()) {
       return (
@@ -394,10 +528,15 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
     return null;
   };
 
+  const handleCheckboxChange = (checkedValues) => {
+    setIsArqueoChecked(checkedValues.includes('arqueo'));
+    setCategory(''); // Reset category when checkbox changes
+  };
+
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white shadow-lg w-full max-w-4xl p-6 relative self-start">
+      <div className="bg-white shadow-lg w-full max-w-4xl p-6 relative self-start ">
 
         {/* Encabezado */}
         <div className="flex justify-between items-center mb-3">
@@ -405,12 +544,33 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
             Crear un Ingreso
           </Title>
           <Space>
+            <div className="px-6 py-4 flex justify-end">
+              <input
+                type="file"
+                accept=".xlsx, .xls"
+                onChange={handleFileUpload}
+                style={{ display: "none" }}
+                id="bulkUploadInput"
+              />
+              <Button
+                type="primary"
+                icon={<UploadOutlined />}
+                loading={loading}
+                onClick={() => document.getElementById("bulkUploadInput").click()}
+                className="bg-blue-400 hover:bg-green-800 border-none text-white"
+              >
+                Cargar Ingresos Masivos
+              </Button>
+            </div>
+
             <Button onClick={onClose} type="default" className="border-gray-300 text-gray-600">
               Cancelar
             </Button>
             <Button onClick={handleSave} type="primary" className="bg-green-500 text-white">
               Guardar
             </Button>
+
+
           </Space>
         </div>
         <Card
@@ -445,7 +605,10 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
           </div>
           <Title level={5}>Tipo de Ingreso</Title>
           <Space direction="vertical" className="w-full flex justify-center">
-            <Checkbox.Group className="w-full">
+            <Checkbox.Group
+              className="w-full"
+              onChange={handleCheckboxChange}
+            >
               <Row gutter={[24, 16]} justify="center">
                 <Col span={8} className="flex justify-center">
                   <Checkbox value="venta">
@@ -466,7 +629,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
           className="mb-6"
           bordered={false}>
 
-            
+          {renderArqueoInputs(isArqueoChecked)}
 
         </Card>
 
@@ -523,8 +686,8 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
                 accounts={accounts}
               />
             </div>
-            {renderArqueoInputs(category)}
-            {renderVentaInputs(category)}
+
+            {renderVentaInputs(!isArqueoChecked)}
           </div>
         </div>
         <div className="mt-6 text-center text-sm text-gray-500 border-t border-dashed border-gray-400 pt-2"></div></div>
