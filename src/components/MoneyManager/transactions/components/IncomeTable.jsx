@@ -213,12 +213,12 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
                     />
                 </div>
             ),
-            dataIndex: "cashier_number",
-            key: "cashier_number",
-            sorter: (a, b) => a.cashier_number - b.cashier_number,
+            dataIndex: "arqueo_number",
+            key: "arqueo_number",
+            sorter: (a, b) => a.arqueo_number - b.arqueo_number,
             render: (text) => text || "No disponible",
             onFilter: (value, record) =>
-                record.cashier_number.toString().toLowerCase().includes(searchText["cashier_number"] || ""),
+                record.arqueo_number.toString().toLowerCase().includes(searchText["arqueo_number"] || ""),
         },
         {
             title: (

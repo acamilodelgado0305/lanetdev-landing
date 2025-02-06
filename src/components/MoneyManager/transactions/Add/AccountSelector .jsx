@@ -12,7 +12,7 @@ const AccountSelector = ({
   accounts = [],
   selectedAccount,
   onAccountSelect,
-  formatCurrency = (amount) => amount
+  
 }) => {
   const getAccountIcon = (type) => {
     const normalizedType = type?.toLowerCase()
@@ -39,6 +39,16 @@ const AccountSelector = ({
       default:
         return <DollarOutlined className="text-2xl" />;
     }
+  };
+
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
   };
 
   const groupAccountsByType = () => {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { IoClose } from "react-icons/io5";
 import AccountSelector from "../AccountSelector ";
 import CategorySelector from '../CategorySelector';
-import { DatePicker, Input, Button, message } from "antd";
+import { DatePicker, Input, Button, Row, Col, Tabs, Card, Radio, Typography, Space, Checkbox } from "antd";
 import {
   DollarCircleOutlined, CloseOutlined
 } from '@ant-design/icons';
@@ -14,14 +14,15 @@ import axios from "axios";
 
 const apiUrl = import.meta.env.VITE_API_FINANZAS;
 
+const { Title, Text } = Typography;
+
+
 const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) => {
   const [transactionType, setTransactionType] = useState("expense");
   const [amount, setAmount] = useState("");
-  const [rawAmount, setRawAmount] = useState("");
+
   const [fevAmount, setFevAmount] = useState("");
-  const [rawFevAmount, setRawFevAmount] = useState("");
   const [diversoAmount, setDiversoAmount] = useState("");
-  const [rawDiversoAmount, setRawDiversoAmount] = useState("");
   const [category, setCategory] = useState("");
   const [account, setAccount] = useState("");
   const [voucher, setVoucher] = useState("");
@@ -39,6 +40,16 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
 
 
   const [arqueoCategoryId, setArqueoCategoryId] = useState(null);
+  const [isArqueoChecked, setIsArqueoChecked] = useState(false);
+  const [isVentaChecked, setIsVentaChecked] = useState(false);
+
+  const [startPeriod, setStartPeriod] = useState(null);
+  const [endPeriod, setEndPeriod] = useState(null);
+  const [cashierName, setCashierName] = useState("");
+  const [arqueoNumber, setArqueoNumber] = useState("");
+  const [otherIncome, setOtherIncome] = useState("");
+  const [cashReceived, setCashReceived] = useState("");
+  const [cashierCommission, setCashierCommission] = useState("");
 
   //------------USE EFECTS--------------------------
 
@@ -46,17 +57,6 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
     fetchCategories();
     fetchAccounts();
   }, []);
-
-  useEffect(() => {
-    // Cuando cambie alguno de los importes, actualizar el importe total si la categoría es Arque
-    if (category === arqueoCategoryId?.toString()) {
-      const fev = parseFloat(rawFevAmount) || 0;
-      const diverso = parseFloat(rawDiversoAmount) || 0;
-      const total = fev + diverso;
-      setRawAmount(total);
-      setAmount(new Intl.NumberFormat("es-CO").format(total));
-    }
-  }, [rawFevAmount, rawDiversoAmount, category, arqueoCategoryId]);
 
 
   //---------------------------FETCH---------------------------//
@@ -134,33 +134,27 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
       style: 'currency',
       currency: 'COP',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
 
   //--------------------------FUNCIONES
 
-  const handleAmountChange = (e, type) => {
-    const value = e.target.value.replace(/\./g, "").replace(/[^0-9]/g, "");
-    const numericValue = parseFloat(value) || 0;
+  const handleAmountChange = (e, field) => {
+    const rawValue = e.target.value.replace(/\D/g, ''); // Eliminar caracteres no numéricos
+    const numericValue = rawValue ? parseInt(rawValue, 10) : 0; // Convertir a número
 
-    switch (type) {
-      case 'fev':
-        setRawFevAmount(numericValue);
-        setFevAmount(new Intl.NumberFormat("es-CO").format(numericValue));
-        break;
-      case 'diverso':
-        setRawDiversoAmount(numericValue);
-        setDiversoAmount(new Intl.NumberFormat("es-CO").format(numericValue));
-        break;
-      case 'venta':
-        setRawAmount(numericValue);
-        setAmount(new Intl.NumberFormat("es-CO").format(numericValue));
-        break;
-      default:
-        setRawAmount(numericValue);
-        setAmount(new Intl.NumberFormat("es-CO").format(numericValue));
+    if (field === 'fev') {
+      setFevAmount(numericValue); // Actualizar el estado con el valor numérico
+    } else if (field === 'diverso') {
+      setDiversoAmount(numericValue); // Actualizar el estado con el valor numérico
+    }
+    else if (field === 'other_incomes') {
+      setOtherIncome(numericValue); // Actualizar el estado con el valor numérico
+    }
+    else if (field === 'cashReceived') {
+      setCashReceived(numericValue); // Actualizar el estado con el valor numérico
     }
   };
 
@@ -206,69 +200,46 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
         return;
       }
 
-      // Verificar que el monto no sea 0 o vacío
-      if (!rawAmount && category !== arqueoCategoryId?.toString()) {
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: "Por favor ingrese un monto válido",
-          confirmButtonColor: "#d33",
-        });
-        return;
-      }
+      const totalAmount = isArqueoChecked ?
+        (parseFloat(fevAmount) || 0) +
+        (parseFloat(diversoAmount) || 0) +
+        (parseFloat(otherIncome) || 0) :
+        parseFloat(amount);
 
-      // Si es categoría Arqueo, verificar que al menos uno de los montos no sea 0
-      if (category === arqueoCategoryId?.toString() && !rawFevAmount && !rawDiversoAmount) {
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: "Por favor ingrese al menos un monto para el arqueo",
-          confirmButtonColor: "#d33",
-        });
-        return;
-      }
-
-      let transactionType;
-      // Determinar el tipo de transacción
-      if (category === ventaCategoryId?.toString()) {
-        transactionType = isFevChecked ? "FEV*" : "arqueo";
-      } else {
-        transactionType = "arqueo"; // tipo por defecto para otras categorías
-      }
-
-
-      let requestBody = {
-        user_id: sessionStorage.getItem('userId'),
+      const baseRequestBody = {
+        user_id: parseInt(sessionStorage.getItem('userId')),
         account_id: parseInt(account),
         category_id: parseInt(category),
-        type: transactionType, // Usar el tipo determinado por la condición
+        type: isArqueoChecked ? "arqueo" : "income",
         date: date.format("YYYY-MM-DD[T]HH:mm:ss[Z]"),
         voucher: voucher,
         description: description,
-        estado: true
+        estado: true,
+        amount: totalAmount // Add the total amount here
       };
 
+      let requestBody;
+      if (isArqueoChecked) {
+        const commission = totalAmount * 0.02;
 
-      if (category === ventaCategoryId?.toString()) {
         requestBody = {
-          ...requestBody,
-          amount: rawAmount
-        };
-      } else if (category === arqueoCategoryId?.toString()) {
-        requestBody = {
-          ...requestBody,
-          amountfev: rawFevAmount || 0,
-          amountdiverse: rawDiversoAmount || 0
+          ...baseRequestBody,
+          amountfev: parseFloat(fevAmount) || 0,
+          amountdiverse: parseFloat(diversoAmount) || 0,
+          cashier_name: cashierName,
+          arqueo_number: parseInt(arqueoNumber),
+          other_income: parseFloat(otherIncome) || 0,
+          cash_received: parseFloat(cashReceived) || 0,
+          cashier_commission: commission,
+          start_period: startPeriod?.format("YYYY-MM-DD"),
+          end_period: endPeriod?.format("YYYY-MM-DD")
         };
       } else {
-        requestBody = {
-          ...requestBody,
-          amount: rawAmount
-        };
+        requestBody = baseRequestBody;
       }
 
       const response = await fetch(`${apiUrl}/incomes`, {
-        method: isEditing ? "PUT" : "POST",
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
@@ -279,33 +250,18 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const result = await response.json();
+      await response.json();
 
       Swal.fire({
         icon: "success",
-        title: isEditing ? "Ingreso Actualizado" : "Ingreso Registrado",
-        text: isEditing
-          ? "El ingreso se ha actualizado correctamente"
-          : "El ingreso se ha registrado correctamente",
+        title: "Ingreso Registrado",
+        text: "El ingreso se ha registrado correctamente",
         confirmButtonColor: "#3085d6",
       });
 
-      // Limpiar el formulario
-      setAmount("");
-      setRawAmount("");
-      setFevAmount("");
-      setRawFevAmount("");
-      setDiversoAmount("");
-      setRawDiversoAmount("");
-      setCategory("");
-      setAccount("");
-      setVoucher("");
-      setDescription("");
-      setImageUrls([]);
-      setDate(dayjs());
-
-      // Cerrar el modal y actualizar la lista
+      resetForm();
       onClose();
+      fetchAccounts();
       if (onTransactionAdded) {
         onTransactionAdded();
       }
@@ -321,47 +277,191 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
     }
   };
 
+  const resetForm = () => {
+    setAmount("");
+    setFevAmount("");
+    setDiversoAmount("");
+    setCategory("");
+    setAccount("");
+    setVoucher("");
+    setDescription("");
+    setImageUrls([]);
+    setDate(dayjs());
+    setCashierName("");
+    setArqueoNumber("");
+    setOtherIncome("");
+    setCashReceived("");
+    setCashierCommission("");
+    setStartPeriod(null);
+    setEndPeriod(null);
+  };
 
   //----------------------RENDERS-------------------------------//
-  const renderArqueoInputs = (selectedCategory) => {
-    if (selectedCategory === arqueoCategoryId?.toString()) {
+  const renderArqueoInputs = () => {
+    if (isArqueoChecked) {
+      const calculateTotalAmount = () => {
+        const fev = parseFloat(fevAmount) || 0;
+        const diverso = parseFloat(diversoAmount) || 0;
+        const otros = parseFloat(otherIncome) || 0;
+        return fev + diverso + otros;
+      };
+
+
+      // Calcular el importe total
+      const amount = calculateTotalAmount();
+
+      // Verificar si el dinero recibido en efectivo coincide con el importe total
+      const cashReceivedValue = parseFloat(cashReceived) || 0;
+      const isCashMatch = cashReceivedValue === amount;
+
+      // Calcular la comisión del cajero (2% del importe total)
+      const commission = amount * 0.02;
       return (
-        <div className="col-span-2 space-y-4 mt-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Importe FEV
-            </label>
-            <Input
-              value={fevAmount}
-              onChange={(e) => handleAmountChange(e, 'fev')}
-              prefix="$"
-              size="large"
-              className="text-lg"
-            />
+        <div className="space-y-4 mt-2">
+
+          <div className="flex items-center space-x-6">
+            <div className="w-full font-medium text-gray-700 text-sm">Periodo de Arqueo</div>
+            <div className="flex space-x-2">
+              <DatePicker
+                value={startPeriod}
+                onChange={(date) => setStartPeriod(date)}
+                placeholder="Fecha Inicio"
+                className="w-40"
+              />
+              <DatePicker
+                value={endPeriod}
+                onChange={(date) => setEndPeriod(date)}
+                placeholder="Fecha Fin"
+                className="w-40"
+              />
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Importe Diverso
-            </label>
-            <Input
-              value={diversoAmount}
-              onChange={(e) => handleAmountChange(e, 'diverso')}
-              prefix="$"
-              size="large"
-              className="text-lg"
-            />
+
+          <div className="flex items-center space-x-6">
+            <div className="w-full font-medium text-gray-700 text-sm">Cajero</div>
+            <div>
+              <select
+                className="w-45 text-sm py-1 px-2 border border-gray-300 rounded"
+                value={cashierName}
+                onChange={(e) => setCashierName(e.target.value)}
+              >
+                <option value="">Selecciona una opcion</option>
+                <option value="Seg-Rafael Urdaneta">Seg-Rafael Urdaneta</option>
+                <option value="Seg-Ragonvalia Oficina">Seg-Ragonvalia Oficina</option>
+                <option value="Seg-Ragonvalia Casa">Seg-Ragonvalia Casa</option>
+                <option value="Seg-AsoFranco">Seg-AsoFranco</option>
+                <option value="Seg-AsoFranco">Seg-Bancolombia Rocely</option>
+                <option value="cSeg-AsoFranco">Seg-Bancolombia LANET</option>
+              </select>
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Importe Total
-            </label>
-            <Input
-              value={amount}
-              disabled
-              prefix="$"
-              size="large"
-              className="text-lg bg-gray-50"
-            />
+          <div className="flex items-center space-x-6">
+            <div className="w-full font-medium text-gray700 text-sm">Numero de Arqueo</div>
+            <div>
+              <Input
+                value={arqueoNumber}
+                onChange={(e) => setArqueoNumber(e.target.value)}
+                prefix="#"
+                size="small"
+                className="w-32 text-lg px-2 text-blue-700"
+                placeholder="Número de Arqueo"
+              />
+            </div>
+          </div>
+          <div className="space-y-4">
+            {/* Campo Importe FEV */}
+            <div className="flex items-center space-x-6">
+              <div className="w-full font-medium text-gray-700 text-sm">Importe FEV</div>
+              <div>
+                <Input
+                  value={formatCurrency(fevAmount)} // Mostrar el valor formateado
+                  onChange={(e) => handleAmountChange(e, 'fev')} // Manejar cambios
+                  size="small"
+                  className="w-32 text-lg px-2"
+                  placeholder="Ingrese importe"
+                />
+              </div>
+            </div>
+
+            {/* Campo Importe Diverso */}
+            <div className="flex items-center space-x-6">
+              <div className="w-full font-medium text-gray-700 text-sm">Importe Diverso</div>
+              <div>
+                <Input
+                  value={formatCurrency(diversoAmount)} // Mostrar el valor formateado
+                  onChange={(e) => handleAmountChange(e, 'diverso')} // Manejar cambios
+                  size="small"
+                  className="w-32 text-lg px-2"
+                  placeholder="Ingrese importe"
+                />
+              </div>
+            </div>
+
+            {/* Campo Otros Ingresos */}
+            <div className="flex items-center space-x-6">
+              <div className="w-full font-medium text-gray-700 text-sm">Otros Ingresos</div>
+              <div>
+                <Input
+                  value={formatCurrency(otherIncome)} // Mostrar el valor sin formato
+                  onChange={(e) => handleAmountChange(e, 'other_incomes')} // Manejar cambios directamente
+                  size="small"
+                  className="w-32 text-lg px-2"
+                  placeholder="Otros ingresos"
+                />
+              </div>
+            </div>
+          </div>
+          <div className="mt-6 text-center text-sm text-gray-500 border-t border-dashed border-gray-400 pt-2"></div>
+
+          <div className="flex justify-between space-x-6">
+            {/* Importe Total */}
+
+
+            {/* Dinero recibido en Efectivo */}
+            <div className="flex flex-col items-center">
+              <div className="font-medium text-gray-700 text-sm">Dinero recibido en Efectivo</div>
+              <Input
+                value={formatCurrency(cashReceived)}
+                onChange={(e) => handleAmountChange(e, 'cashReceived')}
+                size="small"
+                className="w-40 text-lg px-2"
+                placeholder="Dinero recibido"
+              />
+            </div>
+
+            <div className="flex flex-col items-center">
+              <div className="font-medium text-gray-700 text-sm">Importe Total</div>
+              <Input
+                value={formatCurrency(amount)} // Mostrar el total calculado con 2 decimales
+
+                size="small"
+                className="w-40 text-lg px-2 bg-green-100 text-green-700 font-semibold border-none cursor-not-allowed"
+                placeholder="Total calculado"
+              />
+            </div>
+          </div>
+
+          {/* Mensaje de coincidencia */}
+          {isCashMatch ? (
+            <div className="text-center text-green-600 font-semibold">
+              Los valores coinciden.
+            </div>
+          ) : (
+            <div className="text-center text-red-600 font-semibold">
+              Ups, ha ocurrido un descuadre al momento de realizar el arqueo.
+            </div>
+          )}
+          <div className="flex items-center space-x-6">
+            <div className="w-full font-medium text-gray-700 text-sm">Comision del Cajero</div>
+            <div>
+              <Input
+                value={formatCurrency(commission)} // Mostrar la comisión con 2 decimales
+                disabled
+                size="small"
+                className="w-40 text-lg px-2 bg-white-50"
+                placeholder="Comisión"
+              />
+            </div>
           </div>
         </div>
       );
@@ -370,210 +470,190 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
   };
 
 
-  const renderVentaInputs = (selectedCategory) => {
-    if (selectedCategory === ventaCategoryId?.toString()) {
+
+
+  const renderVentaInputs = () => {
+    if (isVentaChecked) {
       return (
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Importe*
-            </label>
-            <Input
-              value={amount}
-              onChange={(e) => handleAmountChange(e, 'venta')}
-              prefix="$"
-              size="large"
-              className="text-lg"
-              placeholder="Ingrese el importe de la venta"
-            />
-          </div>
+        <div>
+          {/* Campos específicos de Venta */}
+          <div>Importe*</div>
+          <Input
+            onChange={(e) => handleAmountChange(e, 'venta')}
+            prefix="$"
+            size="large"
+            className="text-lg"
+            placeholder="Ingrese el importe de la venta"
+          />
         </div>
       );
     }
     return null;
+  };
+
+  const handleCheckboxChange = (checkedValues) => {
+    const isArqueoSelected = checkedValues.includes('arqueo');
+    const isVentaSelected = checkedValues.includes('venta');
+
+    // Si se selecciona Arqueo, desactivar Venta y viceversa
+    setIsArqueoChecked(isArqueoSelected);
+    setIsVentaChecked(isVentaSelected && !isArqueoSelected);
+
+    // Resetear la categoría cuando cambia el tipo de ingreso
+    setCategory('');
   };
 
   if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex justify-center items-center overflow-y-auto"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}>
-      <div className="bg-white shadow-2xl rounded-lg  max-w-[80%] max-h-[90%] overflow-y-auto">
-        {/* Header */}
-        <div className="bg-white">
-          <div className="px-6 pt-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <span className="text-green-700">
-                  <DollarCircleOutlined className="text-xl" />
-                </span>
-                <h2 className="text-xl font-semibold text-gray-800">
-                  {transactionToEdit ? "Editar Ingreso" : "Nuevo Ingreso"}
-                </h2>
-              </div>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+      <div className="bg-white shadow-lg w-full max-w-4xl p-6 pt-0 relative self-start overflow-y-auto max-h-full">
+
+
+        {/* Encabezado */}
+        <div className=" bg-white flex justify-between items-center mb-3 sticky top-0 bg-white z-50">
+          <Title level={3} className="mb-0">
+            Crear un Ingreso
+          </Title>
+          <Space>
+            <div className="px-6 py-4 flex justify-end">
+              <input
+                type="file"
+                accept=".xlsx, .xls"
+                onChange={handleFileUpload}
+                style={{ display: "none" }}
+                id="bulkUploadInput"
+              />
               <Button
-                type="text"
-                icon={<CloseOutlined className="text-lg" />}
-                onClick={onClose}
-                className="hover:bg-gray-100 rounded-full h-8 w-8 flex items-center justify-center"
+                type="primary"
+                icon={<UploadOutlined />}
+                loading={loading}
+                onClick={() => document.getElementById("bulkUploadInput").click()}
+                className="bg-blue-400 hover:bg-green-800 border-none text-white"
+              >
+                Cargar Ingresos Masivos
+              </Button>
+            </div>
+
+            <Button onClick={onClose} type="default" className="border-gray-300 text-gray-600">
+              Cancelar
+            </Button>
+            <Button onClick={handleSave} type="primary" className="bg-green-500 text-white">
+              Guardar
+            </Button>
+          </Space>
+        </div>
+
+        <Card
+          className="mb-6"
+          bordered={false}
+
+        >
+
+          <div className="flex justify-between items-start mb-4">
+            {/* Descripción a la izquierda */}
+            <div className="w-2/3">
+              <label className="block text-sm font-medium text-gray-700">Descripción*</label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Añade una descripción"
+                rows={1}
+                className="w-[20em] border  p-1"
+              />
+            </div>
+
+            {/* Fecha a la derecha */}
+            <div className="w-1/4">
+              <label className="block text-sm font-medium text-gray-700">Fecha</label>
+              <DatePicker
+                value={date}
+                onChange={(newDate) => setDate(newDate)}
+                format="YYYY-MM-DD"
+                className="w-full"
               />
             </div>
           </div>
-          <div className="h-1 bg-green-700" />
-        </div>
-        {/* 🆕 Botón de Carga Masiva */}
-        <div className="px-6 py-4 flex justify-end">
-          <input
-            type="file"
-            accept=".xlsx, .xls"
-            onChange={handleFileUpload}
-            style={{ display: "none" }}
-            id="bulkUploadInput"
-          />
-          <Button
-            type="primary"
-            icon={<UploadOutlined />}
-            loading={loading}
-            onClick={() => document.getElementById("bulkUploadInput").click()}
-            className="bg-green-700 hover:bg-green-800 border-none text-white"
-          >
-            Cargar Ingresos Masivos
-          </Button>
-        </div>
-        <div className="pt-3 px-4">
-          <div className="grid grid-cols-2 gap-4">
-            {/* Columna de datos básicos */}
-            <div className="rounded-lg border  p-4 auto-rows-auto">
-              <div className="flex justify-center">
-                <h3 className="font-bold text-gray-500 pb-2 ">
-                  Información Básica
-                </h3>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Titulo*
-                </label>
-                <Input.TextArea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Añade una descripción"
-                  rows={2}
-                  className="w-full"
-                />
-              </div>
-              <div className="pb-8">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Fecha
-                </label>
-                <DatePicker
-                  value={date}
-                  onChange={(newDate) => setDate(newDate)}
-                  format="YYYY-MM-DD"
-                  className="w-full"
-                />
-              </div>
+          <div >
+            <div className="mb-6">
+              {/* Tipo de Ingreso */}
+              <div>Tipo de Ingreso</div>
+              <Radio.Group
+                value={isArqueoChecked ? 'arqueo' : isVentaChecked ? 'venta' : null}
+                onChange={(e) => handleCheckboxChange([e.target.value])}
+              >
+                <Radio value="arqueo">Arqueo</Radio>
+                <Radio value="venta">Venta</Radio>
+              </Radio.Group>
 
-              <div className="h-1 bg-green-700" />
+            </div>
 
-              <div className="mt-6 space-y-4">
-                <label className="block text-sm font-medium text-gray-700">
-                  Comprobantes
-                </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleImageUpload}
-                    className="w-full"
-                    disabled={isUploading}
-                  />
-                  {isUploading && (
-                    <div className="text-sm text-gray-500 mt-2">Subiendo imágenes...</div>
-                  )}
+
+            {renderArqueoInputs()}
+            {renderVentaInputs()}
+          </div>
+        </Card>
+
+        <div className="mt-6 text-center text-sm text-gray-500 border-t border-dashed border-gray-400 pt-2"></div>
+
+        <Card
+          className="mb-6"
+          bordered={false}>
+          <div className="mb-6">
+            <AccountSelector
+              selectedAccount={account}  // Cambiar 'value' por 'selectedAccount'
+              onAccountSelect={(value) => setAccount(value)}  // Cambiar 'onChange' por 'onAccountSelect'
+              accounts={accounts}
+            />
+
+          </div>
+
+          <div className="mb-4">
+            <CategorySelector
+              selectedCategory={category}  // Cambiar 'value' por 'selectedCategory'
+              onCategorySelect={(value) => setCategory(value)}  // Cambiar 'onChange' por 'onCategorySelect'
+              categories={categories}
+            />
+
+          </div>
+
+        </Card>
+
+        {/* Cuerpo */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Columna Izquierda: Detalles Básicos */}
+          <div className="space-y-4">
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Comprobantes</label>
+              <input
+                type="file"
+                multiple
+                onChange={handleImageUpload}
+                className="w-full border rounded-md p-2"
+              />
+              {isUploading && <p className="text-sm text-gray-500">Subiendo imágenes...</p>}
+              {imageUrls.length > 0 && (
+                <div className="mt-2 space-y-2">
+                  {imageUrls.map((url, index) => (
+                    <div key={index} className="relative group">
+                      <img src={url} alt={`Comprobante ${index}`} className="w-full h-24 object-cover rounded-md" />
+                      <button
+                        onClick={() => {
+                          setImageUrls((urls) => urls.filter((_, i) => i !== index));
+                          setVoucher((voucher) => voucher.replace(url, "").trim());
+                        }}
+                        className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 text-white rounded-full h-6 w-6 flex items-center justify-center"
+                      >
+                        <CloseOutlined />
+                      </button>
+                    </div>
+                  ))}
                 </div>
-                {imageUrls.length > 0 && (
-                  <div className="grid grid-cols-3 gap-4">
-                    {imageUrls.map((url, index) => (
-                      <div key={index} className="relative group">
-                        <img
-                          src={url}
-                          alt={`Comprobante ${index + 1}`}
-                          className="rounded-lg w-full h-24 object-cover"
-                        />
-                        <Button
-                          type="primary"
-                          danger
-                          size="small"
-                          icon={<IoClose />}
-                          onClick={() => {
-                            setImageUrls(urls => urls.filter((_, i) => i !== index));
-                            setVoucher(voucher => voucher.replace(url, '').trim());
-                          }}
-                          className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-
-
-            {/* Columna de datos financieros */}
-            <div className="bg-white p-4 rounded-lg border-l border-gray-500 shadow-sm h-[42em] overflow-y-auto">
-
-              <div className="flex justify-center">
-                <h3 className="font-bold text-gray-500 pb-2">
-                  Detalles Financieros
-                </h3>
-              </div>
-              <CategorySelector
-                categories={categories}
-                selectedCategory={category}
-                onCategorySelect={setCategory}
-                additionalInputs={(selectedCategory) => {
-                  if (selectedCategory === arqueoCategoryId?.toString()) {
-                    return renderArqueoInputs(selectedCategory);
-                  } else if (selectedCategory === ventaCategoryId?.toString()) {
-                    return renderVentaInputs(selectedCategory);
-                  }
-                  return null;
-                }}
-                onFevCheckChange={setIsFevChecked}
-                isFevChecked={isFevChecked}
-                ventaCategoryId={ventaCategoryId}
-              />
-
-              {/* Métodos de Pago */}
-              <AccountSelector
-                accounts={accounts}
-                selectedAccount={account}
-                onAccountSelect={setAccount}
-                formatCurrency={formatCurrency}
-              />
+              )}
             </div>
           </div>
-
-          {/* Adjuntos - Fuera del grid para mantener ancho completo */}
-
         </div>
-
-        {/* Footer */}
-        <div className="sticky bottom-0 bg-white border-t p-6">
-          <Button
-            type="primary"
-            onClick={handleSave}
-            size="large"
-            className="w-full bg-green-700 hover:bg-green-700 h-12"
-          >
-            {transactionToEdit ? "Actualizar Ingreso" : "Registrar Ingreso"}
-          </Button>
-        </div>
-      </div>
+        <div className="mt-6 text-center text-sm text-gray-500 border-t border-dashed border-gray-400 pt-2"></div></div>
     </div>
   );
 };

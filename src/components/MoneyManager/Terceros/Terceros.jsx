@@ -30,7 +30,6 @@ const Terceros = () => {
         </Space>
       </div>
 
-      {/* Tipo de tercero */}
        {/* Tipo de tercero */}
        <Card 
             className="mb-6" 

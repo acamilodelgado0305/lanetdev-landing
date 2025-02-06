@@ -35,20 +35,6 @@ const CategorySelector = ({
           ))}
         </Select>
       </div>
-
-      {selectedCategory && additionalInputs && additionalInputs(selectedCategory)}
-
-      {selectedCategory === ventaCategoryId?.toString() && (
-        <div className="mt-2">
-          <Checkbox
-            checked={isFevChecked}
-            onChange={(e) => onFevCheckChange(e.target.checked)}
-            className="text-sm font-medium text-gray-700"
-          >
-            FEV* (Factura electrónica de venta)
-          </Checkbox>
-        </div>
-      )}
     </div>
   );
 };
