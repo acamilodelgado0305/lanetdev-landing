@@ -43,6 +43,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
 
   const [arqueoCategoryId, setArqueoCategoryId] = useState(null);
   const [isArqueoChecked, setIsArqueoChecked] = useState(false);
+  const [isVentaChecked, setIsVentaChecked] = useState(false);
 
   const [startPeriod, setStartPeriod] = useState(null);
   const [endPeriod, setEndPeriod] = useState(null);
@@ -146,33 +147,27 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
       style: 'currency',
       currency: 'COP',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
 
   //--------------------------FUNCIONES
 
-  const handleAmountChange = (e, type) => {
-    const value = e.target.value.replace(/\./g, "").replace(/[^0-9]/g, "");
-    const numericValue = parseFloat(value) || 0;
+  const handleAmountChange = (e, field) => {
+    const rawValue = e.target.value.replace(/\D/g, ''); // Eliminar caracteres no numéricos
+    const numericValue = rawValue ? parseInt(rawValue, 10) : 0; // Convertir a número
 
-    switch (type) {
-      case 'fev':
-        setRawFevAmount(numericValue);
-        setFevAmount(new Intl.NumberFormat("es-CO").format(numericValue));
-        break;
-      case 'diverso':
-        setRawDiversoAmount(numericValue);
-        setDiversoAmount(new Intl.NumberFormat("es-CO").format(numericValue));
-        break;
-      case 'venta':
-        setRawAmount(numericValue);
-        setAmount(new Intl.NumberFormat("es-CO").format(numericValue));
-        break;
-      default:
-        setRawAmount(numericValue);
-        setAmount(new Intl.NumberFormat("es-CO").format(numericValue));
+    if (field === 'fev') {
+      setFevAmount(numericValue); // Actualizar el estado con el valor numérico
+    } else if (field === 'diverso') {
+      setDiversoAmount(numericValue); // Actualizar el estado con el valor numérico
+    }
+    else if (field === 'other_incomes') {
+      setOtherIncome(numericValue); // Actualizar el estado con el valor numérico
+    }
+    else if (field === 'cashReceived') {
+      setCashReceived(numericValue); // Actualizar el estado con el valor numérico
     }
   };
 
@@ -395,55 +390,59 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
             </div>
           </div>
           <div className="flex items-center space-x-6">
-            <div className="w-full font-medium text-gray-700 text-sm">Numero de Arqueo</div>
+            <div className="w-full font-medium text-gray700 text-sm">Numero de Arqueo</div>
             <div>
               <Input
                 value={arqueoNumber}
                 onChange={(e) => setArqueoNumber(e.target.value)}
                 prefix="#"
                 size="small"
-                className="w-32 text-lg px-2"
+                className="w-32 text-lg px-2 text-blue-700"
                 placeholder="Número de Arqueo"
               />
             </div>
           </div>
-          <div className="flex items-center space-x-6">
-            <div className="w-full font-medium text-gray-700 text-sm">Importe FEV</div>
-            <div>
-              <Input
-                value={fevAmount}
-                onChange={(e) => handleAmountChange(e, 'fev')}
-                prefix="$"
-                size="small"
-                className="w-32 text-lg  px-2"
-                placeholder="Ingrese importe"
-              />
+          <div className="space-y-4">
+            {/* Campo Importe FEV */}
+            <div className="flex items-center space-x-6">
+              <div className="w-full font-medium text-gray-700 text-sm">Importe FEV</div>
+              <div>
+                <Input
+                  value={formatCurrency(fevAmount)} // Mostrar el valor formateado
+                  onChange={(e) => handleAmountChange(e, 'fev')} // Manejar cambios
+                  size="small"
+                  className="w-32 text-lg px-2"
+                  placeholder="Ingrese importe"
+                />
+              </div>
             </div>
-          </div>
-          <div className="flex items-center space-x-6">
-            <div className="w-full font-medium text-gray-700 text-sm">Importe Diverso</div>
-            <div>
-              <Input
-                value={diversoAmount}
-                onChange={(e) => handleAmountChange(e, 'diverso')}
-                prefix="$"
-                size="small"
-                className="w-32 text-lg  px-2"
-                placeholder="Ingrese importe"
-              />
+
+            {/* Campo Importe Diverso */}
+            <div className="flex items-center space-x-6">
+              <div className="w-full font-medium text-gray-700 text-sm">Importe Diverso</div>
+              <div>
+                <Input
+                  value={formatCurrency(diversoAmount)} // Mostrar el valor formateado
+                  onChange={(e) => handleAmountChange(e, 'diverso')} // Manejar cambios
+                  size="small"
+                  className="w-32 text-lg px-2"
+                  placeholder="Ingrese importe"
+                />
+              </div>
             </div>
-          </div>
-          <div className="flex items-center space-x-6">
-            <div className="w-full font-medium text-gray-700 text-sm">Otros Ingresos</div>
-            <div>
-              <Input
-                value={otherIncome}
-                onChange={(e) => setOtherIncome(e.target.value)}
-                prefix="$"
-                size="small"
-                className="w-32 text-lg px-2"
-                placeholder="Otros ingresos"
-              />
+
+            {/* Campo Otros Ingresos */}
+            <div className="flex items-center space-x-6">
+              <div className="w-full font-medium text-gray-700 text-sm">Otros Ingresos</div>
+              <div>
+                <Input
+                  value={formatCurrency(otherIncome)} // Mostrar el valor sin formato
+                  onChange={(e) => handleAmountChange(e, 'other_incomes')} // Manejar cambios directamente
+                  size="small"
+                  className="w-32 text-lg px-2"
+                  placeholder="Otros ingresos"
+                />
+              </div>
             </div>
           </div>
           <div className="mt-6 text-center text-sm text-gray-500 border-t border-dashed border-gray-400 pt-2"></div>
@@ -456,9 +455,8 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
             <div className="flex flex-col items-center">
               <div className="font-medium text-gray-700 text-sm">Dinero recibido en Efectivo</div>
               <Input
-                value={cashReceived}
-                onChange={(e) => setCashReceived(e.target.value)}
-                prefix="$"
+                value={formatCurrency(cashReceived)}
+                onChange={(e) => handleAmountChange(e, 'cashReceived')}
                 size="small"
                 className="w-40 text-lg px-2"
                 placeholder="Dinero recibido"
@@ -468,32 +466,33 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
             <div className="flex flex-col items-center">
               <div className="font-medium text-gray-700 text-sm">Importe Total</div>
               <Input
-                value={totalAmount.toFixed(2)} // Mostrar el total calculado con 2 decimales
-                disabled
-                prefix="$"
+                value={formatCurrency(totalAmount)} // Mostrar el total calculado con 2 decimales
+
                 size="small"
-                className="w-40 text-lg px-2 bg-gray-50"
+                className="w-40 text-lg px-2 bg-green-100 text-green-700 font-semibold border-none cursor-not-allowed"
                 placeholder="Total calculado"
               />
             </div>
           </div>
 
           {/* Mensaje de coincidencia */}
-          {isCashMatch && (
+          {isCashMatch ? (
             <div className="text-center text-green-600 font-semibold">
               Los valores coinciden.
             </div>
+          ) : (
+            <div className="text-center text-red-600 font-semibold">
+              Ups, ha ocurrido un descuadre al momento de realizar el arqueo.
+            </div>
           )}
-
           <div className="flex items-center space-x-6">
             <div className="w-full font-medium text-gray-700 text-sm">Comision del Cajero</div>
             <div>
               <Input
-                value={commission.toFixed(2)} // Mostrar la comisión con 2 decimales
+                value={formatCurrency(commission)} // Mostrar la comisión con 2 decimales
                 disabled
-                prefix="$"
                 size="small"
-                className="w-40 text-lg px-2 bg-gray-50"
+                className="w-40 text-lg px-2 bg-white-50"
                 placeholder="Comisión"
               />
             </div>
@@ -505,26 +504,26 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
   };
 
 
-  const renderVentaInputs = (selectedCategory) => {
-    if (selectedCategory === ventaCategoryId?.toString()) {
-      return (
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Importe*
-            </label>
-            <Input
-              value={amount}
-              onChange={(e) => handleAmountChange(e, 'venta')}
-              prefix="$"
-              size="large"
-              className="text-lg"
-              placeholder="Ingrese el importe de la venta"
-            />
-          </div>
+  const renderVentaInputs = (isVentaChecked) => {
+
+    return (
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Importe*
+          </label>
+          <Input
+            value={amount}
+            onChange={(e) => handleAmountChange(e, 'venta')}
+            prefix="$"
+            size="large"
+            className="text-lg"
+            placeholder="Ingrese el importe de la venta"
+          />
         </div>
-      );
-    }
+      </div>
+    );
+
     return null;
   };
 
@@ -536,7 +535,8 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white shadow-lg w-full max-w-4xl p-6 relative self-start ">
+      <div className="bg-white shadow-lg w-full max-w-4xl p-6 relative self-start overflow-y-auto max-h-full">
+
 
         {/* Encabezado */}
         <div className="flex justify-between items-center mb-3">
@@ -630,6 +630,32 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
           bordered={false}>
 
           {renderArqueoInputs(isArqueoChecked)}
+          {renderVentaInputs(!isVentaChecked)}
+
+        </Card>
+
+        <div className="mt-6 text-center text-sm text-gray-500 border-t border-dashed border-gray-400 pt-2"></div>
+
+        <Card
+          className="mb-6"
+          bordered={false}>
+          <div className="mb-6">
+            <AccountSelector
+
+              value={account}
+              onChange={(value) => setAccount(value)}
+              accounts={accounts}
+            />
+          </div>
+
+          <div className="mb-4">
+            <CategorySelector
+              value={category}
+              onChange={(value) => setCategory(value)}
+              categories={categories}
+            />
+
+          </div>
 
         </Card>
 
@@ -667,31 +693,8 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
               )}
             </div>
           </div>
-
-          {/* Columna Derecha: Detalles Financieros */}
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Categoría*</label>
-              <CategorySelector
-                value={category}
-                onChange={(value) => setCategory(value)}
-                categories={categories}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Cuenta*</label>
-              <AccountSelector
-                value={account}
-                onChange={(value) => setAccount(value)}
-                accounts={accounts}
-              />
-            </div>
-
-            {renderVentaInputs(!isArqueoChecked)}
-          </div>
         </div>
         <div className="mt-6 text-center text-sm text-gray-500 border-t border-dashed border-gray-400 pt-2"></div></div>
-
     </div>
   );
 };
