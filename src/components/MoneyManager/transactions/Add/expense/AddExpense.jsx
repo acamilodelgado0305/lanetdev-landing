@@ -16,6 +16,8 @@ import dayjs from "dayjs";
 import ImageUploader from "../ImageUploader";
 import AmountCalculator from './AmountCalculator';
 import { UploadOutlined } from "@ant-design/icons";
+import { message } from 'antd';
+import axios from "axios";
 
 const apiUrl = import.meta.env.VITE_API_FINANZAS;
 
@@ -41,6 +43,7 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
   const [recurringDuration, setRecurringDuration] = useState(0);
   const [subType, setSubType] = useState("");
   const [loading, setLoading] = useState(false);
+
 
   // Nuevos estados para IVA y retención
   const [hasIva, setHasIva] = useState(true);
