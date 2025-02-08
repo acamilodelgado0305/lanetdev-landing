@@ -31,20 +31,11 @@ export default function Root() {
   const [isExpanded, setIsExpanded] = useState(true); // Controla la expansión/colapso del menú
   const [unreadEmailsCount, setUnreadEmailsCount] = useState(0);
   const [isUserProfileOpen, setIsUserProfileOpen] = useState(false);
-  const [isModalVisible, setIsModalVisible] = useState(false);  // Controla la visibilidad del modal
-  const [modalContent, setModalContent] = useState(null); // Guarda el contenido a mostrar en el modal
 
   const [activeSubMenu, setActiveSubMenu] = useState(null); // Controla qué submenú está activo
   const { userRole } = useAuth();
   const location = useLocation();
-  const openModal = (submenu) => {
-    setModalContent(submenu); // Establece el contenido del submenú
-    setIsModalVisible(true);  // Abre el modal
-  };
 
-  const closeModal = () => {
-    setIsModalVisible(false); // Cierra el modal
-  };
   // Definición de los enlaces principales del menú
   const mainMenuLinks = useMemo(
     () => [
@@ -142,10 +133,9 @@ export default function Root() {
                   <button
                     onClick={() => {
                       if (!isExpanded) {
-                        openModal(link.submenuItems); // Abre el modal si el menú está contraído
-                      } else {
-                        toggleSubMenu(link.label); // Expande el submenú si el menú está expandido
+                        setIsExpanded(true); // Expande el menú si está contraído
                       }
+                      toggleSubMenu(link.label); // Abre el submenú
                     }}
                     className="flex items-center w-full p-2 text-left hover:bg-gray-700 text-sm"
                   >
@@ -166,7 +156,6 @@ export default function Root() {
                           to={subItem.to}
                           className="flex items-center w-full p-1 text-gray-300 hover:bg-gray-700 text-sm"
                         >
-                          {/* Icono y texto del submenú */}
                           <span className="mr-3">{subItem.icon}</span>
                           <span>{subItem.label}</span>
                         </Link>
@@ -200,29 +189,7 @@ export default function Root() {
               )}
             </span>
           </button>
-          {isModalVisible && (
-            <Modal
-              title="Submenú"
-              visible={isModalVisible}
-              onCancel={closeModal}
-              footer={null}
-              width={400}
-              style={{ top: '300px' }}
-            >
-              <div>
-                {modalContent && modalContent.map((subItem) => (
-                  <Link
-                    key={subItem.to}
-                    to={subItem.to}
-                    className="flex items-center w-full p-1 text-gray-300 hover:bg-gray-700 text-sm"
-                  >
-                    <span className="mr-3">{subItem.icon}</span>
-                    <span>{subItem.label}</span>
-                  </Link>
-                ))}
-              </div>
-            </Modal>
-          )}
+
         </div>
 
 
