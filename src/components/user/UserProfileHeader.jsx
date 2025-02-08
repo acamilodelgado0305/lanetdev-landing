@@ -44,7 +44,7 @@ const UserProfileHeader = ({ onToggle, isUserProfileOpen, setIsUserProfileOpen }
     };
 
     return (
-        <div className="border-b border-gray-200" ref={dropdownRef}>
+        <div className="" ref={dropdownRef}>
             <div className="flex items-center justify-between h-16 px-4">
 
                 <button

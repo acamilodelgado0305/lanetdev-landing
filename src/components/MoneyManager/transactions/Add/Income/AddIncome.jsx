@@ -305,160 +305,176 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
         const otros = parseFloat(otherIncome) || 0;
         return fev + diverso + otros;
       };
-
-
+  
       // Calcular el importe total
       const amount = calculateTotalAmount();
-
       // Verificar si el dinero recibido en efectivo coincide con el importe total
       const cashReceivedValue = parseFloat(cashReceived) || 0;
       const isCashMatch = cashReceivedValue === amount;
-
       // Calcular la comisión del cajero (2% del importe total)
       const commission = amount * 0.02;
+  
       return (
-        <div className="space-y-4 mt-2">
-
-          <div className="flex items-center space-x-6">
-            <div className="w-full font-medium text-gray-700 text-sm">Periodo de Arqueo</div>
-            <div className="flex space-x-2">
+        <div className="p-6 bg-white rounded-lg shadow-lg space-y-8">
+          {/* Título */}
+          <div className="text-center">
+            <h2 className="text-xl font-bold text-gray-800">Arqueo de Caja</h2>
+            <p className="text-sm text-gray-500">Ingrese los datos requeridos para realizar el arqueo.</p>
+          </div>
+  
+          {/* Periodo de Arqueo */}
+          <div className="flex items-center relative">
+            <div className="w-48 font-semibold text-gray-700 text-sm">Periodo de Arqueo</div>
+          
+            <div className="flex space-x-4 ml-6">
               <DatePicker
                 value={startPeriod}
                 onChange={(date) => setStartPeriod(date)}
                 placeholder="Fecha Inicio"
-                className="w-40"
+                className="w-40 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500"
               />
               <DatePicker
                 value={endPeriod}
                 onChange={(date) => setEndPeriod(date)}
                 placeholder="Fecha Fin"
-                className="w-40"
+                className="w-40 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500"
               />
             </div>
           </div>
-
-          <div className="flex items-center space-x-6">
-            <div className="w-full font-medium text-gray-700 text-sm">Cajero</div>
-            <div>
+  
+          {/* Cajero */}
+          <div className="flex items-center relative">
+            <div className="w-48 font-semibold text-gray-700 text-sm">Cajero</div>
+        
+            <div className="ml-6">
               <select
-                className="w-45 text-sm py-1 px-2 border border-gray-300 rounded"
+                className="w-64 text-sm py-1 px-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
                 value={cashierName}
                 onChange={(e) => setCashierName(e.target.value)}
               >
-                <option value="">Selecciona una opcion</option>
+                <option value="">Selecciona un cajero</option>
                 <option value="Seg-Rafael Urdaneta">Seg-Rafael Urdaneta</option>
                 <option value="Seg-Ragonvalia Oficina">Seg-Ragonvalia Oficina</option>
                 <option value="Seg-Ragonvalia Casa">Seg-Ragonvalia Casa</option>
                 <option value="Seg-AsoFranco">Seg-AsoFranco</option>
-                <option value="Seg-AsoFranco">Seg-Bancolombia Rocely</option>
-                <option value="cSeg-AsoFranco">Seg-Bancolombia LANET</option>
+                <option value="Seg-Bancolombia Rocely">Seg-Bancolombia Rocely</option>
+                <option value="Seg-Bancolombia LANET">Seg-Bancolombia LANET</option>
               </select>
             </div>
           </div>
-          <div className="flex items-center space-x-6">
-            <div className="w-full font-medium text-gray700 text-sm">Numero de Arqueo</div>
-            <div>
+  
+          {/* Número de Arqueo */}
+          <div className="flex items-center relative">
+            <div className="w-48 font-semibold text-gray-700 text-sm">Número de Arqueo</div>
+      
+            <div className="ml-6">
               <Input
                 value={arqueoNumber}
                 onChange={(e) => setArqueoNumber(e.target.value)}
                 prefix="#"
                 size="small"
-                className="w-32 text-lg px-2 text-blue-700"
-                placeholder="Número de Arqueo"
+                className="w-40 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500"
+                placeholder="Ej: 1234"
               />
             </div>
           </div>
+  
+          {/* Importes */}
           <div className="space-y-4">
-            {/* Campo Importe FEV */}
-            <div className="flex items-center space-x-6">
-              <div className="w-full font-medium text-gray-700 text-sm">Importe FEV</div>
-              <div>
+            <div className="flex items-center relative">
+              <div className="w-48 font-semibold text-gray-700 text-sm">Importe FEV</div>
+             
+              <div className="ml-6">
                 <Input
-                  value={formatCurrency(fevAmount)} // Mostrar el valor formateado
-                  onChange={(e) => handleAmountChange(e, 'fev')} // Manejar cambios
+                  value={formatCurrency(fevAmount)}
+                  onChange={(e) => handleAmountChange(e, 'fev')}
                   size="small"
-                  className="w-32 text-lg px-2"
-                  placeholder="Ingrese importe"
+                  className="w-40 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500"
+                  placeholder="Ej: 1000.00"
                 />
               </div>
             </div>
-
-            {/* Campo Importe Diverso */}
-            <div className="flex items-center space-x-6">
-              <div className="w-full font-medium text-gray-700 text-sm">Importe Diverso</div>
-              <div>
+            <div className="flex items-center relative">
+              <div className="w-48 font-semibold text-gray-700 text-sm">Importe Diverso</div>
+              
+              <div className="ml-6">
                 <Input
-                  value={formatCurrency(diversoAmount)} // Mostrar el valor formateado
-                  onChange={(e) => handleAmountChange(e, 'diverso')} // Manejar cambios
+                  value={formatCurrency(diversoAmount)}
+                  onChange={(e) => handleAmountChange(e, 'diverso')}
                   size="small"
-                  className="w-32 text-lg px-2"
-                  placeholder="Ingrese importe"
+                  className="w-40 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500"
+                  placeholder="Ej: 500.00"
                 />
               </div>
             </div>
-
-            {/* Campo Otros Ingresos */}
-            <div className="flex items-center space-x-6">
-              <div className="w-full font-medium text-gray-700 text-sm">Otros Ingresos</div>
-              <div>
+            <div className="flex items-center relative">
+              <div className="w-48 font-semibold text-gray-700 text-sm">Otros Ingresos</div>
+             
+              <div className="ml-6">
                 <Input
-                  value={formatCurrency(otherIncome)} // Mostrar el valor sin formato
-                  onChange={(e) => handleAmountChange(e, 'other_incomes')} // Manejar cambios directamente
+                  value={formatCurrency(otherIncome)}
+                  onChange={(e) => handleAmountChange(e, 'other_incomes')}
                   size="small"
-                  className="w-32 text-lg px-2"
-                  placeholder="Otros ingresos"
+                  className="w-40 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500"
+                  placeholder="Ej: 200.00"
                 />
               </div>
             </div>
           </div>
-          <div className="mt-6 text-center text-sm text-gray-500 border-t border-dashed border-gray-400 pt-2"></div>
-
-          <div className="flex justify-between space-x-6">
-            {/* Importe Total */}
-
-
-            {/* Dinero recibido en Efectivo */}
-            <div className="flex flex-col items-center">
-              <div className="font-medium text-gray-700 text-sm">Dinero recibido en Efectivo</div>
-              <Input
-                value={formatCurrency(cashReceived)}
-                onChange={(e) => handleAmountChange(e, 'cashReceived')}
-                size="small"
-                className="w-40 text-lg px-2"
-                placeholder="Dinero recibido"
-              />
+  
+          {/* Resumen */}
+          <div className="space-y-4">
+            <div className="flex justify-between items-center relative">
+              <div className="w-48 font-semibold text-gray-700 text-sm">Dinero Recibido en Efectivo</div>
+              
+              <div className="ml-6">
+                <Input
+                  value={formatCurrency(cashReceived)}
+                  onChange={(e) => handleAmountChange(e, 'cashReceived')}
+                  size="small"
+                  className="w-40 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500"
+                  placeholder="Ej: 1700.00"
+                />
+              </div>
             </div>
-
-            <div className="flex flex-col items-center">
-              <div className="font-medium text-gray-700 text-sm">Importe Total</div>
-              <Input
-                value={formatCurrency(amount)} // Mostrar el total calculado con 2 decimales
-
-                size="small"
-                className="w-40 text-lg px-2 bg-green-100 text-green-700 font-semibold border-none cursor-not-allowed"
-                placeholder="Total calculado"
-              />
+            <div className="flex justify-between items-center relative">
+              <div className="w-48 font-semibold text-gray-700 text-sm">Importe Total</div>
+             
+              <div className="ml-6">
+                <Input
+                  value={formatCurrency(amount)}
+                  disabled
+                  size="small"
+                  className="w-40 bg-green-100 text-green-700 font-bold border-none cursor-not-allowed px-2 py-1"
+                  placeholder="Total calculado"
+                />
+              </div>
             </div>
           </div>
-
+  
           {/* Mensaje de coincidencia */}
-          {isCashMatch ? (
-            <div className="text-center text-green-600 font-semibold">
-              Los valores coinciden.
-            </div>
-          ) : (
-            <div className="text-center text-red-600 font-semibold">
-              Ups, ha ocurrido un descuadre al momento de realizar el arqueo.
-            </div>
-          )}
-          <div className="flex items-center space-x-6">
-            <div className="w-full font-medium text-gray-700 text-sm">Comision del Cajero</div>
-            <div>
+          <div className="text-center">
+            {isCashMatch ? (
+              <div className="text-green-600 font-semibold">
+                Los valores coinciden correctamente.
+              </div>
+            ) : (
+              <div className="text-red-600 font-semibold">
+                ¡Error! Hay un descuadre en el arqueo.
+              </div>
+            )}
+          </div>
+  
+          {/* Comisión del Cajero */}
+          <div className="flex items-center relative">
+            <div className="w-48 font-semibold text-gray-700 text-sm">Comisión del Cajero (2%)</div>
+        
+            <div className="ml-6">
               <Input
-                value={formatCurrency(commission)} // Mostrar la comisión con 2 decimales
+                value={formatCurrency(commission)}
                 disabled
                 size="small"
-                className="w-40 text-lg px-2 bg-white-50"
+                className="w-40 bg-gray-100 text-gray-700 font-bold border-none cursor-not-allowed px-2 py-1"
                 placeholder="Comisión"
               />
             </div>
@@ -468,7 +484,6 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
     }
     return null;
   };
-
 
 
 
