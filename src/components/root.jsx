@@ -7,9 +7,14 @@ import {
   DollarCircleOutlined,
   MessageOutlined,
   MenuOutlined,
-  CaretRightOutlined,
-  CaretDownOutlined,
   DotChartOutlined,
+  CalendarOutlined,
+  SettingOutlined,
+  ShoppingCartOutlined,
+  AppstoreAddOutlined,
+  ContainerOutlined,
+  BankOutlined
+
 } from "@ant-design/icons";
 import { Layout, Menu, Button, Tooltip } from "antd";
 import Header from "../components/header/Header";
@@ -38,17 +43,17 @@ export default function Root() {
   const [unreadEmailsCount, setUnreadEmailsCount] = useState(0);
   const [isUserProfileOpen, setIsUserProfileOpen] = useState(false);
   const { userRole } = useAuth();
-  const location = useLocation(); // Obtenemos la ubicación actual
+  const location = useLocation();
 
   // Definición de los enlaces principales del menú
   const mainMenuLinks = useMemo(
     () => [
       { to: "/index", label: "Inicio", icon: <HomeOutlined /> },
       userRole === "superadmin" && { to: "/index/clientes", label: "Clientes", icon: <TeamOutlined /> },
-      { to: "/index/cobro-cartera", label: "Cobro de Cartera", icon: <DotChartOutlined /> },
+      { to: "/index/cobro-cartera", label: "Cobro de Cartera", icon: <BankOutlined /> },
       { to: "/index/tickets", label: "Tickets", icon: <DotChartOutlined /> },
       { to: "/index/gestion-red", label: "Gestión de Red", icon: <TeamOutlined /> },
-      { to: "/index/inventario", label: "Inventario", icon: <TeamOutlined /> },
+      { to: "/index/inventario", label: "Inventario", icon: <ContainerOutlined /> },
       (userRole === "admin" || userRole === "superadmin") && {
         label: "Contabilidad",
         icon: <DollarCircleOutlined />,
@@ -59,8 +64,8 @@ export default function Root() {
           { to: "/index/moneymanager/terceros", label: "Terceros", icon: <DotIcon /> },
           { to: "/index/moneymanager/pagos-pendientes", label: "Pagos Recurrentes", icon: <DotIcon /> },
           { to: "/index/moneymanager/informes", label: "Informes", icon: <DotChartOutlined /> },
-          { to: "/index/moneymanager/calendario", label: "Calendario", icon: <DotChartOutlined /> },
-          { to: "/index/moneymanager/config", label: "Configuración", icon: <DotChartOutlined /> },
+          { to: "/index/moneymanager/calendario", label: "Calendario", icon: <CalendarOutlined /> },
+          { to: "/index/moneymanager/config", label: "Configuración", icon: <SettingOutlined /> },
           { to: "/index/moneymanager/cotizacion", label: "Cotización", icon: <DotChartOutlined /> },
         ],
       },
@@ -74,9 +79,11 @@ export default function Root() {
           { to: "/index/comunicacion/multichat", label: "Multichat", icon: <DotChartOutlined /> },
         ],
       },
-      { to: "/index/tareas", label: "Tareas", icon: <MessageOutlined /> },
-      { to: "/index/configuracion", label: "Configuración", icon: <MessageOutlined /> },
-      { to: "/index/tienda", label: "Tienda", icon: <MessageOutlined /> },
+      { to: "/index/tareas", label: "Tareas", icon: <AppstoreAddOutlined /> },
+      { to: "/index/configuracion", label: "Configuración", icon: <SettingOutlined /> },
+      {
+        to: "/index/tienda", label: "Tienda", icon: <ShoppingCartOutlined />
+      },
     ].filter(Boolean),
     [userRole]
   );
