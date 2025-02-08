@@ -492,7 +492,7 @@ const TransactionsDashboard = () => {
       </div>
 
       {/* Navegación de meses */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-md">
+      <div className="fixed bottom-0 w-full bg-white border-t shadow-md">
         <div className="max-w-7xl mx-auto px-6 py-2">
           <div className="flex items-center justify-center space-x-4">
             <Button
