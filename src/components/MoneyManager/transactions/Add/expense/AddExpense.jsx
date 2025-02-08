@@ -15,6 +15,9 @@ import { uploadImage } from "../../../../../services/apiService";
 import dayjs from "dayjs";
 import ImageUploader from "../ImageUploader";
 import AmountCalculator from './AmountCalculator';
+import { UploadOutlined } from "@ant-design/icons";
+import { message } from 'antd';
+import axios from "axios";
 
 const apiUrl = import.meta.env.VITE_API_FINANZAS;
 
@@ -39,6 +42,8 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurringDuration, setRecurringDuration] = useState(0);
   const [subType, setSubType] = useState("");
+  const [loading, setLoading] = useState(false);
+
 
   // Nuevos estados para IVA y retención
   const [hasIva, setHasIva] = useState(true);
@@ -80,6 +85,29 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
       setAccounts(filteredAccounts);
     } catch (error) {
       console.error("Error al obtener las cuentas:", error);
+    }
+  };
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setLoading(true);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await axios.post(`${apiUrl}/expenses/bulk-upload`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      message.success("Carga masiva completada exitosamente!");
+      if (onTransactionAdded) onTransactionAdded();
+    } catch (error) {
+      message.error("Error al procesar la carga masiva.");
+      console.error("Error en la carga masiva:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -314,7 +342,7 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 z-40 flex justify-center items-center"
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -341,6 +369,24 @@ const AddExpense = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) 
             </div>
           </div>
           <div className="h-1 bg-red-500" />
+          <div className="px-6 py-4 flex justify-end">
+            <input
+              type="file"
+              accept=".xlsx, .xls"
+              onChange={handleFileUpload}
+              style={{ display: "none" }}
+              id="bulkUploadInput"
+            />
+            <Button
+              type="primary"
+              icon={<UploadOutlined />}
+              loading={loading}
+              onClick={() => document.getElementById("bulkUploadInput").click()}
+              className="bg-red-500 hover:bg-green-800 border-none text-white"
+            >
+              Cargar Egresos Masivos
+            </Button>
+          </div>
         </div>
 
 
