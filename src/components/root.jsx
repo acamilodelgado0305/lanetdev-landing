@@ -24,18 +24,27 @@ import { DotIcon } from "lucide-react";
 import Header from "../components/header/Header";
 import UserProfileHeader from "./user/UserProfileHeader";
 import { useAuth } from "../components/Context/AuthProvider";
-
+import { Modal } from 'antd';
 const { Sider } = Layout;
 export default function Root() {
   const [isOpen, setIsOpen] = useState(false); // Controla si el menú está abierto o cerrado
   const [isExpanded, setIsExpanded] = useState(true); // Controla la expansión/colapso del menú
-
   const [unreadEmailsCount, setUnreadEmailsCount] = useState(0);
   const [isUserProfileOpen, setIsUserProfileOpen] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);  // Controla la visibilidad del modal
+  const [modalContent, setModalContent] = useState(null); // Guarda el contenido a mostrar en el modal
+
   const [activeSubMenu, setActiveSubMenu] = useState(null); // Controla qué submenú está activo
   const { userRole } = useAuth();
   const location = useLocation();
+  const openModal = (submenu) => {
+    setModalContent(submenu); // Establece el contenido del submenú
+    setIsModalVisible(true);  // Abre el modal
+  };
 
+  const closeModal = () => {
+    setIsModalVisible(false); // Cierra el modal
+  };
   // Definición de los enlaces principales del menú
   const mainMenuLinks = useMemo(
     () => [
@@ -110,7 +119,7 @@ export default function Root() {
         <div
           className={`${isExpanded ? "w-48" : "w-16"} 
                 bg-gray-800 text-white ${isOpen ? "block" : "hidden"} 
-                lg:block fixed top-0 left-0 h-full transition-all duration-300 `}
+                lg:block fixed top-0 left-0 h-full transition-all duration-300`}
         >
           {isExpanded && (
             <UserProfileHeader
@@ -131,15 +140,24 @@ export default function Root() {
               link.hasSubmenu ? (
                 <div key={link.label}>
                   <button
-                    onClick={() => toggleSubMenu(link.label)}
+                    onClick={() => {
+                      if (!isExpanded) {
+                        openModal(link.submenuItems); // Abre el modal si el menú está contraído
+                      } else {
+                        toggleSubMenu(link.label); // Expande el submenú si el menú está expandido
+                      }
+                    }}
                     className="flex items-center w-full p-2 text-left hover:bg-gray-700 text-sm"
                   >
                     <span className="mr-3">{link.icon}</span>
                     <span>{isExpanded ? link.label : ""}</span>
                     <span className="ml-auto">
-                      {isExpanded && (activeSubMenu === link.label ? <DownOutlined /> : <UpOutlined />)}
+                      {/* Muestra las flechas independientemente de si está expandido o no */}
+                      {activeSubMenu === link.label ? <DownOutlined /> : <UpOutlined />}
                     </span>
                   </button>
+
+                  {/* Submenú */}
                   {activeSubMenu === link.label && isExpanded && (
                     <div className="ml-6 space-y-1">
                       {link.submenuItems.map((subItem) => (
@@ -148,7 +166,7 @@ export default function Root() {
                           to={subItem.to}
                           className="flex items-center w-full p-1 text-gray-300 hover:bg-gray-700 text-sm"
                         >
-                          {/* Alineación del ícono y el texto */}
+                          {/* Icono y texto del submenú */}
                           <span className="mr-3">{subItem.icon}</span>
                           <span>{subItem.label}</span>
                         </Link>
@@ -167,6 +185,7 @@ export default function Root() {
                 </Link>
               )
             )}
+
           </div>
           {/* Botón para expandir/contraer el menú */}
           <button
@@ -181,7 +200,31 @@ export default function Root() {
               )}
             </span>
           </button>
+          {isModalVisible && (
+            <Modal
+              title="Submenú"
+              visible={isModalVisible}
+              onCancel={closeModal}
+              footer={null}
+              width={400}
+              style={{ top: '300px' }}
+            >
+              <div>
+                {modalContent && modalContent.map((subItem) => (
+                  <Link
+                    key={subItem.to}
+                    to={subItem.to}
+                    className="flex items-center w-full p-1 text-gray-300 hover:bg-gray-700 text-sm"
+                  >
+                    <span className="mr-3">{subItem.icon}</span>
+                    <span>{subItem.label}</span>
+                  </Link>
+                ))}
+              </div>
+            </Modal>
+          )}
         </div>
+
 
         {/* Contenido principal */}
         <Layout.Content
@@ -190,7 +233,6 @@ export default function Root() {
           <Outlet context={{ setUnreadEmailsCount }} />
         </Layout.Content>
       </Layout>
-
     </>
   );
 }
