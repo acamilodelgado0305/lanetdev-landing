@@ -6,7 +6,6 @@ import { Modal, message, Input, Select, Button, Card } from "antd";
 import AddEntryModal from "./addModal";
 import AddIncome from "./Add/Income/AddIncome";
 import AddExpense from "./Add/expense/AddExpense";
-import PlusModal from "./PlusModal";
 import {
   getAccounts,
   getCategories,
@@ -361,15 +360,6 @@ const TransactionsDashboard = () => {
               >
                 Nueva Transferencia
               </Button>
-
-              <button
-                ref={createButtonRef}
-                onClick={openPlusModal}
-                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center space-x-2"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Crear</span>
-              </button>
             </div>
           </div>
 
@@ -492,7 +482,7 @@ const TransactionsDashboard = () => {
       </div>
 
       {/* Navegación de meses */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-md">
+      <div className="fixed bottom-0 w-full bg-white border-t shadow-md">
         <div className="max-w-7xl mx-auto px-6 py-2">
           <div className="flex items-center justify-center space-x-4">
             <Button
@@ -540,12 +530,6 @@ const TransactionsDashboard = () => {
         onTransactionAdded={handleEntryAdded}
         transactionToEdit={editTransaction}
         transactionType={transactionType}
-      />
-
-      <PlusModal
-        isOpen={isPlusModalOpen}
-        onClose={closePlusModal}
-        buttonPosition={buttonPosition}
       />
 
       <AddIncome

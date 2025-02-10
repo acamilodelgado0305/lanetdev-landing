@@ -71,7 +71,7 @@ const PlusModal = ({ isOpen, onClose, buttonPosition }) => {
         onClick={onClose}
       />
 
-      <div className="fixed top-[8em] right-8 w-[900px] bg-white shadow-xl rounded-lg border border-gray-100">
+      <div className="fixed top-[4em] right-72 w-[900px] bg-white shadow-xl rounded-lg border border-gray-100">
         <div className="absolute -top-2 right-8 w-4 h-4 bg-white rotate-45 border-l border-t border-gray-100" />
 
         <div className="p-6">
