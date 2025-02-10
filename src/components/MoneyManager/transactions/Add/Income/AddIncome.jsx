@@ -11,13 +11,14 @@ import { uploadImage } from "../../../../../services/apiService";
 import dayjs from "dayjs";
 import { UploadOutlined } from "@ant-design/icons";
 import axios from "axios";
-
+import { useNavigate } from 'react-router-dom'; // Importa useNavigate
 const apiUrl = import.meta.env.VITE_API_FINANZAS;
 
 const { Title, Text } = Typography;
 
 
-const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) => {
+const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
+  const navigate = useNavigate(); // Inicializa el hook useNavigate
   const [transactionType, setTransactionType] = useState("expense");
   const [amount, setAmount] = useState("");
 
@@ -27,6 +28,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
   const [account, setAccount] = useState("");
   const [voucher, setVoucher] = useState("");
   const [description, setDescription] = useState("");
+  const [comentarios, setComentarios] = useState("");
   const [categories, setCategories] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [imageUrl, setImageUrl] = useState("");
@@ -50,6 +52,12 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
   const [otherIncome, setOtherIncome] = useState("");
   const [cashReceived, setCashReceived] = useState("");
   const [cashierCommission, setCashierCommission] = useState("");
+
+  const handleCancel = () => {
+    navigate(-1); // Navega hacia atrás en la historia del navegador
+  };
+
+
 
   //------------USE EFECTS--------------------------
 
@@ -159,18 +167,26 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
   };
 
   const handleImageUpload = async (e) => {
-    const files = Array.from(e.target.files);
+    const files = Array.from(e.target.files); // Convierte los archivos seleccionados en un array
     if (files.length > 0) {
-      setIsUploading(true);
+      setIsUploading(true); // Indica que se está iniciando la carga
       try {
         // Usa Promise.all para cargar todos los archivos simultáneamente
-        const uploadedImageUrls = await Promise.all(files.map(async (file) => {
-          const uploadedImageUrl = await uploadImage(file);
-          return uploadedImageUrl;
-        }));
+        const uploadedImageUrls = await Promise.all(
+          files.map(async (file) => {
+            const uploadedImageUrl = await uploadImage(file); // Sube cada archivo
+            return uploadedImageUrl; // Retorna la URL del archivo cargado
+          })
+        );
 
+        // Actualiza el estado de las URLs de las imágenes
         setImageUrls((prevUrls) => [...prevUrls, ...uploadedImageUrls]);
-        setVoucher((prevVoucher) => `${prevVoucher}\n${uploadedImageUrls.join("\n")}`);
+
+        // Actualiza el estado del voucher agregando las nuevas URLs como un array
+        setVoucher((prevVoucher) => {
+          const currentVoucher = prevVoucher ? JSON.parse(prevVoucher) : []; // Parsea el voucher actual si existe
+          return JSON.stringify([...currentVoucher, ...uploadedImageUrls]); // Combina las URLs y lo guarda como JSON
+        });
       } catch (error) {
         console.error("Error al subir las imágenes:", error);
         Swal.fire({
@@ -180,7 +196,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
           confirmButtonColor: "#d33",
         });
       } finally {
-        setIsUploading(false);
+        setIsUploading(false); // Finaliza el estado de carga
       }
     }
   };
@@ -190,11 +206,11 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
 
   const handleSave = async () => {
     try {
-      if (!account || !category) {
+      if (!account) {
         Swal.fire({
           icon: "error",
           title: "Error",
-          text: "Por favor seleccione una cuenta y una categoría",
+          text: "Por favor seleccione una cuenta",
           confirmButtonColor: "#d33",
         });
         return;
@@ -214,6 +230,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
         date: date.format("YYYY-MM-DD[T]HH:mm:ss[Z]"),
         voucher: voucher,
         description: description,
+        comentarios: comentarios,
         estado: true,
         amount: totalAmount // Add the total amount here
       };
@@ -285,6 +302,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
     setAccount("");
     setVoucher("");
     setDescription("");
+    setComentarios("");
     setImageUrls([]);
     setDate(dayjs());
     setCashierName("");
@@ -305,7 +323,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
         const otros = parseFloat(otherIncome) || 0;
         return fev + diverso + otros;
       };
-  
+
       // Calcular el importe total
       const amount = calculateTotalAmount();
       // Verificar si el dinero recibido en efectivo coincide con el importe total
@@ -313,7 +331,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
       const isCashMatch = cashReceivedValue === amount;
       // Calcular la comisión del cajero (2% del importe total)
       const commission = amount * 0.02;
-  
+
       return (
         <div className="p-6 bg-white rounded-lg shadow-lg space-y-8">
           {/* Título */}
@@ -321,11 +339,11 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
             <h2 className="text-xl font-bold text-gray-800">Arqueo de Caja</h2>
             <p className="text-sm text-gray-500">Ingrese los datos requeridos para realizar el arqueo.</p>
           </div>
-  
+
           {/* Periodo de Arqueo */}
           <div className="flex items-center relative">
             <div className="w-48 font-semibold text-gray-700 text-sm">Periodo de Arqueo</div>
-          
+
             <div className="flex space-x-4 ml-6">
               <DatePicker
                 value={startPeriod}
@@ -341,11 +359,11 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
               />
             </div>
           </div>
-  
+
           {/* Cajero */}
           <div className="flex items-center relative">
             <div className="w-48 font-semibold text-gray-700 text-sm">Cajero</div>
-        
+
             <div className="ml-6">
               <select
                 className="w-64 text-sm py-1 px-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
@@ -362,11 +380,11 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
               </select>
             </div>
           </div>
-  
+
           {/* Número de Arqueo */}
           <div className="flex items-center relative">
             <div className="w-48 font-semibold text-gray-700 text-sm">Número de Arqueo</div>
-      
+
             <div className="ml-6">
               <Input
                 value={arqueoNumber}
@@ -378,12 +396,12 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
               />
             </div>
           </div>
-  
+
           {/* Importes */}
           <div className="space-y-4">
             <div className="flex items-center relative">
               <div className="w-48 font-semibold text-gray-700 text-sm">Importe FEV</div>
-             
+
               <div className="ml-6">
                 <Input
                   value={formatCurrency(fevAmount)}
@@ -396,7 +414,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
             </div>
             <div className="flex items-center relative">
               <div className="w-48 font-semibold text-gray-700 text-sm">Importe Diverso</div>
-              
+
               <div className="ml-6">
                 <Input
                   value={formatCurrency(diversoAmount)}
@@ -409,7 +427,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
             </div>
             <div className="flex items-center relative">
               <div className="w-48 font-semibold text-gray-700 text-sm">Otros Ingresos</div>
-             
+
               <div className="ml-6">
                 <Input
                   value={formatCurrency(otherIncome)}
@@ -421,12 +439,12 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
               </div>
             </div>
           </div>
-  
+
           {/* Resumen */}
           <div className="space-y-4">
             <div className="flex justify-between items-center relative">
               <div className="w-48 font-semibold text-gray-700 text-sm">Dinero Recibido en Efectivo</div>
-              
+
               <div className="ml-6">
                 <Input
                   value={formatCurrency(cashReceived)}
@@ -439,7 +457,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
             </div>
             <div className="flex justify-between items-center relative">
               <div className="w-48 font-semibold text-gray-700 text-sm">Importe Total</div>
-             
+
               <div className="ml-6">
                 <Input
                   value={formatCurrency(amount)}
@@ -451,7 +469,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
               </div>
             </div>
           </div>
-  
+
           {/* Mensaje de coincidencia */}
           <div className="text-center">
             {isCashMatch ? (
@@ -464,11 +482,11 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
               </div>
             )}
           </div>
-  
+
           {/* Comisión del Cajero */}
           <div className="flex items-center relative">
             <div className="w-48 font-semibold text-gray-700 text-sm">Comisión del Cajero (2%)</div>
-        
+
             <div className="ml-6">
               <Input
                 value={formatCurrency(commission)}
@@ -500,7 +518,15 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
             className="text-lg"
             placeholder="Ingrese el importe de la venta"
           />
+
+          <CategorySelector
+            selectedCategory={category}  // Cambiar 'value' por 'selectedCategory'
+            onCategorySelect={(value) => setCategory(value)}  // Cambiar 'onChange' por 'onCategorySelect'
+            categories={categories}
+          />
         </div>
+
+
       );
     }
     return null;
@@ -518,17 +544,24 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
     setCategory('');
   };
 
-  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white shadow-lg w-full max-w-4xl p-6 pt-0 relative self-start overflow-y-auto max-h-full">
-
-
-        {/* Encabezado */}
-        <div className=" bg-white flex justify-between items-center mb-3 sticky top-0 bg-white z-50">
-          <Title level={3} className="mb-0">
-            Crear un Ingreso
-          </Title>
+    <div className="p-6 max-w-[1200px] mx-auto bg-white  shadow">
+      <div
+        className="flex justify-between items-center mb-6"
+        style={{
+          position: "sticky", // Hace que el elemento sea pegajoso
+          top: 0, // Define la posición desde la parte superior donde se fija
+          zIndex: 10, // Asegura que esté por encima de otros elementos
+          backgroundColor: "white", // Fondo blanco para evitar transparencias
+          padding: "1rem", // Espaciado interno
+          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", // Sombra para destacarlo
+        }}
+      >
+        <Title level={3} className="mb-0">
+          Crear un Ingreso
+        </Title>
+        <Space>
           <Space>
             <div className="px-6 py-4 flex justify-end">
               <input
@@ -548,128 +581,133 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
                 Cargar Ingresos Masivos
               </Button>
             </div>
-
-            <Button onClick={onClose} type="default" className="border-gray-300 text-gray-600">
+            <Button onClick={handleCancel} type="default" className="border-gray-300 text-gray-600">
               Cancelar
             </Button>
             <Button onClick={handleSave} type="primary" className="bg-green-500 text-white">
               Guardar
             </Button>
           </Space>
+        </Space>
+      </div>
+
+      {/* Encabezado */}
+
+
+      <Card
+        className="mb-6"
+        bordered={false}
+
+      >
+
+        <div className="flex justify-between items-start mb-4">
+          {/* Descripción a la izquierda */}
+          <div className="w-2/3">
+            <label className="block text-sm font-medium text-gray-700">Titulo*</label>
+            <Input
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Añade un título descriptivo"
+              rows={1}
+              className="w-[50em] border  p-1"
+            />
+          </div>
+
+          {/* Fecha a la derecha */}
+          <div className="w-1/4">
+            <label className="block text-sm font-medium text-gray-700">Fecha</label>
+            <DatePicker
+              value={date}
+              onChange={(newDate) => setDate(newDate)}
+              format="YYYY-MM-DD"
+              className="w-full"
+            />
+          </div>
         </div>
-
-        <Card
-          className="mb-6"
-          bordered={false}
-
-        >
-
-          <div className="flex justify-between items-start mb-4">
-            {/* Descripción a la izquierda */}
-            <div className="w-2/3">
-              <label className="block text-sm font-medium text-gray-700">Descripción*</label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Añade una descripción"
-                rows={1}
-                className="w-[20em] border  p-1"
-              />
-            </div>
-
-            {/* Fecha a la derecha */}
-            <div className="w-1/4">
-              <label className="block text-sm font-medium text-gray-700">Fecha</label>
-              <DatePicker
-                value={date}
-                onChange={(newDate) => setDate(newDate)}
-                format="YYYY-MM-DD"
-                className="w-full"
-              />
-            </div>
-          </div>
-          <div >
-            <div className="mb-6">
-              {/* Tipo de Ingreso */}
-              <div>Tipo de Ingreso</div>
-              <Radio.Group
-                value={isArqueoChecked ? 'arqueo' : isVentaChecked ? 'venta' : null}
-                onChange={(e) => handleCheckboxChange([e.target.value])}
-              >
-                <Radio value="arqueo">Arqueo</Radio>
-                <Radio value="venta">Venta</Radio>
-              </Radio.Group>
-
-            </div>
-
-
-            {renderArqueoInputs()}
-            {renderVentaInputs()}
-          </div>
-        </Card>
-
-        <div className="mt-6 text-center text-sm text-gray-500 border-t border-dashed border-gray-400 pt-2"></div>
-
-        <Card
-          className="mb-6"
-          bordered={false}>
+        <div >
           <div className="mb-6">
-            <AccountSelector
-              selectedAccount={account}  // Cambiar 'value' por 'selectedAccount'
-              onAccountSelect={(value) => setAccount(value)}  // Cambiar 'onChange' por 'onAccountSelect'
-              accounts={accounts}
-            />
+            {/* Tipo de Ingreso */}
+            <div>Tipo de Ingreso</div>
+            <Radio.Group
+              value={isArqueoChecked ? 'arqueo' : isVentaChecked ? 'venta' : null}
+              onChange={(e) => handleCheckboxChange([e.target.value])}
+            >
+              <Radio value="arqueo">Arqueo</Radio>
+              <Radio value="venta">Venta</Radio>
+            </Radio.Group>
 
           </div>
 
-          <div className="mb-4">
-            <CategorySelector
-              selectedCategory={category}  // Cambiar 'value' por 'selectedCategory'
-              onCategorySelect={(value) => setCategory(value)}  // Cambiar 'onChange' por 'onCategorySelect'
-              categories={categories}
+
+          {renderArqueoInputs()}
+          {renderVentaInputs()}
+        </div>
+      </Card>
+
+      <div className="mt-6 text-center text-sm text-gray-500 border-t border-dashed border-gray-400 pt-2"></div>
+
+      <Card
+        className="mb-6"
+        bordered={false}>
+        <div className="mb-6">
+          <AccountSelector
+            selectedAccount={account}  // Cambiar 'value' por 'selectedAccount'
+            onAccountSelect={(value) => setAccount(value)}  // Cambiar 'onChange' por 'onAccountSelect'
+            accounts={accounts}
+          />
+
+        </div>
+
+        <div className="w-full">
+          <label className="block text-sm font-medium text-gray-700">Comentarios*</label>
+          <textarea
+            value={comentarios}
+            onChange={(e) => setComentarios(e.target.value)}
+            placeholder="Añade comentarios adicionales"
+            rows={3}
+            className="w-full border  p-1"
+          />
+        </div>
+
+      </Card>
+
+      {/* Cuerpo */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Columna Izquierda: Detalles Básicos */}
+        <div className="space-y-4">
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Comprobantes</label>
+            <input
+              type="file"
+              multiple
+              onChange={handleImageUpload}
+              className="w-full border rounded-md p-2"
             />
-
-          </div>
-
-        </Card>
-
-        {/* Cuerpo */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Columna Izquierda: Detalles Básicos */}
-          <div className="space-y-4">
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Comprobantes</label>
-              <input
-                type="file"
-                multiple
-                onChange={handleImageUpload}
-                className="w-full border rounded-md p-2"
-              />
-              {isUploading && <p className="text-sm text-gray-500">Subiendo imágenes...</p>}
-              {imageUrls.length > 0 && (
-                <div className="mt-2 space-y-2">
-                  {imageUrls.map((url, index) => (
-                    <div key={index} className="relative group">
-                      <img src={url} alt={`Comprobante ${index}`} className="w-full h-24 object-cover rounded-md" />
-                      <button
-                        onClick={() => {
-                          setImageUrls((urls) => urls.filter((_, i) => i !== index));
-                          setVoucher((voucher) => voucher.replace(url, "").trim());
-                        }}
-                        className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 text-white rounded-full h-6 w-6 flex items-center justify-center"
-                      >
-                        <CloseOutlined />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            {isUploading && <p className="text-sm text-gray-500">Subiendo imágenes...</p>}
+            {imageUrls.length > 0 && (
+              <div className="mt-2 space-y-2">
+                {imageUrls.map((url, index) => (
+                  <div key={index} className="relative group">
+                    <img src={url} alt={`Comprobante ${index}`} className="w-full h-24 object-cover rounded-md" />
+                    <button
+                      onClick={() => {
+                        setImageUrls((urls) => urls.filter((_, i) => i !== index));
+                        setVoucher((voucher) => voucher.replace(url, "").trim());
+                      }}
+                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 text-white rounded-full h-6 w-6 flex items-center justify-center"
+                    >
+                      <CloseOutlined />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
-        <div className="mt-6 text-center text-sm text-gray-500 border-t border-dashed border-gray-400 pt-2"></div></div>
-    </div>
+      </div>
+      <div className="mt-6 text-center text-sm text-gray-500 border-t border-dashed border-gray-400 pt-2"></div></div>
+
   );
 };
 

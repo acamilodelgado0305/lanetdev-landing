@@ -30,6 +30,8 @@ import {
   Plus,
   Menu
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
 
 const { Option } = Select;
 const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
@@ -45,6 +47,7 @@ const formatCurrency = (amount) => {
 };
 
 const TransactionsDashboard = () => {
+  const navigate = useNavigate();
   const [isContentModalOpen, setIsContentModalOpen] = useState(false);
   const [selectedVoucherContent, setSelectedVoucherContent] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -76,6 +79,10 @@ const TransactionsDashboard = () => {
   const openModal = () => {
     setEditTransaction(null);
     setIsModalOpen(true);
+  };
+
+  const handleNavigate = () => {
+    navigate('/index/moneymanager/transactions/nuevoingreso'); // Reemplaza '/nueva-ruta' con la ruta deseada
   };
 
   const openContentModal = (voucherContent) => {
@@ -337,7 +344,7 @@ const TransactionsDashboard = () => {
             </div>
             <div className="flex gap-3">
               <Button
-                onClick={openIncomeModal}
+                onClick={handleNavigate}
                 type="primary"
                 className="bg-emerald-600 hover:bg-emerald-700 border-none h-11"
                 icon={<TrendingUp className="w-4 h-4 mr-2" />}
@@ -532,12 +539,7 @@ const TransactionsDashboard = () => {
         transactionType={transactionType}
       />
 
-      <AddIncome
-        isOpen={isIncomeModalOpen}
-        onClose={closeIncomeModal}
-        onTransactionAdded={handleEntryAdded}
-        transactionToEdit={editTransaction}
-      />
+      
 
       <AddExpense
         isOpen={isExpenseModalOpen}
