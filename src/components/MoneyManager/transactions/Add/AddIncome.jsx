@@ -153,7 +153,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
         }));
 
         setImageUrls((prevUrls) => [...prevUrls, ...uploadedImageUrls]);
-        setVoucher((prevVoucher) => `${prevVoucher}\n${uploadedImageUrls.join("\n")}`);
+        setVoucher((prevVoucher) => `${prevVoucher}${uploadedImageUrls.join("\n")}`);
       } catch (error) {
         console.error("Error al subir las imágenes:", error);
         Swal.fire({
@@ -377,7 +377,7 @@ const AddIncome = ({ isOpen, onClose, onTransactionAdded, transactionToEdit }) =
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}>
-      <div className="fixed inset-y-0 right-0 w-full md:w-[32em] bg-white shadow-2xl transform 
+      <div className="fixed inset-y-0 right-0 w-full w-full bg-white shadow-2xl transform 
                       transition-transform duration-300 ease-in-out overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-white z-10">

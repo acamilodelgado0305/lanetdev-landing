@@ -30,6 +30,7 @@ import SearchResults from "./components/search/SearchResults";
 import Network from "./components/Network/Network.jsx";
 import Configuracion from "./components/MoneyManager/configuracion/Configuracion.jsx";
 import Terceros from "./components/MoneyManager/Terceros/Terceros.jsx";
+import AddIncome from "./components/MoneyManager/transactions/Add/Income/AddIncome.jsx";
 import 'antd/dist/reset.css';
 
 
@@ -79,6 +80,10 @@ const router = createBrowserRouter([
           {
             path: "transactions",
             element: <TransactionsDashboard />,
+          },
+          {
+            path: "transactions/nuevoingreso",
+            element: <AddIncome />,
           },
           {
             path: "categorias",
