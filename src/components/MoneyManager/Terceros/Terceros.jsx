@@ -7,14 +7,15 @@ const { Title, Text } = Typography;
 const { Option } = Select;
 
 const Terceros = () => {
-  const [tipoTercero, setTipoTercero] = useState({
-    clientes: false,
-    proveedores: false,
-    otros: false,
-  });
+  const [tipoTercero, setTipoTercero] = useState(null); // Estado para el tipo de tercero seleccionado
+
+  // Función para manejar la selección del tipo de tercero
+  const handleTipoTerceroChange = (value) => {
+    setTipoTercero(value);
+  };
 
   return (
-    <div className="p-6 max-w-[1200px] mx-auto bg-white  shadow">
+    <div className="p-6 max-w-[1200px] mx-auto bg-white shadow">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <Title level={3} className="mb-0">
@@ -30,200 +31,113 @@ const Terceros = () => {
         </Space>
       </div>
 
-       {/* Tipo de tercero */}
-       <Card 
-            className="mb-6" 
-            bordered={false} 
-         
-          >
-            <Title level={5}>Tipo de tercero</Title>
-            <Space direction="vertical" className="w-full">
-              <Checkbox.Group className="w-full">
-                <Row gutter={[24, 16]}>
-                  <Col span={8}>
-                    <Checkbox value="clientes" style={{display: 'flex', alignItems: 'flex-start'}}>
-                      <div>
-                        <div className="font-medium">Clientes</div>
-                        <Text type="secondary" className="text-sm">
-                          Personas o empresas a las cuales necesitas generarles una cotización y/o una factura de venta
-                        </Text>
-                      </div>
-                    </Checkbox>
-                  </Col>
-                  <Col span={8}>
-                    <Checkbox value="proveedores" style={{display: 'flex', alignItems: 'flex-start'}}>
-                      <div>
-                        <div className="font-medium">Proveedores</div>
-                        <Text type="secondary" className="text-sm">
-                          Todas las personas o empresas a las cuales les compras bienes o servicios
-                        </Text>
-                      </div>
-                    </Checkbox>
-                  </Col>
-                  <Col span={8}>
-                    <Checkbox value="otros" style={{display: 'flex', alignItems: 'flex-start'}}>
-                      <div>
-                        <div className="font-medium">Otros</div>
-                        <Text type="secondary" className="text-sm">
-                          Por ejemplo: Fondos de salud y pensión, bancos, etc.
-                        </Text>
-                      </div>
-                    </Checkbox>
-                  </Col>
-                </Row>
-              </Checkbox.Group>
-            </Space>
-          </Card>
+      {/* Tipo de tercero */}
+      <Card className="mb-6" bordered={false}>
+        <Title level={5}>Tipo de tercero</Title>
+        <Radio.Group
+          value={tipoTercero}
+          onChange={(e) => handleTipoTerceroChange(e.target.value)}
+          className="w-full"
+        >
+          <Row gutter={[24, 16]}>
+            <Col span={8}>
+              <Radio value="clientes" style={{ display: 'flex', alignItems: 'flex-start' }}>
+                <div>
+                  <div className="font-medium">Clientes</div>
+                  <Text type="secondary" className="text-sm">
+                    Personas o empresas a las cuales necesitas generarles una cotización y/o una factura de venta
+                  </Text>
+                </div>
+              </Radio>
+            </Col>
+            <Col span={8}>
+              <Radio value="proveedores" style={{ display: 'flex', alignItems: 'flex-start' }}>
+                <div>
+                  <div className="font-medium">Proveedores</div>
+                  <Text type="secondary" className="text-sm">
+                    Todas las personas o empresas a las cuales les compras bienes o servicios
+                  </Text>
+                </div>
+              </Radio>
+            </Col>
+            <Col span={8}>
+              <Radio value="cajero" style={{ display: 'flex', alignItems: 'flex-start' }}>
+                <div>
+                  <div className="font-medium">Cajero</div>
+                  <Text type="secondary" className="text-sm">
+                    Información específica para cajeros
+                  </Text>
+                </div>
+              </Radio>
+            </Col>
+          </Row>
+        </Radio.Group>
+      </Card>
 
-      <div className="grid grid-cols-2 gap-8">
-        {/* Datos básicos */}
+      {/* Renderizado condicional según el tipo de tercero */}
+      {tipoTercero === 'clientes' && (
         <Card>
-          <Title level={4} className="flex items-center gap-2">
-            Datos básicos <Text type="danger">*</Text>
-          </Title>
+          <Title level={4}>Información para Clientes</Title>
           <Space direction="vertical" size="middle" className="w-full">
-            <div>
-              <Text strong className="block mb-1">
-                Tipo
-              </Text>
-              <Select className="w-full">
-                <Option value="persona">Es persona</Option>
-                <Option value="empresa">Es empresa</Option>
-              </Select>
-            </div>
-
-            <div>
-              <Text strong className="block mb-1">
-                Tipo de identificación
-              </Text>
-              <Select className="w-full">
-                <Option value="cc">Cédula de ciudadanía</Option>
-                <Option value="nit">NIT</Option>
-                <Option value="pasaporte">Pasaporte</Option>
-              </Select>
-            </div>
-
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <Text strong className="block mb-1">
-                  Identificación <Text type="danger">*</Text>
-                </Text>
-                <Input placeholder="Identificación" />
-              </div>
-              <div>
-                <Text strong className="block mb-1">
-                  DV
-                </Text>
-                <Input placeholder="DV" style={{ width: '80px' }} />
-              </div>
-            </div>
-
-            <div>
-              <Text strong className="block mb-1">
-                Nombres <Text type="danger">*</Text>
-              </Text>
-              <Input placeholder="Nombres" />
-            </div>
-
-            <div>
-              <Text strong className="block mb-1">
-                Apellidos <Text type="danger">*</Text>
-              </Text>
-              <Input placeholder="Apellidos" />
-            </div>
-
             <div>
               <Text strong className="block mb-1">
                 Nombre comercial
               </Text>
               <Input placeholder="Nombre comercial" />
             </div>
-
             <div>
               <Text strong className="block mb-1">
-                Dirección
-              </Text>
-              <Input placeholder="Dirección" />
-            </div>
-
-            <div>
-              <Text strong className="block mb-1">
-                Teléfono
-              </Text>
-              <Space>
-                <Input placeholder="Indicativo" style={{ width: '80px' }} />
-                <Input placeholder="# de Teléfono" />
-                <Input placeholder="Extensión" style={{ width: '100px' }} />
-                <Button type="text" danger icon={<X className="w-4 h-4" />} />
-              </Space>
-            </div>
-
-            <Button type="link" icon={<Plus className="w-4 h-4" />} className="text-green-500">
-              Agregar otro Teléfono
-            </Button>
-          </Space>
-        </Card>
-
-        {/* Datos para facturación y envío */}
-        <Card>
-          <Title level={4} className="flex items-center gap-2">
-            Datos para facturación y envío <Info className="w-4 h-4 text-gray-400" />
-          </Title>
-          <Space direction="vertical" size="middle" className="w-full">
-            <div>
-              <Text strong className="block mb-1">
-                Nombres del contacto
-              </Text>
-              <Input placeholder="Nombres del contacto" />
-            </div>
-
-            <div>
-              <Text strong className="block mb-1">
-                Apellidos del contacto
-              </Text>
-              <Input placeholder="Apellidos del contacto" />
-            </div>
-
-            <div>
-              <Text strong className="block mb-1">
-                Correo electrónico cuando aplique
+                Correo electrónico
               </Text>
               <Input placeholder="Correo electrónico" type="email" />
             </div>
+          </Space>
+        </Card>
+      )}
 
+      {tipoTercero === 'proveedores' && (
+        <Card>
+          <Title level={4}>Información para Proveedores</Title>
+          <Space direction="vertical" size="middle" className="w-full">
             <div>
               <Text strong className="block mb-1">
-                Tipo de régimen IVA
+                RUT del proveedor
               </Text>
-              <Select className="w-full" placeholder="Seleccione...">
-                <Option value="1">Régimen 1</Option>
-                <Option value="2">Régimen 2</Option>
-              </Select>
+              <Input placeholder="RUT" />
             </div>
-
             <div>
               <Text strong className="block mb-1">
-                Responsabilidad fiscal
+                Producto o servicio ofrecido
               </Text>
-              <Radio.Group>
-                <Space direction="vertical">
-                  {[
-                    'O-13 Gran contribuyente',
-                    'O-15 Autorretenedor',
-                    'O-23 Agente de retención IVA',
-                    'O-47 Régimen simple de tributación',
-                    'R-99-PN No aplica - Otros',
-                  ].map((option) => (
-                    <Radio key={option} value={option}>
-                      {option}
-                    </Radio>
-                  ))}
-                </Space>
-              </Radio.Group>
+              <Input placeholder="Producto o servicio" />
             </div>
           </Space>
         </Card>
-      </div>
+      )}
+
+      {tipoTercero === 'cajero' && (
+        <Card>
+          <Title level={4}>Información para Cajeros</Title>
+          <Space direction="vertical" size="middle" className="w-full">
+            <div>
+              <Text strong className="block mb-1">
+                Número de caja
+              </Text>
+              <Input placeholder="Número de caja" />
+            </div>
+            <div>
+              <Text strong className="block mb-1">
+                Turno asignado
+              </Text>
+              <Select className="w-full">
+                <Option value="mañana">Mañana</Option>
+                <Option value="tarde">Tarde</Option>
+                <Option value="noche">Noche</Option>
+              </Select>
+            </div>
+          </Space>
+        </Card>
+      )}
     </div>
   );
 };

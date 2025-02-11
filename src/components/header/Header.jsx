@@ -87,14 +87,7 @@ const Header = ({ unreadEmailsCount }) => {
           />
         </Link>
         <div className="flex items-center space-x-3">
-          <button
-            ref={createButtonRef}
-            onClick={openPlusModal}
-            className="px-4 py-1 bg-green-500 text-white rounded hover:bg-green-600 flex items-center space-x-2"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Crear</span>
-          </button>
+
           <PlusModal
             isOpen={isPlusModalOpen}
             onClose={closePlusModal}
@@ -110,6 +103,15 @@ const Header = ({ unreadEmailsCount }) => {
             style={{ width: 180 }}
             className="hidden md:block"
           />
+
+          <button
+            ref={createButtonRef}
+            onClick={openPlusModal}
+            className="px-4 py-1 bg-green-500 text-white rounded hover:bg-green-600 flex items-center space-x-2"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Crear</span>
+          </button>
           <Tooltip title="Notifications">
             <Badge count={notifications.length} size="small">
               <BellOutlined

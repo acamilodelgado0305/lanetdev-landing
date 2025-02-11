@@ -1,24 +1,25 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { IoClose } from "react-icons/io5";
 import AccountSelector from "../AccountSelector ";
 import CategorySelector from '../CategorySelector';
-import { DatePicker, Input, Button, Row, Col, Tabs, Card, Radio, Typography, Space, Checkbox } from "antd";
+import { DatePicker, Input, Button, Row, Col, Tabs, Card, Radio, Typography, Space, Checkbox, Divider, Select } from "antd";
 import {
   DollarCircleOutlined, CloseOutlined
 } from '@ant-design/icons';
 import Swal from "sweetalert2";
 import { uploadImage } from "../../../../../services/apiService";
 import dayjs from "dayjs";
-import { UploadOutlined } from "@ant-design/icons";
+import { UploadOutlined, DownloadOutlined } from "@ant-design/icons";
 import axios from "axios";
 import { useNavigate } from 'react-router-dom'; // Importa useNavigate
 const apiUrl = import.meta.env.VITE_API_FINANZAS;
+import VoucherSection from "../../components/VoucherSection";
 
 const { Title, Text } = Typography;
 
 
 const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
-  const navigate = useNavigate(); // Inicializa el hook useNavigate
+  const navigate = useNavigate(); // Inicializa el hook useNavigaten
   const [transactionType, setTransactionType] = useState("expense");
   const [amount, setAmount] = useState("");
 
@@ -52,6 +53,8 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
   const [otherIncome, setOtherIncome] = useState("");
   const [cashReceived, setCashReceived] = useState("");
   const [cashierCommission, setCashierCommission] = useState("");
+
+  const printRef = useRef();
 
   const handleCancel = () => {
     navigate(-1); // Navega hacia atrás en la historia del navegador
@@ -135,6 +138,7 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
   };
 
 
+
   //-------------MONEDA--------------------
 
   const formatCurrency = (amount) => {
@@ -163,41 +167,6 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
     }
     else if (field === 'cashReceived') {
       setCashReceived(numericValue); // Actualizar el estado con el valor numérico
-    }
-  };
-
-  const handleImageUpload = async (e) => {
-    const files = Array.from(e.target.files); // Convierte los archivos seleccionados en un array
-    if (files.length > 0) {
-      setIsUploading(true); // Indica que se está iniciando la carga
-      try {
-        // Usa Promise.all para cargar todos los archivos simultáneamente
-        const uploadedImageUrls = await Promise.all(
-          files.map(async (file) => {
-            const uploadedImageUrl = await uploadImage(file); // Sube cada archivo
-            return uploadedImageUrl; // Retorna la URL del archivo cargado
-          })
-        );
-
-        // Actualiza el estado de las URLs de las imágenes
-        setImageUrls((prevUrls) => [...prevUrls, ...uploadedImageUrls]);
-
-        // Actualiza el estado del voucher agregando las nuevas URLs como un array
-        setVoucher((prevVoucher) => {
-          const currentVoucher = prevVoucher ? JSON.parse(prevVoucher) : []; // Parsea el voucher actual si existe
-          return JSON.stringify([...currentVoucher, ...uploadedImageUrls]); // Combina las URLs y lo guarda como JSON
-        });
-      } catch (error) {
-        console.error("Error al subir las imágenes:", error);
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: "No se pudieron subir algunas imágenes. Por favor, intente de nuevo.",
-          confirmButtonColor: "#d33",
-        });
-      } finally {
-        setIsUploading(false); // Finaliza el estado de carga
-      }
     }
   };
 
@@ -277,7 +246,6 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
       });
 
       resetForm();
-      onClose();
       fetchAccounts();
       if (onTransactionAdded) {
         onTransactionAdded();
@@ -314,6 +282,48 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
     setEndPeriod(null);
   };
 
+
+  const renderInvoiceHeader = () => (
+    <div className="border-b-2 border-gray-200 pb-4 mb-6">
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">COMPROBANTE DE ARQUEO</h1>
+          <div className="flex items-center space-x-4">
+            <span className="text-gray-600">No.</span>
+            <Input
+              value={arqueoNumber}
+              onChange={(e) => setArqueoNumber(e.target.value)}
+              placeholder="Número de Arqueo"
+              className="w-40"
+            />
+          </div>
+        </div>
+        <div className="text-right space-y-2">
+          <div className="flex items-center justify-end space-x-4">
+            <p className="text-gray-600">Fecha: {date?.format("DD/MM/YYYY")}</p>
+          
+          </div>
+          <div className="flex items-center justify-end space-x-4">
+            <span className="text-gray-600">Cajero:</span>
+            <Select
+              value={cashierName}
+              onChange={(value) => setCashierName(value)}
+              className="w-64"
+              placeholder="Selecciona un cajero"
+            >
+              <Select.Option value="Seg-Rafael Urdaneta">Seg-Rafael Urdaneta</Select.Option>
+              <Select.Option value="Seg-Ragonvalia Oficina">Seg-Ragonvalia Oficina</Select.Option>
+              <Select.Option value="Seg-Ragonvalia Casa">Seg-Ragonvalia Casa</Select.Option>
+              <Select.Option value="Seg-AsoFranco">Seg-AsoFranco</Select.Option>
+              <Select.Option value="Seg-Bancolombia Rocely">Seg-Bancolombia Rocely</Select.Option>
+              <Select.Option value="Seg-Bancolombia LANET">Seg-Bancolombia LANET</Select.Option>
+            </Select>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   //----------------------RENDERS-------------------------------//
   const renderArqueoInputs = () => {
     if (isArqueoChecked) {
@@ -324,183 +334,170 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
         return fev + diverso + otros;
       };
 
-      // Calcular el importe total
       const amount = calculateTotalAmount();
-      // Verificar si el dinero recibido en efectivo coincide con el importe total
       const cashReceivedValue = parseFloat(cashReceived) || 0;
       const isCashMatch = cashReceivedValue === amount;
-      // Calcular la comisión del cajero (2% del importe total)
       const commission = amount * 0.02;
 
       return (
-        <div className="p-6 bg-white rounded-lg shadow-lg space-y-8">
-          {/* Título */}
-          <div className="text-center">
-            <h2 className="text-xl font-bold text-gray-800">Arqueo de Caja</h2>
-            <p className="text-sm text-gray-500">Ingrese los datos requeridos para realizar el arqueo.</p>
-          </div>
+        <div className="p-6 bg-white rounded-lg shadow-lg space-y-8" ref={printRef}>
+          {renderInvoiceHeader()}
 
-          {/* Periodo de Arqueo */}
-          <div className="flex items-center relative">
-            <div className="w-48 font-semibold text-gray-700 text-sm">Periodo de Arqueo</div>
-
-            <div className="flex space-x-4 ml-6">
-              <DatePicker
-                value={startPeriod}
-                onChange={(date) => setStartPeriod(date)}
-                placeholder="Fecha Inicio"
-                className="w-40 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500"
-              />
-              <DatePicker
-                value={endPeriod}
-                onChange={(date) => setEndPeriod(date)}
-                placeholder="Fecha Fin"
-                className="w-40 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500"
-              />
+          <div className="grid grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <Title level={4}>Periodo de Arqueo</Title>
+              <div className="flex space-x-4">
+                <DatePicker
+                  value={startPeriod}
+                  onChange={(date) => setStartPeriod(date)}
+                  placeholder="Fecha Inicio"
+                  className="w-40"
+                />
+                <DatePicker
+                  value={endPeriod}
+                  onChange={(date) => setEndPeriod(date)}
+                  placeholder="Fecha Fin"
+                  className="w-40"
+                />
+              </div>
             </div>
-          </div>
 
-          {/* Cajero */}
-          <div className="flex items-center relative">
-            <div className="w-48 font-semibold text-gray-700 text-sm">Cajero</div>
-
-            <div className="ml-6">
-              <select
-                className="w-64 text-sm py-1 px-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
-                value={cashierName}
-                onChange={(e) => setCashierName(e.target.value)}
-              >
-                <option value="">Selecciona un cajero</option>
-                <option value="Seg-Rafael Urdaneta">Seg-Rafael Urdaneta</option>
-                <option value="Seg-Ragonvalia Oficina">Seg-Ragonvalia Oficina</option>
-                <option value="Seg-Ragonvalia Casa">Seg-Ragonvalia Casa</option>
-                <option value="Seg-AsoFranco">Seg-AsoFranco</option>
-                <option value="Seg-Bancolombia Rocely">Seg-Bancolombia Rocely</option>
-                <option value="Seg-Bancolombia LANET">Seg-Bancolombia LANET</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Número de Arqueo */}
-          <div className="flex items-center relative">
-            <div className="w-48 font-semibold text-gray-700 text-sm">Número de Arqueo</div>
-
-            <div className="ml-6">
-              <Input
-                value={arqueoNumber}
-                onChange={(e) => setArqueoNumber(e.target.value)}
-                prefix="#"
-                size="small"
-                className="w-40 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500"
-                placeholder="Ej: 1234"
+            <div className="space-y-4">
+              <Title level={4}>Información de Cuenta</Title>
+              <AccountSelector
+                selectedAccount={account}
+                onAccountSelect={(value) => setAccount(value)}
+                accounts={accounts}
               />
             </div>
           </div>
 
-          {/* Importes */}
+          <Divider />
+
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <Title level={5}>Desglose de Ingresos</Title>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span>Importe FEV:</span>
+                    <Input
+                      value={formatCurrency(fevAmount)}
+                      onChange={(e) => handleAmountChange(e, 'fev')}
+                      className="w-40"
+                    />
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Importe Diverso:</span>
+                    <Input
+                      value={formatCurrency(diversoAmount)}
+                      onChange={(e) => handleAmountChange(e, 'diverso')}
+                      className="w-40"
+                    />
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Otros Ingresos:</span>
+                    <Input
+                      value={formatCurrency(otherIncome)}
+                      onChange={(e) => handleAmountChange(e, 'other_incomes')}
+                      className="w-40"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <Title level={5}>Resumen</Title>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span>Total Ingresos:</span>
+                    <span className="font-bold text-lg">{formatCurrency(amount)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Efectivo Recibido:</span>
+                    <Input
+                      value={formatCurrency(cashReceived)}
+                      onChange={(e) => handleAmountChange(e, 'cashReceived')}
+                      className="w-40"
+                    />
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Comisión (2%):</span>
+                    <span className="font-bold">{formatCurrency(commission)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className={`p-4 rounded-lg text-center ${isCashMatch ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+              {isCashMatch ? 'Los valores coinciden correctamente' : '¡Error! Hay un descuadre en el arqueo'}
+            </div>
+          </div>
+
+          <Divider />
+
           <div className="space-y-4">
-            <div className="flex items-center relative">
-              <div className="w-48 font-semibold text-gray-700 text-sm">Importe FEV</div>
-
-              <div className="ml-6">
-                <Input
-                  value={formatCurrency(fevAmount)}
-                  onChange={(e) => handleAmountChange(e, 'fev')}
-                  size="small"
-                  className="w-40 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500"
-                  placeholder="Ej: 1000.00"
-                />
-              </div>
-            </div>
-            <div className="flex items-center relative">
-              <div className="w-48 font-semibold text-gray-700 text-sm">Importe Diverso</div>
-
-              <div className="ml-6">
-                <Input
-                  value={formatCurrency(diversoAmount)}
-                  onChange={(e) => handleAmountChange(e, 'diverso')}
-                  size="small"
-                  className="w-40 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500"
-                  placeholder="Ej: 500.00"
-                />
-              </div>
-            </div>
-            <div className="flex items-center relative">
-              <div className="w-48 font-semibold text-gray-700 text-sm">Otros Ingresos</div>
-
-              <div className="ml-6">
-                <Input
-                  value={formatCurrency(otherIncome)}
-                  onChange={(e) => handleAmountChange(e, 'other_incomes')}
-                  size="small"
-                  className="w-40 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500"
-                  placeholder="Ej: 200.00"
-                />
-              </div>
-            </div>
+            <Title level={4}>Observaciones</Title>
+            <textarea
+              value={comentarios}
+              onChange={(e) => setComentarios(e.target.value)}
+              placeholder="Añade comentarios adicionales"
+              rows={3}
+              className="w-full border p-2 rounded"
+            />
           </div>
 
-          {/* Resumen */}
-          <div className="space-y-4">
-            <div className="flex justify-between items-center relative">
-              <div className="w-48 font-semibold text-gray-700 text-sm">Dinero Recibido en Efectivo</div>
-
-              <div className="ml-6">
-                <Input
-                  value={formatCurrency(cashReceived)}
-                  onChange={(e) => handleAmountChange(e, 'cashReceived')}
-                  size="small"
-                  className="w-40 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500"
-                  placeholder="Ej: 1700.00"
-                />
-              </div>
+          <div className="mt-8 flex justify-between items-center">
+            <div className="border-t border-gray-300 w-1/3 pt-4">
+              <p className="text-center">Firma del Cajero</p>
             </div>
-            <div className="flex justify-between items-center relative">
-              <div className="w-48 font-semibold text-gray-700 text-sm">Importe Total</div>
-
-              <div className="ml-6">
-                <Input
-                  value={formatCurrency(amount)}
-                  disabled
-                  size="small"
-                  className="w-40 bg-green-100 text-green-700 font-bold border-none cursor-not-allowed px-2 py-1"
-                  placeholder="Total calculado"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Mensaje de coincidencia */}
-          <div className="text-center">
-            {isCashMatch ? (
-              <div className="text-green-600 font-semibold">
-                Los valores coinciden correctamente.
-              </div>
-            ) : (
-              <div className="text-red-600 font-semibold">
-                ¡Error! Hay un descuadre en el arqueo.
-              </div>
-            )}
-          </div>
-
-          {/* Comisión del Cajero */}
-          <div className="flex items-center relative">
-            <div className="w-48 font-semibold text-gray-700 text-sm">Comisión del Cajero (2%)</div>
-
-            <div className="ml-6">
-              <Input
-                value={formatCurrency(commission)}
-                disabled
-                size="small"
-                className="w-40 bg-gray-100 text-gray-700 font-bold border-none cursor-not-allowed px-2 py-1"
-                placeholder="Comisión"
-              />
+            <div className="border-t border-gray-300 w-1/3 pt-4">
+              <p className="text-center">Firma del Supervisor</p>
             </div>
           </div>
         </div>
       );
     }
     return null;
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!printRef.current) return;
+
+    try {
+      const element = printRef.current;
+      const { jsPDF } = await import('jspdf');
+      const { default: html2canvas } = await import('html2canvas');
+
+      const canvas = await html2canvas(element);
+      const data = canvas.toDataURL('image/png');
+
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'px',
+        format: 'a4',
+      });
+
+      const imgProperties = pdf.getImageProperties(data);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProperties.height * pdfWidth) / imgProperties.width;
+
+      pdf.addImage(data, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`arqueo_${arqueoNumber || 'sin_numero'}.pdf`);
+
+      Swal.fire({
+        icon: 'success',
+        title: 'PDF Generado',
+        text: 'El comprobante se ha descargado correctamente',
+      });
+    } catch (error) {
+      console.error('Error al generar PDF:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudo generar el PDF. Por favor, intente de nuevo.',
+      });
+    }
   };
 
 
@@ -546,169 +543,70 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
 
 
   return (
-    <div className="p-6 max-w-[1200px] mx-auto bg-white  shadow">
-      <div
-        className="flex justify-between items-center mb-6"
-        style={{
-          position: "sticky", // Hace que el elemento sea pegajoso
-          top: 0, // Define la posición desde la parte superior donde se fija
-          zIndex: 10, // Asegura que esté por encima de otros elementos
-          backgroundColor: "white", // Fondo blanco para evitar transparencias
-          padding: "1rem", // Espaciado interno
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", // Sombra para destacarlo
-        }}
-      >
+    <div className="p-6 max-w-[1200px] mx-auto bg-white shadow">
+      <div className="sticky top-0 z-10 bg-white p-4 shadow-md flex justify-between items-center">
         <Title level={3} className="mb-0">
           Crear un Ingreso
         </Title>
         <Space>
-          <Space>
-            <div className="px-6 py-4 flex justify-end">
-              <input
-                type="file"
-                accept=".xlsx, .xls"
-                onChange={handleFileUpload}
-                style={{ display: "none" }}
-                id="bulkUploadInput"
-              />
-              <Button
-                type="primary"
-                icon={<UploadOutlined />}
-                loading={loading}
-                onClick={() => document.getElementById("bulkUploadInput").click()}
-                className="bg-blue-400 hover:bg-green-800 border-none text-white"
-              >
-                Cargar Ingresos Masivos
-              </Button>
-            </div>
-            <Button onClick={handleCancel} type="default" className="border-gray-300 text-gray-600">
-              Cancelar
+          {isArqueoChecked && (
+            <Button
+              onClick={handleDownloadPDF}
+              type="primary"
+              icon={<DownloadOutlined />}
+              className="bg-red-500 text-white rounded"
+            >
+              Descargar PDF
             </Button>
-            <Button onClick={handleSave} type="primary" className="bg-green-500 text-white">
-              Guardar
+          )}
+          <div className="px-6 py-4 flex justify-end">
+            <input
+              type="file"
+              accept=".xlsx, .xls"
+              onChange={handleFileUpload}
+              style={{ display: "none" }}
+              id="bulkUploadInput"
+            />
+            <Button
+              type="primary"
+              icon={<UploadOutlined />}
+              loading={loading}
+              onClick={() => document.getElementById("bulkUploadInput").click()}
+              className="bg-blue-500 hover:bg-green-800 border-none text-white"
+            >
+              Cargar Ingresos Masivos
             </Button>
-          </Space>
+          </div>
+          <Button onClick={handleCancel} type="default">
+            Cancelar
+          </Button>
+          <Button onClick={handleSave} type="primary" className="bg-green-500">
+            Guardar
+          </Button>
         </Space>
       </div>
 
-      {/* Encabezado */}
+      <div bordered={false} className="mt-6">
+        <Radio.Group
+          value={isArqueoChecked ? 'arqueo' : isVentaChecked ? 'venta' : null}
+          onChange={(e) => handleCheckboxChange([e.target.value])}
+          className="mb-6"
+        >
+          <Radio value="arqueo">Arqueo</Radio>
+          <Radio value="venta">Venta</Radio>
+        </Radio.Group>
 
-
-      <Card
-        className="mb-6"
-        bordered={false}
-
-      >
-
-        <div className="flex justify-between items-start mb-4">
-          {/* Descripción a la izquierda */}
-          <div className="w-2/3">
-            <label className="block text-sm font-medium text-gray-700">Titulo*</label>
-            <Input
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Añade un título descriptivo"
-              rows={1}
-              className="w-[50em] border  p-1"
-            />
-          </div>
-
-          {/* Fecha a la derecha */}
-          <div className="w-1/4">
-            <label className="block text-sm font-medium text-gray-700">Fecha</label>
-            <DatePicker
-              value={date}
-              onChange={(newDate) => setDate(newDate)}
-              format="YYYY-MM-DD"
-              className="w-full"
-            />
-          </div>
-        </div>
-        <div >
-          <div className="mb-6">
-            {/* Tipo de Ingreso */}
-            <div>Tipo de Ingreso</div>
-            <Radio.Group
-              value={isArqueoChecked ? 'arqueo' : isVentaChecked ? 'venta' : null}
-              onChange={(e) => handleCheckboxChange([e.target.value])}
-            >
-              <Radio value="arqueo">Arqueo</Radio>
-              <Radio value="venta">Venta</Radio>
-            </Radio.Group>
-
-          </div>
-
-
-          {renderArqueoInputs()}
-          {renderVentaInputs()}
-        </div>
-      </Card>
-
-      <div className="mt-6 text-center text-sm text-gray-500 border-t border-dashed border-gray-400 pt-2"></div>
-
-      <Card
-        className="mb-6"
-        bordered={false}>
-        <div className="mb-6">
-          <AccountSelector
-            selectedAccount={account}  // Cambiar 'value' por 'selectedAccount'
-            onAccountSelect={(value) => setAccount(value)}  // Cambiar 'onChange' por 'onAccountSelect'
-            accounts={accounts}
-          />
-
-        </div>
-
-        <div className="w-full">
-          <label className="block text-sm font-medium text-gray-700">Comentarios*</label>
-          <textarea
-            value={comentarios}
-            onChange={(e) => setComentarios(e.target.value)}
-            placeholder="Añade comentarios adicionales"
-            rows={3}
-            className="w-full border  p-1"
-          />
-        </div>
-
-      </Card>
-
-      {/* Cuerpo */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Columna Izquierda: Detalles Básicos */}
-        <div className="space-y-4">
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Comprobantes</label>
-            <input
-              type="file"
-              multiple
-              onChange={handleImageUpload}
-              className="w-full border rounded-md p-2"
-            />
-            {isUploading && <p className="text-sm text-gray-500">Subiendo imágenes...</p>}
-            {imageUrls.length > 0 && (
-              <div className="mt-2 space-y-2">
-                {imageUrls.map((url, index) => (
-                  <div key={index} className="relative group">
-                    <img src={url} alt={`Comprobante ${index}`} className="w-full h-24 object-cover rounded-md" />
-                    <button
-                      onClick={() => {
-                        setImageUrls((urls) => urls.filter((_, i) => i !== index));
-                        setVoucher((voucher) => voucher.replace(url, "").trim());
-                      }}
-                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 text-white rounded-full h-6 w-6 flex items-center justify-center"
-                    >
-                      <CloseOutlined />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        {renderArqueoInputs()}
+        {renderVentaInputs()}
       </div>
-      <div className="mt-6 text-center text-sm text-gray-500 border-t border-dashed border-gray-400 pt-2"></div></div>
 
+      <VoucherSection
+        onVoucherChange={setVoucher}
+        initialVouchers={voucher ? JSON.parse(voucher) : []}
+      />
+    </div>
   );
 };
+
 
 export default AddIncome;
