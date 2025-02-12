@@ -1,249 +1,155 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Spin, message } from 'antd';
-import { ArrowLeftOutlined } from '@ant-design/icons';
-import axios from 'axios';
+import { Modal, Spin, message, Upload, Card } from 'antd';
+import { ArrowLeftOutlined, InboxOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
 import { uploadImage } from '../../../../services/apiService';
 
-const VoucherSection = ({ entry, entryId }) => {
-    const [isEditVoucherMode, setIsEditVoucherMode] = useState(false);
+const VoucherSection = ({ onVoucherChange, initialVouchers = [], entryId }) => {
+    const [isEditMode, setIsEditMode] = useState(false);
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
     const [currentImage, setCurrentImage] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
-    const [tempImageUrls, setTempImageUrls] = useState([]);
-    const [vouchers, setVouchers] = useState([]);
+    const [imageUrls, setImageUrls] = useState(initialVouchers);
 
-    const API_URL =  import.meta.env.VITE_API_FINANZAS;
-
+    // Efecto para notificar al padre cuando cambian las imágenes
     useEffect(() => {
-        if (entryId) {
-            fetchVouchers();
+        if (onVoucherChange) {
+            onVoucherChange(JSON.stringify(imageUrls));
         }
-    }, [entryId]);
+    }, [imageUrls]);
 
-    const fetchVouchers = async () => {
-        try {
-            const response = await axios.get(`${API_URL}/incomes/${entryId}/vouchers`);
-            if (response.data.vouchers) {
-                setVouchers(response.data.vouchers);
-            }
-        } catch (error) {
-            console.error('Error al obtener comprobantes:', error);
-            message.error('Error al cargar los comprobantes');
-        }
-    };
-
-    const openImageModal = (imageUrl) => {
-        setCurrentImage(imageUrl);
-        setIsImageModalOpen(true);
-    };
-
-    const closeImageModal = () => {
-        setCurrentImage(null);
-        setIsImageModalOpen(false);
-    };
-
-    const handleGoBack = () => {
-        setIsEditVoucherMode(false);
-        setTempImageUrls([]);
-    };
-
-    const updateVouchers = async ({ id, action, vouchers }) => {
-        try {
-            const response = await axios.patch(
-                `${API_URL}/incomes/${id}/vouchers`,
-                {
-                    id,
-                    action,
-                    vouchers
-                }
-            );
-
-            if (response.status === 200) {
-                return true;
-            } else {
-                console.error('Respuesta inesperada de la API:', response.data);
-                message.error('No se pudo actualizar los comprobantes');
-                return false;
-            }
-        } catch (error) {
-            console.error('Error al actualizar comprobantes:', error.response || error.message);
-            message.error('Error al actualizar los comprobantes');
-            return false;
-        }
-    };
-
-    const handleImageSelection = async (e) => {
-        const files = Array.from(e.target.files);
+    const handleImageUpload = async (files) => {
         if (files.length === 0) return;
-
         setIsUploading(true);
 
         try {
-            const tempUrls = files.map(file => URL.createObjectURL(file));
-            setTempImageUrls(prevUrls => [...prevUrls, ...tempUrls]);
-
             const uploadPromises = files.map(file => uploadImage(file));
             const uploadedUrls = await Promise.all(uploadPromises);
-
-            const result = await updateVouchers({
-                id: entryId,
-                action: "add",
-                vouchers: uploadedUrls
-            });
-
-            if (result) {
-                message.success('Comprobantes agregados correctamente');
-                tempUrls.forEach(URL.revokeObjectURL);
-                setTempImageUrls([]);
-                await fetchVouchers();
-            }
+            
+            setImageUrls(prev => [...prev, ...uploadedUrls]);
+            message.success('Comprobantes agregados correctamente');
         } catch (error) {
             console.error('Error al subir imágenes:', error);
             message.error('Error al subir los comprobantes');
-            setTempImageUrls(prevUrls => {
-                prevUrls.forEach(URL.revokeObjectURL);
-                return [];
-            });
         } finally {
             setIsUploading(false);
         }
     };
 
-    const handleDeleteVoucher = async (voucherUrl) => {
-        try {
-            const result = await updateVouchers({
-                id: entryId,
-                action: "remove",
-                vouchers: [voucherUrl]
-            });
-
-            if (result) {
-                message.success('Comprobante eliminado correctamente');
-                await fetchVouchers();
-            }
-        } catch (error) {
-            console.error('Error al eliminar comprobante:', error.response || error.message);
-            message.error('Error al eliminar el comprobante');
-        }
+    const handleDeleteVoucher = (indexToDelete) => {
+        setImageUrls(prev => prev.filter((_, index) => index !== indexToDelete));
+        message.success('Comprobante eliminado');
     };
 
-    // Combinamos los comprobantes del estado con los temporales
-    const allVouchers = [
-        ...(Array.isArray(vouchers) ? vouchers : []),
-        ...tempImageUrls
-    ];
+    const { Dragger } = Upload;
+
+    const uploadProps = {
+        name: 'file',
+        multiple: true,
+        beforeUpload: (file) => {
+            const isImage = file.type.startsWith('image/');
+            if (!isImage) {
+                message.error('Solo se permiten archivos de imagen');
+                return false;
+            }
+            return false;
+        },
+        onChange: (info) => {
+            const { fileList } = info;
+            const files = fileList.map(file => file.originFileObj);
+            handleImageUpload(files);
+        },
+        showUploadList: false,
+    };
 
     return (
-        <div className="space-y-4 border border-gray-300 p-4 rounded-lg">
-            {!isEditVoucherMode ? (
-                <>
-                    <div className="flex justify-between items-center mb-2">
-                        <p className="text-sm text-gray-500">Comprobantes</p>
-                        <button
-                            onClick={() => setIsEditVoucherMode(true)}
-                            className="text-sm text-gray-500 !important btn btn-sm btn-outline btn-primary"
-                        >
-                            Editar comprobantes
-                        </button>
-
-                    </div>
-
-
-                    <div className="flex flex-wrap gap-2">
-                        {allVouchers.length > 0 ? (
-                            allVouchers.map((voucherUrl, index) => (
-                                <div key={index} className="relative w-24 h-24 group">
-                                    <img
-                                        src={voucherUrl}
-                                        alt={`Comprobante ${index + 1}`}
-                                        className="w-full h-full object-cover border rounded-md cursor-pointer"
-                                        onClick={() => openImageModal(voucherUrl)}
-                                    />
-                                </div>
-                            ))
-                        ) : (
-                            <p className="text-gray-500">Sin comprobantes</p>
-                        )}
-                    </div>
-                </>
-            ) : (
+        <Card 
+            title="Comprobantes" 
+            className="mt-4"
+            extra={
+                <button
+                    onClick={() => setIsEditMode(!isEditMode)}
+                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                >
+                    {isEditMode ? 'Finalizar edición' : 'Editar comprobantes'}
+                </button>
+            }
+        >
+            {isEditMode ? (
                 <div className="space-y-4">
-                    <div className="flex items-center justify-between mb-4">
-                        <button
-                            onClick={handleGoBack}
-                            className="flex items-center text-gray-600 hover:text-gray-800"
-                        >
-                            <ArrowLeftOutlined className="mr-1" />
-                            <span>Volver</span>
-                        </button>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="file"
-                            multiple
-                            accept="image/*"
-                            onChange={handleImageSelection}
-                            className="file-input file-input-bordered file-input-sm w-full"
-                            disabled={isUploading}
-                        />
-                    </div>
+                    <Dragger {...uploadProps} className="bg-gray-50 hover:bg-gray-100 transition-colors">
+                        <p className="text-4xl">
+                            <InboxOutlined />
+                        </p>
+                        <p className="text-gray-600">
+                            Haz clic o arrastra archivos aquí para subirlos
+                        </p>
+                        <p className="text-gray-400 text-sm">
+                            Soporta: JPG, PNG, GIF
+                        </p>
+                    </Dragger>
 
                     {isUploading && (
-                        <div className="flex items-center gap-2">
-                            <Spin size="small" />
-                            <span className="text-sm">Subiendo comprobantes...</span>
+                        <div className="flex items-center justify-center gap-2 py-2">
+                            <Spin />
+                            <span className="text-gray-600">Subiendo comprobantes...</span>
                         </div>
                     )}
+                </div>
+            ) : null}
 
-                    <div className="flex flex-wrap gap-2">
-                        {allVouchers.map((voucherUrl, index) => {
-                            const isTemp = tempImageUrls.includes(voucherUrl);
-                            return (
-                                <div key={`voucher-${index}`} className="relative w-16 h-16 group">
-                                    <img
-                                        src={voucherUrl}
-                                        alt={`Comprobante ${index + 1}`}
-                                        className={`w-full h-full object-cover border rounded-md ${isTemp ? 'opacity-70' : ''}`}
-                                        onClick={() => !isTemp && openImageModal(voucherUrl)}
-                                    />
-                                    {!isTemp && (
-                                        <button
-                                            onClick={() => handleDeleteVoucher(voucherUrl)}
-                                            className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                                            title="Eliminar comprobante"
-                                        >
-                                            ✕
-                                        </button>
-                                    )}
-                                    {isTemp && (
-                                        <div className="absolute inset-0 flex items-center justify-center">
-                                            <Spin size="small" />
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                {imageUrls.map((url, index) => (
+                    <div key={index} className="relative group">
+                        <img
+                            src={url}
+                            alt={`Comprobante ${index + 1}`}
+                            className="w-full h-32 object-cover rounded-lg shadow-sm"
+                        />
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all rounded-lg flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                            <button
+                                onClick={() => {
+                                    setCurrentImage(url);
+                                    setIsImageModalOpen(true);
+                                }}
+                                className="p-2 bg-white rounded-full hover:bg-gray-100"
+                            >
+                                <EyeOutlined className="text-gray-700" />
+                            </button>
+                            {isEditMode && (
+                                <button
+                                    onClick={() => handleDeleteVoucher(index)}
+                                    className="p-2 bg-white rounded-full hover:bg-gray-100"
+                                >
+                                    <DeleteOutlined className="text-red-600" />
+                                </button>
+                            )}
+                        </div>
                     </div>
+                ))}
+            </div>
+
+            {imageUrls.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                    No hay comprobantes adjuntos
                 </div>
             )}
 
             <Modal
                 open={isImageModalOpen}
-                onCancel={closeImageModal}
+                onCancel={() => setIsImageModalOpen(false)}
                 footer={null}
+                width={800}
                 centered
-                width={600}
             >
                 {currentImage && (
                     <img
                         src={currentImage}
-                        alt="Comprobante ampliado"
-                        className="w-full h-auto rounded-md"
+                        alt="Comprobante"
+                        className="w-full h-auto rounded-lg"
                     />
                 )}
             </Modal>
-        </div>
+        </Card>
     );
 };
 

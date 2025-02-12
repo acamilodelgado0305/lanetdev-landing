@@ -106,6 +106,24 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
         {
             title: (
                 <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    N° de Arqueo
+                    <Input
+                        placeholder="Buscar"
+                        onChange={(e) => handleSearch(e.target.value, "category_id")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                    />
+                </div>
+            ),
+            dataIndex: "arqueo_number",
+            key: "arqueo_number",
+            sorter: (a, b) => a.arqueo_number - b.arqueo_number,
+            render: (text) => text || "No disponible",
+            onFilter: (value, record) =>
+                record.arqueo_number.toString().toLowerCase().includes(searchText["arqueo_number"] || ""),
+        },
+        {
+            title: (
+                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
                     Fecha
                     <Input
                         placeholder="Buscar"
@@ -202,24 +220,7 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
             onFilter: (value, record) =>
                 record.cashier_name.toString().toLowerCase().includes(searchText["cashier_name"] || ""),
         },
-        {
-            title: (
-                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                    N° de Arqueo
-                    <Input
-                        placeholder="Buscar"
-                        onChange={(e) => handleSearch(e.target.value, "category_id")}
-                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
-                    />
-                </div>
-            ),
-            dataIndex: "arqueo_number",
-            key: "arqueo_number",
-            sorter: (a, b) => a.arqueo_number - b.arqueo_number,
-            render: (text) => text || "No disponible",
-            onFilter: (value, record) =>
-                record.arqueo_number.toString().toLowerCase().includes(searchText["arqueo_number"] || ""),
-        },
+        
         {
             title: (
                 <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>

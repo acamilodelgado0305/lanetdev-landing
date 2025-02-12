@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Plus, Wallet, Tags, ArrowRight, Users, CreditCard, FileText, Building2, BarChart3 } from 'lucide-react';
+import { X, Wallet, ArrowRight, Building2, BarChart3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const PlusModal = ({ isOpen, onClose, buttonPosition }) => {
@@ -7,57 +7,33 @@ const PlusModal = ({ isOpen, onClose, buttonPosition }) => {
 
   const menuColumns = [
     {
-      title: "Finanzas",
+      title: "Contabilidad",
+      icon: <Wallet className="w-5 h-5 text-green-600" />,
       description: "Gestiona tus cuentas y movimientos",
       items: [
-        {
-          label: "Nueva Cuenta",
-          description: "Crea una cuenta bancaria o de efectivo",
-          icon: <Wallet className="w-4 h-4 text-blue-600" />,
-          path: "/accounts"
-        },
-        {
-          label: "Nuevo Movimiento",
-          description: "Registra ingresos o gastos",
-          icon: <CreditCard className="w-4 h-4 text-emerald-600" />,
-          path: "/transactions/new"
-        }
+        { label: "Nuevo Egreso", path: "/transactions/new" },
+        { label: "Nuevo Arqueo", path: "/index/moneymanager/transactions/nuevoingreso" },
+        { label: "Nueva Venta", path: "/transactions/new" },
+        { label: "Nueva Transferencia", path: "/transactions/new" },
+        { label: "Nueva Cuenta", path: "/transactions/new" },
       ]
     },
     {
       title: "Contactos",
+      icon: <Building2 className="w-5 h-5 text-violet-600" />,
       description: "Administra tus relaciones comerciales",
       items: [
-        {
-          label: "Nuevo Proveedor",
-          description: "Añade un proveedor de servicios",
-          icon: <Building2 className="w-4 h-4 text-violet-600" />,
-          path: "/index/moneymanager/terceros"
-        },
-        {
-          label: "Nuevo Cliente",
-          description: "Registra un nuevo cliente",
-          icon: <Users className="w-4 h-4 text-orange-600" />,
-          path: "/categories/new"
-        }
+        { label: "Nuevo Proveedor", path: "/index/moneymanager/terceros" },
+        { label: "Nuevo Cliente", path: "/categories/new" }
       ]
     },
     {
       title: "Organización",
+      icon: <BarChart3 className="w-5 h-5 text-indigo-600" />,
       description: "Estructura tu información",
       items: [
-        {
-          label: "Nueva Categoría",
-          description: "Clasifica tus movimientos",
-          icon: <Tags className="w-4 h-4 text-pink-600" />,
-          path: "/categories/new"
-        },
-        {
-          label: "Nuevo Reporte",
-          description: "Genera informes personalizados",
-          icon: <BarChart3 className="w-4 h-4 text-indigo-600" />,
-          path: "/reports/new"
-        }
+        { label: "Nueva Categoría", path: "/categories/new" },
+        { label: "Nuevo Reporte", path: "/reports/new" }
       ]
     }
   ];
@@ -66,15 +42,17 @@ const PlusModal = ({ isOpen, onClose, buttonPosition }) => {
 
   return (
     <div className="fixed inset-0 z-50">
-      <div
-        className="fixed inset-0 bg-black/20 "
-        onClick={onClose}
-      />
+      {/* Fondo oscuro */}
+      <div className="fixed inset-0 bg-black/20" onClick={onClose} />
 
+      {/* Contenedor del menú */}
       <div className="fixed top-[4em] right-72 w-[900px] bg-white shadow-xl rounded-lg border border-gray-100">
+        {/* Flecha superior */}
         <div className="absolute -top-2 right-8 w-4 h-4 bg-white rotate-45 border-l border-t border-gray-100" />
 
+        {/* Contenido */}
         <div className="p-6">
+          {/* Encabezado */}
           <div className="flex justify-between items-center mb-6">
             <div>
               <h2 className="text-lg font-medium text-gray-900">Menú Rápido</h2>
@@ -88,36 +66,33 @@ const PlusModal = ({ isOpen, onClose, buttonPosition }) => {
             </button>
           </div>
 
-          <div className="grid grid-cols-3 gap-8">
+          {/* Columnas del menú */}
+          <div className="grid grid-cols-3 gap-6">
             {menuColumns.map((column, idx) => (
-              <div key={idx} className="space-y-4">
-                <div className="mb-4">
-                  <h3 className="text-sm font-medium text-gray-900">
-                    {column.title}
-                  </h3>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {column.description}
-                  </p>
+              <div key={idx}>
+                {/* Título con ícono */}
+                <div className="flex items-center gap-2 mb-4">
+                  {column.icon}
+                  <h3 className="text-sm font-medium text-gray-900">{column.title}</h3>
                 </div>
-                <div className="space-y-1">
+
+                {/* Descripción */}
+                <p className="text-xs text-gray-500 mb-3">{column.description}</p>
+
+                {/* Acciones */}
+                <div className="space-y-2">
                   {column.items.map((item, itemIdx) => (
                     <button
                       key={itemIdx}
-                      className="w-full group flex items-center gap-3 p-3 rounded-md hover:bg-gray-50 transition-colors"
+                      className="w-full group flex items-center gap-3  rounded-md hover:bg-gray-50 transition-colors"
                       onClick={() => {
                         navigate(item.path);
                         onClose();
                       }}
                     >
-                      <div className="flex-shrink-0 p-2 bg-gray-50 rounded-md group-hover:bg-white transition-colors">
-                        {item.icon}
-                      </div>
                       <div className="flex-grow text-left">
                         <p className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
                           {item.label}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-0.5">
-                          {item.description}
                         </p>
                       </div>
                       <ArrowRight className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-all transform translate-x-0 group-hover:translate-x-1" />
