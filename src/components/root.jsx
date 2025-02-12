@@ -39,7 +39,7 @@ export default function Root() {
   // Definición de los enlaces principales del menú
   const mainMenuLinks = useMemo(
     () => [
-      { to: "/index", label: "Inicio", icon: <HomeOutlined /> },
+      { to: "/index", label: "Dashboard", icon: <HomeOutlined /> },
       userRole === "superadmin" && { to: "/index/clientes", label: "Clientes", icon: <TeamOutlined /> },
       { to: "/index/cobro-cartera", label: "Cobro de Cartera", icon: <BankOutlined /> },
       { to: "/index/tickets", label: "Tickets", icon: <DotChartOutlined /> },
@@ -109,10 +109,10 @@ export default function Root() {
         {/* Sidebar */}
         <div
           className={`${isExpanded ? "w-48" : "w-16"} 
-                bg-gray-800 text-white ${isOpen ? "block" : "hidden"} 
+                bg-gray-200 text-black ${isOpen ? "block" : "hidden"} 
                 lg:block fixed top-0 left-0 h-full transition-all duration-300`}
         >
-          {isExpanded && (
+          {/* {isExpanded && (
             <UserProfileHeader
               className="mb-20"
               onToggle={() => setIsOpen(false)}
@@ -120,8 +120,8 @@ export default function Root() {
               setIsUserProfileOpen={setIsUserProfileOpen}
               isExpanded={isExpanded}
             />
-          )}
-          <div className="space-y-2 py-4 max-h-screen overflow-y-auto"
+          )} */}
+          <div className="space-y-2 py-4 max-h-screen overflow-y-auto mt-14"
             style={{
               scrollbarWidth: "none",
               msOverflowStyle: "none",
@@ -154,7 +154,7 @@ export default function Root() {
                         <Link
                           key={subItem.to}
                           to={subItem.to}
-                          className="flex items-center w-full p-1 text-gray-300 hover:bg-gray-700 text-sm"
+                          className="flex items-center w-full p-1 text-black hover:bg-gray-700 text-sm"
                         >
                           <span className="mr-3">{subItem.icon}</span>
                           <span>{subItem.label}</span>
