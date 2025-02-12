@@ -117,8 +117,71 @@ const CashierTable = ({ onDelete, cashiers = [], loading = false }) => {
       key: 'comision_porcentaje',
       render: (value) => (value ? `${value}%` : '-'),
       sorter: (a, b) => (a.comision_porcentaje || 0) - (b.comision_porcentaje || 0),
-    }
+    },
+
+   {
+         title: 'Acciones',
+         key: 'acciones',
+         render: (_, record) => (
+           <Button 
+             danger 
+             onClick={() => onDelete(record.id_cajero)}
+           >
+             Eliminar
+           </Button>
+         ),
+       },
   ];
+
+
+  const handleDelete = async (id_cajero) => {
+    console.log('ID a eliminar:', id_cajero); // Para debugging
+
+    try {
+      if (!id_cajero) {
+        throw new Error('ID del cajero no proporcionado');
+      }
+  
+      const result = await Swal.fire({
+        title: '¿Estás seguro?',
+        text: 'Esta acción no se puede deshacer',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+      });
+  
+      if (result.isConfirmed) {
+        const response = await fetch(`${import.meta.env.VITE_API_TERCEROS}/cajeros/${id_cajero}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+  
+        if (!response.ok) {
+          throw new Error(`Error HTTP: ${response.status}`);
+        }
+  
+        await Swal.fire({
+          icon: 'success',
+          title: 'Eliminado',
+          text: 'El cajero ha sido eliminado exitosamente'
+        });
+  
+        await fetchCashiers();
+      }
+    } catch (error) {
+      console.error('Error al eliminar el cajero:', error);
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudo eliminar el cajero. Por favor, intente de nuevo.'
+      });
+    }
+  };
 
   const CashierDetailDrawer = ({ cashier }) => (
     <div className="p-4">
