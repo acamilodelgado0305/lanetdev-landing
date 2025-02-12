@@ -17,49 +17,7 @@ const CashiersPage = () => {
     activeCashiers: 0
   });
 
-  const columns = [
-    {
-      title: 'Nombre',
-      dataIndex: 'nombre',
-      key: 'nombre',
-      sorter: (a, b) => ((a.nombre || '') > (b.nombre || '') ? 1 : -1),
-      render: (text) => text || '-'
-    },
-    {
-      title: 'Responsable',
-      dataIndex: 'responsable',
-      key: 'responsable',
-      sorter: (a, b) => a.responsable.localeCompare(b.responsable),
-    },
-    {
-      title: 'Municipio',
-      dataIndex: 'municipio',
-      key: 'municipio',
-      sorter: (a, b) => a.municipio.localeCompare(b.municipio),
-    },
-    {
-      title: 'Dirección',
-      dataIndex: 'direccion',
-      key: 'direccion',
-    },
-    {
-      title: 'Comisión %',
-      dataIndex: 'comision_porcentaje',
-      key: 'comision_porcentaje',
-      render: (value) => (value ? `${value}%` : '-'),
-      sorter: (a, b) => parseFloat(a.comision_porcentaje) - parseFloat(b.comision_porcentaje),
-    },
-    {
-      title: 'Estado',
-      dataIndex: 'activo',
-      key: 'activo',
-      render: (activo) => (
-        <span style={{ color: activo ? '#52c41a' : '#f5222d' }}>
-          {activo ? 'Activo' : 'Inactivo'}
-        </span>
-      ),
-    }
-  ];
+
 
   const fetchCashiers = async () => {
     try {
@@ -111,8 +69,13 @@ const CashiersPage = () => {
     fetchCashiers();
   }, []);
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id_cajero) => {
     try {
+      // Verificar que el id_cajero existe
+      if (!id_cajero) {
+        throw new Error('ID del cajero no proporcionado');
+      }
+  
       const result = await Swal.fire({
         title: '¿Estás seguro?',
         text: 'Esta acción no se puede deshacer',
@@ -123,25 +86,34 @@ const CashiersPage = () => {
         confirmButtonText: 'Sí, eliminar',
         cancelButtonText: 'Cancelar'
       });
-
+  
       if (result.isConfirmed) {
-        const response = await fetch(`${import.meta.env.VITE_API_FINANZAS}/cashiers/${id}`, {
-          method: 'DELETE'
+        const response = await fetch(`${import.meta.env.VITE_API_TERCEROS}/cajeros/${id_cajero}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
         });
-
+  
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error(`Error HTTP: ${response.status}`);
         }
-
-        Swal.fire('Eliminado', 'El cajero ha sido eliminado', 'success');
-        fetchCashiers();
+  
+        await Swal.fire({
+          icon: 'success',
+          title: 'Eliminado',
+          text: 'El cajero ha sido eliminado exitosamente'
+        });
+  
+        // Actualizar la lista de cajeros
+        await fetchCashiers();
       }
     } catch (error) {
       console.error('Error al eliminar el cajero:', error);
-      Swal.fire({
+      await Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: 'No se pudo eliminar el cajero. Por favor, intente de nuevo.',
+        text: 'No se pudo eliminar el cajero. Por favor, intente de nuevo.'
       });
     }
   };
