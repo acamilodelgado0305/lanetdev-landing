@@ -9,7 +9,7 @@ import {
 import Swal from "sweetalert2";
 import { uploadImage } from "../../../../../services/apiService";
 import dayjs from "dayjs";
-import { UploadOutlined, DownloadOutlined } from "@ant-design/icons";
+import { UploadOutlined, DownloadOutlined, FileTextOutlined } from "@ant-design/icons";
 import axios from "axios";
 import { useNavigate } from 'react-router-dom'; // Importa useNavigate
 const apiUrl = import.meta.env.VITE_API_FINANZAS;
@@ -31,6 +31,8 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
   const [description, setDescription] = useState("");
   const [comentarios, setComentarios] = useState("");
   const [categories, setCategories] = useState([]);
+  const [cashiers, setCashiers] = useState([]);
+
   const [accounts, setAccounts] = useState([]);
   const [imageUrl, setImageUrl] = useState("");
   const [imageUrls, setImageUrls] = useState([]);
@@ -54,6 +56,11 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
   const [cashReceived, setCashReceived] = useState("");
   const [cashierCommission, setCashierCommission] = useState("");
 
+  const [stats, setStats] = useState({
+    totalCashiers: 0,
+    avgCommission: 0
+  });
+
   const printRef = useRef();
 
   const handleCancel = () => {
@@ -67,6 +74,7 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
   useEffect(() => {
     fetchCategories();
     fetchAccounts();
+    fetchCashiers();
   }, []);
 
 
@@ -113,30 +121,48 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
     }
   };
 
-  const handleFileUpload = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    setLoading(true);
-
-    const formData = new FormData();
-    formData.append("file", file);
-
+  const fetchCashiers = async () => {
     try {
-      const response = await axios.post(`${apiUrl}/incomes/bulk-upload`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      setLoading(true);
+      const response = await fetch(`${import.meta.env.VITE_API_TERCEROS}/cajeros`);
 
-      message.success("Carga masiva completada exitosamente!");
-      if (onTransactionAdded) onTransactionAdded(); // Recargar la lista de ingresos
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const responseData = await response.json();
+      const cashiersArray = responseData.data || [];
+
+      // Mapear solo los campos necesarios
+      const mappedCashiers = cashiersArray.map(cashier => ({
+        nombre: cashier.nombre,
+        comision_porcentaje: cashier.comision_porcentaje
+      }));
+
+      setCashiers(mappedCashiers);
+
+      // Si necesitas mantener las estadísticas, puedes calcularlas con los datos simplificados
+      if (mappedCashiers.length > 0) {
+        const total = mappedCashiers.length;
+        const avgComm = mappedCashiers.reduce((acc, curr) => acc + parseFloat(curr.comision_porcentaje || 0), 0) / total;
+
+        setStats({
+          totalCashiers: total,
+          avgCommission: avgComm
+        });
+      }
     } catch (error) {
-      message.error("Error al procesar la carga masiva.");
-      console.error("Error en la carga masiva:", error);
+      console.error('Error al obtener los cajeros:', error);
+      setCashiers([]);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudieron cargar los cajeros. Por favor, intente de nuevo.',
+      });
     } finally {
       setLoading(false);
     }
   };
-
 
 
   //-------------MONEDA--------------------
@@ -169,8 +195,6 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
       setCashReceived(numericValue); // Actualizar el estado con el valor numérico
     }
   };
-
-
 
 
   const handleSave = async () => {
@@ -282,6 +306,30 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
     setEndPeriod(null);
   };
 
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setLoading(true);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await axios.post(`${apiUrl}/incomes/bulk-upload`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      message.success("Carga masiva completada exitosamente!");
+      if (onTransactionAdded) onTransactionAdded(); // Recargar la lista de ingresos
+    } catch (error) {
+      message.error("Error al procesar la carga masiva.");
+      console.error("Error en la carga masiva:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   const renderInvoiceHeader = () => (
     <div className="border-b-2 border-gray-200 pb-4 mb-6">
@@ -308,16 +356,26 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
             <span className="text-gray-600">Cajero:</span>
             <Select
               value={cashierName}
-              onChange={(value) => setCashierName(value)}
+              onChange={(value, option) => {
+                setCashierName(value);
+                // Actualizar la comisión basada en el cajero seleccionado
+                const selectedCashier = cashiers.find(c => c.nombre === value);
+                if (selectedCashier) {
+                  // Guardar el porcentaje de comisión del cajero seleccionado
+                  setCashierCommission(parseFloat(selectedCashier.comision_porcentaje));
+                }
+              }}
               className="w-64"
               placeholder="Selecciona un cajero"
             >
-              <Select.Option value="Seg-Rafael Urdaneta">Seg-Rafael Urdaneta</Select.Option>
-              <Select.Option value="Seg-Ragonvalia Oficina">Seg-Ragonvalia Oficina</Select.Option>
-              <Select.Option value="Seg-Ragonvalia Casa">Seg-Ragonvalia Casa</Select.Option>
-              <Select.Option value="Seg-AsoFranco">Seg-AsoFranco</Select.Option>
-              <Select.Option value="Seg-Bancolombia Rocely">Seg-Bancolombia Rocely</Select.Option>
-              <Select.Option value="Seg-Bancolombia LANET">Seg-Bancolombia LANET</Select.Option>
+              {cashiers.map((cashier) => (
+                <Select.Option
+                  key={cashier.nombre}
+                  value={cashier.nombre}
+                >
+                  {cashier.nombre} 
+                </Select.Option>
+              ))}
             </Select>
           </div>
 
@@ -337,7 +395,7 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
           className="w-[50em] border  p-1"
         />
       </div>
-      
+
     </div>
   );
 
@@ -354,7 +412,8 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
       const amount = calculateTotalAmount();
       const cashReceivedValue = parseFloat(cashReceived) || 0;
       const isCashMatch = cashReceivedValue === amount;
-      const commission = amount * 0.02;
+      // Usar el porcentaje de comisión del cajero seleccionado
+      const commission = amount * (cashierCommission / 100);
 
       return (
         <div className="p-6 bg-white rounded-lg shadow-lg space-y-8" ref={printRef}>
@@ -439,7 +498,7 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
                     />
                   </div>
                   <div className="flex justify-between">
-                    <span>Comisión (2%):</span>
+                    <span>Comisión ({cashierCommission}%):</span>
                     <span className="font-bold">{formatCurrency(commission)}</span>
                   </div>
                 </div>
@@ -464,14 +523,7 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
             />
           </div>
 
-          <div className="mt-8 flex justify-between items-center">
-            <div className="border-t border-gray-300 w-1/3 pt-4">
-              <p className="text-center">Firma del Cajero</p>
-            </div>
-            <div className="border-t border-gray-300 w-1/3 pt-4">
-              <p className="text-center">Firma del Supervisor</p>
-            </div>
-          </div>
+
         </div>
       );
     }
@@ -562,9 +614,17 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
   return (
     <div className="p-6 max-w-[1200px] mx-auto bg-white shadow">
       <div className="sticky top-0 z-10 bg-white p-4 shadow-md flex justify-between items-center">
-        <Title level={3} className="mb-0">
-          Crear un Ingreso
-        </Title>
+        <div className="flex items-center gap-2">
+          <div className="bg-green-400 p-2 rounded">
+            <FileTextOutlined className=" text-white" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-green-400 text-sm">Ingresos /</span>
+            <Title level={3} >
+              Crear
+            </Title>
+          </div>
+        </div>
         <Space>
           {isArqueoChecked && (
             <Button

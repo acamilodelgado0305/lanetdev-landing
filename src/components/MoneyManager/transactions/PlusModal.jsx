@@ -7,23 +7,25 @@ const PlusModal = ({ isOpen, onClose, buttonPosition }) => {
 
   const menuColumns = [
     {
-      title: "Contabilidad",
-      icon: <Wallet className="w-5 h-5 text-green-600" />,
+      title: "CMR",
+      icon: <Wallet className="w-5 h-5 text-violet-600" />,
       description: "Gestiona tus cuentas y movimientos",
       items: [
         { label: "Nuevo Egreso", path: "/transactions/new" },
-        { label: "Nuevo Arqueo", path: "/index/moneymanager/transactions/nuevoingreso" },
+        
         { label: "Nueva Venta", path: "/transactions/new" },
         { label: "Nueva Transferencia", path: "/transactions/new" },
-        { label: "Nueva Cuenta", path: "/transactions/new" },
+        
       ]
     },
     {
-      title: "Contactos",
-      icon: <Building2 className="w-5 h-5 text-violet-600" />,
+      title: "COMPAÑIA",
+      icon: <Building2 className="w-5 h-5 text-green-400" />,
       description: "Administra tus relaciones comerciales",
       items: [
-        { label: "Nuevo Proveedor", path: "/index/moneymanager/terceros" },
+        { label: "Nuevo Arqueo", path: "/index/moneymanager/transactions/nuevoingreso" },
+        { label: "Nueva Cuenta", path: "/transactions/new" },
+        { label: "Nuevo Cajero", path: "/index/terceros/cajeros/nuevo" },
         { label: "Nuevo Cliente", path: "/categories/new" }
       ]
     },
@@ -46,7 +48,7 @@ const PlusModal = ({ isOpen, onClose, buttonPosition }) => {
       <div className="fixed inset-0 bg-black/20" onClick={onClose} />
 
       {/* Contenedor del menú */}
-      <div className="fixed top-[4em] right-72 w-[900px] bg-white shadow-xl rounded-lg border border-gray-100">
+      <div className="fixed top-[4em] right-[6em] w-[900px] bg-white shadow-xl rounded-lg border border-gray-100">
         {/* Flecha superior */}
         <div className="absolute -top-2 right-8 w-4 h-4 bg-white rotate-45 border-l border-t border-gray-100" />
 
