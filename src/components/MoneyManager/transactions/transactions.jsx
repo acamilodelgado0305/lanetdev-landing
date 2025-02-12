@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 
 import { format as formatDate, startOfMonth, endOfMonth, subMonths, addMonths } from "date-fns";
 import axios from "axios";
-import { Modal, message, Input, Select, Button, Card } from "antd";
+import { Modal, message, Input, Select, Button, Card,Typography } from "antd";
 import AddEntryModal from "./addModal";
 import AddIncome from "./Add/Income/AddIncome";
 import AddExpense from "./Add/expense/AddExpense";
@@ -31,6 +31,9 @@ import {
   Menu
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { FileTextOutlined } from '@ant-design/icons';
+
+const { Title, Text } = Typography;
 
 
 const { Option } = Select;
@@ -354,7 +357,17 @@ const TransactionsDashboard = () => {
         <div className="max-full mx-auto py-2 px-3">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
-              <h1 className="text-3xl pl-8 font-semibold text-gray-800">Finanzas</h1>
+              <div className="flex items-center gap-2">
+                <div className="bg-green-400 p-2 rounded">
+                  <FileTextOutlined className=" text-white" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-green-400 text-sm">Finanzas /</span>
+                  <Title level={3} className="">
+                    Dashboard
+                  </Title>
+                </div>
+              </div>
             </div>
             <div className="flex gap-3">
               <Button

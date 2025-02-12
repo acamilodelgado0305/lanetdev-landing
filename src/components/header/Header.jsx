@@ -109,8 +109,8 @@ const Header = ({ unreadEmailsCount }) => {
             onClick={openPlusModal}
             className="px-4 py-1 bg-green-500 text-white rounded hover:bg-green-600 flex items-center space-x-2"
           >
-            <Plus className="w-4 h-4" />
-            <span>Crear</span>
+            <Plus className="w-5 h-5" />
+          
           </button>
           <Tooltip title="Notifications">
             <Badge count={notifications.length} size="small">
