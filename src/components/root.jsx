@@ -17,7 +17,8 @@ import {
   LeftOutlined,
   RightOutlined,
   DownOutlined,
-  UpOutlined
+  UpOutlined,
+  IdcardOutlined
 } from "@ant-design/icons";
 import { Layout, Menu, Button, Tooltip } from "antd";
 import { DotIcon } from "lucide-react";
@@ -43,8 +44,30 @@ export default function Root() {
       userRole === "superadmin" && { to: "/index/clientes", label: "Clientes", icon: <TeamOutlined /> },
       { to: "/index/cobro-cartera", label: "Cobro de Cartera", icon: <BankOutlined /> },
       { to: "/index/tickets", label: "Tickets", icon: <DotChartOutlined /> },
-      { to: "/index/gestion-red", label: "Gestión de Red", icon: <TeamOutlined /> },
+
+      {
+        label: "Finanzas",
+        icon: <IdcardOutlined />,
+        hasSubmenu: true,
+        submenuItems: [
+          { to: "/index/administracion/cajeros", label: "Facturas", icon: <DotIcon /> },
+
+        ],
+      },
+      {
+        label: "Gestión de Red",
+        icon: <IdcardOutlined />,
+        hasSubmenu: true,
+        submenuItems: [
+          { to: "/index/administracion/cajeros", label: "Direccionamiento Ip", icon: <DotIcon /> },
+          { to: "/index/administracion/cajeros", label: "Monitoreo", icon: <DotIcon /> },
+          { to: "/index/administracion/cajeros", label: "Aprovisinamiento de Red", icon: <DotIcon /> },
+          { to: "/index/administracion/cajeros", label: "Conexion de routers", icon: <DotIcon /> },
+
+        ],
+      },
       { to: "/index/inventario", label: "Inventario", icon: <ContainerOutlined /> },
+      { to: "/index/moneymanager/cotizacion", label: "Estudio de Mercado", icon: <DotChartOutlined /> },
       (userRole === "admin" || userRole === "superadmin") && {
         label: "Contabilidad",
         icon: <DollarCircleOutlined />,
@@ -52,15 +75,14 @@ export default function Root() {
         submenuItems: [
           { to: "/index/moneymanager/estadisticas", label: "Resumen", icon: <DotIcon /> },
           { to: "/index/moneymanager/transactions", label: "Transacciones", icon: <DotIcon /> },
-          { to: "/index/moneymanager/terceros", label: "Terceros", icon: <DotIcon /> },
           { to: "/index/moneymanager/pagos-pendientes", label: "Pagos Recurrentes", icon: <DotIcon /> },
           { to: "/index/moneymanager/informes", label: "Informes", icon: <DotChartOutlined /> },
           { to: "/index/moneymanager/calendario", label: "Calendario", icon: <CalendarOutlined /> },
-          { to: "/index/moneymanager/config", label: "Configuración", icon: <SettingOutlined /> },
-          { to: "/index/moneymanager/cotizacion", label: "Cotización", icon: <DotChartOutlined /> },
+          { to: "/index/moneymanager/cotizacion", label: "Estudio de mercadeo", icon: <DotChartOutlined /> },
+          { to: "/index/moneymanager/cotizacion", label: "Gestion de compras", icon: <DotChartOutlined /> },
         ],
       },
-      { to: "/index/doc", label: "Documentación", icon: <FileTextOutlined /> },
+      { to: "/index/doc", label: "", icon: <FileTextOutlined /> },
       {
         label: "Comunicación",
         icon: <MessageOutlined />,
@@ -70,9 +92,32 @@ export default function Root() {
           { to: "/index/comunicacion/multichat", label: "Multichat", icon: <DotChartOutlined /> },
         ],
       },
+      { to: "/index/moneymanager/config", label: "Configuración", icon: <SettingOutlined /> },
       { to: "/index/tareas", label: "Tareas", icon: <AppstoreAddOutlined /> },
-      { to: "/index/configuracion", label: "Configuración", icon: <SettingOutlined /> },
+      {
+        label: "terceros",
+        icon: <IdcardOutlined />,
+        hasSubmenu: true,
+        submenuItems: [
+          { to: "/index/terceros/cajeros", label: "Cajeros", icon: <DotIcon /> },
+        ],
+      },
+      {
+        label: "Configuracion",
+        icon: <IdcardOutlined />,
+        hasSubmenu: true,
+        submenuItems: [
+          { to: "/index/administracion/cajeros", label: "Portal Tecnicos", icon: <DotIcon /> },
+          { to: "/index/administracion/cajeros", label: "Portal Clientes", icon: <DotIcon /> },
+          { to: "/index/administracion/cajeros", label: "Portal Cajeros", icon: <DotIcon /> },
+
+        ],
+      },
+      { to: "/index/tienda", label: "Reportes", icon: <ShoppingCartOutlined /> },
+      { to: "/index/tienda", label: "Tareas", icon: <ShoppingCartOutlined /> },
+      { to: "/index/tienda", label: "Navegacion de Archivos", icon: <ShoppingCartOutlined /> },
       { to: "/index/tienda", label: "Tienda", icon: <ShoppingCartOutlined /> },
+    
     ].filter(Boolean),
     [userRole]
   );

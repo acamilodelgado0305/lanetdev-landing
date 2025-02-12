@@ -288,6 +288,7 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-2xl font-bold text-gray-800 mb-4">COMPROBANTE DE ARQUEO</h1>
+
           <div className="flex items-center space-x-4">
             <span className="text-gray-600">No.</span>
             <Input
@@ -301,7 +302,7 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
         <div className="text-right space-y-2">
           <div className="flex items-center justify-end space-x-4">
             <p className="text-gray-600">Fecha: {date?.format("DD/MM/YYYY")}</p>
-          
+
           </div>
           <div className="flex items-center justify-end space-x-4">
             <span className="text-gray-600">Cajero:</span>
@@ -319,8 +320,24 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
               <Select.Option value="Seg-Bancolombia LANET">Seg-Bancolombia LANET</Select.Option>
             </Select>
           </div>
+
+
+
         </div>
+
       </div>
+
+      <div className="flex items-center space-x-4">
+        <span className="text-gray-600">Titulo.</span>
+        <Input
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Añade un título descriptivo"
+          rows={1}
+          className="w-[50em] border  p-1"
+        />
+      </div>
+      
     </div>
   );
 
