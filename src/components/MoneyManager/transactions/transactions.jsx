@@ -75,6 +75,9 @@ const TransactionsDashboard = () => {
   const [selectedEndpoint, setSelectedEndpoint] = useState("/incomes");
   const { userRole } = useAuth();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [monthlyBalance, setMonthlyBalance] = useState(0);
+  const [monthlyIncome, setMonthlyIncome] = useState(0);
+  const [monthlyExpenses, setMonthlyExpenses] = useState(0);
 
   const openModal = () => {
     setEditTransaction(null);
@@ -179,28 +182,39 @@ const TransactionsDashboard = () => {
     }
   };
 
-  /* const fetchMonthlyData = async () => {
+  const fetchMonthlyDatax = async () => {
     const monthYear = formatDate(currentMonth, "yyyy-MM");
     try {
-      const [balanceResponse, incomeResponse, expensesResponse] =
-        await Promise.all([
-          axios.get(`${API_BASE_URL}/transactions/balance/month/${monthYear}`),
-          axios.get(`${API_BASE_URL}/transactions/income/month/${monthYear}`),
-          axios.get(`${API_BASE_URL}/transactions/expenses/month/${monthYear}`),
-        ]);
+      const response = await axios.get(`${API_BASE_URL}/balance/month/${monthYear}`);
 
-      const balanceValue = parseFloat(balanceResponse.data.balance) || 0;
-      const incomeValue = parseFloat(incomeResponse.data.totalIncome) || 0;
-      const expensesValue = parseFloat(expensesResponse.data.totalExpenses) || 0;
+      // Verificar la respuesta
+      console.log('Balance Mensual Response:', response);
 
-      setBalance(balanceValue);
-      setTotalIncome(incomeValue);
-      setTotalExpenses(expensesValue);
+      // Extraer los datos correctamente
+      const { total_incomes, total_expenses, net_balance } = response.data;
+
+      // Convertir a número y manejar posibles valores nulos
+      const balanceValue = parseFloat(net_balance) || 0;
+      const incomeValue = parseFloat(total_incomes) || 0;
+      const expensesValue = parseFloat(total_expenses) || 0;
+
+      // Actualizar estados
+      setMonthlyBalance(balanceValue);
+      setMonthlyIncome(incomeValue);
+      setMonthlyExpenses(expensesValue);
     } catch (err) {
       setError("Error al cargar los datos mensuales");
-      console.error("Error fetching monthly data:", err);
+      console.error("Error fetching monthly data:", err.response ? err.response.data : err.message);
     }
-  }; */
+  };
+
+  // Llamar la función cuando cambie el mes seleccionado
+  useEffect(() => {
+    fetchMonthlyDatax();
+  }, [currentMonth]);
+
+
+
   const fetchMonthlyData = async () => {
     try {
       // Realizar la solicitud a la nueva ruta
@@ -371,52 +385,70 @@ const TransactionsDashboard = () => {
           </div>
 
           {/* Resumen financiero */}
-          <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="p-2 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-36 mx-2 md:mx-28">
             {userRole === "superadmin" && (
               <>
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                  <div className="flex items-center space-x-4">
-                    <div className="p-3 bg-blue-100 rounded-full">
-                      <DollarSign className="w-6 h-6 text-blue-600" />
+                <div className="bg-white p-1 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                  <div className="flex items-center justify-center space-x-4">
+                    <div className="p-0 bg-blue-100 rounded-full">
+                      <DollarSign className="w-5 h-5 text-blue-600" />
                     </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Balance Total</p>
-                      <p className="text-2xl font-semibold text-gray-900">{formatCurrency(balance)}</p>
+                    <div className="flex flex-col"> {/* Reducido el espacio entre los elementos */}
+                      <div>
+                        <p className="text-xs text-gray-500">Balance Total</p> {/* Usé 'text-xs' para texto más pequeño */}
+                        <p className="text-xl font-semibold text-gray-900">{formatCurrency(balance)}</p> {/* Reducido el tamaño de texto */}
+                      </div>
+
+                      <div>
+                        <p className="text-xs text-gray-500">Balance Mensual</p>
+                        <p className="text-xl font-semibold text-gray-900">{formatCurrency(monthlyBalance)}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white p-1 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                  <div className="flex items-center justify-center space-x-4">
+                    <div className="p-0 bg-green-100 rounded-full">
+                      <TrendingUp className="w-10 h-10 text-green-600" />
+                    </div>
+                    <div className="flex flex-col"> {/* Reducido el espacio entre los elementos */}
+                      <div>
+                        <p className="text-xs text-gray-500">Ingresos Totales</p> {/* Usé 'text-xs' para texto más pequeño */}
+                        <p className="text-xl font-semibold text-green-600">{formatCurrency(totalIncome)}</p> {/* Reducido el tamaño de texto */}
+                      </div>
+
+                      <div>
+                        <p className="text-xs text-gray-500">Ingresos Mensuales</p>
+                        <p className="text-xl font-semibold text-green-600">{formatCurrency(monthlyIncome)}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                  <div className="flex items-center space-x-4">
-                    <div className="p-3 bg-green-100 rounded-full">
-                      <TrendingUp className="w-6 h-6 text-green-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Ingresos Totales</p>
-                      <p className="text-2xl font-semibold text-green-600">{formatCurrency(totalIncome)}</p>
-                    </div>
-                  </div>
-                </div>
               </>
             )}
 
             {(userRole === "admin" || userRole === "superadmin") && (
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                <div className="flex items-center space-x-4">
-                  <div className="p-3 bg-red-100 rounded-full">
-                    <CreditCard className="w-6 h-6 text-red-600" />
+              <div className="bg-white p-1 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                <div className="flex items-center space-x-4 justify-center">
+                  <div className="p-0 bg-red-100 rounded-full">
+                    <CreditCard className="w-10 h-10 text-red-600" />
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Gastos Totales</p>
-                    <p className="text-2xl font-semibold text-red-600">{formatCurrency(totalExpenses)}</p>
+                  <div className="flex flex-col"> {/* Reducido el espacio entre los elementos */}
+                    <div>
+                      <p className="text-xs text-gray-500">Gastos Totales</p> {/* Usé 'text-xs' para texto más pequeño */}
+                      <p className="text-xl font-semibold text-red-600">{formatCurrency(totalExpenses)}</p> {/* Reducido el tamaño de texto */}
+                    </div>
+
+                    <div>
+                      <p className="text-xs text-gray-500">Gastos Mensuales</p>
+                      <p className="text-xl font-semibold text-red-600">{formatCurrency(monthlyExpenses)}</p>
+                    </div>
                   </div>
                 </div>
               </div>
             )}
           </div>
-
-
-
         </div>
 
         {/* Navegación entre categorías */}
@@ -539,7 +571,7 @@ const TransactionsDashboard = () => {
         transactionType={transactionType}
       />
 
-      
+
 
       <AddExpense
         isOpen={isExpenseModalOpen}
