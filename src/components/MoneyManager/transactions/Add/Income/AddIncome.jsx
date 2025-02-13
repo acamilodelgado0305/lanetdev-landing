@@ -37,13 +37,10 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
   const [cashiers, setCashiers] = useState([]);
 
   const [accounts, setAccounts] = useState([]);
-  const [imageUrl, setImageUrl] = useState("");
-  const [imageUrls, setImageUrls] = useState([]);
-  const [isUploading, setIsUploading] = useState(false);
   const [date, setDate] = useState(dayjs());
-  const [isEditing, setIsEditing] = useState(false);
+
   const [ventaCategoryId, setVentaCategoryId] = useState(null);
-  const [isFevChecked, setIsFevChecked] = useState(false);
+
   const [loading, setLoading] = useState(false);
 
 
@@ -59,6 +56,7 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
   const [cashReceived, setCashReceived] = useState("");
   const [cashierCommission, setCashierCommission] = useState("");
   const [CommissionPorcentaje, setCommissionPorcentaje] = useState("");
+  const [isIncomeSaved, setIsIncomeSaved] = useState(false);
 
   const [stats, setStats] = useState({
     totalCashiers: 0,
@@ -308,6 +306,9 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
 
       await response.json();
 
+      // Actualizar el estado para indicar que el ingreso ha sido guardado
+      setIsIncomeSaved(true);
+
       Swal.fire({
         icon: "success",
         title: id ? "Ingreso Actualizado" : "Ingreso Registrado",
@@ -315,14 +316,7 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
         confirmButtonColor: "#3085d6",
       });
 
-      resetForm();
-      fetchAccounts();
-
-      navigate(-1);
-      if (onTransactionAdded) {
-        onTransactionAdded();
-      }
-
+      // ... (código existente)
     } catch (error) {
       console.error("Error al guardar el ingreso:", error);
       Swal.fire({
@@ -492,8 +486,7 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
             <div className="space-y-4">
               {/* Contenedor flex para alinear el título y el texto en rojo */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Title level={4} style={{ margin: 0 }}>Información de Cuenta</Title>
-                <p style={{ color: 'red', margin: 0 }}>donde ingresa el dinero</p>
+                <Title level={4} style={{ margin: 0 }}>Donde ingresa el dinero*</Title>
               </div>
               <AccountSelector
                 selectedAccount={account}
@@ -681,16 +674,15 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
           </div>
         </div>
         <Space>
-          {isArqueoChecked && (
-            <Button
-              onClick={handleDownloadPDF}
-              type="primary"
-              icon={<DownloadOutlined />}
-              className="bg-red-500 text-white rounded"
-            >
-              Descargar PDF
-            </Button>
-          )}
+
+          <Button
+            disabled={!isIncomeSaved}  // Deshabilitar el botón si el ingreso no ha sido guardado
+            onClick={handleDownloadPDF}
+            className="bg-red-500 text-white rounded"
+          >
+            Descargar PDF
+          </Button>
+
           <div className="px-6 py-4 flex justify-end">
             <input
               type="file"
