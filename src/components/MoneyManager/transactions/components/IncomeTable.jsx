@@ -2,16 +2,21 @@ import React, { useState } from "react";
 import { Table, Input, Drawer, Button } from "antd";
 import { format as formatDate } from "date-fns";
 import IncomeDetailModal from "./IncomeDetailsModal";
+import { useNavigate } from "react-router-dom";
 
 
 const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
+    const navigate = useNavigate();
 
-    const [isModalOpen, setIsModalOpen] = useState(false);
+
     const [selectedEntry, setSelectedEntry] = useState(null);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedImages, setSelectedImages] = useState([]);
-
     const [searchText, setSearchText] = useState({});
+
+    const handleRowClick = (record) => {
+        navigate(`/index/moneymanager/ingresos/view/${record.id}`);
+    };
 
     const handleSearch = (value, dataIndex) => {
         setSearchText((prev) => ({
@@ -66,15 +71,7 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
         }
     };
 
-    const openModal = (entry) => {
-        setSelectedEntry(entry);
-        setIsModalOpen(true);
-    };
 
-    const closeModal = () => {
-        setIsModalOpen(false);
-        setSelectedEntry(null);
-    };
 
     const openDrawer = (images) => {
         setSelectedImages(images);
@@ -220,7 +217,7 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
             onFilter: (value, record) =>
                 record.cashier_name.toString().toLowerCase().includes(searchText["cashier_name"] || ""),
         },
-        
+
         {
             title: (
                 <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
@@ -370,9 +367,9 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
                 pagination={{ pageSize: 10 }}
                 bordered
                 onRow={(record) => ({
-                    onClick: () => openModal(record),
+                    onClick: () => handleRowClick(record),
                 })}
-                rowClassName="clickable-row "
+                rowClassName="clickable-row"
             />
             <style>
                 {`
@@ -428,8 +425,8 @@ const IncomeTable = ({ onDelete, entries, categories = [], accounts = [] }) => {
                 </div>
             </Drawer>
             <IncomeDetailModal
-                isOpen={isModalOpen}
-                onClose={closeModal}
+
+
                 entry={selectedEntry}
                 getCategoryName={getCategoryName}
                 getAccountName={getAccountName}

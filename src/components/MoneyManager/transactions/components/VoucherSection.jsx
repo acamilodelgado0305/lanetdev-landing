@@ -10,6 +10,29 @@ const VoucherSection = ({ onVoucherChange, initialVouchers = [], entryId }) => {
     const [isUploading, setIsUploading] = useState(false);
     const [imageUrls, setImageUrls] = useState(initialVouchers);
 
+
+    useEffect(() => {
+        const fetchVouchers = async () => {
+            if (!entryId) return;
+
+            try {
+                const response = await fetch(`${import.meta.env.VITE_API_FINANZAS}/incomes/${entryId}/vouchers`);
+                if (!response.ok) {
+                    throw new Error('Error al obtener los comprobantes');
+                }
+                const data = await response.json();
+                // Extraer el array de vouchers de la respuesta
+                setImageUrls(data.vouchers || []);
+            } catch (error) {
+                console.error('Error al obtener los comprobantes:', error);
+                message.error('No se pudieron cargar los comprobantes');
+                setImageUrls([]); // En caso de error, establecer un array vacío
+            }
+        };
+
+        fetchVouchers();
+    }, [entryId]);
+
     // Efecto para notificar al padre cuando cambian las imágenes
     useEffect(() => {
         if (onVoucherChange) {
@@ -24,7 +47,7 @@ const VoucherSection = ({ onVoucherChange, initialVouchers = [], entryId }) => {
         try {
             const uploadPromises = files.map(file => uploadImage(file));
             const uploadedUrls = await Promise.all(uploadPromises);
-            
+
             setImageUrls(prev => [...prev, ...uploadedUrls]);
             message.success('Comprobantes agregados correctamente');
         } catch (error) {
@@ -62,8 +85,8 @@ const VoucherSection = ({ onVoucherChange, initialVouchers = [], entryId }) => {
     };
 
     return (
-        <Card 
-            title="Comprobantes" 
+        <Card
+            title="Comprobantes"
             className="mt-4"
             extra={
                 <button

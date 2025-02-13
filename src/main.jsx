@@ -103,6 +103,10 @@ const router = createBrowserRouter([
             element: <AddIncome />,
           },
           {
+            path: "ingresos/view/:id",
+            element: <AddIncome />,
+          },
+          {
             path: "categorias",
             element: <Categories />,
           },
