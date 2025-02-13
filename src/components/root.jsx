@@ -41,22 +41,53 @@ export default function Root() {
   const mainMenuLinks = useMemo(
     () => [
       { to: "/index", label: "Dashboard", icon: <HomeOutlined /> },
-      userRole === "superadmin" && { to: "/index/clientes", label: "Clientes", icon: <TeamOutlined /> },
-      { to: "/index/cobro-cartera", label: "Cobro de Cartera", icon: <BankOutlined /> },
-      { to: "/index/tickets", label: "Tickets", icon: <DotChartOutlined /> },
 
+
+      { label: "CRM", isTitle: true, color: "text-purple-600" },
+
+      userRole === "superadmin" && { to: "/index/clientes", label: "Clientes", icon: <TeamOutlined className="text-purple-600" /> },
+      { to: "/index/Instalaciones", label: "Instalaciones", icon: <DotChartOutlined className="text-purple-600" /> },
       {
         label: "Finanzas",
-        icon: <IdcardOutlined />,
+        icon: <IdcardOutlined className="text-purple-600" />,
         hasSubmenu: true,
         submenuItems: [
-          { to: "/index/administracion/cajeros", label: "Facturas", icon: <DotIcon /> },
+          { to: "/index/administracion/cajeros", label: "Facturas", icon: <DotIcon className="text-purple-600" /> },
 
         ],
       },
+      { to: "/index/tickets", label: "Tickets", icon: <DotChartOutlined className="text-purple-600" /> },
+      {
+        label: "Comunicación",
+        icon: <MessageOutlined className="text-purple-600" />,
+        hasSubmenu: true,
+        submenuItems: [
+          { to: "/index/comunicacion/notificaciones", label: "Notificaciones WhatsApp", icon: <DotChartOutlined className="text-purple-600" /> },
+          { to: "/index/comunicacion/multichat", label: "Multichat", icon: <DotChartOutlined className="text-purple-600" /> },
+        ],
+      },
+      { to: "/index/moneymanager/cotizacion", label: "Estudio de Mercado", icon: <DotChartOutlined className="text-purple-600" /> },
+
+
+      { label: "COMPAÑIA", isTitle: true, color: "text-green-400" },
+
+      (userRole === "admin" || userRole === "superadmin") && {
+        label: "Contabilidad",
+        icon: <DollarCircleOutlined className="text-green-400" />,
+        hasSubmenu: true,
+        submenuItems: [
+          { to: "/index/moneymanager/estadisticas", label: "Resumen", icon: <DotIcon /> },
+          { to: "/index/moneymanager/transactions", label: "Transacciones", icon: <DotIcon /> },
+          { to: "/index/moneymanager/pagos-pendientes", label: "Pagos Recurrentes", icon: <DotIcon /> },
+          { to: "/index/moneymanager/informes", label: "Informes", icon: <DotChartOutlined /> },
+          { to: "/index/moneymanager/cotizacion", label: "Estudio de mercadeo", icon: <DotChartOutlined /> },
+
+        ],
+      },
+
       {
         label: "Gestión de Red",
-        icon: <IdcardOutlined />,
+        icon: <IdcardOutlined className="text-green-400" />,
         hasSubmenu: true,
         submenuItems: [
           { to: "/index/administracion/cajeros", label: "Direccionamiento Ip", icon: <DotIcon /> },
@@ -66,58 +97,55 @@ export default function Root() {
 
         ],
       },
-      { to: "/index/inventario", label: "Inventario", icon: <ContainerOutlined /> },
-      { to: "/index/moneymanager/cotizacion", label: "Estudio de Mercado", icon: <DotChartOutlined /> },
-      (userRole === "admin" || userRole === "superadmin") && {
-        label: "Contabilidad",
-        icon: <DollarCircleOutlined />,
-        hasSubmenu: true,
-        submenuItems: [
-          { to: "/index/moneymanager/estadisticas", label: "Resumen", icon: <DotIcon /> },
-          { to: "/index/moneymanager/transactions", label: "Transacciones", icon: <DotIcon /> },
-          { to: "/index/moneymanager/pagos-pendientes", label: "Pagos Recurrentes", icon: <DotIcon /> },
-          { to: "/index/moneymanager/informes", label: "Informes", icon: <DotChartOutlined /> },
-          { to: "/index/moneymanager/calendario", label: "Calendario", icon: <CalendarOutlined /> },
-          { to: "/index/moneymanager/cotizacion", label: "Estudio de mercadeo", icon: <DotChartOutlined /> },
-          { to: "/index/moneymanager/cotizacion", label: "Gestion de compras", icon: <DotChartOutlined /> },
-        ],
-      },
-      { to: "/index/doc", label: "", icon: <FileTextOutlined /> },
+      { to: "/index/inventario", label: "Inventario", icon: <ContainerOutlined className="text-green-400" /> },
       {
-        label: "Comunicación",
-        icon: <MessageOutlined />,
-        hasSubmenu: true,
-        submenuItems: [
-          { to: "/index/comunicacion/notificaciones", label: "Notificaciones WhatsApp", icon: <DotChartOutlined /> },
-          { to: "/index/comunicacion/multichat", label: "Multichat", icon: <DotChartOutlined /> },
-        ],
-      },
-      { to: "/index/moneymanager/config", label: "Configuración", icon: <SettingOutlined /> },
-      { to: "/index/tareas", label: "Tareas", icon: <AppstoreAddOutlined /> },
-      {
-        label: "terceros",
-        icon: <IdcardOutlined />,
+        label: "Terceros",
+        icon: <IdcardOutlined className="text-green-400" />,
         hasSubmenu: true,
         submenuItems: [
           { to: "/index/terceros/cajeros", label: "Cajeros", icon: <DotIcon /> },
         ],
       },
+      { to: "/index/tienda", label: "Reportes", icon: <ShoppingCartOutlined className="text-green-400" /> },
+      { to: "/index/moneymanager/cotizacion", label: "Gestion de compras", icon: <DotChartOutlined className="text-green-400" /> },
+      { to: "/index/moneymanager/calendario", label: "Calendario", icon: <CalendarOutlined className="text-green-400" /> },
+      { to: "/index/recursoHumanos", label: "Recuersos Humanos", icon: <BankOutlined className="text-green-400" /> },
+
+
+      { label: "SISTEMA", isTitle: true, color: "text-blue-500" },
+
       {
-        label: "Configuracion",
-        icon: <IdcardOutlined />,
+        label: "Configuración",
+        icon: <IdcardOutlined className="text-blue-500" />,
+        hasSubmenu: true,
+        submenuItems: [
+          { to: "/index/moneymanager/config", label: "Configuración", icon: <SettingOutlined className="text-blue-500" /> },
+
+        ],
+      },
+      {
+        label: "Administración",
+        icon: <IdcardOutlined className="text-blue-500" />,
         hasSubmenu: true,
         submenuItems: [
           { to: "/index/administracion/cajeros", label: "Portal Tecnicos", icon: <DotIcon /> },
           { to: "/index/administracion/cajeros", label: "Portal Clientes", icon: <DotIcon /> },
-          { to: "/index/administracion/cajeros", label: "Portal Cajeros", icon: <DotIcon /> },
-
         ],
       },
-      { to: "/index/tienda", label: "Reportes", icon: <ShoppingCartOutlined /> },
-      { to: "/index/tienda", label: "Tareas", icon: <ShoppingCartOutlined /> },
-      { to: "/index/tienda", label: "Navegacion de Archivos", icon: <ShoppingCartOutlined /> },
-      { to: "/index/tienda", label: "Tienda", icon: <ShoppingCartOutlined /> },
-    
+
+
+
+
+      { to: "", label: "", isSpace: true },
+      { to: "/index/tienda", label: "Tienda", icon: <ShoppingCartOutlined className="text-red-500" /> },
+      { to: "/index/tareas", label: "Tareas", icon: <AppstoreAddOutlined className="text-red-500" /> },
+      { to: "/index/cobro-cartera", label: "Cobro de Cartera", icon: <BankOutlined className="text-red-500" /> },
+      { to: "/index/tienda", label: "Navegacion de Archivos", icon: <ShoppingCartOutlined className="text-red-500" /> },
+      { to: "", label: "", isSpace: true },
+      { to: "", label: "", isSpace: true },
+      { to: "", label: "", isSpace: true },
+
+
     ].filter(Boolean),
     [userRole]
   );
@@ -153,7 +181,7 @@ export default function Root() {
 
         {/* Sidebar */}
         <div
-          className={`${isExpanded ? "w-48" : "w-16"} 
+          className={`${isExpanded ? "w-48" : "w-18"} 
                 bg-gray-200 text-black ${isOpen ? "block" : "hidden"} 
                 lg:block fixed top-0 left-0 h-full transition-all duration-300`}
         >
@@ -166,33 +194,37 @@ export default function Root() {
               isExpanded={isExpanded}
             />
           )} */}
-          <div className="space-y-2 py-4 max-h-screen overflow-y-auto mt-14"
+          <div className="space-y-2 py-4 max-h-screen overflow-y-auto mt-10 my-4"
             style={{
               scrollbarWidth: "none",
               msOverflowStyle: "none",
             }}>
             {/* Menu Links */}
             {mainMenuLinks.map((link) =>
-              link.hasSubmenu ? (
+              link.isSpace ? (
+                <div key="space" className="py-2"></div>
+              ) : link.isTitle ? (
+                <div
+                  key={link.label}
+                  className={`${isExpanded ? "px-9" : "px-1"
+                    } py-2 text-xs font-bold uppercase ${link.color || "text-gray-500"}`}
+                >               {link.label}
+                </div>
+              ) : link.hasSubmenu ? (
                 <div key={link.label}>
                   <button
                     onClick={() => {
-                      if (!isExpanded) {
-                        setIsExpanded(true); // Expande el menú si está contraído
-                      }
-                      toggleSubMenu(link.label); // Abre el submenú
+                      if (!isExpanded) setIsExpanded(true);
+                      toggleSubMenu(link.label);
                     }}
                     className="flex items-center w-full p-2 text-left hover:bg-gray-700 text-sm"
                   >
                     <span className="mr-3">{link.icon}</span>
                     <span>{isExpanded ? link.label : ""}</span>
                     <span className="ml-auto">
-                      {/* Muestra las flechas independientemente de si está expandido o no */}
                       {activeSubMenu === link.label ? <DownOutlined /> : <UpOutlined />}
                     </span>
                   </button>
-
-                  {/* Submenú */}
                   {activeSubMenu === link.label && isExpanded && (
                     <div className="ml-6 space-y-1">
                       {link.submenuItems.map((subItem) => (
@@ -220,6 +252,7 @@ export default function Root() {
               )
             )}
 
+
           </div>
           {/* Botón para expandir/contraer el menú */}
           <button
@@ -228,9 +261,9 @@ export default function Root() {
           >
             <span className="ml-2">
               {isExpanded ? (
-                <LeftOutlined className="text-white" />
+                <LeftOutlined className="text-black" />
               ) : (
-                <RightOutlined className="text-white" />
+                <RightOutlined className="text-black" />
               )}
             </span>
           </button>
