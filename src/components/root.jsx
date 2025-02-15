@@ -120,20 +120,35 @@ export default function Root() {
       },
 
 
-
-
       { label: "COMPAÑIA", isTitle: true, color: "text-green-400" },
 
       (userRole === "admin" || userRole === "superadmin") && {
         label: "Contabilidad",
         icon: <DollarCircleOutlined className="text-green-400" />,
+        color: "text-green-400",
+        hoverClass: "hover:text-green-400 hover:text-white",
         hasSubmenu: true,
         submenuItems: [
-          { to: "/index/moneymanager/estadisticas", label: "Resumen", icon: <DotIcon /> },
-          { to: "/index/moneymanager/transactions", label: "Transacciones", icon: <DotIcon /> },
-          { to: "/index/moneymanager/pagos-pendientes", label: "Pagos Recurrentes", icon: <DotIcon /> },
-          { to: "/index/moneymanager/informes", label: "Informes", icon: <DotChartOutlined /> },
-          { to: "/index/moneymanager/cotizacion", label: "Estudio de mercadeo", icon: <DotChartOutlined /> },
+          {
+            to: "/index/moneymanager/estadisticas", label: "Resumen", icon: <DotIcon />, color: "text-green-400",
+            hoverClass: "hover:text-green-400 hover:text-white",
+          },
+          {
+            to: "/index/moneymanager/transactions", label: "Transacciones", icon: <DotIcon />, color: "text-green-400",
+            hoverClass: "hover:text-green-400 hover:text-white",
+          },
+          {
+            to: "/index/moneymanager/pagos-pendientes", label: "Pagos Recurrentes", icon: <DotIcon />, color: "text-green-400",
+            hoverClass: "hover:text-green-400 hover:text-white",
+          },
+          {
+            to: "/index/moneymanager/informes", label: "Informes", icon: <DotChartOutlined />, color: "text-green-400",
+            hoverClass: "hover:text-green-400 hover:text-white",
+          },
+          {
+            to: "/index/moneymanager/cotizacion", label: "Estudio de mercadeo", icon: <DotChartOutlined />, color: "text-green-400",
+            hoverClass: "hover:text-green-400 hover:text-white",
+          },
 
         ],
       },
@@ -142,27 +157,61 @@ export default function Root() {
         label: "Gestión de Red",
         icon: <IdcardOutlined className="text-green-400" />,
         hasSubmenu: true,
+        color: "text-green-400",
+        hoverClass: "hover:text-green-400 hover:text-white",
         submenuItems: [
-          { to: "/index/administracion/cajeros", label: "Direccionamiento Ip", icon: <DotIcon /> },
-          { to: "/index/administracion/cajeros", label: "Monitoreo", icon: <DotIcon /> },
-          { to: "/index/administracion/cajeros", label: "Aprovisinamiento de Red", icon: <DotIcon /> },
-          { to: "/index/administracion/cajeros", label: "Conexion de routers", icon: <DotIcon /> },
+          {
+            to: "/index/administracion/cajeros", label: "Direccionamiento Ip", icon: <DotIcon />, color: "text-green-400",
+            hoverClass: "hover:text-green-400 hover:text-white",
+          },
+          {
+            to: "/index/administracion/cajeros", label: "Monitoreo", icon: <DotIcon />, color: "text-green-400",
+            hoverClass: "hover:text-green-400 hover:text-white",
+          },
+          {
+            to: "/index/administracion/cajeros", label: "Aprovisinamiento de Red", icon: <DotIcon />, color: "text-green-400",
+            hoverClass: "hover:text-green-400 hover:text-white",
+          },
+          {
+            to: "/index/administracion/cajeros", label: "Conexion de routers", icon: <DotIcon />, color: "text-green-400",
+            hoverClass: "hover:text-green-400 hover:text-white",
+          },
 
         ],
       },
-      { to: "/index/inventario", label: "Inventario", icon: <ContainerOutlined className="text-green-400" /> },
+      {
+        to: "/index/inventario", label: "Inventario", icon: <ContainerOutlined className="text-green-400" />, color: "text-green-400",
+        hoverClass: "hover:text-green-400 hover:text-white",
+      },
       {
         label: "Terceros",
         icon: <IdcardOutlined className="text-green-400" />,
+        color: "text-green-400",
+        hoverClass: "hover:text-green-400 hover:text-white",
         hasSubmenu: true,
         submenuItems: [
-          { to: "/index/terceros/cajeros", label: "Cajeros", icon: <DotIcon /> },
+          {
+            to: "/index/terceros/cajeros", label: "Cajeros", icon: <DotIcon />, color: "text-green-400",
+            hoverClass: "hover:text-green-400 hover:text-white",
+          },
         ],
       },
-      { to: "/index/tienda", label: "Reportes", icon: <ShoppingCartOutlined className="text-green-400" /> },
-      { to: "/index/moneymanager/cotizacion", label: "Gestion de compras", icon: <DotChartOutlined className="text-green-400" /> },
-      { to: "/index/moneymanager/calendario", label: "Calendario", icon: <CalendarOutlined className="text-green-400" /> },
-      { to: "/index/recursoHumanos", label: "Recuersos Humanos", icon: <BankOutlined className="text-green-400" /> },
+      {
+        to: "/index/tienda", label: "Reportes", icon: <ShoppingCartOutlined className="text-green-400" />, color: "text-green-400",
+        hoverClass: "hover:text-green-400 hover:text-white",
+      },
+      {
+        to: "/index/moneymanager/cotizacion", label: "Gestion de compras", icon: <DotChartOutlined className="text-green-400" />, color: "text-green-400",
+        hoverClass: "hover:text-green-400 hover:text-white",
+      },
+      {
+        to: "/index/moneymanager/calendario", label: "Calendario", icon: <CalendarOutlined className="text-green-400" />, color: "text-green-400",
+        hoverClass: "hover:text-green-400 hover:text-white",
+      },
+      {
+        to: "/index/recursoHumanos", label: "Recuersos Humanos", icon: <BankOutlined className="text-green-400" />, color: "text-green-400",
+        hoverClass: "hover:text-green-400 hover:text-white",
+      },
 
 
       { label: "SISTEMA", isTitle: true, color: "text-blue-500" },
@@ -170,6 +219,8 @@ export default function Root() {
       {
         label: "Configuración",
         icon: <IdcardOutlined className="text-blue-500" />,
+        color: "text-blue-500",
+        hoverClass: "hover:text-blue-500 hover:text-white",
         hasSubmenu: true,
         submenuItems: [
           { to: "/index/moneymanager/config", label: "Configuración", icon: <SettingOutlined className="text-blue-500" /> },
@@ -179,22 +230,37 @@ export default function Root() {
       {
         label: "Administración",
         icon: <IdcardOutlined className="text-blue-500" />,
+        color: "text-blue-500",
+        hoverClass: "hover:text-blue-500 hover:text-white",
         hasSubmenu: true,
         submenuItems: [
-          { to: "/index/administracion/cajeros", label: "Portal Tecnicos", icon: <DotIcon /> },
-          { to: "/index/administracion/cajeros", label: "Portal Clientes", icon: <DotIcon /> },
+          {
+            to: "/index/administracion/cajeros", label: "Portal Tecnicos", icon: <DotIcon />, color: "text-blue-500",
+            hoverClass: "hover:text-blue-500 hover:text-white",
+          },
+          {
+            to: "/index/administracion/cajeros", label: "Portal Clientes", icon: <DotIcon />, color: "text-blue-500",
+            hoverClass: "hover:text-blue-500 hover:text-white",
+          },
         ],
       },
 
-
-
-
-      { to: "", label: "", isSpace: true },
-      { to: "/index/tienda", label: "Tienda", icon: <ShoppingCartOutlined className="text-red-500" /> },
-      { to: "/index/tareas", label: "Tareas", icon: <AppstoreAddOutlined className="text-red-500" /> },
-      { to: "/index/cobro-cartera", label: "Cobro de Cartera", icon: <BankOutlined className="text-red-500" /> },
-      { to: "/index/tienda", label: "Navegacion de Archivos", icon: <ShoppingCartOutlined className="text-red-500" /> },
-      { to: "", label: "", isSpace: true },
+      {
+        to: "/index/tienda", label: "Tienda", icon: <ShoppingCartOutlined className="text-red-500" />, color: "text-red-500",
+        hoverClass: "hover:text-red-500 hover:text-white",
+      },
+      {
+        to: "/index/tareas", label: "Tareas", icon: <AppstoreAddOutlined className="text-red-500" />, color: "text-red-500",
+        hoverClass: "hover:text-red-500 hover:text-white",
+      },
+      {
+        to: "/index/cobro-cartera", label: "Cobro de Cartera", icon: <BankOutlined className="text-red-500" />, color: "text-red-500",
+        hoverClass: "hover:text-red-500 hover:text-white",
+      },
+      {
+        to: "/index/tienda", label: "Navegacion de Archivos", icon: <ShoppingCartOutlined className="text-red-500" />, color: "text-red-500",
+        hoverClass: "hover:text-red-500 hover:text-white",
+      },
       { to: "", label: "", isSpace: true },
       { to: "", label: "", isSpace: true },
 
@@ -247,7 +313,7 @@ export default function Root() {
               isExpanded={isExpanded}
             />
           )} */}
-          <div className="space-y-2 py-4 max-h-screen overflow-y-auto mt-10 my-4"
+          <div className="space-y-2 py-4 max-h-screen overflow-y-auto mt-10 my-4 bg-white"
             style={{
               scrollbarWidth: "none",
               msOverflowStyle: "none",
@@ -268,7 +334,15 @@ export default function Root() {
                       if (!isExpanded) setIsExpanded(true);
                       toggleSubMenu(link.label);
                     }}
-                    className={`group flex items-center w-full p-2 text-left ${link.hoverClass} ${link.color || "text-black"} text-sm hover:bg-purple-600`}
+                    className={`group flex items-center w-full p-2 text-left 
+          ${link.color === "text-green-400"
+                        ? "hover:bg-green-400"
+                        : link.color === "text-blue-500"
+                          ? "hover:bg-blue-500"
+                          : link.color === "text-red-500"
+                            ? "hover:bg-red-500"
+                            : "hover:bg-purple-600"} 
+          ${link.color || "text-black"} text-sm`}
                   >
                     <span className={`mr-3 ${link.color} group-hover:text-white`}>
                       {link.icon}
@@ -286,7 +360,15 @@ export default function Root() {
                         <Link
                           key={subItem.to}
                           to={subItem.to}
-                          className={`group flex items-center w-full p-1 text-left text-sm ${subItem.hoverClass} ${subItem.color || "text-black"} hover:bg-purple-600 group-hover:text-white`}
+                          className={`group flex items-center w-full p-1 text-left text-sm 
+                ${subItem.color === "text-green-400"
+                              ? "hover:bg-green-400"
+                              : subItem.color === "text-blue-500"
+                                ? "hover:bg-blue-500"
+                                : subItem.color === "text-red-500"
+                                  ? "hover:bg-red-500"
+                                  : "hover:bg-purple-600"} 
+                ${subItem.color || "text-black"} group-hover:text-white`}
                         >
                           <span className={`mr-3 ${subItem.color} group-hover:text-white`}>
                             {subItem.icon}
@@ -303,7 +385,15 @@ export default function Root() {
                 <Link
                   key={link.to}
                   to={link.to}
-                  className={`group flex items-center w-full p-2 text-left ${link.hoverClass} ${link.color || "text-black"} hover:bg-purple-600 group-hover:text-white text-sm`}
+                  className={`group flex items-center w-full p-2 text-left 
+        ${link.color === "text-green-400"
+                      ? "hover:bg-green-400"
+                      : link.color === "text-blue-500"
+                        ? "hover:bg-blue-500"
+                        : link.color === "text-red-500"
+                          ? "hover:bg-red-500"
+                          : "hover:bg-purple-600"} 
+        ${link.color || "text-black"} group-hover:text-white text-sm`}
                 >
                   <span className={`mr-3 ${link.color} group-hover:text-white`}>
                     {link.icon}
@@ -314,7 +404,6 @@ export default function Root() {
                 </Link>
               )
             )}
-
 
 
           </div>
@@ -337,7 +426,7 @@ export default function Root() {
 
         {/* Contenido principal */}
         <Layout.Content
-          className={`flex-1 overflow-x-hidden overflow-y-auto mt-10 ${isExpanded ? "ml-48" : "ml-16"} h-screen`}
+          className={`flex-1 overflow-x-hidden overflow-y-auto mt-10 ${isExpanded ? "ml-52" : "ml-16"} h-screen`}
         >
           <Outlet context={{ setUnreadEmailsCount }} />
         </Layout.Content>
