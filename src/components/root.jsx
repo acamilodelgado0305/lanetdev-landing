@@ -247,6 +247,7 @@ export default function Root() {
           },
         ],
       },
+      { to: "", label: "", isSpace: true },
 
       {
         to: "/index/tienda", label: "Tienda", icon: <ShoppingCartOutlined />, color: "text-gray-500",
@@ -264,6 +265,7 @@ export default function Root() {
         to: "/index/tienda", label: "Navegacion de Archivos", icon: <ShoppingCartOutlined />, color: "text-gray-500",
         hoverClass: "hover:text-gray-500 hover:text-white",
       },
+      { to: "", label: "", isSpace: true },
       { to: "", label: "", isSpace: true },
       { to: "", label: "", isSpace: true },
     ].filter(Boolean),
@@ -321,11 +323,13 @@ export default function Root() {
             }}>
             {/* Menu Links */}
             {mainMenuLinks.map((link) =>
-              link.isTitle ? (
+              link.isSpace ? (
+                <div key={link.label} className="py-2"></div> // Solo renderiza un espacio vacío sin estilos de hover
+              ) : link.isTitle ? (
                 <div
                   key={link.label}
-                  className={` py-4 text-xs font-bold uppercase ${link.color || "text-gray-500"} 
-        ${isExpanded ? "text-center" : "hidden"} w-full`}
+                  className={`py-4 text-xs font-bold uppercase ${link.color || "text-gray-500"} 
+      ${isExpanded ? "text-center" : "hidden"} w-full`}
                 >
                   {link.label}
                 </div>
@@ -337,14 +341,14 @@ export default function Root() {
                       toggleSubMenu(link.label);
                     }}
                     className={`group flex items-center w-full p-2 text-left 
-          ${link.color === "text-green-400"
+        ${link.color === "text-green-400"
                         ? "hover:bg-green-400"
                         : link.color === "text-blue-500"
                           ? "hover:bg-blue-500"
                           : link.color === "text-gray-500"
                             ? "hover:bg-gray-500"
-                            : "hover:bg-[#7d4fff]"}  // Usando el color #7d4fff para el hover
-          ${link.color || "text-black"} text-sm`}
+                            : "hover:bg-[#7d4fff]"}  
+        ${link.color || "text-black"} text-sm`}
                   >
                     <span className={`mr-3 ${link.color} group-hover:text-white`}>
                       {link.icon}
@@ -369,7 +373,7 @@ export default function Root() {
                                 ? "hover:bg-blue-500"
                                 : subItem.color === "text-gray-500"
                                   ? "hover:bg-gray-500"
-                                  : "hover:bg-[#7d4fff]"}  // Usando el color #7d4fff para el hover
+                                  : "hover:bg-[#7d4fff]"}  
                 ${subItem.color || "text-black"} group-hover:text-white`}
                         >
                           <span className={`mr-3 ${subItem.color} group-hover:text-white`}>
@@ -394,7 +398,7 @@ export default function Root() {
                         ? "hover:bg-blue-500"
                         : link.color === "text-gray-500"
                           ? "hover:bg-gray-500"
-                          : "hover:bg-[#7d4fff]"}  // Usando el color #7d4fff para el hover
+                          : "hover:bg-[#7d4fff]"}  
         ${link.color || "text-black"} group-hover:text-white text-sm`}
                 >
                   <span className={`mr-3 ${link.color} group-hover:text-white`}>
@@ -406,6 +410,7 @@ export default function Root() {
                 </Link>
               )
             )}
+
           </div>
           {/* Botón para expandir/contraer el menú */}
           <button
