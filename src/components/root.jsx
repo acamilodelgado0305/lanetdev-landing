@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import {
   HomeOutlined,
@@ -32,10 +32,13 @@ export default function Root() {
   const [isExpanded, setIsExpanded] = useState(true);
   const [unreadEmailsCount, setUnreadEmailsCount] = useState(0);
   const [isUserProfileOpen, setIsUserProfileOpen] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false); // Controla la visibilidad del modal
+  const [modalContent, setModalContent] = useState(null); // Contenido del modal
+  const [modalPosition, setModalPosition] = useState({ top: 20, left: window.innerWidth - 300 });
 
   const [activeSubMenu, setActiveSubMenu] = useState(null);
   const { userRole } = useAuth();
-  const location = useLocation();
+  const menuItemRef = useRef(null);
 
   // Definición de los enlaces principales del menú
   const mainMenuLinks = useMemo(
@@ -271,8 +274,6 @@ export default function Root() {
     ].filter(Boolean),
     [userRole]
   );
-
-  // Determinar la clave seleccionada basada en la ubicación actual
   const selectedKeys = useMemo(() => {
     const currentPath = location.pathname;
     return mainMenuLinks
@@ -283,10 +284,15 @@ export default function Root() {
       )
       .filter((path) => currentPath.startsWith(path));
   }, [location.pathname, mainMenuLinks]);
-
-  // Controla la expansión de los submenús
-  const toggleSubMenu = (label) => {
-    setActiveSubMenu(activeSubMenu === label ? null : label);
+  // Obtener la posición del ítem de menú cuando se hace clic
+  const handleMenuItemClick = (e, submenuItems) => {
+    const rect = e.target.getBoundingClientRect(); // Obtener las coordenadas del ítem
+    setModalPosition({
+      top: rect.top + rect.height, // Justo debajo del ítem
+      left: rect.left + 40, // Aquí puedes aumentar el valor de 'left' para moverlo más a la derecha
+    });
+    setModalContent(submenuItems); // Establecer el contenido del submenú
+    setIsModalVisible(true); // Mostrar el modal
   };
 
   return (
@@ -322,33 +328,37 @@ export default function Root() {
               msOverflowStyle: "none",
             }}>
             {/* Menu Links */}
-            {mainMenuLinks.map((link) =>
+            {mainMenuLinks.map((link, index) =>
               link.isSpace ? (
-                <div key={link.label} className="py-2"></div> // Solo renderiza un espacio vacío sin estilos de hover
+                <div key={`space-${index}`} className="py-2"></div> // Solo renderiza un espacio vacío
               ) : link.isTitle ? (
                 <div
-                  key={link.label}
+                  key={`title-${index}`} // Asegura una clave única para los títulos
                   className={`py-4 text-xs font-bold uppercase ${link.color || "text-gray-500"} 
-      ${isExpanded ? "text-center" : "hidden"} w-full`}
+        ${isExpanded ? "text-center" : "hidden"} w-full`}
                 >
                   {link.label}
                 </div>
               ) : link.hasSubmenu ? (
-                <div key={link.label}>
+                <div key={`submenu-${link.label}-${index}`}>
                   <button
-                    onClick={() => {
-                      if (!isExpanded) setIsExpanded(true);
-                      toggleSubMenu(link.label);
+                    ref={menuItemRef} // Referencia al botón del ítem
+                    onClick={(e) => {
+                      if (!isExpanded) {
+                        handleMenuItemClick(e, link.submenuItems); // Mostrar el modal si está contraído
+                      } else {
+                        setActiveSubMenu(activeSubMenu === link.label ? null : link.label); // Mostrar el submenú si está expandido
+                      }
                     }}
                     className={`group flex items-center w-full p-2 text-left 
-        ${link.color === "text-green-400"
+          ${link.color === "text-green-400"
                         ? "hover:bg-green-400"
                         : link.color === "text-blue-500"
                           ? "hover:bg-blue-500"
                           : link.color === "text-gray-500"
                             ? "hover:bg-gray-500"
                             : "hover:bg-[#7d4fff]"}  
-        ${link.color || "text-black"} text-sm`}
+          ${link.color || "text-black"} text-sm`}
                   >
                     <span className={`mr-3 ${link.color} group-hover:text-white`}>
                       {link.icon}
@@ -360,11 +370,13 @@ export default function Root() {
                       {activeSubMenu === link.label ? <DownOutlined /> : <UpOutlined />}
                     </span>
                   </button>
+
+                  {/* Mostrar submenú si está expandido */}
                   {activeSubMenu === link.label && isExpanded && (
                     <div className="ml-6 space-y-1">
-                      {link.submenuItems.map((subItem) => (
+                      {link.submenuItems.map((subItem, subIndex) => (
                         <Link
-                          key={subItem.to}
+                          key={`${subItem.to}-${subIndex}`} // Clave única combinando `to` y `subIndex`
                           to={subItem.to}
                           className={`group flex items-center w-full p-1 text-left text-sm 
                 ${subItem.color === "text-green-400"
@@ -389,7 +401,7 @@ export default function Root() {
                 </div>
               ) : (
                 <Link
-                  key={link.to}
+                  key={`${link.to}-${index}`} // Clave única combinando `to` y `index`
                   to={link.to}
                   className={`group flex items-center w-full p-2 text-left 
         ${link.color === "text-green-400"
@@ -418,14 +430,11 @@ export default function Root() {
             className="z-1000 flex items-center justify-center w-full p-2 text-left hover:bg-gray-700 text-sm absolute bottom-0"
           >
             <span className="ml-2">
-              {isExpanded ? (
-                <LeftOutlined className="text-black" />
-              ) : (
-                <RightOutlined className="text-black" />
-              )}
+              {isExpanded ? <UpOutlined className="text-black" /> : <DownOutlined className="text-black" />}
             </span>
           </button>
         </div>
+
         {/* Contenido principal */}
         <Layout.Content
           className={`flex-1 overflow-x-hidden overflow-y-auto mt-10 ${isExpanded ? "ml-52" : "ml-16"} h-screen`}
@@ -433,6 +442,37 @@ export default function Root() {
           <Outlet context={{ setUnreadEmailsCount }} />
         </Layout.Content>
       </Layout>
+
+      {/* Modal flotante para submenú */}
+      {isModalVisible && (
+        <div
+          style={{
+            position: "absolute",
+            top: modalPosition.top,
+            left: modalPosition.left,
+            zIndex: 1000,
+            background: "white",
+            border: "1px solid #ddd",
+            boxShadow: "0 0 5px rgba(0, 0, 0, 0.15)",
+            padding: "10px",
+            borderRadius: "4px",
+            width: "200px", // Puedes ajustarlo según tus necesidades
+          }}
+        >
+          <div className="space-y-1">
+            {modalContent.map((subItem) => (
+              <Link
+                key={subItem.to}
+                to={subItem.to}
+                className="block p-2 text-sm text-[#7d4fff] hover:bg-[#7d4fff] hover:text-white"
+              >
+                {subItem.label}
+              </Link>
+            ))}
+
+          </div>
+        </div>
+      )}
     </>
   );
 }
