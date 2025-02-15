@@ -49,7 +49,7 @@ export default function Root() {
       userRole === "superadmin" && {
         to: "/index/clientes",
         label: "Clientes",
-        icon: <TeamOutlined className="text-purple-600" />,
+        icon: <TeamOutlined />,
         color: "text-purple-600", // Color de texto
         hoverClass: "hover:bg-purple-600 hover:text-white", // Clase de hover para el fondo y color del texto
       },
@@ -57,14 +57,14 @@ export default function Root() {
       {
         to: "/index/Instalaciones",
         label: "Instalaciones",
-        icon: <DotChartOutlined className="text-purple-600" />,
+        icon: <DotChartOutlined />,
         color: "text-purple-600",
         hoverClass: "hover:bg-purple-600 hover:text-white", // Clase de hover para el fondo y color del texto
       },
 
       {
         label: "Finanzas",
-        icon: <IdcardOutlined className="text-purple-600" />,
+        icon: <IdcardOutlined />,
         color: "text-purple-600",
         hoverClass: "hover:bg-purple-600 hover:text-white", // Clase de hover para el fondo y color del texto
         hasSubmenu: true,
@@ -72,7 +72,7 @@ export default function Root() {
           {
             to: "/index/administracion/cajeros",
             label: "Facturas",
-            icon: <DotIcon className="text-purple-600" />,
+            icon: <DotIcon />,
             color: "text-purple-600",
             hoverClass: "hover:bg-purple-600 hover:text-white", // Clase de hover para el fondo y color del texto
           },
@@ -82,14 +82,14 @@ export default function Root() {
       {
         to: "/index/tickets",
         label: "Tickets",
-        icon: <DotChartOutlined className="text-purple-600" />,
+        icon: <DotChartOutlined />,
         color: "text-purple-600",
         hoverClass: "hover:bg-purple-600 hover:text-white", // Clase de hover para el fondo y color del texto
       },
 
       {
         label: "Comunicación",
-        icon: <MessageOutlined className="text-purple-600" />,
+        icon: <MessageOutlined />,
         color: "text-purple-600",
         hoverClass: "hover:bg-purple-600 hover:text-white", // Clase de hover para el fondo y color del texto
         hasSubmenu: true,
@@ -97,14 +97,14 @@ export default function Root() {
           {
             to: "/index/comunicacion/notificaciones",
             label: "Notificaciones WhatsApp",
-            icon: <DotChartOutlined className="text-purple-600" />,
+            icon: <DotChartOutlined />,
             color: "text-purple-600",
             hoverClass: "hover:bg-purple-600 hover:text-white", // Clase de hover para el fondo y color del texto
           },
           {
             to: "/index/comunicacion/multichat",
             label: "Multichat",
-            icon: <DotChartOutlined className="text-purple-600" />,
+            icon: <DotChartOutlined />,
             color: "text-purple-600",
             hoverClass: "hover:bg-purple-600 hover:text-white", // Clase de hover para el fondo y color del texto
           },
@@ -114,7 +114,7 @@ export default function Root() {
       {
         to: "/index/moneymanager/cotizacion",
         label: "Estudio de Mercado",
-        icon: <DotChartOutlined className="text-purple-600" />,
+        icon: <DotChartOutlined />,
         color: "text-purple-600",
         hoverClass: "hover:bg-purple-600 hover:text-white", // Clase de hover para el fondo y color del texto
       },
@@ -124,7 +124,7 @@ export default function Root() {
 
       (userRole === "admin" || userRole === "superadmin") && {
         label: "Contabilidad",
-        icon: <DollarCircleOutlined className="text-green-400" />,
+        icon: <DollarCircleOutlined />,
         color: "text-green-400",
         hoverClass: "hover:text-green-400 hover:text-white",
         hasSubmenu: true,
@@ -155,7 +155,7 @@ export default function Root() {
 
       {
         label: "Gestión de Red",
-        icon: <IdcardOutlined className="text-green-400" />,
+        icon: <IdcardOutlined />,
         hasSubmenu: true,
         color: "text-green-400",
         hoverClass: "hover:text-green-400 hover:text-white",
@@ -180,12 +180,12 @@ export default function Root() {
         ],
       },
       {
-        to: "/index/inventario", label: "Inventario", icon: <ContainerOutlined className="text-green-400" />, color: "text-green-400",
+        to: "/index/inventario", label: "Inventario", icon: <ContainerOutlined />, color: "text-green-400",
         hoverClass: "hover:text-green-400 hover:text-white",
       },
       {
         label: "Terceros",
-        icon: <IdcardOutlined className="text-green-400" />,
+        icon: <IdcardOutlined />,
         color: "text-green-400",
         hoverClass: "hover:text-green-400 hover:text-white",
         hasSubmenu: true,
@@ -197,19 +197,19 @@ export default function Root() {
         ],
       },
       {
-        to: "/index/tienda", label: "Reportes", icon: <ShoppingCartOutlined className="text-green-400" />, color: "text-green-400",
+        to: "/index/tienda", label: "Reportes", icon: <ShoppingCartOutlined />, color: "text-green-400",
         hoverClass: "hover:text-green-400 hover:text-white",
       },
       {
-        to: "/index/moneymanager/cotizacion", label: "Gestion de compras", icon: <DotChartOutlined className="text-green-400" />, color: "text-green-400",
+        to: "/index/moneymanager/cotizacion", label: "Gestion de compras", icon: <DotChartOutlined />, color: "text-green-400",
         hoverClass: "hover:text-green-400 hover:text-white",
       },
       {
-        to: "/index/moneymanager/calendario", label: "Calendario", icon: <CalendarOutlined className="text-green-400" />, color: "text-green-400",
+        to: "/index/moneymanager/calendario", label: "Calendario", icon: <CalendarOutlined />, color: "text-green-400",
         hoverClass: "hover:text-green-400 hover:text-white",
       },
       {
-        to: "/index/recursoHumanos", label: "Recuersos Humanos", icon: <BankOutlined className="text-green-400" />, color: "text-green-400",
+        to: "/index/recursoHumanos", label: "Recuersos Humanos", icon: <BankOutlined />, color: "text-green-400",
         hoverClass: "hover:text-green-400 hover:text-white",
       },
 
@@ -218,18 +218,18 @@ export default function Root() {
 
       {
         label: "Configuración",
-        icon: <IdcardOutlined className="text-blue-500" />,
+        icon: <IdcardOutlined />,
         color: "text-blue-500",
         hoverClass: "hover:text-blue-500 hover:text-white",
         hasSubmenu: true,
         submenuItems: [
-          { to: "/index/moneymanager/config", label: "Configuración", icon: <SettingOutlined className="text-blue-500" /> },
+          { to: "/index/moneymanager/config", label: "Configuración", icon: <SettingOutlined /> },
 
         ],
       },
       {
         label: "Administración",
-        icon: <IdcardOutlined className="text-blue-500" />,
+        icon: <IdcardOutlined />,
         color: "text-blue-500",
         hoverClass: "hover:text-blue-500 hover:text-white",
         hasSubmenu: true,
@@ -246,19 +246,19 @@ export default function Root() {
       },
 
       {
-        to: "/index/tienda", label: "Tienda", icon: <ShoppingCartOutlined className="text-red-500" />, color: "text-red-500",
+        to: "/index/tienda", label: "Tienda", icon: <ShoppingCartOutlined />, color: "text-red-500",
         hoverClass: "hover:text-red-500 hover:text-white",
       },
       {
-        to: "/index/tareas", label: "Tareas", icon: <AppstoreAddOutlined className="text-red-500" />, color: "text-red-500",
+        to: "/index/tareas", label: "Tareas", icon: <AppstoreAddOutlined />, color: "text-red-500",
         hoverClass: "hover:text-red-500 hover:text-white",
       },
       {
-        to: "/index/cobro-cartera", label: "Cobro de Cartera", icon: <BankOutlined className="text-red-500" />, color: "text-red-500",
+        to: "/index/cobro-cartera", label: "Cobro de Cartera", icon: <BankOutlined />, color: "text-red-500",
         hoverClass: "hover:text-red-500 hover:text-white",
       },
       {
-        to: "/index/tienda", label: "Navegacion de Archivos", icon: <ShoppingCartOutlined className="text-red-500" />, color: "text-red-500",
+        to: "/index/tienda", label: "Navegacion de Archivos", icon: <ShoppingCartOutlined />, color: "text-red-500",
         hoverClass: "hover:text-red-500 hover:text-white",
       },
       { to: "", label: "", isSpace: true },
@@ -313,7 +313,7 @@ export default function Root() {
               isExpanded={isExpanded}
             />
           )} */}
-          <div className="space-y-2 py-4 max-h-screen overflow-y-auto mt-10 my-4 bg-white"
+          <div className="space-y-2 py-4 max-h-screen overflow-y-auto mt-10 my-4 bg-white px-2"
             style={{
               scrollbarWidth: "none",
               msOverflowStyle: "none",
@@ -323,7 +323,8 @@ export default function Root() {
               link.isTitle ? (
                 <div
                   key={link.label}
-                  className={`py-2 text-xs font-bold uppercase ${link.color || "text-gray-500"}`}
+                  className={`py-2 text-xs font-bold uppercase ${link.color || "text-gray-500"} 
+        ${isExpanded ? "text-center" : "hidden"} w-full`} // Título centrado si está expandido
                 >
                   {link.label}
                 </div>
@@ -404,6 +405,7 @@ export default function Root() {
                 </Link>
               )
             )}
+
 
 
           </div>
