@@ -43,38 +43,38 @@ export default function Root() {
       { to: "/index", label: "Dashboard", icon: <HomeOutlined /> },
 
 
-      { label: "CRM", isTitle: true, color: "text-purple-600" },
+      { label: "CRM", isTitle: true, color: "text-[#7d4fff]" },
 
 
       userRole === "superadmin" && {
         to: "/index/clientes",
         label: "Clientes",
         icon: <TeamOutlined />,
-        color: "text-purple-600", // Color de texto
-        hoverClass: "hover:bg-purple-600 hover:text-white", // Clase de hover para el fondo y color del texto
+        color: "text-[#7d4fff]", // Color de texto
+        hoverClass: "hover:bg-[#7d4fff] hover:text-white", // Clase de hover para el fondo y color del texto
       },
 
       {
         to: "/index/Instalaciones",
         label: "Instalaciones",
         icon: <DotChartOutlined />,
-        color: "text-purple-600",
-        hoverClass: "hover:bg-purple-600 hover:text-white", // Clase de hover para el fondo y color del texto
+        color: "text-[#7d4fff]",
+        hoverClass: "hover:bg-[#7d4fff] hover:text-white", // Clase de hover para el fondo y color del texto
       },
 
       {
         label: "Finanzas",
         icon: <IdcardOutlined />,
-        color: "text-purple-600",
-        hoverClass: "hover:bg-purple-600 hover:text-white", // Clase de hover para el fondo y color del texto
+        color: "text-[#7d4fff]",
+        hoverClass: "hover:bg-[#7d4fff] hover:text-white", // Clase de hover para el fondo y color del texto
         hasSubmenu: true,
         submenuItems: [
           {
             to: "/index/administracion/cajeros",
             label: "Facturas",
             icon: <DotIcon />,
-            color: "text-purple-600",
-            hoverClass: "hover:bg-purple-600 hover:text-white", // Clase de hover para el fondo y color del texto
+            color: "text-[#7d4fff]",
+            hoverClass: "hover:bg-[#7d4fff] hover:text-white", // Clase de hover para el fondo y color del texto
           },
         ],
       },
@@ -83,30 +83,30 @@ export default function Root() {
         to: "/index/tickets",
         label: "Tickets",
         icon: <DotChartOutlined />,
-        color: "text-purple-600",
-        hoverClass: "hover:bg-purple-600 hover:text-white", // Clase de hover para el fondo y color del texto
+        color: "text-[#7d4fff]",
+        hoverClass: "hover:bg-[#7d4fff] hover:text-white", // Clase de hover para el fondo y color del texto
       },
 
       {
         label: "Comunicación",
         icon: <MessageOutlined />,
-        color: "text-purple-600",
-        hoverClass: "hover:bg-purple-600 hover:text-white", // Clase de hover para el fondo y color del texto
+        color: "text-[#7d4fff]",
+        hoverClass: "hover:bg-[#7d4fff] hover:text-white", // Clase de hover para el fondo y color del texto
         hasSubmenu: true,
         submenuItems: [
           {
             to: "/index/comunicacion/notificaciones",
             label: "Notificaciones WhatsApp",
             icon: <DotChartOutlined />,
-            color: "text-purple-600",
-            hoverClass: "hover:bg-purple-600 hover:text-white", // Clase de hover para el fondo y color del texto
+            color: "text-[#7d4fff]",
+            hoverClass: "hover:bg-[#7d4fff] hover:text-white", // Clase de hover para el fondo y color del texto
           },
           {
             to: "/index/comunicacion/multichat",
             label: "Multichat",
             icon: <DotChartOutlined />,
-            color: "text-purple-600",
-            hoverClass: "hover:bg-purple-600 hover:text-white", // Clase de hover para el fondo y color del texto
+            color: "text-[#7d4fff]",
+            hoverClass: "hover:bg-[#7d4fff] hover:text-white", // Clase de hover para el fondo y color del texto
           },
         ],
       },
@@ -115,8 +115,8 @@ export default function Root() {
         to: "/index/moneymanager/cotizacion",
         label: "Estudio de Mercado",
         icon: <DotChartOutlined />,
-        color: "text-purple-600",
-        hoverClass: "hover:bg-purple-600 hover:text-white", // Clase de hover para el fondo y color del texto
+        color: "text-[#7d4fff]",
+        hoverClass: "hover:bg-[#7d4fff] hover:text-white", // Clase de hover para el fondo y color del texto
       },
 
 
@@ -246,20 +246,20 @@ export default function Root() {
       },
 
       {
-        to: "/index/tienda", label: "Tienda", icon: <ShoppingCartOutlined />, color: "text-red-500",
-        hoverClass: "hover:text-red-500 hover:text-white",
+        to: "/index/tienda", label: "Tienda", icon: <ShoppingCartOutlined />, color: "text-gray-500",
+        hoverClass: "hover:text-gray-500 hover:text-white",
       },
       {
-        to: "/index/tareas", label: "Tareas", icon: <AppstoreAddOutlined />, color: "text-red-500",
-        hoverClass: "hover:text-red-500 hover:text-white",
+        to: "/index/tareas", label: "Tareas", icon: <AppstoreAddOutlined />, color: "text-gray-500",
+        hoverClass: "hover:text-gray-500 hover:text-white",
       },
       {
-        to: "/index/cobro-cartera", label: "Cobro de Cartera", icon: <BankOutlined />, color: "text-red-500",
-        hoverClass: "hover:text-red-500 hover:text-white",
+        to: "/index/cobro-cartera", label: "Cobro de Cartera", icon: <BankOutlined />, color: "text-gray-500",
+        hoverClass: "hover:text-gray-500 hover:text-white",
       },
       {
-        to: "/index/tienda", label: "Navegacion de Archivos", icon: <ShoppingCartOutlined />, color: "text-red-500",
-        hoverClass: "hover:text-red-500 hover:text-white",
+        to: "/index/tienda", label: "Navegacion de Archivos", icon: <ShoppingCartOutlined />, color: "text-gray-500",
+        hoverClass: "hover:text-gray-500 hover:text-white",
       },
       { to: "", label: "", isSpace: true },
       { to: "", label: "", isSpace: true },
@@ -340,9 +340,9 @@ export default function Root() {
                         ? "hover:bg-green-400"
                         : link.color === "text-blue-500"
                           ? "hover:bg-blue-500"
-                          : link.color === "text-red-500"
-                            ? "hover:bg-red-500"
-                            : "hover:bg-purple-600"} 
+                          : link.color === "text-gray-500"
+                            ? "hover:bg-gray-500"
+                            : "hover:bg-[#7d4fff]"}  // Usando el color #7d4fff para el hover
           ${link.color || "text-black"} text-sm`}
                   >
                     <span className={`mr-3 ${link.color} group-hover:text-white`}>
@@ -366,9 +366,9 @@ export default function Root() {
                               ? "hover:bg-green-400"
                               : subItem.color === "text-blue-500"
                                 ? "hover:bg-blue-500"
-                                : subItem.color === "text-red-500"
-                                  ? "hover:bg-red-500"
-                                  : "hover:bg-purple-600"} 
+                                : subItem.color === "text-gray-500"
+                                  ? "hover:bg-gray-500"
+                                  : "hover:bg-[#7d4fff]"}  // Usando el color #7d4fff para el hover
                 ${subItem.color || "text-black"} group-hover:text-white`}
                         >
                           <span className={`mr-3 ${subItem.color} group-hover:text-white`}>
@@ -391,9 +391,9 @@ export default function Root() {
                       ? "hover:bg-green-400"
                       : link.color === "text-blue-500"
                         ? "hover:bg-blue-500"
-                        : link.color === "text-red-500"
-                          ? "hover:bg-red-500"
-                          : "hover:bg-purple-600"} 
+                        : link.color === "text-gray-500"
+                          ? "hover:bg-gray-500"
+                          : "hover:bg-[#7d4fff]"}  // Usando el color #7d4fff para el hover
         ${link.color || "text-black"} group-hover:text-white text-sm`}
                 >
                   <span className={`mr-3 ${link.color} group-hover:text-white`}>
@@ -405,8 +405,6 @@ export default function Root() {
                 </Link>
               )
             )}
-
-
 
           </div>
           {/* Botón para expandir/contraer el menú */}
