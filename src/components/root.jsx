@@ -28,12 +28,12 @@ import { useAuth } from "../components/Context/AuthProvider";
 import { Modal } from 'antd';
 const { Sider } = Layout;
 export default function Root() {
-  const [isOpen, setIsOpen] = useState(false); // Controla si el menú está abierto o cerrado
-  const [isExpanded, setIsExpanded] = useState(true); // Controla la expansión/colapso del menú
+  const [isOpen, setIsOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   const [unreadEmailsCount, setUnreadEmailsCount] = useState(0);
   const [isUserProfileOpen, setIsUserProfileOpen] = useState(false);
 
-  const [activeSubMenu, setActiveSubMenu] = useState(null); // Controla qué submenú está activo
+  const [activeSubMenu, setActiveSubMenu] = useState(null);
   const { userRole } = useAuth();
   const location = useLocation();
 
@@ -50,8 +50,8 @@ export default function Root() {
         to: "/index/clientes",
         label: "Clientes",
         icon: <TeamOutlined />,
-        color: "text-[#7d4fff]", // Color de texto
-        hoverClass: "hover:bg-[#7d4fff] hover:text-white", // Clase de hover para el fondo y color del texto
+        color: "text-[#7d4fff]",
+        hoverClass: "hover:bg-[#7d4fff] hover:text-white",
       },
 
       {
@@ -59,14 +59,14 @@ export default function Root() {
         label: "Instalaciones",
         icon: <DotChartOutlined />,
         color: "text-[#7d4fff]",
-        hoverClass: "hover:bg-[#7d4fff] hover:text-white", // Clase de hover para el fondo y color del texto
+        hoverClass: "hover:bg-[#7d4fff] hover:text-white",
       },
 
       {
         label: "Finanzas",
         icon: <IdcardOutlined />,
         color: "text-[#7d4fff]",
-        hoverClass: "hover:bg-[#7d4fff] hover:text-white", // Clase de hover para el fondo y color del texto
+        hoverClass: "hover:bg-[#7d4fff] hover:text-white",
         hasSubmenu: true,
         submenuItems: [
           {
@@ -74,7 +74,7 @@ export default function Root() {
             label: "Facturas",
             icon: <DotIcon />,
             color: "text-[#7d4fff]",
-            hoverClass: "hover:bg-[#7d4fff] hover:text-white", // Clase de hover para el fondo y color del texto
+            hoverClass: "hover:bg-[#7d4fff] hover:text-white",
           },
         ],
       },
@@ -84,14 +84,14 @@ export default function Root() {
         label: "Tickets",
         icon: <DotChartOutlined />,
         color: "text-[#7d4fff]",
-        hoverClass: "hover:bg-[#7d4fff] hover:text-white", // Clase de hover para el fondo y color del texto
+        hoverClass: "hover:bg-[#7d4fff] hover:text-white",
       },
 
       {
         label: "Comunicación",
         icon: <MessageOutlined />,
         color: "text-[#7d4fff]",
-        hoverClass: "hover:bg-[#7d4fff] hover:text-white", // Clase de hover para el fondo y color del texto
+        hoverClass: "hover:bg-[#7d4fff] hover:text-white",
         hasSubmenu: true,
         submenuItems: [
           {
@@ -99,14 +99,14 @@ export default function Root() {
             label: "Notificaciones WhatsApp",
             icon: <DotChartOutlined />,
             color: "text-[#7d4fff]",
-            hoverClass: "hover:bg-[#7d4fff] hover:text-white", // Clase de hover para el fondo y color del texto
+            hoverClass: "hover:bg-[#7d4fff] hover:text-white",
           },
           {
             to: "/index/comunicacion/multichat",
             label: "Multichat",
             icon: <DotChartOutlined />,
             color: "text-[#7d4fff]",
-            hoverClass: "hover:bg-[#7d4fff] hover:text-white", // Clase de hover para el fondo y color del texto
+            hoverClass: "hover:bg-[#7d4fff] hover:text-white",
           },
         ],
       },
@@ -116,7 +116,7 @@ export default function Root() {
         label: "Estudio de Mercado",
         icon: <DotChartOutlined />,
         color: "text-[#7d4fff]",
-        hoverClass: "hover:bg-[#7d4fff] hover:text-white", // Clase de hover para el fondo y color del texto
+        hoverClass: "hover:bg-[#7d4fff] hover:text-white",
       },
 
 
@@ -223,7 +223,10 @@ export default function Root() {
         hoverClass: "hover:text-blue-500 hover:text-white",
         hasSubmenu: true,
         submenuItems: [
-          { to: "/index/moneymanager/config", label: "Configuración", icon: <SettingOutlined /> },
+          {
+            to: "/index/moneymanager/config", label: "Configuración", icon: <SettingOutlined />, color: "text-blue-500",
+            hoverClass: "hover:text-blue-500 hover:text-white",
+          },
 
         ],
       },
@@ -263,8 +266,6 @@ export default function Root() {
       },
       { to: "", label: "", isSpace: true },
       { to: "", label: "", isSpace: true },
-
-
     ].filter(Boolean),
     [userRole]
   );
@@ -313,7 +314,7 @@ export default function Root() {
               isExpanded={isExpanded}
             />
           )} */}
-          <div className="space-y-2 py-4 max-h-screen overflow-y-auto mt-10 my-4 bg-white px-2"
+          <div className="space-y-2 py-4 max-h-screen overflow-y-auto mt-10 my-4 bg-white"
             style={{
               scrollbarWidth: "none",
               msOverflowStyle: "none",
@@ -323,8 +324,8 @@ export default function Root() {
               link.isTitle ? (
                 <div
                   key={link.label}
-                  className={`py-2 text-xs font-bold uppercase ${link.color || "text-gray-500"} 
-        ${isExpanded ? "text-center" : "hidden"} w-full`} // Título centrado si está expandido
+                  className={` py-4 text-xs font-bold uppercase ${link.color || "text-gray-500"} 
+        ${isExpanded ? "text-center" : "hidden"} w-full`}
                 >
                   {link.label}
                 </div>
@@ -351,7 +352,7 @@ export default function Root() {
                     <span className={`text-black group-hover:text-white ${link.hoverClass}`}>
                       {isExpanded ? link.label : ""}
                     </span>
-                    <span className="ml-auto">
+                    <span className="ml-auto group-hover:text-white">
                       {activeSubMenu === link.label ? <DownOutlined /> : <UpOutlined />}
                     </span>
                   </button>
@@ -405,7 +406,6 @@ export default function Root() {
                 </Link>
               )
             )}
-
           </div>
           {/* Botón para expandir/contraer el menú */}
           <button
@@ -420,10 +420,7 @@ export default function Root() {
               )}
             </span>
           </button>
-
         </div>
-
-
         {/* Contenido principal */}
         <Layout.Content
           className={`flex-1 overflow-x-hidden overflow-y-auto mt-10 ${isExpanded ? "ml-52" : "ml-16"} h-screen`}
