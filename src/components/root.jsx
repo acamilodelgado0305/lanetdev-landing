@@ -45,28 +45,78 @@ export default function Root() {
 
       { label: "CRM", isTitle: true, color: "text-purple-600" },
 
-      userRole === "superadmin" && { to: "/index/clientes", label: "Clientes", icon: <TeamOutlined className="text-purple-600" /> },
-      { to: "/index/Instalaciones", label: "Instalaciones", icon: <DotChartOutlined className="text-purple-600" /> },
+      userRole === "superadmin" && {
+        to: "/index/clientes",
+        label: "Clientes",
+        icon: <TeamOutlined className="text-purple-600" />,
+        color: "text-purple-600", // Color de texto
+        hoverClass: "hover:bg-purple-600", // Clase de hover
+      },
+
+      {
+        to: "/index/Instalaciones",
+        label: "Instalaciones",
+        icon: <DotChartOutlined className="text-purple-600" />,
+        color: "text-purple-600",
+        hoverClass: "hover:bg-purple-600",
+      },
+
       {
         label: "Finanzas",
         icon: <IdcardOutlined className="text-purple-600" />,
+        color: "text-purple-600",
+        hoverClass: "hover:bg-purple-600", // Clase de hover
         hasSubmenu: true,
         submenuItems: [
-          { to: "/index/administracion/cajeros", label: "Facturas", icon: <DotIcon className="text-purple-600" /> },
-
+          {
+            to: "/index/administracion/cajeros",
+            label: "Facturas",
+            icon: <DotIcon className="text-purple-600" />,
+            color: "text-purple-600",
+            hoverClass: "hover:bg-purple-600",
+          },
         ],
       },
-      { to: "/index/tickets", label: "Tickets", icon: <DotChartOutlined className="text-purple-600" /> },
+
+      {
+        to: "/index/tickets",
+        label: "Tickets",
+        icon: <DotChartOutlined className="text-purple-600" />,
+        color: "text-purple-600",
+        hoverClass: "hover:bg-purple-600", // Clase de hover
+      },
+
       {
         label: "Comunicación",
         icon: <MessageOutlined className="text-purple-600" />,
+        color: "text-purple-600",
+        hoverClass: "hover:bg-purple-600", // Clase de hover
         hasSubmenu: true,
         submenuItems: [
-          { to: "/index/comunicacion/notificaciones", label: "Notificaciones WhatsApp", icon: <DotChartOutlined className="text-purple-600" /> },
-          { to: "/index/comunicacion/multichat", label: "Multichat", icon: <DotChartOutlined className="text-purple-600" /> },
+          {
+            to: "/index/comunicacion/notificaciones",
+            label: "Notificaciones WhatsApp",
+            icon: <DotChartOutlined className="text-purple-600" />,
+            color: "text-purple-600",
+            hoverClass: "hover:bg-purple-600", // Clase de hover
+          },
+          {
+            to: "/index/comunicacion/multichat",
+            label: "Multichat",
+            icon: <DotChartOutlined className="text-purple-600" />,
+            color: "text-purple-600",
+            hoverClass: "hover:bg-purple-600", // Clase de hover
+          },
         ],
       },
-      { to: "/index/moneymanager/cotizacion", label: "Estudio de Mercado", icon: <DotChartOutlined className="text-purple-600" /> },
+
+      {
+        to: "/index/moneymanager/cotizacion",
+        label: "Estudio de Mercado",
+        icon: <DotChartOutlined className="text-purple-600" />,
+        color: "text-purple-600",
+        hoverClass: "hover:bg-purple-600", // Clase de hover
+      },
 
 
       { label: "COMPAÑIA", isTitle: true, color: "text-green-400" },
@@ -201,14 +251,12 @@ export default function Root() {
             }}>
             {/* Menu Links */}
             {mainMenuLinks.map((link) =>
-              link.isSpace ? (
-                <div key="space" className="py-2"></div>
-              ) : link.isTitle ? (
+              link.isTitle ? (
                 <div
                   key={link.label}
-                  className={`${isExpanded ? "px-9" : "px-1"
-                    } py-2 text-xs font-bold uppercase ${link.color || "text-gray-500"}`}
-                >               {link.label}
+                  className={`py-2 text-xs font-bold uppercase ${link.color || "text-gray-500"}`}
+                >
+                  {link.label}
                 </div>
               ) : link.hasSubmenu ? (
                 <div key={link.label}>
@@ -217,7 +265,7 @@ export default function Root() {
                       if (!isExpanded) setIsExpanded(true);
                       toggleSubMenu(link.label);
                     }}
-                    className="flex items-center w-full p-2 text-left hover:bg-gray-700 text-sm"
+                    className={`flex items-center w-full p-2 text-left ${link.color} ${link.hoverClass} text-sm`}
                   >
                     <span className="mr-3">{link.icon}</span>
                     <span>{isExpanded ? link.label : ""}</span>
@@ -231,7 +279,7 @@ export default function Root() {
                         <Link
                           key={subItem.to}
                           to={subItem.to}
-                          className="flex items-center w-full p-1 text-black hover:bg-gray-700 text-sm"
+                          className={`flex items-center w-full p-1 text-left ${subItem.color} ${subItem.hoverClass} text-sm`}
                         >
                           <span className="mr-3">{subItem.icon}</span>
                           <span>{subItem.label}</span>
@@ -244,13 +292,14 @@ export default function Root() {
                 <Link
                   key={link.to}
                   to={link.to}
-                  className="flex items-center w-full p-2 text-left hover:bg-gray-700 text-sm"
+                  className={`flex items-center w-full p-2 text-left ${link.color} ${link.hoverClass} text-sm`}
                 >
                   <span className="mr-3">{link.icon}</span>
                   <span>{isExpanded ? link.label : ""}</span>
                 </Link>
               )
             )}
+
 
 
           </div>
