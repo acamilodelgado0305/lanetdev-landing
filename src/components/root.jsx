@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import {
   HomeOutlined,
@@ -39,6 +39,24 @@ export default function Root() {
   const [activeSubMenu, setActiveSubMenu] = useState(null);
   const { userRole } = useAuth();
   const menuItemRef = useRef(null);
+  const modalRef = useRef(null);
+
+  useEffect(() => {
+    // Función que maneja el clic fuera del modal
+    const handleClickOutside = (event) => {
+      if (modalRef.current && !modalRef.current.contains(event.target)) {
+        setIsModalVisible(false); // Cierra el modal si se hace clic fuera de él
+      }
+    };
+
+    // Agregar el evento de clic al documento
+    document.addEventListener("mousedown", handleClickOutside);
+
+    // Limpiar el evento cuando el componente se desmonte
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Definición de los enlaces principales del menú
   const mainMenuLinks = useMemo(
@@ -446,6 +464,7 @@ export default function Root() {
       {/* Modal flotante para submenú */}
       {isModalVisible && (
         <div
+          ref={modalRef} // Agregar la referencia aquí
           style={{
             position: "absolute",
             top: modalPosition.top,
@@ -469,7 +488,6 @@ export default function Root() {
                 {subItem.label}
               </Link>
             ))}
-
           </div>
         </div>
       )}
