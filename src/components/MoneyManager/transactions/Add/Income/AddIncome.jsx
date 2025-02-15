@@ -14,12 +14,15 @@ import axios from "axios";
 import { useNavigate } from 'react-router-dom'; // Importa useNavigate
 const apiUrl = import.meta.env.VITE_API_FINANZAS;
 import VoucherSection from "../../components/VoucherSection";
+import { useParams } from 'react-router-dom'; //
 
 const { Title, Text } = Typography;
 
 
 const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
-  const navigate = useNavigate(); // Inicializa el hook useNavigaten
+  const { id } = useParams(); // Obtener el ID de la URL
+  const navigate = useNavigate();
+  // Inicializa el hook useNavigaten
   const [transactionType, setTransactionType] = useState("expense");
   const [amount, setAmount] = useState("");
 
@@ -34,13 +37,10 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
   const [cashiers, setCashiers] = useState([]);
 
   const [accounts, setAccounts] = useState([]);
-  const [imageUrl, setImageUrl] = useState("");
-  const [imageUrls, setImageUrls] = useState([]);
-  const [isUploading, setIsUploading] = useState(false);
   const [date, setDate] = useState(dayjs());
-  const [isEditing, setIsEditing] = useState(false);
+
   const [ventaCategoryId, setVentaCategoryId] = useState(null);
-  const [isFevChecked, setIsFevChecked] = useState(false);
+
   const [loading, setLoading] = useState(false);
 
 
@@ -55,6 +55,8 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
   const [otherIncome, setOtherIncome] = useState("");
   const [cashReceived, setCashReceived] = useState("");
   const [cashierCommission, setCashierCommission] = useState("");
+  const [CommissionPorcentaje, setCommissionPorcentaje] = useState("");
+  const [isIncomeSaved, setIsIncomeSaved] = useState(false);
 
   const [stats, setStats] = useState({
     totalCashiers: 0,
@@ -67,6 +69,13 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
     navigate(-1); // Navega hacia atrás en la historia del navegador
   };
 
+
+  useEffect(() => {
+    if (id) {
+      fetchIncomeData();
+      fetchCashiers();
+    }
+  }, [id]);
 
 
   //------------USE EFECTS--------------------------
@@ -142,15 +151,7 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
       setCashiers(mappedCashiers);
 
       // Si necesitas mantener las estadísticas, puedes calcularlas con los datos simplificados
-      if (mappedCashiers.length > 0) {
-        const total = mappedCashiers.length;
-        const avgComm = mappedCashiers.reduce((acc, curr) => acc + parseFloat(curr.comision_porcentaje || 0), 0) / total;
 
-        setStats({
-          totalCashiers: total,
-          avgCommission: avgComm
-        });
-      }
     } catch (error) {
       console.error('Error al obtener los cajeros:', error);
       setCashiers([]);
@@ -161,6 +162,48 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+  const fetchIncomeData = async () => {
+    try {
+      const response = await fetch(`${apiUrl}/incomes/${id}`);
+      if (!response.ok) {
+        throw new Error('No se pudo obtener la información del ingreso');
+      }
+      const data = await response.json();
+
+      // Actualizamos los estados con validación para cada campo
+      setAmount(data.amount?.toString() || "");
+      setCategory(data.category_id?.toString() || "");
+      setAccount(data.account_id?.toString() || "");
+      setDescription(data.description || "");
+      setComentarios(data.comentarios || "");
+      setDate(data.date ? dayjs(data.date) : dayjs());
+
+      // Si es un arqueo, actualizar los campos específicos con validación
+      if (data.type === "arqueo") {
+        setIsArqueoChecked(true);
+        setFevAmount(data.amountfev?.toString() || "");
+        setDiversoAmount(data.amountdiverse?.toString() || "");
+        setCashierName(data.cashier_name || "");
+        setArqueoNumber(data.arqueo_number?.toString() || "");
+        setOtherIncome(data.other_income?.toString() || "");
+        setCashReceived(data.cash_received?.toString() || "");
+        setCashierCommission(data.cashier_commission?.toString() || "");
+        setStartPeriod(data.start_period ? dayjs(data.start_period) : null);
+        setEndPeriod(data.end_period ? dayjs(data.end_period) : null);
+      } else if (data.category_id === ventaCategoryId) {
+        setIsVentaChecked(true);
+      }
+
+
+    } catch (error) {
+      console.error('Error al obtener los datos del ingreso:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudo cargar la información del ingreso. ' + error.message
+      });
     }
   };
 
@@ -196,7 +239,6 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
     }
   };
 
-
   const handleSave = async () => {
     try {
       if (!account) {
@@ -225,13 +267,12 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
         description: description,
         comentarios: comentarios,
         estado: true,
-        amount: totalAmount // Add the total amount here
+        amount: totalAmount
       };
 
       let requestBody;
       if (isArqueoChecked) {
         const commission = totalAmount * 0.02;
-
         requestBody = {
           ...baseRequestBody,
           amountfev: parseFloat(fevAmount) || 0,
@@ -248,8 +289,11 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
         requestBody = baseRequestBody;
       }
 
-      const response = await fetch(`${apiUrl}/incomes`, {
-        method: "POST",
+      const url = id ? `${apiUrl}/incomes/${id}` : `${apiUrl}/incomes`;
+      const method = id ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method: method,
         headers: {
           "Content-Type": "application/json",
         },
@@ -262,29 +306,30 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
 
       await response.json();
 
+      // Actualizar el estado para indicar que el ingreso ha sido guardado
+      setIsIncomeSaved(true);
+
       Swal.fire({
         icon: "success",
-        title: "Ingreso Registrado",
-        text: "El ingreso se ha registrado correctamente",
+        title: id ? "Ingreso Actualizado" : "Ingreso Registrado",
+        text: id ? "El ingreso se ha actualizado correctamente" : "El ingreso se ha registrado correctamente",
         confirmButtonColor: "#3085d6",
       });
 
-      resetForm();
-      fetchAccounts();
-      if (onTransactionAdded) {
-        onTransactionAdded();
-      }
-
+      // ... (código existente)
     } catch (error) {
       console.error("Error al guardar el ingreso:", error);
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "Hubo un error al guardar el ingreso. Por favor, intente de nuevo.",
+        text: "Hubo un error al procesar el ingreso. Por favor, intente de nuevo.",
         confirmButtonColor: "#d33",
       });
     }
   };
+
+
+
 
   const resetForm = () => {
     setAmount("");
@@ -362,7 +407,7 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
                 const selectedCashier = cashiers.find(c => c.nombre === value);
                 if (selectedCashier) {
                   // Guardar el porcentaje de comisión del cajero seleccionado
-                  setCashierCommission(parseFloat(selectedCashier.comision_porcentaje));
+                  setCommissionPorcentaje(parseFloat(selectedCashier.comision_porcentaje));
                 }
               }}
               className="w-64"
@@ -373,7 +418,7 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
                   key={cashier.nombre}
                   value={cashier.nombre}
                 >
-                  {cashier.nombre} 
+                  {cashier.nombre}
                 </Select.Option>
               ))}
             </Select>
@@ -413,7 +458,7 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
       const cashReceivedValue = parseFloat(cashReceived) || 0;
       const isCashMatch = cashReceivedValue === amount;
       // Usar el porcentaje de comisión del cajero seleccionado
-      const commission = amount * (cashierCommission / 100);
+      const commission = amount * (CommissionPorcentaje / 100);
 
       return (
         <div className="p-6 bg-white rounded-lg shadow-lg space-y-8" ref={printRef}>
@@ -439,7 +484,10 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
             </div>
 
             <div className="space-y-4">
-              <Title level={4}>Información de Cuenta</Title>
+              {/* Contenedor flex para alinear el título y el texto en rojo */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Title level={4} style={{ margin: 0 }}>Donde ingresa el dinero*</Title>
+              </div>
               <AccountSelector
                 selectedAccount={account}
                 onAccountSelect={(value) => setAccount(value)}
@@ -498,8 +546,8 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
                     />
                   </div>
                   <div className="flex justify-between">
-                    <span>Comisión ({cashierCommission}%):</span>
-                    <span className="font-bold">{formatCurrency(commission)}</span>
+                    <span>Comisión ({CommissionPorcentaje}%):</span>
+                    <span className="font-bold">{formatCurrency(cashierCommission)}</span>
                   </div>
                 </div>
               </div>
@@ -620,22 +668,21 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
           </div>
           <div className="flex flex-col">
             <span className="text-green-400 text-sm">Ingresos /</span>
-            <Title level={3} >
-              Crear
+            <Title level={3}>
+              {id ? 'Editar' : 'Crear'}
             </Title>
           </div>
         </div>
         <Space>
-          {isArqueoChecked && (
-            <Button
-              onClick={handleDownloadPDF}
-              type="primary"
-              icon={<DownloadOutlined />}
-              className="bg-red-500 text-white rounded"
-            >
-              Descargar PDF
-            </Button>
-          )}
+
+          <Button
+            disabled={!isIncomeSaved}  // Deshabilitar el botón si el ingreso no ha sido guardado
+            onClick={handleDownloadPDF}
+            className="bg-red-500 text-white rounded"
+          >
+            Descargar PDF
+          </Button>
+
           <div className="px-6 py-4 flex justify-end">
             <input
               type="file"
@@ -680,6 +727,7 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
       <VoucherSection
         onVoucherChange={setVoucher}
         initialVouchers={voucher ? JSON.parse(voucher) : []}
+        entryId={id}  // Añadir esta línea
       />
     </div>
   );
