@@ -45,12 +45,13 @@ export default function Root() {
 
       { label: "CRM", isTitle: true, color: "text-purple-600" },
 
+
       userRole === "superadmin" && {
         to: "/index/clientes",
         label: "Clientes",
         icon: <TeamOutlined className="text-purple-600" />,
         color: "text-purple-600", // Color de texto
-        hoverClass: "hover:bg-purple-600", // Clase de hover
+        hoverClass: "hover:bg-purple-600 hover:text-white", // Clase de hover para el fondo y color del texto
       },
 
       {
@@ -58,14 +59,14 @@ export default function Root() {
         label: "Instalaciones",
         icon: <DotChartOutlined className="text-purple-600" />,
         color: "text-purple-600",
-        hoverClass: "hover:bg-purple-600",
+        hoverClass: "hover:bg-purple-600 hover:text-white", // Clase de hover para el fondo y color del texto
       },
 
       {
         label: "Finanzas",
         icon: <IdcardOutlined className="text-purple-600" />,
         color: "text-purple-600",
-        hoverClass: "hover:bg-purple-600", // Clase de hover
+        hoverClass: "hover:bg-purple-600 hover:text-white", // Clase de hover para el fondo y color del texto
         hasSubmenu: true,
         submenuItems: [
           {
@@ -73,7 +74,7 @@ export default function Root() {
             label: "Facturas",
             icon: <DotIcon className="text-purple-600" />,
             color: "text-purple-600",
-            hoverClass: "hover:bg-purple-600",
+            hoverClass: "hover:bg-purple-600 hover:text-white", // Clase de hover para el fondo y color del texto
           },
         ],
       },
@@ -83,14 +84,14 @@ export default function Root() {
         label: "Tickets",
         icon: <DotChartOutlined className="text-purple-600" />,
         color: "text-purple-600",
-        hoverClass: "hover:bg-purple-600", // Clase de hover
+        hoverClass: "hover:bg-purple-600 hover:text-white", // Clase de hover para el fondo y color del texto
       },
 
       {
         label: "Comunicación",
         icon: <MessageOutlined className="text-purple-600" />,
         color: "text-purple-600",
-        hoverClass: "hover:bg-purple-600", // Clase de hover
+        hoverClass: "hover:bg-purple-600 hover:text-white", // Clase de hover para el fondo y color del texto
         hasSubmenu: true,
         submenuItems: [
           {
@@ -98,14 +99,14 @@ export default function Root() {
             label: "Notificaciones WhatsApp",
             icon: <DotChartOutlined className="text-purple-600" />,
             color: "text-purple-600",
-            hoverClass: "hover:bg-purple-600", // Clase de hover
+            hoverClass: "hover:bg-purple-600 hover:text-white", // Clase de hover para el fondo y color del texto
           },
           {
             to: "/index/comunicacion/multichat",
             label: "Multichat",
             icon: <DotChartOutlined className="text-purple-600" />,
             color: "text-purple-600",
-            hoverClass: "hover:bg-purple-600", // Clase de hover
+            hoverClass: "hover:bg-purple-600 hover:text-white", // Clase de hover para el fondo y color del texto
           },
         ],
       },
@@ -115,8 +116,10 @@ export default function Root() {
         label: "Estudio de Mercado",
         icon: <DotChartOutlined className="text-purple-600" />,
         color: "text-purple-600",
-        hoverClass: "hover:bg-purple-600", // Clase de hover
+        hoverClass: "hover:bg-purple-600 hover:text-white", // Clase de hover para el fondo y color del texto
       },
+
+
 
 
       { label: "COMPAÑIA", isTitle: true, color: "text-green-400" },
@@ -265,10 +268,14 @@ export default function Root() {
                       if (!isExpanded) setIsExpanded(true);
                       toggleSubMenu(link.label);
                     }}
-                    className={`flex items-center w-full p-2 text-left ${link.color} ${link.hoverClass} text-sm`}
+                    className={`group flex items-center w-full p-2 text-left ${link.hoverClass} ${link.color || "text-black"} text-sm hover:bg-purple-600`}
                   >
-                    <span className="mr-3">{link.icon}</span>
-                    <span>{isExpanded ? link.label : ""}</span>
+                    <span className={`mr-3 ${link.color} group-hover:text-white`}>
+                      {link.icon}
+                    </span>
+                    <span className={`text-black group-hover:text-white ${link.hoverClass}`}>
+                      {isExpanded ? link.label : ""}
+                    </span>
                     <span className="ml-auto">
                       {activeSubMenu === link.label ? <DownOutlined /> : <UpOutlined />}
                     </span>
@@ -279,10 +286,14 @@ export default function Root() {
                         <Link
                           key={subItem.to}
                           to={subItem.to}
-                          className={`flex items-center w-full p-1 text-left ${subItem.color} ${subItem.hoverClass} text-sm`}
+                          className={`group flex items-center w-full p-1 text-left text-sm ${subItem.hoverClass} ${subItem.color || "text-black"} hover:bg-purple-600 group-hover:text-white`}
                         >
-                          <span className="mr-3">{subItem.icon}</span>
-                          <span>{subItem.label}</span>
+                          <span className={`mr-3 ${subItem.color} group-hover:text-white`}>
+                            {subItem.icon}
+                          </span>
+                          <span className={`text-black group-hover:text-white ${subItem.hoverClass}`}>
+                            {subItem.label}
+                          </span>
                         </Link>
                       ))}
                     </div>
@@ -292,10 +303,14 @@ export default function Root() {
                 <Link
                   key={link.to}
                   to={link.to}
-                  className={`flex items-center w-full p-2 text-left ${link.color} ${link.hoverClass} text-sm`}
+                  className={`group flex items-center w-full p-2 text-left ${link.hoverClass} ${link.color || "text-black"} hover:bg-purple-600 group-hover:text-white text-sm`}
                 >
-                  <span className="mr-3">{link.icon}</span>
-                  <span>{isExpanded ? link.label : ""}</span>
+                  <span className={`mr-3 ${link.color} group-hover:text-white`}>
+                    {link.icon}
+                  </span>
+                  <span className={`text-black group-hover:text-white ${link.hoverClass}`}>
+                    {isExpanded ? link.label : ""}
+                  </span>
                 </Link>
               )
             )}
