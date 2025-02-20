@@ -151,8 +151,9 @@ const NewExpenseTable = ({
           className="w-full"
           onChange={(value) => handleValueChange(record.key, 'type', value)}
         >
-          <Select.Option value="Gasto">Gasto</Select.Option>
-          <Select.Option value="Cuenta">Cuenta</Select.Option>
+          <Select.Option value="Producto">Producto</Select.Option>
+          <Select.Option value="Activo">Activo</Select.Option>
+             <Select.Option value="Gasto">Gasto</Select.Option>
         </Select>
       )
     }
