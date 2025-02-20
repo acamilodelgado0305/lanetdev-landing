@@ -31,6 +31,7 @@ import Network from "./components/Network/Network.jsx";
 import Configuracion from "./components/MoneyManager/configuracion/Configuracion.jsx";
 import Terceros from "./components/MoneyManager/Terceros/Terceros.jsx";
 import AddIncome from "./components/MoneyManager/transactions/Add/Income/AddIncome.jsx";
+import AddExpense from "./components/MoneyManager/transactions/Add/expense/AddExpense.jsx";
 import CashiersPage from "./components/Administracion/Cajeros/Cajeros.jsx";
 import AddCajero from "./components/Administracion/Cajeros/AddCajero.jsx";
 import 'antd/dist/reset.css';
@@ -79,7 +80,7 @@ const router = createBrowserRouter([
             path: "cajeros/nuevo",
             element: <AddCajero />,
           },
-          
+
         ],
       },
       {
@@ -104,6 +105,14 @@ const router = createBrowserRouter([
           },
           {
             path: "ingresos/view/:id",
+            element: <AddIncome />,
+          },
+          {
+            path: "transactions/nuevoegreso",
+            element: <AddExpense />,
+          },
+          {
+            path: "egresos/view/:id",
             element: <AddIncome />,
           },
           {
@@ -162,7 +171,7 @@ const router = createBrowserRouter([
           </PrivateRoute>
         ),
       },
-      
+
       {
         path: "config",
         element: <Indexconfig />,

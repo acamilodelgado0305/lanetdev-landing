@@ -55,7 +55,7 @@ const TransactionsDashboard = () => {
   const [selectedVoucherContent, setSelectedVoucherContent] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isIncomeModalOpen, setIsIncomeModalOpen] = useState(false);
-  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+
   const [isPlusModalOpen, setIsPlusModalOpen] = useState(false);
   const [buttonPosition, setButtonPosition] = useState({ top: 0, left: 0, width: 0 });
   const createButtonRef = useRef(null);
@@ -91,6 +91,10 @@ const TransactionsDashboard = () => {
     navigate('/index/moneymanager/transactions/nuevoingreso'); // Reemplaza '/nueva-ruta' con la ruta deseada
   };
 
+  const handleNavigateExpense = () => {
+    navigate('/index/moneymanager/transactions/nuevoegreso'); // Reemplaza '/nueva-ruta' con la ruta deseada
+  };
+
   const openContentModal = (voucherContent) => {
     setSelectedVoucherContent(voucherContent);
     setIsContentModalOpen(true);
@@ -111,10 +115,7 @@ const TransactionsDashboard = () => {
     setEditTransaction(null);
   };
 
-  const openExpenseModal = () => {
-    setIsExpenseModalOpen(true);
-    setEditTransaction(null);
-  };
+  
   const openPlusModal = () => {
     if (createButtonRef.current) {
       const rect = createButtonRef.current.getBoundingClientRect();
@@ -138,15 +139,8 @@ const TransactionsDashboard = () => {
     setTransactionType(null);
   };
 
-  const closeIncomeModal = () => {
-    setIsIncomeModalOpen(false);
-    setEditTransaction(null);
-  };
-
-  const closeExpenseModal = () => {
-    setIsExpenseModalOpen(false);
-    setEditTransaction(null);
-  };
+  
+  
 
   const closePlusModal = () => {
     setIsPlusModalOpen(false);
@@ -379,7 +373,7 @@ const TransactionsDashboard = () => {
                 Nuevo Ingreso
               </Button>
               <Button
-                onClick={openExpenseModal}
+                onClick={handleNavigateExpense}
                 type="primary"
                 className="bg-red-500 hover:bg-red-600 border-none h-11"
                 icon={<CreditCard className="w-4 h-4 mr-2" />}
@@ -586,12 +580,7 @@ const TransactionsDashboard = () => {
 
 
 
-      <AddExpense
-        isOpen={isExpenseModalOpen}
-        onClose={closeExpenseModal}
-        onTransactionAdded={handleEntryAdded}
-        transactionToEdit={editTransaction}
-      />
+      
 
       <VoucherContentModal
         isOpen={isContentModalOpen}
