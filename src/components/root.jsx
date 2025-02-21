@@ -215,6 +215,10 @@ export default function Root() {
             to: "/index/terceros/cajeros", label: "Cajeros", icon: <DotIcon />, color: "text-green-400",
             hoverClass: "hover:text-green-400 hover:text-white",
           },
+          {
+            to: "/index/moneymanager/terceros", label: "Terceros", icon: <DotIcon />, color: "text-green-400",
+            hoverClass: "hover:text-green-400 hover:text-white",
+          },
         ],
       },
       {
