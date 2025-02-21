@@ -30,7 +30,7 @@ import {
   Menu
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { FileTextOutlined, DollarOutlined, ArrowUpOutlined, ArrowDownOutlined   } from '@ant-design/icons';
+import { FileTextOutlined, DollarOutlined, ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 
@@ -363,35 +363,35 @@ const TransactionsDashboard = () => {
               </div>
             </div>
             <div className="flex gap-3">
-              <button
+              <Button
                 onClick={handleNavigate}
                 type="button"
-                className="flex items-center justify-center gap-2 p-2 bg-transparent border border-[#007072] text-[#007072] hover:bg-[#007072] hover:text-white transition-all duration-200"
+                className="px-4 py-2 bg-green-500 text-white"
                 style={{ borderRadius: 0 }}
               >
                 <TrendingUp className="w-4 h-4" />
                 Nuevo Ingreso
-              </button>
+              </Button>
 
-              <button
+              <Button
                 onClick={handleNavigateExpense}
                 type="button"
-                className="flex items-center justify-center gap-2 p-2 bg-transparent border border-[#007072] text-[#007072] hover:bg-[#007072] hover:text-white transition-all duration-200"
+                className="px-4 py-2 bg-red-500 text-white"
                 style={{ borderRadius: 0 }}
               >
                 <CreditCard className="w-4 h-4" />
                 Nuevo Egreso
-              </button>
+              </Button>
 
-              <button
+              <Button
                 onClick={openTransferModal}
                 type="button"
-                className="flex items-center justify-center gap-2 p-2 bg-transparent border border-[#007072] text-[#007072] hover:bg-[#007072] hover:text-white transition-all duration-200"
+                className="px-4 py-2 bg-blue-500 text-white"
                 style={{ borderRadius: 0 }}
               >
                 <ArrowLeftRight className="w-4 h-4" />
                 Nueva Transferencia
-              </button>
+              </Button>
             </div>
           </div>
 

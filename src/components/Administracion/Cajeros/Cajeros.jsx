@@ -75,7 +75,7 @@ const CashiersPage = () => {
       if (!id_cajero) {
         throw new Error('ID del cajero no proporcionado');
       }
-  
+
       const result = await Swal.fire({
         title: '¿Estás seguro?',
         text: 'Esta acción no se puede deshacer',
@@ -86,7 +86,7 @@ const CashiersPage = () => {
         confirmButtonText: 'Sí, eliminar',
         cancelButtonText: 'Cancelar'
       });
-  
+
       if (result.isConfirmed) {
         const response = await fetch(`${import.meta.env.VITE_API_TERCEROS}/cajeros/${id_cajero}`, {
           method: 'DELETE',
@@ -94,17 +94,17 @@ const CashiersPage = () => {
             'Content-Type': 'application/json'
           }
         });
-  
+
         if (!response.ok) {
           throw new Error(`Error HTTP: ${response.status}`);
         }
-  
+
         await Swal.fire({
           icon: 'success',
           title: 'Eliminado',
           text: 'El cajero ha sido eliminado exitosamente'
         });
-  
+
         // Actualizar la lista de cajeros
         await fetchCashiers();
       }
@@ -123,24 +123,27 @@ const CashiersPage = () => {
       {/* Header Section */}
       <div className="mb-6 flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <div className="bg-green-400 p-2 rounded">
-            <FileTextOutlined  className=" text-white" />
+          <div className="bg-[#007072] p-2 ">
+            <FileTextOutlined className=" text-white" />
           </div>
           <div className="flex flex-col">
-            <span className="text-green-400 text-sm">Cajeros /</span>
+            <span className="text-[#007072] text-sm">Cajeros /</span>
             <Title level={3} className="!m-0 !p-0">
               Dashboard
             </Title>
           </div>
         </div>
-        <Button
-          type="default"
-          icon={<PlusOutlined />}
+
+        <button
           onClick={() => navigate('/index/terceros/cajeros/nuevo')}
-          className="border-blue-500 border text-blue-500 p-2 hover:bg-blue-500 hover:text-white hover:border-blue-500"
+          type="button"
+          className="flex items-center justify-center gap-2 p-2 bg-transparent border border-[#007072] text-[#007072] hover:bg-[#007072] hover:text-white transition-all duration-200"
+          style={{ borderRadius: 0 }}
         >
-          Crer Cajero
-        </Button>
+          
+          Nuevo Cajero
+        </button>
+     
       </div>
 
       {/* Statistics Cards */}
@@ -151,7 +154,7 @@ const CashiersPage = () => {
               title="Total de Cajeros"
               value={stats.totalCashiers}
               prefix={<UserOutlined />}
-              valueStyle={{ color: '#3f8600' }}
+              valueStyle={{ color: '#007072 ' }}
             />
           </Card>
         </Col>
@@ -173,7 +176,7 @@ const CashiersPage = () => {
               title="Cajeros Activos"
               value={stats.activeCashiers}
               prefix={<BankOutlined />}
-              valueStyle={{ color: '#1890ff' }}
+              valueStyle={{ color: '#007072 ' }}
             />
           </Card>
         </Col>
