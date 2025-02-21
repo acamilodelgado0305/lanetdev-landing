@@ -4,7 +4,6 @@ import { Table, Select, Input, Button } from 'antd';
 const NewExpenseTable = ({
   hasPercentageDiscount = false,
   onDataChange, // New prop to communicate changes up
-  initialData
 }) => {
   const [items, setItems] = useState([{
     key: '1',
@@ -59,13 +58,22 @@ const NewExpenseTable = ({
     return itemSubtotal + taxChargeAmount - taxWithholdingAmount;
   };
 
+  // En NewExpenseTable, actualiza el useEffect:
   useEffect(() => {
-    onDataChange?.({
-      items,
-      totals
-    });
-  }, [items, totals]);
+    if (onDataChange) {
+      const validItems = items.filter(item =>
+        item.product !== '' ||
+        item.description !== '' ||
+        item.unitPrice > 0 ||
+        item.quantity > 0
+      );
 
+      onDataChange({
+        items: validItems,
+        totals
+      });
+    }
+  }, [items, totals]);
   useEffect(() => {
     const newTotals = items.reduce((acc, item) => {
       const quantity = parseFloat(item.quantity) || 0;
@@ -343,9 +351,10 @@ const NewExpenseTable = ({
                 style={{ width: '80px' }}
                 onChange={(value) => handleRetentionChange('reteIVA', value)}
               >
-                <Select.Option value="0">0%</Select.Option>
+              
                 <Select.Option value="15">15%</Select.Option>
-                <Select.Option value="19">19%</Select.Option>
+                <Select.Option value="0">0%</Select.Option>
+                
               </Select>
             </div>
             <div style={{ textAlign: 'right', color: '#ff4d4f' }}>-{formatCurrency(totals.reteIVA)}</div>
@@ -357,9 +366,14 @@ const NewExpenseTable = ({
                 style={{ width: '80px' }}
                 onChange={(value) => handleRetentionChange('reteICA', value)}
               >
+                <Select.Option value="13.8">13.8%</Select.Option>
+                <Select.Option value="11.04">11.04%</Select.Option>
+                <Select.Option value="9.66">9.66%</Select.Option>|
+                <Select.Option value="8">8%</Select.Option>
+                <Select.Option value="7">7%</Select.Option>
+                <Select.Option value="6.9">6.9%</Select.Option>
+                <Select.Option value="4.14">4.14%</Select.Option>
                 <Select.Option value="0">0%</Select.Option>
-                <Select.Option value="4">4%</Select.Option>
-                <Select.Option value="11">11%</Select.Option>
               </Select>
             </div>
             <div style={{ textAlign: 'right', color: '#ff4d4f' }}>-{formatCurrency(totals.reteICA)}</div>

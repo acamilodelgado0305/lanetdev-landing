@@ -10,7 +10,7 @@ import { UploadOutlined, DownloadOutlined, FileTextOutlined } from "@ant-design/
 import axios from "axios";
 import { useNavigate } from 'react-router-dom'; // Importa useNavigate
 const apiUrl = import.meta.env.VITE_API_FINANZAS;
-import VoucherSection from "../../components/VoucherSection";
+import ExpenseVoucherSection from "./ExpenseVoucherSection";
 import { useParams } from 'react-router-dom'; //
 import NewExpenseTable from "./ExpenseTable";
 
@@ -28,23 +28,20 @@ const AddExpense = () => {
   const [description, setDescription] = useState("");
   const [comentarios, setComentarios] = useState("");
   const [categories, setCategories] = useState([]);
-  const [cashiers, setCashiers] = useState([]);
-
+  const [tipo, setTipo] = useState("");
   const [accounts, setAccounts] = useState([]);
   const [date, setDate] = useState(dayjs());
 
 
 
   const [loading, setLoading] = useState(false);
-  const [isCompraCheckend, setisCompraCheckend] = useState(false);
-  const [isVentaChecked, setIsVentaChecked] = useState(false);
 
 
   const [proveedor, setproveedor] = useState("");
   const [facturaNumber, setFacturaNumber] = useState("");
   const [facturaProvNumber, setFacturaProvNumber] = useState("");
 
- 
+
 
   const [isExpenseSaved, setIsExpenseSaved] = useState(false);
   const [hasPercentageDiscount, setHasPercentageDiscount] = useState(false);
@@ -63,8 +60,20 @@ const AddExpense = () => {
     }
   });
 
+  // En AddExpense, actualiza o añade esta función:
   const handleExpenseTableDataChange = (data) => {
-    setExpenseTableData(data);
+    // Solo actualiza el estado si hay items válidos (con datos)
+    const validItems = data.items.filter(item =>
+      item.product !== '' ||
+      item.description !== '' ||
+      item.unitPrice > 0 ||
+      item.quantity > 0
+    );
+
+    setExpenseTableData({
+      items: validItems,
+      totals: data.totals
+    });
   };
 
 
@@ -126,57 +135,28 @@ const AddExpense = () => {
   };
 
   const renderCompraInputs = () => {
-    if (isCompraCheckend) {
-      return (
-        <div className="p-4   " ref={printRef}>
-          {renderInvoiceHeader()}
-          <Divider />
-          <NewExpenseTable
 
-            hasPercentageDiscount={hasPercentageDiscount}
-          />
-        </div>
-      );
-    }
+    return (
+      <div className="p-4" ref={printRef}>
+        {renderInvoiceHeader()}
+        <Divider />
+        // En AddExpense, donde renderizas NewExpenseTable:
+        <NewExpenseTable
+          hasPercentageDiscount={hasPercentageDiscount}
+          onDataChange={handleExpenseTableDataChange} // Añade esta línea
+        />
+      </div>
+    );
+
     return null;
   };
 
 
 
-  const renderVentaInputs = () => {
-    if (isVentaChecked) {
-      return (
-        <div>
-          {/* Campos específicos de Venta */}
-          <div>Importe*</div>
-          <Input
-            onChange={(e) => handleAmountChange(e, 'venta')}
-            prefix="$"
-            size="large"
-            className="text-lg"
-            placeholder="Ingrese el importe de la venta"
-          />
-
-          <CategorySelector
-            selectedCategory={category}  // Cambiar 'value' por 'selectedCategory'
-            onCategorySelect={(value) => setCategory(value)}  // Cambiar 'onChange' por 'onCategorySelect'
-            categories={categories}
-          />
-        </div>
-
-
-      );
-    }
-    return null;
-  };
 
 
   //--------------------------FUNCIONES
 
-  const handleAmountChange = (e, field) => {
-    const rawValue = e.target.value.replace(/\D/g, ''); // Eliminar caracteres no numéricos
-    const numericValue = rawValue ? parseInt(rawValue, 10) : 0; // Convertir a número
-  };
 
   const handleSave = async () => {
     try {
@@ -189,31 +169,34 @@ const AddExpense = () => {
         });
         return;
       }
-
-      // Calculate total amount including expense table data
-      const totalAmount = isCompraCheckend
-        ? expenseTableData.totals.totalNeto // Use the total from expense table for purchases
-        : parseFloat(amount);
-
       const baseRequestBody = {
         user_id: parseInt(sessionStorage.getItem('userId')),
-        account_id: parseInt(account),
-        category_id: parseInt(category),
-        type: isCompraCheckend ? "compra" : "income",
+        tipo: tipo,
         date: date.format("YYYY-MM-DD[T]HH:mm:ss[Z]"),
+        proveedor: "bb85592f-4342-4e0a-947f-1aea52fb2e73",
+        facturaNumber: facturaNumber,
+        facturaProvNumber: facturaProvNumber,
+        account_id: parseInt(account),
+
         voucher: voucher,
         description: description,
         comentarios: comentarios,
         estado: true,
-        amount: totalAmount
       };
 
       let requestBody;
-      if (isCompraCheckend) {
-        requestBody = {
-          ...baseRequestBody,
-          // Include expense table data
-          expense_items: expenseTableData.items.map(item => ({
+
+      requestBody = {
+        ...baseRequestBody,
+        // Solo incluye items que tengan datos
+        expense_items: expenseTableData.items
+          .filter(item =>
+            item.product !== '' ||
+            item.description !== '' ||
+            item.unitPrice > 0 ||
+            item.quantity > 0
+          )
+          .map(item => ({
             type: item.type,
             product: item.product,
             description: item.description,
@@ -224,26 +207,20 @@ const AddExpense = () => {
             tax_withholding: parseFloat(item.taxWithholding),
             total: parseFloat(item.total)
           })),
-          expense_totals: {
-            total_bruto: expenseTableData.totals.totalBruto,
-            descuentos: expenseTableData.totals.descuentos,
-            subtotal: expenseTableData.totals.subtotal,
-            rete_iva: expenseTableData.totals.reteIVA,
-            rete_ica: expenseTableData.totals.reteICA,
-            total_neto: expenseTableData.totals.totalNeto,
-            rete_iva_percentage: expenseTableData.totals.reteIVAPercentage,
-            rete_ica_percentage: expenseTableData.totals.reteICAPercentage
-          },
-         
-          facturaNumber: parseInt(facturaNumber),
-          facturaProvNumber: parseInt(facturaProvNumber),
-          
-        };
-      } else {
-        requestBody = baseRequestBody;
-      }
+        expense_totals: {
+          total_bruto: expenseTableData.totals.totalBruto,
+          descuentos: expenseTableData.totals.descuentos,
+          subtotal: expenseTableData.totals.subtotal,
+          rete_iva: expenseTableData.totals.reteIVA,
+          rete_ica: expenseTableData.totals.reteICA,
+          total_neto: expenseTableData.totals.totalNeto,
+          rete_iva_percentage: expenseTableData.totals.reteIVAPercentage,
+          rete_ica_percentage: expenseTableData.totals.reteICAPercentage
+        }
+      };
 
-      const url = id ? `${apiUrl}/expenses/${id}` : `${apiUrl}/expenses`;	
+
+      const url = id ? `${apiUrl}/expenses/${id}` : `${apiUrl}/expenses`;
       const method = id ? "PUT" : "POST";
 
       const response = await fetch(url, {
@@ -263,17 +240,17 @@ const AddExpense = () => {
 
       Swal.fire({
         icon: "success",
-        title: id ? "Ingreso Actualizado" : "Ingreso Registrado",
-        text: id ? "El ingreso se ha actualizado correctamente" : "El ingreso se ha registrado correctamente",
+        title: id ? "Egreso Actualizado" : "Egreso Registrado",
+        text: id ? "El Egreso se ha actualizado correctamente" : "El Egreso se ha registrado correctamente",
         confirmButtonColor: "#3085d6",
       });
 
     } catch (error) {
-      console.error("Error al guardar el ingreso:", error);
+      console.error("Error al guardar el Egreso:", error);
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "Hubo un error al procesar el ingreso. Por favor, intente de nuevo.",
+        text: "Hubo un error al procesar el Egreso. Por favor, intente de nuevo.",
         confirmButtonColor: "#d33",
       });
     }
@@ -296,7 +273,7 @@ const AddExpense = () => {
       });
 
       message.success("Carga masiva completada exitosamente!");
-      if (onTransactionAdded) onTransactionAdded(); // Recargar la lista de ingresos
+      if (onTransactionAdded) onTransactionAdded(); // Recargar la lista de Egresos
     } catch (error) {
       message.error("Error al procesar la carga masiva.");
       console.error("Error en la carga masiva:", error);
@@ -310,20 +287,25 @@ const AddExpense = () => {
     <div className="border-b-2 border-gray-200 pb-4 mb-6 space-y-3">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-semibold text-[#007072] mb-4">Nueva Factura de Egreso</h1>
+          <h1 className="text-3xl font-semibold text-[#007072] mb-4">Nuevo comprobante de Egreso</h1>
+
+          <div className="flex items-center space-x-4">
+            <span className="text-gray-600">Titulo.</span>
+            <Input
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Añade un título descriptivo"
+              rows={1}
+              className="w-[50em] border  p-1"
+            />
+          </div>
 
           <div className="flex items-center justify-end space-x-4">
             <span className="text-gray-600">Tipo:</span>
             <Select
-              value={proveedor}
+              value={tipo}
               onChange={(value, option) => {
-                setproveedor(value);
-                // Actualizar la comisión basada en el cajero seleccionado
-                const selectedCashier = cashiers.find(c => c.nombre === value);
-                if (selectedCashier) {
-                  // Guardar el porcentaje de comisión del cajero seleccionado
-                  setCommissionPorcentaje(parseFloat(selectedCashier.comision_porcentaje));
-                }
+                setTipo(value);
               }}
               className="w-64"
               placeholder="Selecciona un Tipó"
@@ -352,12 +334,6 @@ const AddExpense = () => {
                 value={proveedor}
                 onChange={(value, option) => {
                   setproveedor(value);
-                  // Actualizar la comisión basada en el cajero seleccionado
-                  const selectedCashier = cashiers.find(c => c.nombre === value);
-                  if (selectedCashier) {
-                    
-                    setCommissionPorcentaje(parseFloat(selectedCashier.comision_porcentaje));
-                  }
                 }}
                 className="w-64"
                 placeholder="Selecciona un cajero"
@@ -368,41 +344,13 @@ const AddExpense = () => {
 
               </Select>
             </div>
-
-
-            <div className="flex items-center justify-end space-x-4">
-              <span className="text-gray-600">Contacto:</span>
-              <Select
-                value={proveedor}
-                onChange={(value, option) => {
-                  setproveedor(value);
-                  // Actualizar la comisión basada en el cajero seleccionado
-                  const selectedCashier = cashiers.find(c => c.nombre === value);
-                  if (selectedCashier) {
-                    // Guardar el porcentaje de comisión del cajero seleccionado
-                    setCommissionPorcentaje(parseFloat(selectedCashier.comision_porcentaje));
-                  }
-                }}
-                className="w-64"
-                placeholder="Selecciona un cajero"
-              >
-                <option value="Proveedor 1">Proveedor 1</option>
-                <option value="Proveedor 2">Proveedor 2</option>
-                <option value="Proveedor 3">Proveedor 3</option>
-
-              </Select>
-            </div>
-
-
-
-
           </div>
         </div>
         <div className="text-right space-y-4">
           {/* Campo para el número de factura */}
           <div className="flex items-center justify-end space-x-4">
             <span className="text-gray-600 whitespace-nowrap">No.</span>
-            <input
+            <Input
               value={facturaNumber}
               onChange={(e) => setFacturaNumber(e.target.value)}
               placeholder="No. de Factura"
@@ -414,7 +362,7 @@ const AddExpense = () => {
           {/* Campo para el número de factura del proveedor */}
           <div className="flex items-center justify-end space-x-4">
             <span className="text-gray-600 whitespace-nowrap">No. Factura Proveedor</span>
-            <input
+            <Input
               value={facturaProvNumber}
               onChange={(e) => setFacturaProvNumber(e.target.value)}
               placeholder="No. Proveedor"
@@ -481,22 +429,6 @@ const AddExpense = () => {
     }
   };
 
-
-
-
-  const handleCheckboxChange = (checkedValues) => {
-    const isCompraSelected = checkedValues.includes('compra');
-    const isVentaSelected = checkedValues.includes('venta');
-
-
-    setisCompraCheckend(isCompraSelected);
-    setIsVentaChecked(isVentaSelected && !isCompraSelected);
-
-    // Resetear la categoría cuando cambia el tipo de ingreso
-    setCategory('');
-  };
-
-
   return (
     <div className="p-6 max-w-[1200px] mx-auto bg-white shadow">
       <div className="sticky top-0 z-10 bg-white p-4 shadow-md flex justify-between items-center">
@@ -514,7 +446,7 @@ const AddExpense = () => {
         <Space>
 
           <Button
-            disabled={!isExpenseSaved} // Deshabilitar el botón si el ingreso no ha sido guardado
+            disabled={!isExpenseSaved} // Deshabilitar el botón si el Egreso no ha sido guardado
             onClick={handleDownloadPDF}
             className="bg-transparent border border-[#007072] text-[#007072] hover:bg-[#007072] hover:text-white"
             style={{ borderRadius: 0 }} // Eliminar redondez de los bordes
@@ -538,7 +470,7 @@ const AddExpense = () => {
               className="bg-transparent border border-[#007072] text-[#007072] hover:bg-[#007072] hover:text-white"
               style={{ borderRadius: 0 }} // Eliminar redondez de los bordes
             >
-              Cargar Ingresos Masivos
+              Cargar Egresos Masivos
             </Button>
           </div>
           <Button
@@ -555,29 +487,30 @@ const AddExpense = () => {
         </Space>
       </div>
 
-      <div bordered={false} className="mt-6">
-        <Radio.Group
-          value={isCompraCheckend ? 'compra' : isVentaChecked ? 'venta' : null}
-          onChange={(e) => handleCheckboxChange([e.target.value])}
-          className="mb-6"
-        >
-          <Radio value="compra">Compra</Radio>
-          <Radio value="venta">Venta</Radio>
-        </Radio.Group>
+      {renderCompraInputs()}
 
-
-        {renderCompraInputs()}
-        {renderVentaInputs()}
-
-
+      <div className="space-y-4 mb-8">
         <AccountSelector
           selectedAccount={account}
           onAccountSelect={(value) => setAccount(value)}
           accounts={accounts}
         />
+
       </div>
 
-      <VoucherSection
+
+
+      <div className="space-y-4">
+        <Title level={4}>Observaciones</Title>
+        <textarea
+          value={comentarios}
+          onChange={(e) => setComentarios(e.target.value)}
+          placeholder="Añade comentarios adicionales"
+          rows={3}
+          className="w-full border p-2 "
+        />
+      </div>
+      <ExpenseVoucherSection
         onVoucherChange={setVoucher}
         initialVouchers={voucher ? JSON.parse(voucher) : []}
         entryId={id}  // Añadir esta línea
