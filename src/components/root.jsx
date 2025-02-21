@@ -354,7 +354,7 @@ export default function Root() {
               isExpanded={isExpanded}
             />
           )} */}
-          <div className="space-y-2 py-4 max-h-screen overflow-y-auto mt-10 my-4 bg-white"
+          <div className="space-y-2 py-2 max-h-screen overflow-y-auto mt-10 my-4 bg-white"
             style={{
               scrollbarWidth: "none",
               msOverflowStyle: "none",
@@ -362,11 +362,11 @@ export default function Root() {
             {/* Menu Links */}
             {mainMenuLinks.map((link, index) =>
               link.isSpace ? (
-                <div key={`space-${index}`} className="py-2"></div> // Solo renderiza un espacio vacío
+                <div key={`space-${index}`} className="py-1"></div> // Reducir el espacio vacío
               ) : link.isTitle ? (
                 <div
                   key={`title-${index}`} // Asegura una clave única para los títulos
-                  className={`py-4 text-xs font-bold uppercase ${link.color || "text-gray-500"} 
+                  className={`py-2 text-xs font-bold uppercase ${link.color || "text-gray-500"} 
         ${isExpanded ? "text-center" : "hidden"} w-full`}
                 >
                   {link.label}
@@ -392,7 +392,7 @@ export default function Root() {
                             : "hover:bg-[#7d4fff]"}  
                             ${link.color || "text-black"} text-sm ${link.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
-                    <span className={`mr-3 ${link.color} group-hover:text-white`}>
+                    <span className={`mr-2 ${link.color} group-hover:text-white`}> {/* Reducir margen a la derecha */}
                       {link.icon}
                     </span>
                     <span className={`text-black group-hover:text-white ${link.hoverClass}`}>
@@ -405,7 +405,7 @@ export default function Root() {
 
                   {/* Mostrar submenú si está expandido */}
                   {activeSubMenu === link.label && isExpanded && (
-                    <div className="ml-6 space-y-1">
+                    <div className="ml-4 space-y-1"> {/* Reducir margen a la izquierda */}
                       {link.submenuItems.map((subItem, subIndex) => (
                         <Link
                           key={`${subItem.to}-${subIndex}`} // Clave única combinando `to` y `subIndex`
@@ -420,7 +420,7 @@ export default function Root() {
                                   : "hover:bg-[#7d4fff]"}  
                                   ${subItem.color || "text-black"} text-sm ${subItem.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
-                          <span className={`mr-3 ${subItem.color} group-hover:text-white`}>
+                          <span className={`mr-2 ${subItem.color} group-hover:text-white`}> {/* Reducir margen a la derecha */}
                             {subItem.icon}
                           </span>
                           <span className={`text-black group-hover:text-white ${subItem.hoverClass}`}>
@@ -445,7 +445,7 @@ export default function Root() {
                           : "hover:bg-[#7d4fff]"}  
                           ${link.color || "text-black"} text-sm ${link.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
-                  <span className={`mr-3 ${link.color} group-hover:text-white`}>
+                  <span className={`mr-2 ${link.color} group-hover:text-white`}> {/* Reducir margen a la derecha */}
                     {link.icon}
                   </span>
                   <span className={`text-black group-hover:text-white ${link.hoverClass}`}>
