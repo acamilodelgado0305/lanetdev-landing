@@ -78,9 +78,10 @@ export default function Root() {
       {
         to: "/index/Instalaciones",
         label: "Instalaciones",
-        icon: <DotChartOutlined />,
+        icon: <HomeOutlined />,
         color: "text-[#7d4fff]",
         hoverClass: "hover:bg-[#7d4fff] hover:text-white",
+        disabled: true, // Agrega esta propiedad
       },
 
       {
@@ -89,6 +90,7 @@ export default function Root() {
         color: "text-[#7d4fff]",
         hoverClass: "hover:bg-[#7d4fff] hover:text-white",
         hasSubmenu: true,
+        disabled: true,
         submenuItems: [
           {
             to: "/index/administracion/cajeros",
@@ -106,6 +108,7 @@ export default function Root() {
         icon: <DotChartOutlined />,
         color: "text-[#7d4fff]",
         hoverClass: "hover:bg-[#7d4fff] hover:text-white",
+        disabled: true
       },
 
       {
@@ -130,6 +133,7 @@ export default function Root() {
             hoverClass: "hover:bg-[#7d4fff] hover:text-white",
           },
         ],
+        disabled: true,
       },
 
       {
@@ -138,37 +142,41 @@ export default function Root() {
         icon: <DotChartOutlined />,
         color: "text-[#7d4fff]",
         hoverClass: "hover:bg-[#7d4fff] hover:text-white",
+        disabled: true,
       },
 
 
-      { label: "COMPAÑIA", isTitle: true, color: "text-green-400" },
+      { label: "COMPAÑIA", isTitle: true, color: "text-[#007072]" },
 
       (userRole === "admin" || userRole === "superadmin") && {
         label: "Contabilidad",
         icon: <DollarCircleOutlined />,
-        color: "text-green-400",
+        color: "text-[#007072]",
         hoverClass: "hover:text-green-400 hover:text-white",
         hasSubmenu: true,
         submenuItems: [
           {
-            to: "/index/moneymanager/estadisticas", label: "Resumen", icon: <DotIcon />, color: "text-green-400",
-            hoverClass: "hover:text-green-400 hover:text-white",
+            to: "/index/moneymanager/estadisticas", label: "Resumen", icon: <DotIcon />, color: "text-[#007072]",
+            hoverClass: "hover:text-[#007072] hover:text-white",
+            disabled: true,
           },
           {
-            to: "/index/moneymanager/transactions", label: "Transacciones", icon: <DotIcon />, color: "text-green-400",
-            hoverClass: "hover:text-green-400 hover:text-white",
+            to: "/index/moneymanager/transactions", label: "Transacciones", icon: <DotIcon />, color: "text-[#007072]",
+            hoverClass: "hover:text-[#007072] hover:text-white",
           },
           {
-            to: "/index/moneymanager/pagos-pendientes", label: "Pagos Recurrentes", icon: <DotIcon />, color: "text-green-400",
-            hoverClass: "hover:text-green-400 hover:text-white",
+            to: "/index/moneymanager/pagos-pendientes", label: "Pagos Recurrentes", icon: <DotIcon />, color: "text-[#007072]",
+            hoverClass: "hover:text-[#007072] hover:text-white",
           },
           {
-            to: "/index/moneymanager/informes", label: "Informes", icon: <DotChartOutlined />, color: "text-green-400",
-            hoverClass: "hover:text-green-400 hover:text-white",
+            to: "/index/moneymanager/informes", label: "Informes", icon: <DotIcon />, color: "text-[#007072]",
+            hoverClass: "hover:text-[#007072] hover:text-white",
+            disabled: true,
           },
           {
-            to: "/index/moneymanager/cotizacion", label: "Estudio de mercadeo", icon: <DotChartOutlined />, color: "text-green-400",
-            hoverClass: "hover:text-green-400 hover:text-white",
+            to: "/index/moneymanager/cotizacion", label: "Estudio de mercadeo", icon: <DotIcon />, color: "text-[#007072]",
+            hoverClass: "hover:text-[#007072] hover:text-white",
+            disabled: true,
           },
 
         ],
@@ -178,78 +186,79 @@ export default function Root() {
         label: "Gestión de Red",
         icon: <IdcardOutlined />,
         hasSubmenu: true,
-        color: "text-green-400",
-        hoverClass: "hover:text-green-400 hover:text-white",
+        color: "text-[#007072]",
+        hoverClass: "hover:text-[#007072] hover:text-white",
+        disabled: true,
         submenuItems: [
           {
-            to: "/index/administracion/cajeros", label: "Direccionamiento Ip", icon: <DotIcon />, color: "text-green-400",
-            hoverClass: "hover:text-green-400 hover:text-white",
+            to: "/index/administracion/cajeros", label: "Direccionamiento Ip", icon: <DotIcon />, color: "text-[#007072]",
+            hoverClass: "hover:text-[#007072] hover:text-white",
           },
           {
-            to: "/index/administracion/cajeros", label: "Monitoreo", icon: <DotIcon />, color: "text-green-400",
-            hoverClass: "hover:text-green-400 hover:text-white",
+            to: "/index/administracion/cajeros", label: "Monitoreo", icon: <DotIcon />, color: "text-[#007072]",
+            hoverClass: "hover:text-[#007072] hover:text-white",
           },
           {
-            to: "/index/administracion/cajeros", label: "Aprovisinamiento de Red", icon: <DotIcon />, color: "text-green-400",
-            hoverClass: "hover:text-green-400 hover:text-white",
+            to: "/index/administracion/cajeros", label: "Aprovisinamiento de Red", icon: <DotIcon />, color: "text-[#007072]",
+            hoverClass: "hover:text-g[#007072] hover:text-white",
           },
           {
-            to: "/index/administracion/cajeros", label: "Conexion de routers", icon: <DotIcon />, color: "text-green-400",
-            hoverClass: "hover:text-green-400 hover:text-white",
+            to: "/index/administracion/cajeros", label: "Conexion de routers", icon: <DotIcon />, color: "text-[#007072]",
+            hoverClass: "hover:text-[#007072] hover:text-white",
           },
 
         ],
       },
       {
-        to: "/index/inventario", label: "Inventario", icon: <ContainerOutlined />, color: "text-green-400",
-        hoverClass: "hover:text-green-400 hover:text-white",
+        to: "/index/inventario", label: "Inventario", icon: <ContainerOutlined />, color: "text-[#007072]",
+        hoverClass: "hover:text-[#007072] hover:text-white",
+        disabled: true,
       },
       {
         label: "Terceros",
         icon: <IdcardOutlined />,
-        color: "text-green-400",
-        hoverClass: "hover:text-green-400 hover:text-white",
+        color: "text-[#007072]",
+        hoverClass: "hover:text-[#007072] hover:text-white",
         hasSubmenu: true,
         submenuItems: [
           {
-            to: "/index/terceros/cajeros", label: "Cajeros", icon: <DotIcon />, color: "text-green-400",
-            hoverClass: "hover:text-green-400 hover:text-white",
+            to: "/index/terceros/cajeros", label: "Cajeros", icon: <DotIcon />, color: "text-[#007072]",
+            hoverClass: "hover:text-[#007072] hover:text-white",
           },
         ],
       },
       {
-        to: "/index/tienda", label: "Reportes", icon: <ShoppingCartOutlined />, color: "text-green-400",
-        hoverClass: "hover:text-green-400 hover:text-white",
+        to: "/index/tienda", label: "Reportes", icon: <ShoppingCartOutlined />, color: "text-[#007072]",
+        hoverClass: "hover:text-[#007072] hover:text-white",
+        disabled: true,
       },
       {
-        to: "/index/moneymanager/cotizacion", label: "Gestion de compras", icon: <DotChartOutlined />, color: "text-green-400",
-        hoverClass: "hover:text-green-400 hover:text-white",
+        to: "/index/moneymanager/cotizacion", label: "Gestion de compras", icon: <DotChartOutlined />, color: "text-[#007072]",
+        hoverClass: "hover:text-[#007072] hover:text-white",
+        disabled: true,
       },
       {
-        to: "/index/moneymanager/calendario", label: "Calendario", icon: <CalendarOutlined />, color: "text-green-400",
-        hoverClass: "hover:text-green-400 hover:text-white",
+        to: "/index/moneymanager/calendario", label: "Calendario", icon: <CalendarOutlined />, color: "text-[#007072]",
+        hoverClass: "hover:text-[#007072] hover:text-white",
+        disabled: true,
       },
       {
-        to: "/index/recursoHumanos", label: "Recuersos Humanos", icon: <BankOutlined />, color: "text-green-400",
-        hoverClass: "hover:text-green-400 hover:text-white",
+        to: "/index/recursoHumanos", label: "Recuersos Humanos", icon: <BankOutlined />, color: "text-[#007072]",
+        hoverClass: "hover:text-[#007072] hover:text-white",
+        disabled: true,
       },
 
 
       { label: "SISTEMA", isTitle: true, color: "text-blue-500" },
 
       {
+        to: "/index/config",
         label: "Configuración",
-        icon: <IdcardOutlined />,
+        icon: <SettingOutlined />,
         color: "text-blue-500",
         hoverClass: "hover:text-blue-500 hover:text-white",
-        hasSubmenu: true,
-        submenuItems: [
-          {
-            to: "/index/moneymanager/config", label: "Configuración", icon: <SettingOutlined />, color: "text-blue-500",
-            hoverClass: "hover:text-blue-500 hover:text-white",
-          },
-
-        ],
+     
+       
       },
       {
         label: "Administración",
@@ -257,6 +266,7 @@ export default function Root() {
         color: "text-blue-500",
         hoverClass: "hover:text-blue-500 hover:text-white",
         hasSubmenu: true,
+        disabled: true,
         submenuItems: [
           {
             to: "/index/administracion/cajeros", label: "Portal Tecnicos", icon: <DotIcon />, color: "text-blue-500",
@@ -273,18 +283,22 @@ export default function Root() {
       {
         to: "/index/tienda", label: "Tienda", icon: <ShoppingCartOutlined />, color: "text-gray-500",
         hoverClass: "hover:text-gray-500 hover:text-white",
+        disabled: true,
       },
       {
         to: "/index/tareas", label: "Tareas", icon: <AppstoreAddOutlined />, color: "text-gray-500",
         hoverClass: "hover:text-gray-500 hover:text-white",
+        disabled: true,
       },
       {
         to: "/index/cobro-cartera", label: "Cobro de Cartera", icon: <BankOutlined />, color: "text-gray-500",
         hoverClass: "hover:text-gray-500 hover:text-white",
+        disabled: true,
       },
       {
         to: "/index/tienda", label: "Navegacion de Archivos", icon: <ShoppingCartOutlined />, color: "text-gray-500",
         hoverClass: "hover:text-gray-500 hover:text-white",
+        disabled: true,
       },
       { to: "", label: "", isSpace: true },
       { to: "", label: "", isSpace: true },
@@ -320,7 +334,7 @@ export default function Root() {
         {/* Botón de menú móvil */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="lg:hidden fixed top-4 left-4 bg-primary rounded-xl shadow-lg backdrop-blur-sm bg-opacity-90 text-white hover:bg-opacity-100 transition-all duration-300"
+          className="lg:hidden fixed top-4 left-4 bg-primary shadow-lg backdrop-blur-sm bg-opacity-90 text-white hover:bg-opacity-100 transition-all duration-300"
         >
           <MenuOutlined />
         </button>
@@ -369,14 +383,14 @@ export default function Root() {
                       }
                     }}
                     className={`group flex items-center w-full p-2 text-left 
-          ${link.color === "text-green-400"
-                        ? "hover:bg-green-400"
+          ${link.color === "text-[#007072]"
+                        ? "hover:bg-[#007072]"
                         : link.color === "text-blue-500"
                           ? "hover:bg-blue-500"
                           : link.color === "text-gray-500"
                             ? "hover:bg-gray-500"
                             : "hover:bg-[#7d4fff]"}  
-          ${link.color || "text-black"} text-sm`}
+                            ${link.color || "text-black"} text-sm ${link.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
                     <span className={`mr-3 ${link.color} group-hover:text-white`}>
                       {link.icon}
@@ -397,14 +411,14 @@ export default function Root() {
                           key={`${subItem.to}-${subIndex}`} // Clave única combinando `to` y `subIndex`
                           to={subItem.to}
                           className={`group flex items-center w-full p-1 text-left text-sm 
-                ${subItem.color === "text-green-400"
-                              ? "hover:bg-green-400"
+                ${subItem.color === "text-[#007072]"
+                              ? "hover:bg-[#007072]"
                               : subItem.color === "text-blue-500"
                                 ? "hover:bg-blue-500"
                                 : subItem.color === "text-gray-500"
                                   ? "hover:bg-gray-500"
                                   : "hover:bg-[#7d4fff]"}  
-                ${subItem.color || "text-black"} group-hover:text-white`}
+                                  ${subItem.color || "text-black"} text-sm ${subItem.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
                           <span className={`mr-3 ${subItem.color} group-hover:text-white`}>
                             {subItem.icon}
@@ -422,14 +436,14 @@ export default function Root() {
                   key={`${link.to}-${index}`} // Clave única combinando `to` y `index`
                   to={link.to}
                   className={`group flex items-center w-full p-2 text-left 
-        ${link.color === "text-green-400"
-                      ? "hover:bg-green-400"
+        ${link.color === "text-[#007072]"
+                      ? "hover:bg-[#007072]"
                       : link.color === "text-blue-500"
                         ? "hover:bg-blue-500"
                         : link.color === "text-gray-500"
                           ? "hover:bg-gray-500"
                           : "hover:bg-[#7d4fff]"}  
-        ${link.color || "text-black"} group-hover:text-white text-sm`}
+                          ${link.color || "text-black"} text-sm ${link.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   <span className={`mr-3 ${link.color} group-hover:text-white`}>
                     {link.icon}

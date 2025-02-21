@@ -3,10 +3,6 @@ import { IoClose } from "react-icons/io5";
 import AccountSelector from "../AccountSelector ";
 import CategorySelector from '../CategorySelector';
 import { DatePicker, Input, Button, Row, Col, Tabs, Card, Radio, Typography, Space, Checkbox, Divider, Select, Tooltip } from "antd";
-import {
-  InfoCircleOutlined,
-  DollarCircleOutlined, CloseOutlined
-} from '@ant-design/icons';
 import Swal from "sweetalert2";
 import { uploadImage } from "../../../../../services/apiService";
 import dayjs from "dayjs";
@@ -21,15 +17,11 @@ import NewExpenseTable from "./ExpenseTable";
 const { Title, Text } = Typography;
 
 
-const AddExpense = ({ onTransactionAdded, transactionToEdit }) => {
+const AddExpense = () => {
   const { id } = useParams(); // Obtener el ID de la URL
   const navigate = useNavigate();
   // Inicializa el hook useNavigaten
-  const [transactionType, setTransactionType] = useState("expense");
   const [amount, setAmount] = useState("");
-
-  const [fevAmount, setFevAmount] = useState("");
-  const [diversoAmount, setDiversoAmount] = useState("");
   const [category, setCategory] = useState("");
   const [account, setAccount] = useState("");
   const [voucher, setVoucher] = useState("");
@@ -41,31 +33,40 @@ const AddExpense = ({ onTransactionAdded, transactionToEdit }) => {
   const [accounts, setAccounts] = useState([]);
   const [date, setDate] = useState(dayjs());
 
-  const [ventaCategoryId, setVentaCategoryId] = useState(null);
+
 
   const [loading, setLoading] = useState(false);
   const [isCompraCheckend, setisCompraCheckend] = useState(false);
   const [isVentaChecked, setIsVentaChecked] = useState(false);
 
-  const [startPeriod, setStartPeriod] = useState(null);
-  const [endPeriod, setEndPeriod] = useState(null);
-  const [cashierName, setCashierName] = useState("");
-  const [arqueoNumber, setArqueoNumber] = useState("");
-  const [otherIncome, setOtherIncome] = useState("");
-  const [cashReceived, setCashReceived] = useState("");
-  const [cashierCommission, setCashierCommission] = useState("");
-  const [CommissionPorcentaje, setCommissionPorcentaje] = useState("");
-  const [isIncomeSaved, setIsIncomeSaved] = useState(false);
 
+  const [proveedor, setproveedor] = useState("");
+  const [facturaNumber, setFacturaNumber] = useState("");
+  const [facturaProvNumber, setFacturaProvNumber] = useState("");
 
-  const [hasProviderPerItem, setHasProviderPerItem] = useState(false);
-  const [hasIncludedTax, setHasIncludedTax] = useState(false);
+ 
+
+  const [isExpenseSaved, setIsExpenseSaved] = useState(false);
   const [hasPercentageDiscount, setHasPercentageDiscount] = useState(false);
 
-  const [stats, setStats] = useState({
-    totalCashiers: 0,
-    avgCommission: 0
+  const [expenseTableData, setExpenseTableData] = useState({
+    items: [],
+    totals: {
+      totalBruto: 0,
+      descuentos: 0,
+      subtotal: 0,
+      reteIVA: 0,
+      reteICA: 0,
+      totalNeto: 0,
+      reteIVAPercentage: "0",
+      reteICAPercentage: "0"
+    }
   });
+
+  const handleExpenseTableDataChange = (data) => {
+    setExpenseTableData(data);
+  };
+
 
   const printRef = useRef();
 
@@ -76,8 +77,7 @@ const AddExpense = ({ onTransactionAdded, transactionToEdit }) => {
 
   useEffect(() => {
     if (id) {
-      fetchIncomeData();
-      fetchCashiers();
+      fetchExpenseData();
     }
   }, [id]);
 
@@ -128,12 +128,11 @@ const AddExpense = ({ onTransactionAdded, transactionToEdit }) => {
   const renderCompraInputs = () => {
     if (isCompraCheckend) {
       return (
-        <div className="p-6 bg-white rounded-lg shadow-lg space-y-8" ref={printRef}>
+        <div className="p-4   " ref={printRef}>
           {renderInvoiceHeader()}
           <Divider />
           <NewExpenseTable
-            hasProviderPerItem={hasProviderPerItem}
-            hasIncludedTax={hasIncludedTax}
+
             hasPercentageDiscount={hasPercentageDiscount}
           />
         </div>
@@ -177,18 +176,6 @@ const AddExpense = ({ onTransactionAdded, transactionToEdit }) => {
   const handleAmountChange = (e, field) => {
     const rawValue = e.target.value.replace(/\D/g, ''); // Eliminar caracteres no numéricos
     const numericValue = rawValue ? parseInt(rawValue, 10) : 0; // Convertir a número
-
-    if (field === 'fev') {
-      setFevAmount(numericValue); // Actualizar el estado con el valor numérico
-    } else if (field === 'diverso') {
-      setDiversoAmount(numericValue); // Actualizar el estado con el valor numérico
-    }
-    else if (field === 'other_incomes') {
-      setOtherIncome(numericValue); // Actualizar el estado con el valor numérico
-    }
-    else if (field === 'cashReceived') {
-      setCashReceived(numericValue); // Actualizar el estado con el valor numérico
-    }
   };
 
   const handleSave = async () => {
@@ -203,17 +190,16 @@ const AddExpense = ({ onTransactionAdded, transactionToEdit }) => {
         return;
       }
 
-      const totalAmount = isCompraCheckend ?
-        (parseFloat(fevAmount) || 0) +
-        (parseFloat(diversoAmount) || 0) +
-        (parseFloat(otherIncome) || 0) :
-        parseFloat(amount);
+      // Calculate total amount including expense table data
+      const totalAmount = isCompraCheckend
+        ? expenseTableData.totals.totalNeto // Use the total from expense table for purchases
+        : parseFloat(amount);
 
       const baseRequestBody = {
         user_id: parseInt(sessionStorage.getItem('userId')),
         account_id: parseInt(account),
         category_id: parseInt(category),
-        type: isCompraCheckend ? "arqueo" : "income",
+        type: isCompraCheckend ? "compra" : "income",
         date: date.format("YYYY-MM-DD[T]HH:mm:ss[Z]"),
         voucher: voucher,
         description: description,
@@ -224,24 +210,40 @@ const AddExpense = ({ onTransactionAdded, transactionToEdit }) => {
 
       let requestBody;
       if (isCompraCheckend) {
-        const commission = totalAmount * 0.02;
         requestBody = {
           ...baseRequestBody,
-          amountfev: parseFloat(fevAmount) || 0,
-          amountdiverse: parseFloat(diversoAmount) || 0,
-          cashier_name: cashierName,
-          arqueo_number: parseInt(arqueoNumber),
-          other_income: parseFloat(otherIncome) || 0,
-          cash_received: parseFloat(cashReceived) || 0,
-          cashier_commission: commission,
-          start_period: startPeriod?.format("YYYY-MM-DD"),
-          end_period: endPeriod?.format("YYYY-MM-DD")
+          // Include expense table data
+          expense_items: expenseTableData.items.map(item => ({
+            type: item.type,
+            product: item.product,
+            description: item.description,
+            quantity: parseFloat(item.quantity),
+            unit_price: parseFloat(item.unitPrice),
+            discount: parseFloat(item.discount),
+            tax_charge: parseFloat(item.taxCharge),
+            tax_withholding: parseFloat(item.taxWithholding),
+            total: parseFloat(item.total)
+          })),
+          expense_totals: {
+            total_bruto: expenseTableData.totals.totalBruto,
+            descuentos: expenseTableData.totals.descuentos,
+            subtotal: expenseTableData.totals.subtotal,
+            rete_iva: expenseTableData.totals.reteIVA,
+            rete_ica: expenseTableData.totals.reteICA,
+            total_neto: expenseTableData.totals.totalNeto,
+            rete_iva_percentage: expenseTableData.totals.reteIVAPercentage,
+            rete_ica_percentage: expenseTableData.totals.reteICAPercentage
+          },
+         
+          facturaNumber: parseInt(facturaNumber),
+          facturaProvNumber: parseInt(facturaProvNumber),
+          
         };
       } else {
         requestBody = baseRequestBody;
       }
 
-      const url = id ? `${apiUrl}/incomes/${id}` : `${apiUrl}/incomes`;
+      const url = id ? `${apiUrl}/expenses/${id}` : `${apiUrl}/expenses`;	
       const method = id ? "PUT" : "POST";
 
       const response = await fetch(url, {
@@ -257,9 +259,7 @@ const AddExpense = ({ onTransactionAdded, transactionToEdit }) => {
       }
 
       await response.json();
-
-      // Actualizar el estado para indicar que el ingreso ha sido guardado
-      setIsIncomeSaved(true);
+      setIsExpenseSaved(true);
 
       Swal.fire({
         icon: "success",
@@ -268,7 +268,6 @@ const AddExpense = ({ onTransactionAdded, transactionToEdit }) => {
         confirmButtonColor: "#3085d6",
       });
 
-      // ... (código existente)
     } catch (error) {
       console.error("Error al guardar el ingreso:", error);
       Swal.fire({
@@ -282,9 +281,6 @@ const AddExpense = ({ onTransactionAdded, transactionToEdit }) => {
 
 
 
-
-
-
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -295,7 +291,7 @@ const AddExpense = ({ onTransactionAdded, transactionToEdit }) => {
     formData.append("file", file);
 
     try {
-      const response = await axios.post(`${apiUrl}/incomes/bulk-upload`, formData, {
+      const response = await axios.post(`${apiUrl}/expenses/bulk-upload`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
@@ -314,14 +310,14 @@ const AddExpense = ({ onTransactionAdded, transactionToEdit }) => {
     <div className="border-b-2 border-gray-200 pb-4 mb-6 space-y-3">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-semibold text-red-600 mb-4">Nueva Factura de Compra</h1>
+          <h1 className="text-3xl font-semibold text-[#007072] mb-4">Nueva Factura de Egreso</h1>
 
           <div className="flex items-center justify-end space-x-4">
             <span className="text-gray-600">Tipo:</span>
             <Select
-              value={cashierName}
+              value={proveedor}
               onChange={(value, option) => {
-                setCashierName(value);
+                setproveedor(value);
                 // Actualizar la comisión basada en el cajero seleccionado
                 const selectedCashier = cashiers.find(c => c.nombre === value);
                 if (selectedCashier) {
@@ -330,10 +326,10 @@ const AddExpense = ({ onTransactionAdded, transactionToEdit }) => {
                 }
               }}
               className="w-64"
-              placeholder="Selecciona un cajero"
+              placeholder="Selecciona un Tipó"
             >
-              <option value="Proveedor 1">Legal</option>
-              <option value="Proveedor 2">Diverso</option>
+              <option value="Legal">Legal</option>
+              <option value="Diverso">Diverso</option>
 
 
             </Select>
@@ -353,13 +349,13 @@ const AddExpense = ({ onTransactionAdded, transactionToEdit }) => {
             <div className="flex items-center justify-end space-x-4">
               <span className="text-gray-600">Proveedor:</span>
               <Select
-                value={cashierName}
+                value={proveedor}
                 onChange={(value, option) => {
-                  setCashierName(value);
+                  setproveedor(value);
                   // Actualizar la comisión basada en el cajero seleccionado
                   const selectedCashier = cashiers.find(c => c.nombre === value);
                   if (selectedCashier) {
-                    // Guardar el porcentaje de comisión del cajero seleccionado
+                    
                     setCommissionPorcentaje(parseFloat(selectedCashier.comision_porcentaje));
                   }
                 }}
@@ -377,9 +373,9 @@ const AddExpense = ({ onTransactionAdded, transactionToEdit }) => {
             <div className="flex items-center justify-end space-x-4">
               <span className="text-gray-600">Contacto:</span>
               <Select
-                value={cashierName}
+                value={proveedor}
                 onChange={(value, option) => {
-                  setCashierName(value);
+                  setproveedor(value);
                   // Actualizar la comisión basada en el cajero seleccionado
                   const selectedCashier = cashiers.find(c => c.nombre === value);
                   if (selectedCashier) {
@@ -402,62 +398,35 @@ const AddExpense = ({ onTransactionAdded, transactionToEdit }) => {
 
           </div>
         </div>
-        <div className="text-right space-y-2 space-x-5">
-          <div className="flex items-center space-x-4">
-            <span className="text-gray-600">No.</span>
-            <Input
-              value={arqueoNumber}
-              onChange={(e) => setArqueoNumber(e.target.value)}
-              placeholder="Número de Arqueo"
-              className="w-40"
+        <div className="text-right space-y-4">
+          {/* Campo para el número de factura */}
+          <div className="flex items-center justify-end space-x-4">
+            <span className="text-gray-600 whitespace-nowrap">No.</span>
+            <input
+              value={facturaNumber}
+              onChange={(e) => setFacturaNumber(e.target.value)}
+              placeholder="No. de Factura"
+              className="w-32" // Ajusta el ancho del campo
+              style={{ maxWidth: '120px' }} // Opcional: limita el ancho máximo
             />
           </div>
 
-
-          <div className="flex items-center space-x-4">
-            <span className="text-gray-600">No. Factura Proveedor</span>
-            <Input
-              value={arqueoNumber}
-              onChange={(e) => setArqueoNumber(e.target.value)}
-              placeholder="Número de Arqueo"
-              className="w-30"
-            />
-            <Input
-              value={arqueoNumber}
-              onChange={(e) => setArqueoNumber(e.target.value)}
-              placeholder="Número de Arqueo"
-              className="w-40"
+          {/* Campo para el número de factura del proveedor */}
+          <div className="flex items-center justify-end space-x-4">
+            <span className="text-gray-600 whitespace-nowrap">No. Factura Proveedor</span>
+            <input
+              value={facturaProvNumber}
+              onChange={(e) => setFacturaProvNumber(e.target.value)}
+              placeholder="No. Proveedor"
+              className="w-28" // Ajusta el ancho del campo
+              style={{ maxWidth: '100px' }} // Opcional: limita el ancho máximo
             />
           </div>
-
-
-
-
-
         </div>
 
       </div>
 
       <Row gutter={16} align="large">
-        <Col>
-          <Checkbox
-            checked={hasProviderPerItem}
-            onChange={(e) => setHasProviderPerItem(e.target.checked)}
-          >
-            Proveedor por ítem
-          </Checkbox>
-        </Col>
-        <Col>
-          <Checkbox
-            checked={hasIncludedTax}
-            onChange={(e) => setHasIncludedTax(e.target.checked)}
-          >
-            IVA / Impoconsumo incluido{" "}
-            <Tooltip title="Incluye el IVA en el cálculo">
-              <InfoCircleOutlined style={{ marginLeft: 4 }} />
-            </Tooltip>
-          </Checkbox>
-        </Col>
         <Col>
           <Checkbox
             checked={hasPercentageDiscount}
@@ -495,7 +464,7 @@ const AddExpense = ({ onTransactionAdded, transactionToEdit }) => {
       const pdfHeight = (imgProperties.height * pdfWidth) / imgProperties.width;
 
       pdf.addImage(data, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`arqueo_${arqueoNumber || 'sin_numero'}.pdf`);
+      pdf.save(`egreso_${egresoNumber || 'sin_numero'}.pdf`);
 
       Swal.fire({
         icon: 'success',
@@ -516,12 +485,12 @@ const AddExpense = ({ onTransactionAdded, transactionToEdit }) => {
 
 
   const handleCheckboxChange = (checkedValues) => {
-    const isArqueoSelected = checkedValues.includes('arqueo');
+    const isCompraSelected = checkedValues.includes('compra');
     const isVentaSelected = checkedValues.includes('venta');
 
-    // Si se selecciona Arqueo, desactivar Venta y viceversa
-    setisCompraCheckend(isArqueoSelected);
-    setIsVentaChecked(isVentaSelected && !isArqueoSelected);
+
+    setisCompraCheckend(isCompraSelected);
+    setIsVentaChecked(isVentaSelected && !isCompraSelected);
 
     // Resetear la categoría cuando cambia el tipo de ingreso
     setCategory('');
@@ -532,11 +501,11 @@ const AddExpense = ({ onTransactionAdded, transactionToEdit }) => {
     <div className="p-6 max-w-[1200px] mx-auto bg-white shadow">
       <div className="sticky top-0 z-10 bg-white p-4 shadow-md flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <div className="bg-red-400 p-2 rounded">
+          <div className="bg-[#007072] p-2 ">
             <FileTextOutlined className=" text-white" />
           </div>
           <div className="flex flex-col">
-            <span className="text-red-400 text-sm">Egresos /</span>
+            <span className="text-[#007072] text-sm">Egresos /</span>
             <Title level={3}>
               {id ? 'Editar' : 'Nuevo'}
             </Title>
@@ -545,9 +514,10 @@ const AddExpense = ({ onTransactionAdded, transactionToEdit }) => {
         <Space>
 
           <Button
-            disabled={!isIncomeSaved}  // Deshabilitar el botón si el ingreso no ha sido guardado
+            disabled={!isExpenseSaved} // Deshabilitar el botón si el ingreso no ha sido guardado
             onClick={handleDownloadPDF}
-            className="bg-red-500 text-white rounded"
+            className="bg-transparent border border-[#007072] text-[#007072] hover:bg-[#007072] hover:text-white"
+            style={{ borderRadius: 0 }} // Eliminar redondez de los bordes
           >
             Descargar PDF
           </Button>
@@ -561,31 +531,37 @@ const AddExpense = ({ onTransactionAdded, transactionToEdit }) => {
               id="bulkUploadInput"
             />
             <Button
-              type="primary"
+              type="default" // Cambia a "default" para evitar estilos predeterminados de Ant Design
               icon={<UploadOutlined />}
               loading={loading}
               onClick={() => document.getElementById("bulkUploadInput").click()}
-              className="bg-blue-500 hover:bg-green-800 border-none text-white"
+              className="bg-transparent border border-[#007072] text-[#007072] hover:bg-[#007072] hover:text-white"
+              style={{ borderRadius: 0 }} // Eliminar redondez de los bordes
             >
               Cargar Ingresos Masivos
             </Button>
           </div>
-          <Button onClick={handleCancel} type="default">
+          <Button
+            onClick={handleCancel}
+
+            className="bg-transparent border border-gray-500 text-gray-500 hover:bg-gray-500 hover:text-white"
+            style={{ borderRadius: 0 }} // Eliminar redondez de los bordes
+          >
             Cancelar
           </Button>
-          <Button onClick={handleSave} type="primary" className="bg-red-500">
-            Guardar
+          <Button onClick={handleSave} type="primary" className="bg-[#007072]" style={{ borderRadius: 0 }}>
+            Aceptar
           </Button>
         </Space>
       </div>
 
       <div bordered={false} className="mt-6">
         <Radio.Group
-          value={isCompraCheckend ? 'arqueo' : isVentaChecked ? 'venta' : null}
+          value={isCompraCheckend ? 'compra' : isVentaChecked ? 'venta' : null}
           onChange={(e) => handleCheckboxChange([e.target.value])}
           className="mb-6"
         >
-          <Radio value="arqueo">Compra</Radio>
+          <Radio value="compra">Compra</Radio>
           <Radio value="venta">Venta</Radio>
         </Radio.Group>
 

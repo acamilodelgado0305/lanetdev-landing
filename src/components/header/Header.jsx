@@ -14,7 +14,8 @@ import {
   Badge,
   Tooltip,
   Dropdown,
-  Menu
+  Menu,
+  Button
 } from 'antd';
 import { useNavigate, Link } from 'react-router-dom';
 import { useSocket } from '../Context/SocketContext';
@@ -83,7 +84,7 @@ const Header = ({ unreadEmailsCount }) => {
           <img
             src="https://res.cloudinary.com/djbe9agfz/image/upload/v1726013391/LOGO_i1vjvs.png"
             alt="Logo Lanet"
-            className="h-6 rounded-full"
+            className="h-6 "
           />
         </Link>
         <div className="flex items-center space-x-3">
@@ -93,6 +94,17 @@ const Header = ({ unreadEmailsCount }) => {
             onClose={closePlusModal}
             buttonPosition={buttonPosition}
           />
+
+          <Button
+            ref={createButtonRef}
+            onClick={openPlusModal}
+            className="px-4 py-1 bg-green-500 text-white"
+            style={{ borderRadius: 0 }}
+          >
+            Crear
+            <Plus className="w-5 h-5" />
+
+          </Button>
           <Input.Search
             placeholder="Search..."
             allowClear
@@ -104,14 +116,7 @@ const Header = ({ unreadEmailsCount }) => {
             className="hidden md:block"
           />
 
-          <button
-            ref={createButtonRef}
-            onClick={openPlusModal}
-            className="px-4 py-1 bg-green-500 text-white rounded hover:bg-green-600 flex items-center space-x-2"
-          >
-            <Plus className="w-5 h-5" />
-          
-          </button>
+
           <Tooltip title="Notifications">
             <Badge count={notifications.length} size="small">
               <BellOutlined

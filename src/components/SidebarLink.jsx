@@ -18,7 +18,7 @@ const SidebarLink = ({
       <Link
         to={to || '#'}
         className={`
-          flex items-center p-2 rounded-lg 
+          flex items-center p-2 
           transition-colors duration-200
           ${isActive ? 'bg-white/10 text-white' : 'hover:bg-white/5'}
           ${isExpanded ? 'justify-start' : 'justify-center'}
