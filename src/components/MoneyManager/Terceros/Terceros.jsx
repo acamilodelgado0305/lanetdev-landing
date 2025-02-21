@@ -1,34 +1,116 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Info, Plus, X } from 'lucide-react';
-import { Card, Form, Input, Select, Radio, Checkbox, Button, Space, Divider, Typography, Row, Col } from 'antd';
-import { PlusOutlined, InfoCircleOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Button, message, Card, Input, Select, Radio, Space, Row, Col, Typography } from 'antd';
+import { RedoOutlined, SaveOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 
 const Terceros = () => {
-  const [tipoTercero, setTipoTercero] = useState(null); // Estado para el tipo de tercero seleccionado
+  const [tipoTercero, setTipoTercero] = useState('clientes'); // Estado para el tipo de tercero seleccionado
+  const [formData, setFormData] = useState({
+    tipoTercero: 'clientes', // Por defecto 'clientes'
+    tipoPersona: 'natural', // Por defecto 'natural' (Persona)
+    tipoIdentificacion: 'cc', // Por defecto 'Cédula de ciudadanía'
+    identificacion: '',
+    nombreComercial: '',
+    correoElectronico: '',
+    codigoSucursal: '',
+    // Añadir más campos según los datos del formulario
+  });
+
+  useEffect(() => {
+    // Cuando tipoTercero cambia, actualizamos el valor de tipoPersona y tipoIdentificacion
+    if (formData.tipoPersona === 'juridica') {
+      setFormData((prevState) => ({
+        ...prevState,
+        tipoIdentificacion: 'nit', // Si es empresa, por defecto 'NIT'
+      }));
+    } else {
+      setFormData((prevState) => ({
+        ...prevState,
+        tipoIdentificacion: 'cc', // Si es persona, por defecto 'Cédula de ciudadanía'
+      }));
+    }
+  }, [formData.tipoPersona]);
+
+  // Función para manejar cambios en los campos del formulario
+  const handleInputChange = (field, value) => {
+    setFormData((prevState) => ({
+      ...prevState,
+      [field]: value,
+    }));
+  };
 
   // Función para manejar la selección del tipo de tercero
   const handleTipoTerceroChange = (value) => {
     setTipoTercero(value);
+    setFormData((prevState) => ({
+      ...prevState,
+      tipoTercero: value,
+    }));
+  };
+
+  // Función para manejar el cambio de tipo de persona
+  const handleTipoPersonaChange = (value) => {
+    setFormData((prevState) => ({
+      ...prevState,
+      tipoPersona: value,
+    }));
+  };
+
+  // Función para guardar los datos
+  const handleSave = () => {
+    // Aquí se muestra en la consola para verificar que los datos estén listos para enviarse
+    console.log('Datos enviados:', formData);
+    message.success('Los datos han sido guardados correctamente.');
+  };
+
+  // Función para cancelar y limpiar los datos
+  const handleCancel = () => {
+    setFormData({});
+    message.info('La acción ha sido cancelada.');
   };
 
   return (
     <div className="p-6 max-w-[1200px] mx-auto bg-white shadow">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-6 mr-10">
         <Title level={3} className="mb-0">
           Crear un tercero
         </Title>
+        {/* Botones */}
         <Space>
-          <Button type="default" className="border-gray-300 text-gray-600">
+          <Button
+            type="default"
+            icon={<RedoOutlined />}
+            onClick={handleCancel}
+            style={{
+              borderColor: 'red',
+              color: 'red',
+              borderRadius: '30px',
+              padding: '20px 30px',
+              fontSize: '16px'
+            }}
+          >
             Cancelar
           </Button>
-          <Button type="primary" className="bg-green-500 text-white">
+          <Button
+            type="primary"
+            icon={<SaveOutlined />}
+            onClick={handleSave}
+            style={{
+              backgroundColor: '#4CAF50',
+              borderColor: '#4CAF50',
+              borderRadius: '30px',
+              padding: '20px 30px',
+              fontSize: '16px'
+            }}
+          >
             Guardar
           </Button>
         </Space>
+
       </div>
 
       {/* Tipo de tercero */}
@@ -83,13 +165,22 @@ const Terceros = () => {
               <Text strong className="block mb-1">
                 Nombre comercial
               </Text>
-              <Input placeholder="Nombre comercial" />
+              <Input
+                placeholder="Nombre comercial"
+                value={formData.nombreComercial}
+                onChange={(e) => handleInputChange('nombreComercial', e.target.value)}
+              />
             </div>
             <div>
               <Text strong className="block mb-1">
                 Correo electrónico
               </Text>
-              <Input placeholder="Correo electrónico" type="email" />
+              <Input
+                placeholder="Correo electrónico"
+                value={formData.correoElectronico}
+                onChange={(e) => handleInputChange('correoElectronico', e.target.value)}
+                type="email"
+              />
             </div>
           </Space>
         </Card>
@@ -97,23 +188,187 @@ const Terceros = () => {
 
       {tipoTercero === 'proveedores' && (
         <Card>
-          <Title level={4}>Información para Proveedores</Title>
+          <Title level={4}>Datos básicos</Title>
           <Space direction="vertical" size="middle" className="w-full">
-            <div>
-              <Text strong className="block mb-1">
-                RUT del proveedor
-              </Text>
-              <Input placeholder="RUT" />
-            </div>
-            <div>
-              <Text strong className="block mb-1">
-                Producto o servicio ofrecido
-              </Text>
-              <Input placeholder="Producto o servicio" />
-            </div>
+            <Row gutter={[24, 16]}>
+              {/* Columna 1 (Datos básicos) */}
+              <Col span={8}>
+                <div>
+                  <Text strong className="block mb-1">
+                    Tipo de persona
+                  </Text>
+                  <Select
+                    className="w-full"
+                    value={formData.tipoPersona}
+                    onChange={(value) => handleTipoPersonaChange(value)}
+                  >
+                    <Option value="natural">Es persona</Option>
+                    <Option value="juridica">Es empresa</Option>
+                  </Select>
+                </div>
+
+                {/* Tipo de identificación se ajusta según el tipo de persona */}
+                <div>
+                  <Text strong className="block mb-1">
+                    Tipo de identificación
+                  </Text>
+                  <Select
+                    className="w-full"
+                    value={formData.tipoIdentificacion}
+                    onChange={(value) => handleInputChange('tipoIdentificacion', value)}
+                  >
+                    {formData.tipoPersona === 'natural' ? (
+                      <Option value="cc">Cédula de ciudadanía</Option>
+                    ) : (
+                      <Option value="nit">NIT</Option>
+                    )}
+                  </Select>
+                </div>
+
+                {/* Identificación: un solo campo para persona, dos para empresa */}
+                {formData.tipoPersona === 'natural' ? (
+                  <div>
+                    <Text strong className="block mb-1">
+                      Identificación
+                    </Text>
+                    <Input
+                      placeholder="Numero de Cédula"
+                      value={formData.identificacion}
+                      onChange={(e) => handleInputChange('identificacion', e.target.value)}
+                    />
+                  </div>
+                ) : (
+                  <div>
+                    <Text strong className="block mb-1">
+                      NIT
+                    </Text>
+                    <Row gutter={8}>
+                      <Col span={16}>
+                        <Input
+                          placeholder="Número de NIT"
+                          value={formData.nit}
+                          onChange={(e) => handleInputChange('nit', e.target.value)}
+                        />
+                      </Col>
+                      <Col span={8}>
+                        <Input
+                          placeholder="DV"
+                          value={formData.dv}
+                          onChange={(e) => handleInputChange('dv', e.target.value)}
+                        />
+                      </Col>
+                    </Row>
+                  </div>
+                )}
+
+                <div>
+                  <Text strong className="block mb-1">
+                    Código de la sucursal
+                  </Text>
+                  <Input
+                    placeholder="Código de la sucursal"
+                    value={formData.codigoSucursal}
+                    onChange={(e) => handleInputChange('codigoSucursal', e.target.value)}
+                  />
+                </div>
+              </Col>
+              {/* Columna 2 (Datos de contacto) */}
+              <Col span={8}>
+                <div>
+                  <Input
+                    placeholder="Nombres"
+                    value={formData.nombresContacto}
+                    onChange={(e) => handleInputChange('nombresContacto', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Input
+                    placeholder="Apellidos"
+                    value={formData.apellidosContacto}
+                    onChange={(e) => handleInputChange('apellidosContacto', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Input
+                    placeholder="Nombre comercial"
+                    value={formData.nombreComercial}
+                    onChange={(e) => handleInputChange('nombreComercial', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Input
+                    placeholder="Ciudad"
+                    value={formData.ciudad}
+                    onChange={(e) => handleInputChange('ciudad', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Input
+                    placeholder="Dirección"
+                    value={formData.direccion}
+                    onChange={(e) => handleInputChange('direccion', e.target.value)}
+                  />
+                </div>
+              </Col>
+
+              {/* Columna 3 (Datos para facturación y envío) */}
+              <Col span={8}>
+                <Title level={4}>Datos para facturación y envio</Title>
+                <div>
+                  <Input
+                    placeholder="Nombres del contacto"
+                    value={formData.nombresContactoFacturacion}
+                    onChange={(e) => handleInputChange('nombresContactoFacturacion', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Input
+                    placeholder="Apellidos del contacto"
+                    value={formData.apellidosContactoFacturacion}
+                    onChange={(e) => handleInputChange('apellidosContactoFacturacion', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Input
+                    placeholder="Correo electrónico"
+                    value={formData.correoElectronicoFacturacion}
+                    onChange={(e) => handleInputChange('correoElectronicoFacturacion', e.target.value)}
+                    type="email"
+                  />
+                </div>
+                <div>
+                  <Text strong className="block mb-1">
+                    Tipo de régimen IVA
+                  </Text>
+                  <Select
+                    className="w-full"
+                    value={formData.tipoRegimenIVA}
+                    onChange={(value) => handleInputChange('tipoRegimenIVA', value)}
+                  >
+                    <Option value="regimenComún">Régimen Común</Option>
+                    <Option value="regimenSimplificado">Régimen Simplificado</Option>
+                  </Select>
+                </div>
+                <div>
+                  <Input
+                    placeholder="Número de teléfono"
+                    value={formData.telefonoFacturacion}
+                    onChange={(e) => handleInputChange('telefonoFacturacion', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Input
+                    placeholder="Código postal"
+                    value={formData.codigoPostal}
+                    onChange={(e) => handleInputChange('codigoPostal', e.target.value)}
+                  />
+                </div>
+              </Col>
+            </Row>
           </Space>
         </Card>
       )}
+
 
       {tipoTercero === 'cajero' && (
         <Card>
@@ -123,13 +378,21 @@ const Terceros = () => {
               <Text strong className="block mb-1">
                 Número de caja
               </Text>
-              <Input placeholder="Número de caja" />
+              <Input
+                placeholder="Número de caja"
+                value={formData.numeroCaja}
+                onChange={(e) => handleInputChange('numeroCaja', e.target.value)}
+              />
             </div>
             <div>
               <Text strong className="block mb-1">
                 Turno asignado
               </Text>
-              <Select className="w-full">
+              <Select
+                className="w-full"
+                value={formData.turnoAsignado}
+                onChange={(value) => handleInputChange('turnoAsignado', value)}
+              >
                 <Option value="mañana">Mañana</Option>
                 <Option value="tarde">Tarde</Option>
                 <Option value="noche">Noche</Option>
