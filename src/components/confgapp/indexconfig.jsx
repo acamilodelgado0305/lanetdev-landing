@@ -47,7 +47,7 @@ const IndexConfig = () => {
   const { user, userRole } = useAuth();
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
-  const [profilePictureUrl, setProfilePictureUrl] = useState(user?.profilepictureurl || defaultProfilePictureUrl);
+  const [profilePictureUrl, setProfilePictureUrl] = useState(user?.profilepictureurl || "");
   const [form] = Form.useForm();
 
   const defaultProfilePictureUrl = "IndexConfighttps://res.cloudinary.com/dybws2ubw/image/upload/v1726015542/ayqfjv1wj5a9vbbqcrz3.png";
