@@ -385,7 +385,7 @@ export default function Root() {
                       {isExpanded ? link.label : ""}
                     </span>
                     <span className="ml-auto group-hover:text-white">
-                      {activeSubMenu === link.label ? <DownOutlined /> : <UpOutlined />}
+                      {activeSubMenu === link.label ? <UpOutlined /> : <DownOutlined />}
                     </span>
                   </button>
 
