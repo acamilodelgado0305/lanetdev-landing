@@ -9,15 +9,15 @@ const NavItem = ({ label, icon: Icon, isActive, onClick }) => (
       transition-all duration-200 relative
       hover:bg-gray-50
       ${isActive 
-        ? 'text-blue-600 bg-blue-50/50' 
+        ? 'text-[#007072] bg-[#007072]-50/50' 
         : 'text-gray-600 hover:text-gray-900'
       }
     `}
   >
-    <Icon className={`w-4 h-4 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
+    <Icon className={`w-4 h-4 ${isActive ? 'text-[#007072]' : 'text-gray-500'}`} />
     <span>{label}</span>
     {isActive && (
-      <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600" />
+      <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#007072]" />
     )}
   </button>
 );

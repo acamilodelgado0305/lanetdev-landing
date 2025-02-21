@@ -461,7 +461,7 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
       const commission = amount * (CommissionPorcentaje / 100);
 
       return (
-        <div className="p-6 bg-white rounded-lg shadow-lg space-y-8" ref={printRef}>
+        <div className="p-6  space-y-8" ref={printRef}>
           {renderInvoiceHeader()}
 
           <div className="grid grid-cols-2 gap-6">
@@ -500,7 +500,7 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
 
           <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="bg-gray-50 p-4 ">
                 <Title level={5}>Desglose de Ingresos</Title>
                 <div className="space-y-3">
                   <div className="flex justify-between">
@@ -530,7 +530,7 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
                 </div>
               </div>
 
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="bg-gray-50 p-4 ">
                 <Title level={5}>Resumen</Title>
                 <div className="space-y-3">
                   <div className="flex justify-between">
@@ -553,7 +553,7 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
               </div>
             </div>
 
-            <div className={`p-4 rounded-lg text-center ${isCashMatch ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+            <div className={`p-4 text-center ${isCashMatch ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
               {isCashMatch ? 'Los valores coinciden correctamente' : '¡Error! Hay un descuadre en el arqueo'}
             </div>
           </div>
@@ -567,7 +567,7 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
               onChange={(e) => setComentarios(e.target.value)}
               placeholder="Añade comentarios adicionales"
               rows={3}
-              className="w-full border p-2 rounded"
+              className="w-full border p-2 "
             />
           </div>
 
@@ -663,11 +663,11 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
     <div className="p-6 max-w-[1200px] mx-auto bg-white shadow">
       <div className="sticky top-0 z-10 bg-white p-4 shadow-md flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <div className="bg-green-400 p-2 rounded">
+          <div className="bg-[#007072] p-2 ">
             <FileTextOutlined className=" text-white" />
           </div>
           <div className="flex flex-col">
-            <span className="text-green-400 text-sm">Ingresos /</span>
+            <span className="text-[#007072] text-sm">Ingresos /</span>
             <Title level={3}>
               {id ? 'Editar' : 'Crear'}
             </Title>
@@ -678,7 +678,8 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
           <Button
             disabled={!isIncomeSaved}  // Deshabilitar el botón si el ingreso no ha sido guardado
             onClick={handleDownloadPDF}
-            className="bg-red-500 text-white rounded"
+            className="bg-transparent border border-[#007072] text-[#007072] hover:bg-[#007072] hover:text-white"
+            style={{ borderRadius: 0 }}
           >
             Descargar PDF
           </Button>
@@ -696,15 +697,18 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
               icon={<UploadOutlined />}
               loading={loading}
               onClick={() => document.getElementById("bulkUploadInput").click()}
-              className="bg-blue-500 hover:bg-green-800 border-none text-white"
+              className="bg-transparent border border-[#007072] text-[#007072] hover:bg-[#007072] hover:text-white"
+              style={{ borderRadius: 0 }}
             >
               Cargar Ingresos Masivos
             </Button>
           </div>
-          <Button onClick={handleCancel} type="default">
+          <Button onClick={handleCancel}
+            className="bg-transparent border border-gray-500 text-gray-500 hover:bg-gray-500 hover:text-white"
+            style={{ borderRadius: 0 }} >
             Cancelar
           </Button>
-          <Button onClick={handleSave} type="primary" className="bg-green-500">
+          <Button onClick={handleSave} type="primary" className="bg-[#007072]" style={{ borderRadius: 0 }}>
             Guardar
           </Button>
         </Space>

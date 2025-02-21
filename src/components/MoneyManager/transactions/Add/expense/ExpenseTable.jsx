@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Table, Select, Input, Button } from 'antd';
 
 const NewExpenseTable = ({
-  hasProviderPerItem = false,
-  hasIncludedTax = false,
-  hasPercentageDiscount = false
+  hasPercentageDiscount = false,
+  onDataChange, // New prop to communicate changes up
+  initialData
 }) => {
   const [items, setItems] = useState([{
     key: '1',
@@ -36,40 +36,51 @@ const NewExpenseTable = ({
     const quantity = parseFloat(item.quantity) || 0;
     const unitPrice = parseFloat(item.unitPrice) || 0;
     const discount = parseFloat(item.discount) || 0;
+    const taxCharge = parseFloat(item.taxCharge) || 0;
+    const taxWithholding = parseFloat(item.taxWithholding) || 0;
 
-    let itemTotal = quantity * unitPrice;
+    // Calcular valor bruto
+    let itemSubtotal = quantity * unitPrice;
 
     // Aplicar descuento
-    if (hasPercentageDiscount) {
-      itemTotal -= itemTotal * (discount / 100);
-    } else {
-      itemTotal -= discount;
-    }
+    const discountAmount = hasPercentageDiscount
+      ? itemSubtotal * (discount / 100)
+      : discount;
 
-    // Aplicar impuestos
-    const taxCharge = parseFloat(item.taxCharge) || 0;
-    itemTotal += itemTotal * (taxCharge / 100);
+    itemSubtotal -= discountAmount;
 
-    return itemTotal;
+    // Aplicar impuesto cargo (IVA)
+    const taxChargeAmount = itemSubtotal * (taxCharge / 100);
+
+    // Aplicar retención
+    const taxWithholdingAmount = itemSubtotal * (taxWithholding / 100);
+
+    // Total final
+    return itemSubtotal + taxChargeAmount - taxWithholdingAmount;
   };
 
   useEffect(() => {
-    // Calcular totales basados en todos los items
-    const itemTotals = items.reduce((acc, item) => {
+    onDataChange?.({
+      items,
+      totals
+    });
+  }, [items, totals]);
+
+  useEffect(() => {
+    const newTotals = items.reduce((acc, item) => {
       const quantity = parseFloat(item.quantity) || 0;
       const unitPrice = parseFloat(item.unitPrice) || 0;
       const discount = parseFloat(item.discount) || 0;
 
-      // Calcular subtotal por ítem
-      const itemSubtotal = quantity * unitPrice;
+      // Valor bruto por ítem
+      const itemBruto = quantity * unitPrice;
 
-      // Calcular descuento por ítem
-      const itemDiscount = hasPercentageDiscount ?
-        itemSubtotal * (discount / 100) :
-        discount;
+      // Descuento por ítem
+      const itemDiscount = hasPercentageDiscount
+        ? itemBruto * (discount / 100)
+        : discount;
 
-      // Acumular totales
-      acc.totalBruto += itemSubtotal;
+      acc.totalBruto += itemBruto;
       acc.descuentos += itemDiscount;
 
       return acc;
@@ -78,20 +89,20 @@ const NewExpenseTable = ({
       descuentos: 0
     });
 
-    // Calcular subtotal general
-    const subtotal = itemTotals.totalBruto - itemTotals.descuentos;
+    // Subtotal después de descuentos
+    const subtotal = newTotals.totalBruto - newTotals.descuentos;
 
     // Calcular retenciones
-    const reteIVA = (subtotal * parseFloat(totals.reteIVAPercentage)) / 100;
-    const reteICA = (subtotal * parseFloat(totals.reteICAPercentage)) / 100;
+    const reteIVA = subtotal * (parseFloat(totals.reteIVAPercentage) / 100);
+    const reteICA = subtotal * (parseFloat(totals.reteICAPercentage) / 100);
 
-    // Calcular total neto
+    // Total neto final
     const totalNeto = subtotal - reteIVA - reteICA;
 
     setTotals({
       ...totals,
-      totalBruto: itemTotals.totalBruto,
-      descuentos: itemTotals.descuentos,
+      totalBruto: newTotals.totalBruto,
+      descuentos: newTotals.descuentos,
       subtotal: subtotal,
       reteIVA: reteIVA,
       reteICA: reteICA,
@@ -118,7 +129,9 @@ const NewExpenseTable = ({
   };
 
   const handleDeleteRow = (key) => {
-    setItems(items.filter(item => item.key !== key));
+    if (items.length > 1) {
+      setItems(items.filter(item => item.key !== key));
+    }
   };
 
   const handleValueChange = (key, field, value) => {
@@ -139,8 +152,7 @@ const NewExpenseTable = ({
     }));
   };
 
-  // Base columns that are always present
-  let columns = [
+  const columns = [
     {
       title: '# Tipo',
       dataIndex: 'type',
@@ -148,40 +160,15 @@ const NewExpenseTable = ({
       render: (text, record) => (
         <Select
           value={text}
-          className="w-full"
+          style={{ width: '100%' }}
           onChange={(value) => handleValueChange(record.key, 'type', value)}
         >
           <Select.Option value="Producto">Producto</Select.Option>
           <Select.Option value="Activo">Activo</Select.Option>
-             <Select.Option value="Gasto">Gasto</Select.Option>
+          <Select.Option value="Gasto">Gasto</Select.Option>
         </Select>
       )
-    }
-  ];
-
-  // Add provider column if hasProviderPerItem is true
-  if (hasProviderPerItem) {
-    columns.push({
-      title: 'Proveedor',
-      dataIndex: 'provider',
-      width: 150,
-      render: (text, record) => (
-        <Select
-          value={text}
-          className="w-full"
-          onChange={(value) => handleValueChange(record.key, 'provider', value)}
-        >
-          <Select.Option value="proveedor1">Proveedor 1</Select.Option>
-          <Select.Option value="proveedor2">Proveedor 2</Select.Option>
-          <Select.Option value="proveedor3">Proveedor 3</Select.Option>
-        </Select>
-      )
-    });
-  }
-
-  // Add remaining standard columns
-  columns = [
-    ...columns,
+    },
     {
       title: 'Producto',
       dataIndex: 'product',
@@ -189,6 +176,7 @@ const NewExpenseTable = ({
       render: (text, record) => (
         <Input
           value={text}
+          style={{ width: '100%' }}
           onChange={(e) => handleValueChange(record.key, 'product', e.target.value)}
           placeholder="Buscar"
         />
@@ -200,6 +188,7 @@ const NewExpenseTable = ({
       render: (text, record) => (
         <Input
           value={text}
+          style={{ width: '100%' }}
           onChange={(e) => handleValueChange(record.key, 'description', e.target.value)}
         />
       )
@@ -212,6 +201,7 @@ const NewExpenseTable = ({
         <Input
           type="number"
           value={text}
+          style={{ width: '100%' }}
           onChange={(e) => handleValueChange(record.key, 'quantity', e.target.value)}
         />
       )
@@ -224,46 +214,25 @@ const NewExpenseTable = ({
         <Input
           type="number"
           value={text}
+          style={{ width: '100%' }}
           onChange={(e) => handleValueChange(record.key, 'unitPrice', e.target.value)}
         />
       )
-    }
-  ];
-
-  // Add purchase value column if hasIncludedTax is true
-  if (hasIncludedTax) {
-    columns.push({
-      title: 'Valor Compra',
-      dataIndex: 'purchaseValue',
+    },
+    {
+      title: 'Descuento',
+      dataIndex: 'discount',
       width: 120,
       render: (text, record) => (
         <Input
           type="number"
           value={text}
-          onChange={(e) => handleValueChange(record.key, 'purchaseValue', e.target.value)}
+          style={{ width: '100%' }}
+          onChange={(e) => handleValueChange(record.key, 'discount', e.target.value)}
+          suffix={hasPercentageDiscount ? '%' : ''}
         />
       )
-    });
-  }
-
-  // Add discount column with appropriate rendering based on hasPercentageDiscount
-  columns.push({
-    title: 'Descuento',
-    dataIndex: 'discount',
-    width: 120,
-    render: (text, record) => (
-      <Input
-        type="number"
-        value={text}
-        onChange={(e) => handleValueChange(record.key, 'discount', e.target.value)}
-        suffix={hasPercentageDiscount ? '%' : ''}
-      />
-    )
-  });
-
-  // Add remaining columns
-  columns = [
-    ...columns,
+    },
     {
       title: 'Impuesto Cargo',
       dataIndex: 'taxCharge',
@@ -271,11 +240,13 @@ const NewExpenseTable = ({
       render: (text, record) => (
         <Select
           value={text}
-          className="w-full"
+          style={{ width: '100%' }}
           onChange={(value) => handleValueChange(record.key, 'taxCharge', value)}
         >
-          <Select.Option value="0">0%</Select.Option>
-          <Select.Option value="19">19%</Select.Option>
+          <Select.Option value="19">IVA 19%</Select.Option>
+          <Select.Option value="5">IVA 5%</Select.Option>
+          <Select.Option value="0">IVA 0%</Select.Option>
+          <Select.Option value="8">Ipoconsumo 8%</Select.Option>
         </Select>
       )
     },
@@ -286,12 +257,19 @@ const NewExpenseTable = ({
       render: (text, record) => (
         <Select
           value={text}
-          className="w-full"
+          style={{ width: '100%' }}
           onChange={(value) => handleValueChange(record.key, 'taxWithholding', value)}
         >
-          <Select.Option value="0">0%</Select.Option>
-          <Select.Option value="4">4%</Select.Option>
-          <Select.Option value="11">11%</Select.Option>
+          <Select.Option value="11">Rete 11%</Select.Option>
+          <Select.Option value="10">Rete 10%</Select.Option>
+          <Select.Option value="7">Rete 7%</Select.Option>
+          <Select.Option value="6">Rete 6%</Select.Option>
+          <Select.Option value="4">Rete 4%</Select.Option>
+          <Select.Option value="3.5">Rete 3.5%</Select.Option>
+          <Select.Option value="2.5">Rete 2.5%</Select.Option>
+          <Select.Option value="2">Rete 2%</Select.Option>
+          <Select.Option value="1">Rete 1%</Select.Option>
+          <Select.Option value="0">Rete 0%</Select.Option>
         </Select>
       )
     },
@@ -308,7 +286,8 @@ const NewExpenseTable = ({
       render: (_, record) => (
         <Button
           type="text"
-          className="text-red-500 hover:text-red-700"
+          danger
+          style={{ width: '100%' }}
           onClick={() => handleDeleteRow(record.key)}
         >
           Eliminar
@@ -327,40 +306,41 @@ const NewExpenseTable = ({
   };
 
   return (
-    <div className="mt-6">
+    <div style={{ width: '100%' }}>
       <Table
         dataSource={items}
         columns={columns}
         pagination={false}
-        scroll={{ x: 'max-content' }}
-        footer={() => (
-          <Button
-            onClick={handleAddRow}
-            type="dashed"
-            className="w-full"
-          >
-            + Agregar línea
-          </Button>
-        )}
+        size="small"
+        bordered
+        style={{ width: '100%' }}
       />
 
-      <div className="mt-4 w-full max-w-md ml-auto">
-        <div className="space-y-2 border rounded-lg p-4 bg-gray-50">
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-            <div className="text-right font-medium text-gray-600">Total Bruto:</div>
-            <div className="text-right font-medium">{formatCurrency(totals.totalBruto)}</div>
+      <Button
+        onClick={handleAddRow}
+        type="dashed"
+        style={{ width: '100%', marginTop: '8px' }}
+      >
+        + Agregar línea
+      </Button>
 
-            <div className="text-right font-medium text-gray-600">Descuentos:</div>
-            <div className="text-right text-red-600">-{formatCurrency(totals.descuentos)}</div>
+      <div style={{ marginTop: '16px', width: '100%', maxWidth: '400px', marginLeft: 'auto' }}>
+        <div style={{ border: '1px solid #f0f0f0', padding: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Total Bruto:</div>
+            <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.totalBruto)}</div>
 
-            <div className="text-right font-medium text-gray-600">Subtotal:</div>
-            <div className="text-right font-medium">{formatCurrency(totals.subtotal)}</div>
+            <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Descuentos:</div>
+            <div style={{ textAlign: 'right', color: '#ff4d4f' }}>-{formatCurrency(totals.descuentos)}</div>
 
-            <div className="text-right font-medium text-gray-600 flex items-center justify-end">
-              <span className="mr-2">ReteIVA:</span>
+            <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Subtotal:</div>
+            <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.subtotal)}</div>
+
+            <div style={{ textAlign: 'right', fontWeight: 500, color: '#666', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+              <span style={{ marginRight: '8px' }}>ReteIVA:</span>
               <Select
                 value={totals.reteIVAPercentage}
-                style={{ width: 80 }}
+                style={{ width: '80px' }}
                 onChange={(value) => handleRetentionChange('reteIVA', value)}
               >
                 <Select.Option value="0">0%</Select.Option>
@@ -368,13 +348,13 @@ const NewExpenseTable = ({
                 <Select.Option value="19">19%</Select.Option>
               </Select>
             </div>
-            <div className="text-right text-red-600">-{formatCurrency(totals.reteIVA)}</div>
+            <div style={{ textAlign: 'right', color: '#ff4d4f' }}>-{formatCurrency(totals.reteIVA)}</div>
 
-            <div className="text-right font-medium text-gray-600 flex items-center justify-end">
-              <span className="mr-2">ReteICA:</span>
+            <div style={{ textAlign: 'right', fontWeight: 500, color: '#666', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+              <span style={{ marginRight: '8px' }}>ReteICA:</span>
               <Select
                 value={totals.reteICAPercentage}
-                style={{ width: 80 }}
+                style={{ width: '80px' }}
                 onChange={(value) => handleRetentionChange('reteICA', value)}
               >
                 <Select.Option value="0">0%</Select.Option>
@@ -382,13 +362,13 @@ const NewExpenseTable = ({
                 <Select.Option value="11">11%</Select.Option>
               </Select>
             </div>
-            <div className="text-right text-red-600">-{formatCurrency(totals.reteICA)}</div>
+            <div style={{ textAlign: 'right', color: '#ff4d4f' }}>-{formatCurrency(totals.reteICA)}</div>
           </div>
 
-          <div className="border-t pt-2 mt-2">
-            <div className="grid grid-cols-2 gap-x-4">
-              <div className="text-right font-bold text-lg">Total Neto:</div>
-              <div className="text-right font-bold text-lg">{formatCurrency(totals.totalNeto)}</div>
+          <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '8px', marginTop: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <div style={{ textAlign: 'right', fontWeight: 'bold', fontSize: '16px' }}>Total Neto:</div>
+              <div style={{ textAlign: 'right', fontWeight: 'bold', fontSize: '16px' }}>{formatCurrency(totals.totalNeto)}</div>
             </div>
           </div>
         </div>

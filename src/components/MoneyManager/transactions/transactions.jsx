@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
-
+import { Navigate } from "react-router-dom";
 import { format as formatDate, startOfMonth, endOfMonth, subMonths, addMonths } from "date-fns";
 import axios from "axios";
-import { Modal, message, Input, Select, Button, Card,Typography } from "antd";
+import { Modal, message, Input, Select, Button, Card, Row, Col, Statistic, Typography } from "antd";
 import AddEntryModal from "./addModal";
 import AddIncome from "./Add/Income/AddIncome";
 import AddExpense from "./Add/expense/AddExpense";
@@ -20,7 +20,6 @@ import { useAuth } from '../../Context/AuthProvider';
 import Header from "./components/Header";
 import {
   TrendingUp,
-  DollarSign,
   CreditCard,
   ChevronLeft,
   ChevronRight,
@@ -31,7 +30,7 @@ import {
   Menu
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { FileTextOutlined } from '@ant-design/icons';
+import { FileTextOutlined, DollarOutlined, ArrowUpOutlined, ArrowDownOutlined   } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 
@@ -115,7 +114,7 @@ const TransactionsDashboard = () => {
     setEditTransaction(null);
   };
 
-  
+
   const openPlusModal = () => {
     if (createButtonRef.current) {
       const rect = createButtonRef.current.getBoundingClientRect();
@@ -139,8 +138,8 @@ const TransactionsDashboard = () => {
     setTransactionType(null);
   };
 
-  
-  
+
+
 
   const closePlusModal = () => {
     setIsPlusModalOpen(false);
@@ -346,17 +345,17 @@ const TransactionsDashboard = () => {
   return (
     <div className="flex-1 bg-gray-50 min-h-screen">
       {/* Barra superior de herramientas */}
-      <div className="bg-white border-b sticky top-0 z-0 shadow-sm">
+      <div className="bg-gray border-b sticky top-0 z-0 shadow-sm">
         {/* Sección superior con botones de acción */}
         <div className="max-full mx-auto py-2 px-3">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
               <div className="flex items-center gap-2">
-                <div className="bg-green-400 p-2 rounded">
+                <div className="bg-[#007072] p-2 ">
                   <FileTextOutlined className=" text-white" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-green-400 text-sm">Finanzas /</span>
+                  <span className="text-[#007072] text-sm">Finanzas /</span>
                   <Title level={3} className="">
                     Dashboard
                   </Title>
@@ -364,97 +363,114 @@ const TransactionsDashboard = () => {
               </div>
             </div>
             <div className="flex gap-3">
-              <Button
+              <button
                 onClick={handleNavigate}
-                type="primary"
-                className="bg-emerald-600 hover:bg-emerald-700 border-none h-11"
-                icon={<TrendingUp className="w-4 h-4 mr-2" />}
+                type="button"
+                className="flex items-center justify-center gap-2 p-2 bg-transparent border border-[#007072] text-[#007072] hover:bg-[#007072] hover:text-white transition-all duration-200"
+                style={{ borderRadius: 0 }}
               >
+                <TrendingUp className="w-4 h-4" />
                 Nuevo Ingreso
-              </Button>
-              <Button
+              </button>
+
+              <button
                 onClick={handleNavigateExpense}
-                type="primary"
-                className="bg-red-500 hover:bg-red-600 border-none h-11"
-                icon={<CreditCard className="w-4 h-4 mr-2" />}
+                type="button"
+                className="flex items-center justify-center gap-2 p-2 bg-transparent border border-[#007072] text-[#007072] hover:bg-[#007072] hover:text-white transition-all duration-200"
+                style={{ borderRadius: 0 }}
               >
+                <CreditCard className="w-4 h-4" />
                 Nuevo Egreso
-              </Button>
-              <Button
+              </button>
+
+              <button
                 onClick={openTransferModal}
-                type="primary"
-                className="bg-blue-500 hover:bg-blue-600 border-none h-11"
-                icon={<ArrowLeftRight className="w-4 h-4 mr-2" />}
+                type="button"
+                className="flex items-center justify-center gap-2 p-2 bg-transparent border border-[#007072] text-[#007072] hover:bg-[#007072] hover:text-white transition-all duration-200"
+                style={{ borderRadius: 0 }}
               >
+                <ArrowLeftRight className="w-4 h-4" />
                 Nueva Transferencia
-              </Button>
+              </button>
             </div>
           </div>
 
           {/* Resumen financiero */}
-          <div className="p-2 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-36 mx-2 md:mx-28">
-            {userRole === "superadmin" && (
-              <>
-                <div className="bg-white p-1 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                  <div className="flex items-center justify-center space-x-4">
-                    <div className="p-0 bg-blue-100 rounded-full">
-                      <DollarSign className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div className="flex flex-col"> {/* Reducido el espacio entre los elementos */}
-                      <div>
-                        <p className="text-xs text-gray-500">Balance Total</p> {/* Usé 'text-xs' para texto más pequeño */}
-                        <p className="text-xl font-semibold text-gray-900">{formatCurrency(balance)}</p> {/* Reducido el tamaño de texto */}
-                      </div>
+          <div className="p-4">
+            <Row gutter={[16, 16]}>
+              {userRole === "superadmin" && (
+                <>
+                  <Col xs={24} md={8}>
+                    <Card bordered={false} className="h-full">
+                      <Title level={5} className="text-gray-500 mb-4">Balance</Title>
+                      <Statistic
+                        title="Balance Total"
+                        value={balance}
+                        precision={2}
+                        prefix={<DollarOutlined />}
+                        formatter={(value) => formatCurrency(value)}
+                        className="mb-4"
+                      />
+                      <Statistic
+                        title="Balance Mensual"
+                        value={monthlyBalance}
+                        precision={2}
+                        prefix={<DollarOutlined />}
+                        formatter={(value) => formatCurrency(value)}
+                      />
+                    </Card>
+                  </Col>
 
-                      <div>
-                        <p className="text-xs text-gray-500">Balance Mensual</p>
-                        <p className="text-xl font-semibold text-gray-900">{formatCurrency(monthlyBalance)}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-white p-1 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                  <div className="flex items-center justify-center space-x-4">
-                    <div className="p-0 bg-green-100 rounded-full">
-                      <TrendingUp className="w-10 h-10 text-green-600" />
-                    </div>
-                    <div className="flex flex-col"> {/* Reducido el espacio entre los elementos */}
-                      <div>
-                        <p className="text-xs text-gray-500">Ingresos Totales</p> {/* Usé 'text-xs' para texto más pequeño */}
-                        <p className="text-xl font-semibold text-green-600">{formatCurrency(totalIncome)}</p> {/* Reducido el tamaño de texto */}
-                      </div>
+                  <Col xs={24} md={8}>
+                    <Card bordered={false} className="h-full">
+                      <Title level={5} className="text-gray-500 mb-4">Ingresos</Title>
+                      <Statistic
+                        title="Ingresos Totales"
+                        value={totalIncome}
+                        precision={2}
+                        prefix={<ArrowUpOutlined />}
+                        valueStyle={{ color: '#3f8600' }}
+                        formatter={(value) => formatCurrency(value)}
+                        className="mb-4"
+                      />
+                      <Statistic
+                        title="Ingresos Mensuales"
+                        value={monthlyIncome}
+                        precision={2}
+                        prefix={<ArrowUpOutlined />}
+                        valueStyle={{ color: '#3f8600' }}
+                        formatter={(value) => formatCurrency(value)}
+                      />
+                    </Card>
+                  </Col>
+                </>
+              )}
 
-                      <div>
-                        <p className="text-xs text-gray-500">Ingresos Mensuales</p>
-                        <p className="text-xl font-semibold text-green-600">{formatCurrency(monthlyIncome)}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-              </>
-            )}
-
-            {(userRole === "admin" || userRole === "superadmin") && (
-              <div className="bg-white p-1 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                <div className="flex items-center space-x-4 justify-center">
-                  <div className="p-0 bg-red-100 rounded-full">
-                    <CreditCard className="w-10 h-10 text-red-600" />
-                  </div>
-                  <div className="flex flex-col"> {/* Reducido el espacio entre los elementos */}
-                    <div>
-                      <p className="text-xs text-gray-500">Gastos Totales</p> {/* Usé 'text-xs' para texto más pequeño */}
-                      <p className="text-xl font-semibold text-red-600">{formatCurrency(totalExpenses)}</p> {/* Reducido el tamaño de texto */}
-                    </div>
-
-                    <div>
-                      <p className="text-xs text-gray-500">Gastos Mensuales</p>
-                      <p className="text-xl font-semibold text-red-600">{formatCurrency(monthlyExpenses)}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+              {(userRole === "admin" || userRole === "superadmin") && (
+                <Col xs={24} md={8}>
+                  <Card bordered={false} className="h-full">
+                    <Title level={5} className="text-gray-500 mb-4">Gastos</Title>
+                    <Statistic
+                      title="Gastos Totales"
+                      value={totalExpenses}
+                      precision={2}
+                      prefix={<ArrowDownOutlined />}
+                      valueStyle={{ color: '#cf1322' }}
+                      formatter={(value) => formatCurrency(value)}
+                      className="mb-4"
+                    />
+                    <Statistic
+                      title="Gastos Mensuales"
+                      value={monthlyExpenses}
+                      precision={2}
+                      prefix={<ArrowDownOutlined />}
+                      valueStyle={{ color: '#cf1322' }}
+                      formatter={(value) => formatCurrency(value)}
+                    />
+                  </Card>
+                </Col>
+              )}
+            </Row>
           </div>
         </div>
 
@@ -468,7 +484,7 @@ const TransactionsDashboard = () => {
 
       {/* Contenido principal */}
       <div className="max-w-full py-4 mx-auto  ">
-        <div className="bg-white rounded-lg shadow-sm border">
+        <div className="bg-white  shadow-sm border">
           <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 450px)' }}>
             {error && (
               <div className="p-2 bg-red-50 border-l-4 border-red-500 text-red-700">
@@ -546,7 +562,7 @@ const TransactionsDashboard = () => {
                     key={date.getTime()}
                     onClick={() => setCurrentMonth(date)}
                     className={`
-                      px-4 py-2 rounded-md text-sm font-medium transition-all
+                      px-4 py-2 text-sm font-medium transition-all
                       ${isCurrentMonth
                         ? "bg-blue-50 text-blue-600 border border-blue-200"
                         : "text-gray-600 hover:bg-gray-50"
@@ -580,7 +596,7 @@ const TransactionsDashboard = () => {
 
 
 
-      
+
 
       <VoucherContentModal
         isOpen={isContentModalOpen}
