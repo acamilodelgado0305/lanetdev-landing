@@ -98,6 +98,7 @@ export default function Root() {
             icon: <DotIcon />,
             color: "text-[#7d4fff]",
             hoverClass: "hover:bg-[#7d4fff] hover:text-white",
+            disabled: true,
           },
         ],
       },
@@ -117,6 +118,7 @@ export default function Root() {
         color: "text-[#7d4fff]",
         hoverClass: "hover:bg-[#7d4fff] hover:text-white",
         hasSubmenu: true,
+        disabled: true,
         submenuItems: [
           {
             to: "/index/comunicacion/notificaciones",
@@ -124,6 +126,7 @@ export default function Root() {
             icon: <DotChartOutlined />,
             color: "text-[#7d4fff]",
             hoverClass: "hover:bg-[#7d4fff] hover:text-white",
+            disabled: true,
           },
           {
             to: "/index/comunicacion/multichat",
@@ -131,9 +134,10 @@ export default function Root() {
             icon: <DotChartOutlined />,
             color: "text-[#7d4fff]",
             hoverClass: "hover:bg-[#7d4fff] hover:text-white",
+            disabled: true,
           },
         ],
-        disabled: true,
+       
       },
 
       {
@@ -193,18 +197,22 @@ export default function Root() {
           {
             to: "/index/administracion/cajeros", label: "Direccionamiento Ip", icon: <DotIcon />, color: "text-[#007072]",
             hoverClass: "hover:text-[#007072] hover:text-white",
+            disabled: true,
           },
           {
             to: "/index/administracion/cajeros", label: "Monitoreo", icon: <DotIcon />, color: "text-[#007072]",
             hoverClass: "hover:text-[#007072] hover:text-white",
+            disabled: true,
           },
           {
             to: "/index/administracion/cajeros", label: "Aprovisinamiento de Red", icon: <DotIcon />, color: "text-[#007072]",
             hoverClass: "hover:text-g[#007072] hover:text-white",
+            disabled: true,
           },
           {
             to: "/index/administracion/cajeros", label: "Conexion de routers", icon: <DotIcon />, color: "text-[#007072]",
             hoverClass: "hover:text-[#007072] hover:text-white",
+            disabled: true,
           },
 
         ],

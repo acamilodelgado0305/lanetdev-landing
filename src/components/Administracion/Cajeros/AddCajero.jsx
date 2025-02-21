@@ -53,20 +53,33 @@ const AddCajero = ({ onCashierAdded }) => {
   return (
     <div className="p-6 max-w-5xl mx-auto bg-white shadow-md rounded-md border border-gray-200">
       <div className="flex justify-between items-center border-b pb-4 mb-4">
-      <div className="flex items-center gap-2">
-          <div className="bg-green-400 p-2 rounded">
-            <FileTextOutlined  className=" text-white" />
+        <div className="flex items-center gap-2">
+          <div className="bg-[#007072] p-2 rounded">
+            <FileTextOutlined className=" text-white" />
           </div>
           <div className="flex flex-col">
-            <span className="text-green-400 text-sm">Cajeros /</span>
+            <span className="text[#007072] green-400 text-sm">Cajeros /</span>
             <Title level={3} className="!m-0 !p-0">
               Crear
             </Title>
           </div>
         </div>
         <div>
-          <Button onClick={handleCancel} className="mr-2 bg-gray-200">Cancelar</Button>
-          <Button onClick={handleSave} className="bg-green-400 text-white  " loading={loading}>Guardar</Button>
+
+
+          <Button
+            onClick={handleCancel}
+
+            className="bg-transparent mr-2 border border-gray-500 text-gray-500 hover:bg-gray-500 hover:text-white"
+            style={{ borderRadius: 0 }} // Eliminar redondez de los bordes
+          >
+            Cancelar
+          </Button>
+          <Button onClick={handleSave} type="primary" className="bg-[#007072]" style={{ borderRadius: 0 }}>
+            Aceptar
+          </Button>
+
+
         </div>
       </div>
 

@@ -82,32 +82,14 @@ const Terceros = () => {
         {/* Botones */}
         <Space>
           <Button
-            type="default"
-            icon={<RedoOutlined />}
             onClick={handleCancel}
-            style={{
-              borderColor: 'red',
-              color: 'red',
-              borderRadius: '30px',
-              padding: '20px 30px',
-              fontSize: '16px'
-            }}
+            className="bg-transparent border border-gray-500 text-gray-500 hover:bg-gray-500 hover:text-white"
+            style={{ borderRadius: 0 }} // Eliminar redondez de los bordes
           >
             Cancelar
           </Button>
-          <Button
-            type="primary"
-            icon={<SaveOutlined />}
-            onClick={handleSave}
-            style={{
-              backgroundColor: '#4CAF50',
-              borderColor: '#4CAF50',
-              borderRadius: '30px',
-              padding: '20px 30px',
-              fontSize: '16px'
-            }}
-          >
-            Guardar
+          <Button onClick={handleSave} type="primary" className="bg-[#007072]" style={{ borderRadius: 0 }}>
+            Aceptar
           </Button>
         </Space>
 
