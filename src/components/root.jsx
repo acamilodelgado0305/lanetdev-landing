@@ -137,7 +137,7 @@ export default function Root() {
             disabled: true,
           },
         ],
-       
+
       },
 
       {
@@ -269,8 +269,8 @@ export default function Root() {
         icon: <SettingOutlined />,
         color: "text-blue-500",
         hoverClass: "hover:text-blue-500 hover:text-white",
-     
-       
+
+
       },
       {
         label: "Administración",
@@ -374,11 +374,11 @@ export default function Root() {
             {/* Menu Links */}
             {mainMenuLinks.map((link, index) =>
               link.isSpace ? (
-                <div key={`space-${index}`} className="py-1"></div> // Reducir el espacio vacío
+                <div key={`space-${index}`} className="py-0"></div> // Reducido el espacio vacío
               ) : link.isTitle ? (
                 <div
-                  key={`title-${index}`} // Asegura una clave única para los títulos
-                  className={`py-2 text-xs font-bold uppercase ${link.color || "text-gray-500"} 
+                  key={`title-${index}`}
+                  className={`py-1 text-xs font-bold uppercase ${link.color || "text-gray-500"} 
         ${isExpanded ? "text-center" : "hidden"} w-full`}
                 >
                   {link.label}
@@ -386,15 +386,15 @@ export default function Root() {
               ) : link.hasSubmenu ? (
                 <div key={`submenu-${link.label}-${index}`}>
                   <button
-                    ref={menuItemRef} // Referencia al botón del ítem
+                    ref={menuItemRef}
                     onClick={(e) => {
                       if (!isExpanded) {
-                        handleMenuItemClick(e, link.submenuItems); // Mostrar el modal si está contraído
+                        handleMenuItemClick(e, link.submenuItems);
                       } else {
-                        setActiveSubMenu(activeSubMenu === link.label ? null : link.label); // Mostrar el submenú si está expandido
+                        setActiveSubMenu(activeSubMenu === link.label ? null : link.label);
                       }
                     }}
-                    className={`group flex items-center w-full p-2 text-left 
+                    className={`group flex items-center w-full p-1 text-left 
           ${link.color === "text-[#007072]"
                         ? "hover:bg-[#007072]"
                         : link.color === "text-blue-500"
@@ -402,9 +402,9 @@ export default function Root() {
                           : link.color === "text-gray-500"
                             ? "hover:bg-gray-500"
                             : "hover:bg-[#7d4fff]"}  
-                            ${link.color || "text-black"} text-sm ${link.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+            ${link.color || "text-black"} text-sm ${link.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
-                    <span className={`mr-2 ${link.color} group-hover:text-white`}> {/* Reducir margen a la derecha */}
+                    <span className={`mr-1 ${link.color} group-hover:text-white`}>
                       {link.icon}
                     </span>
                     <span className={`text-black group-hover:text-white ${link.hoverClass}`}>
@@ -415,12 +415,11 @@ export default function Root() {
                     </span>
                   </button>
 
-                  {/* Mostrar submenú si está expandido */}
                   {activeSubMenu === link.label && isExpanded && (
-                    <div className="ml-4 space-y-1"> {/* Reducir margen a la izquierda */}
+                    <div className="ml-2 space-y-1"> {/* Reducido el margen a la izquierda */}
                       {link.submenuItems.map((subItem, subIndex) => (
                         <Link
-                          key={`${subItem.to}-${subIndex}`} // Clave única combinando `to` y `subIndex`
+                          key={`${subItem.to}-${subIndex}`}
                           to={subItem.to}
                           className={`group flex items-center w-full p-1 text-left text-sm 
                 ${subItem.color === "text-[#007072]"
@@ -430,9 +429,9 @@ export default function Root() {
                                 : subItem.color === "text-gray-500"
                                   ? "hover:bg-gray-500"
                                   : "hover:bg-[#7d4fff]"}  
-                                  ${subItem.color || "text-black"} text-sm ${subItem.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                ${subItem.color || "text-black"} text-sm ${subItem.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
-                          <span className={`mr-2 ${subItem.color} group-hover:text-white`}> {/* Reducir margen a la derecha */}
+                          <span className={`mr-1 ${subItem.color} group-hover:text-white`}>
                             {subItem.icon}
                           </span>
                           <span className={`text-black group-hover:text-white ${subItem.hoverClass}`}>
@@ -445,9 +444,9 @@ export default function Root() {
                 </div>
               ) : (
                 <Link
-                  key={`${link.to}-${index}`} // Clave única combinando `to` y `index`
+                  key={`${link.to}-${index}`}
                   to={link.to}
-                  className={`group flex items-center w-full p-2 text-left 
+                  className={`group flex items-center w-full p-1 text-left 
         ${link.color === "text-[#007072]"
                       ? "hover:bg-[#007072]"
                       : link.color === "text-blue-500"
@@ -455,9 +454,9 @@ export default function Root() {
                         : link.color === "text-gray-500"
                           ? "hover:bg-gray-500"
                           : "hover:bg-[#7d4fff]"}  
-                          ${link.color || "text-black"} text-sm ${link.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+        ${link.color || "text-black"} text-sm ${link.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
-                  <span className={`mr-2 ${link.color} group-hover:text-white`}> {/* Reducir margen a la derecha */}
+                  <span className={`mr-1 ${link.color} group-hover:text-white`}>
                     {link.icon}
                   </span>
                   <span className={`text-black group-hover:text-white ${link.hoverClass}`}>
@@ -466,6 +465,7 @@ export default function Root() {
                 </Link>
               )
             )}
+
 
           </div>
           {/* Botón para expandir/contraer el menú */}
