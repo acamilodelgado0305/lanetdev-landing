@@ -84,11 +84,11 @@ const Terceros = () => {
           <Button
             onClick={handleCancel}
             className="bg-transparent border border-gray-500 text-gray-500 hover:bg-gray-500 hover:text-white"
-            style={{ borderRadius: 0 }} // Eliminar redondez de los bordes
+           
           >
             Cancelar
           </Button>
-          <Button onClick={handleSave} type="primary" className="bg-[#007072]" style={{ borderRadius: 0 }}>
+          <Button onClick={handleSave} type="primary" className="bg-[#007072]" >
             Aceptar
           </Button>
         </Space>
