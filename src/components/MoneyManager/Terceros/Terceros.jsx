@@ -10,7 +10,7 @@ const Terceros = () => {
   const [formData, setFormData] = useState({
     tipoTercero: 'clientes',
     tipoPersona: 'natural',
-    tipoIdentificacion: 'cc', // Cambié tipoIdentificacion a tipo_identificacion
+    tipoIdentificacion: 'cc',
     identificacion: '',
     nombreComercial: '',
     codigoSucursal: '',
@@ -24,8 +24,8 @@ const Terceros = () => {
     tipoRegimen: 'regimenComún',
     telefonoFacturacion: '',
     codigoPostal: '',
-    nit: '', // NIT para empresa
-    dv: '',  // DV para empresa
+    nit: '',
+    dv: '',
   });
 
 
@@ -34,21 +34,19 @@ const Terceros = () => {
   const { Option } = Select;
 
   useEffect(() => {
-    // Cuando tipoTercero cambia, actualizamos el valor de tipoPersona y tipoIdentificacion
     if (formData.tipoPersona === 'juridica') {
       setFormData((prevState) => ({
         ...prevState,
-        tipoIdentificacion: 'nit', // Si es empresa, por defecto 'NIT'
+        tipoIdentificacion: 'nit',
       }));
     } else {
       setFormData((prevState) => ({
         ...prevState,
-        tipoIdentificacion: 'cc', // Si es persona, por defecto 'Cédula de ciudadanía'
+        tipoIdentificacion: 'cc',
       }));
     }
   }, [formData.tipoPersona]);
 
-  // Función para manejar cambios en los campos del formulario
   const handleInputChange = (field, value) => {
     setFormData((prevState) => ({
       ...prevState,
@@ -56,7 +54,6 @@ const Terceros = () => {
     }));
   };
 
-  // Función para manejar la selección del tipo de tercero
   const handleTipoTerceroChange = (value) => {
     setTipoTercero(value);
     setFormData((prevState) => ({
@@ -65,7 +62,6 @@ const Terceros = () => {
     }));
   };
 
-  // Función para manejar el cambio de tipo de persona
   const handleTipoPersonaChange = (value) => {
     setFormData((prevState) => ({
       ...prevState,
@@ -118,7 +114,7 @@ const Terceros = () => {
           <Button
             onClick={handleCancel}
             className="bg-transparent border border-gray-500 text-gray-500 hover:bg-gray-500 hover:text-white"
-            style={{ borderRadius: 0 }} // Eliminar redondez de los bordes
+            style={{ borderRadius: 0 }}
           >
             Cancelar
           </Button>
