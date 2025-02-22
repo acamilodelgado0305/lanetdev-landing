@@ -7,16 +7,25 @@ const { Title, Text } = Typography;
 const { Option } = Select;
 
 const Terceros = () => {
-  const [tipoTercero, setTipoTercero] = useState('clientes'); // Estado para el tipo de tercero seleccionado
+  const [tipoTercero, setTipoTercero] = useState('clientes');
   const [formData, setFormData] = useState({
-    tipoTercero: 'clientes', // Por defecto 'clientes'
-    tipoPersona: 'natural', // Por defecto 'natural' (Persona)
-    tipoIdentificacion: 'cc', // Por defecto 'Cédula de ciudadanía'
+    tipoTercero: 'clientes',
+    tipoPersona: 'natural',
+    tipoIdentificacion: 'cc',
     identificacion: '',
     nombreComercial: '',
     correoElectronico: '',
     codigoSucursal: '',
-    // Añadir más campos según los datos del formulario
+    nombresContacto: '',
+    apellidosContacto: '',
+    ciudad: '',
+    direccion: '',
+    nombresContactoFacturacion: '',
+    apellidosContactoFacturacion: '',
+    correoElectronicoFacturacion: '',
+    tipoRegimenIVA: 'regimenComún',
+    telefonoFacturacion: '',
+    codigoPostal: '',
   });
 
   useEffect(() => {
