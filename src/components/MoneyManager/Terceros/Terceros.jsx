@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Info, Plus, X } from 'lucide-react';
 import { Button, message, Card, Input, Select, Radio, Space, Row, Col, Typography } from 'antd';
 import { RedoOutlined, SaveOutlined } from '@ant-design/icons';
+import Swal from "sweetalert2";
 
-const { Title, Text } = Typography;
-const { Option } = Select;
 
 const Terceros = () => {
   const [tipoTercero, setTipoTercero] = useState('clientes');
@@ -27,6 +26,11 @@ const Terceros = () => {
     telefonoFacturacion: '',
     codigoPostal: '',
   });
+
+
+  const apiUrl = import.meta.env.VITE_API_FINANZAS;
+  const { Title, Text } = Typography;
+  const { Option } = Select;
 
   useEffect(() => {
     // Cuando tipoTercero cambia, actualizamos el valor de tipoPersona y tipoIdentificacion
@@ -68,12 +72,44 @@ const Terceros = () => {
     }));
   };
 
-  // Función para guardar los datos
-  const handleSave = () => {
-    // Aquí se muestra en la consola para verificar que los datos estén listos para enviarse
-    console.log('Datos enviados:', formData);
-    message.success('Los datos han sido guardados correctamente.');
+  const handleSave = async () => {
+    try {
+      console.log('Datos enviados:', formData);
+      const method = "POST";
+      const endpoint = `${apiUrl}/providers`;
+      const response = await fetch(endpoint, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Notificación de éxito
+      Swal.fire({
+        icon: "success",
+        title: "Proveedor Registrado",
+        text: "El proveedor se ha guardado correctamente.",
+        confirmButtonColor: "#3085d6",
+      });
+
+      // Cerrar el formulario o hacer alguna otra acción
+      onClose();
+      if (onProviderAdded) onProviderAdded();
+
+    } catch (error) {
+      // En caso de error, mostrar un mensaje de error
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo guardar el proveedor. Inténtalo de nuevo.",
+        confirmButtonColor: "#d33",
+      });
+    }
   };
+
 
   // Función para cancelar y limpiar los datos
   const handleCancel = () => {
