@@ -49,7 +49,7 @@ const Header = ({ onNavClick }) => {
   };
 
   return (
-    <nav className="bg-white w-full">
+    <nav className="mt-[-1em] bg-white w-full">
       <div className="flex justify-center border-b">
         {navItems.map((item, index) => (
           <div 

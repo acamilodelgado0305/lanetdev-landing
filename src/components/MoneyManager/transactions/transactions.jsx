@@ -59,7 +59,7 @@ const DynamicButton = ({ icon: Icon, onClick, children, type = "default" }) => {
       case "expense":
         return "hover:bg-red-600 bg-red-500";
       case "transfer":
-        return "hover:bg-blue-600 bg-blue-500";
+        return "hover:bg-[#0052CC] bg-[#0052CC]";
       default:
         return "hover:bg-gray-600 bg-gray-500";
     }
@@ -120,6 +120,8 @@ const TransactionsDashboard = () => {
   const [monthlyBalance, setMonthlyBalance] = useState(0);
   const [monthlyIncome, setMonthlyIncome] = useState(0);
   const [monthlyExpenses, setMonthlyExpenses] = useState(0);
+
+  
 
   const openModal = () => {
     setEditTransaction(null);
@@ -387,7 +389,7 @@ const TransactionsDashboard = () => {
       {/* Barra superior de herramientas */}
       <div className="bg-gray border-b sticky top-0 z-0 shadow-sm">
         {/* Sección superior con botones de acción */}
-        <div className="max-full mx-auto py-2 px-3">
+        <div className="max-full mx-auto pt-4 pl-4 pr-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
               <div className="flex items-center gap-2">
@@ -628,11 +630,6 @@ const TransactionsDashboard = () => {
         transactionToEdit={editTransaction}
         transactionType={transactionType}
       />
-
-
-
-
-
       <VoucherContentModal
         isOpen={isContentModalOpen}
         onClose={closeContentModal}
