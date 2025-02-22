@@ -698,17 +698,17 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
               loading={loading}
               onClick={() => document.getElementById("bulkUploadInput").click()}
               className="bg-transparent border border-[#007072] text-[#007072] hover:bg-[#007072] hover:text-white"
-              style={{ borderRadius: 0 }}
+              style={{ borderRadius: 2 }}
             >
               Cargar Ingresos Masivos
             </Button>
           </div>
           <Button onClick={handleCancel}
             className="bg-transparent border border-gray-500 text-gray-500 hover:bg-gray-500 hover:text-white"
-            style={{ borderRadius: 0 }} >
+            style={{ borderRadius: 2 }} >
             Cancelar
           </Button>
-          <Button onClick={handleSave} type="primary" className="bg-[#007072]" style={{ borderRadius: 0 }}>
+          <Button onClick={handleSave} type="primary" className="bg-[#007072]" style={{ borderRadius: 2 }}>
             Guardar
           </Button>
         </Space>

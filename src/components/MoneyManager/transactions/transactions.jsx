@@ -48,6 +48,46 @@ const formatCurrency = (amount) => {
   }).format(amount);
 };
 
+
+
+
+const DynamicButton = ({ icon: Icon, onClick, children, type = "default" }) => {
+  const getColorScheme = () => {
+    switch (type) {
+      case "income":
+        return "hover:bg-green-600 bg-green-500";
+      case "expense":
+        return "hover:bg-red-600 bg-red-500";
+      case "transfer":
+        return "hover:bg-[#0052CC] bg-[#0052CC]";
+      default:
+        return "hover:bg-gray-600 bg-gray-500";
+    }
+  };
+
+  return (
+    <button
+      onClick={onClick}
+      className={`
+        flex items-center gap-2
+        px-4 py-2.5
+        text-white
+        rounded
+        shadow-sm
+        transition-all duration-200
+        ${getColorScheme()}
+        hover:shadow-md
+        active:transform active:scale-95
+        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-opacity-50
+        disabled:opacity-50 disabled:cursor-not-allowed
+      `}
+    >
+      {Icon && <Icon className="w-4 h-4" />}
+      <span className="font-medium">{children}</span>
+    </button>
+  );
+};
+
 const TransactionsDashboard = () => {
   const navigate = useNavigate();
   const [isContentModalOpen, setIsContentModalOpen] = useState(false);
@@ -80,6 +120,8 @@ const TransactionsDashboard = () => {
   const [monthlyBalance, setMonthlyBalance] = useState(0);
   const [monthlyIncome, setMonthlyIncome] = useState(0);
   const [monthlyExpenses, setMonthlyExpenses] = useState(0);
+
+  
 
   const openModal = () => {
     setEditTransaction(null);
@@ -347,7 +389,7 @@ const TransactionsDashboard = () => {
       {/* Barra superior de herramientas */}
       <div className="bg-gray border-b sticky top-0 z-0 shadow-sm">
         {/* Sección superior con botones de acción */}
-        <div className="max-full mx-auto py-2 px-3">
+        <div className="max-full mx-auto pt-4 pl-4 pr-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
               <div className="flex items-center gap-2">
@@ -363,229 +405,224 @@ const TransactionsDashboard = () => {
               </div>
             </div>
             <div className="flex gap-3">
-              <Button
+              <DynamicButton
+                icon={TrendingUp}
                 onClick={handleNavigate}
-                type="button"
-                className="px-4 py-2 bg-green-500 text-white"
-                style={{ borderRadius: 0 }}
+                type="income"
               >
-                <TrendingUp className="w-4 h-4" />
                 Nuevo Ingreso
-              </Button>
+              </DynamicButton>
 
-              <Button
+              <DynamicButton
+                icon={CreditCard}
                 onClick={handleNavigateExpense}
-                type="button"
-                className="px-4 py-2 bg-red-500 text-white"
-                style={{ borderRadius: 0 }}
+                type="expense"
               >
-                <CreditCard className="w-4 h-4" />
                 Nuevo Egreso
-              </Button>
+              </DynamicButton>
 
-              <Button
+              <DynamicButton
+                icon={ArrowLeftRight}
                 onClick={openTransferModal}
-                type="button"
-                className="px-4 py-2 bg-blue-500 text-white"
-                style={{ borderRadius: 0 }}
+                type="transfer"
               >
-                <ArrowLeftRight className="w-4 h-4" />
                 Nueva Transferencia
-              </Button>
-            </div>
+              </DynamicButton>
+            
           </div>
+        </div>
 
-          {/* Resumen financiero */}
-          <div className="p-4">
-            <Row gutter={[16, 16]}>
-              {userRole === "superadmin" && (
-                <>
-                  <Col xs={24} md={8}>
-                    <Card bordered={false} className="h-full">
-                      <Title level={5} className="text-gray-500 mb-4">Balance</Title>
-                      <Statistic
-                        title="Balance Total"
-                        value={balance}
-                        precision={2}
-                        prefix={<DollarOutlined />}
-                        formatter={(value) => formatCurrency(value)}
-                        className="mb-4"
-                      />
-                      <Statistic
-                        title="Balance Mensual"
-                        value={monthlyBalance}
-                        precision={2}
-                        prefix={<DollarOutlined />}
-                        formatter={(value) => formatCurrency(value)}
-                      />
-                    </Card>
-                  </Col>
-
-                  <Col xs={24} md={8}>
-                    <Card bordered={false} className="h-full">
-                      <Title level={5} className="text-gray-500 mb-4">Ingresos</Title>
-                      <Statistic
-                        title="Ingresos Totales"
-                        value={totalIncome}
-                        precision={2}
-                        prefix={<ArrowUpOutlined />}
-                        valueStyle={{ color: '#3f8600' }}
-                        formatter={(value) => formatCurrency(value)}
-                        className="mb-4"
-                      />
-                      <Statistic
-                        title="Ingresos Mensuales"
-                        value={monthlyIncome}
-                        precision={2}
-                        prefix={<ArrowUpOutlined />}
-                        valueStyle={{ color: '#3f8600' }}
-                        formatter={(value) => formatCurrency(value)}
-                      />
-                    </Card>
-                  </Col>
-                </>
-              )}
-
-              {(userRole === "admin" || userRole === "superadmin") && (
+        {/* Resumen financiero */}
+        <div className="p-4">
+          <Row gutter={[16, 16]}>
+            {userRole === "superadmin" && (
+              <>
                 <Col xs={24} md={8}>
                   <Card bordered={false} className="h-full">
-                    <Title level={5} className="text-gray-500 mb-4">Gastos</Title>
+                    <Title level={5} className="text-gray-500 mb-4">Balance</Title>
                     <Statistic
-                      title="Gastos Totales"
-                      value={totalExpenses}
+                      title="Balance Total"
+                      value={balance}
                       precision={2}
-                      prefix={<ArrowDownOutlined />}
-                      valueStyle={{ color: '#cf1322' }}
+                      prefix={<DollarOutlined />}
                       formatter={(value) => formatCurrency(value)}
                       className="mb-4"
                     />
                     <Statistic
-                      title="Gastos Mensuales"
-                      value={monthlyExpenses}
+                      title="Balance Mensual"
+                      value={monthlyBalance}
                       precision={2}
-                      prefix={<ArrowDownOutlined />}
-                      valueStyle={{ color: '#cf1322' }}
+                      prefix={<DollarOutlined />}
                       formatter={(value) => formatCurrency(value)}
                     />
                   </Card>
                 </Col>
-              )}
-            </Row>
-          </div>
-        </div>
 
-        {/* Navegación entre categorías */}
-        <div className="bg-white border-b">
-          <div className="max-w-7xl mx-auto">
-            <Header onNavClick={handleNavClick} />
-          </div>
-        </div>
-      </div>
-
-      {/* Contenido principal */}
-      <div className="max-w-full py-4 mx-auto  ">
-        <div className="bg-white  shadow-sm border">
-          <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 450px)' }}>
-            {error && (
-              <div className="p-2 bg-red-50 border-l-4 border-red-500 text-red-700">
-                <p className="flex items-center">
-                  <AlertCircle className="w-5 h-5 mr-2" />
-                  {error}
-                </p>
-              </div>
+                <Col xs={24} md={8}>
+                  <Card bordered={false} className="h-full">
+                    <Title level={5} className="text-gray-500 mb-4">Ingresos</Title>
+                    <Statistic
+                      title="Ingresos Totales"
+                      value={totalIncome}
+                      precision={2}
+                      prefix={<ArrowUpOutlined />}
+                      valueStyle={{ color: '#3f8600' }}
+                      formatter={(value) => formatCurrency(value)}
+                      className="mb-4"
+                    />
+                    <Statistic
+                      title="Ingresos Mensuales"
+                      value={monthlyIncome}
+                      precision={2}
+                      prefix={<ArrowUpOutlined />}
+                      valueStyle={{ color: '#3f8600' }}
+                      formatter={(value) => formatCurrency(value)}
+                    />
+                  </Card>
+                </Col>
+              </>
             )}
 
-            {selectedEndpoint === "/incomes" && (
-              <IncomeTable
-                entries={paginatedEntries}
-                categories={categories}
-                accounts={accounts}
-                onDelete={() => {
-                  fetchData(selectedEndpoint);
-                  fetchMonthlyData();
-                }}
-                onEdit={openEditModal}
-                onOpenContentModal={openContentModal}
-                onOpenModal={openModal}
-              />
+            {(userRole === "admin" || userRole === "superadmin") && (
+              <Col xs={24} md={8}>
+                <Card bordered={false} className="h-full">
+                  <Title level={5} className="text-gray-500 mb-4">Gastos</Title>
+                  <Statistic
+                    title="Gastos Totales"
+                    value={totalExpenses}
+                    precision={2}
+                    prefix={<ArrowDownOutlined />}
+                    valueStyle={{ color: '#cf1322' }}
+                    formatter={(value) => formatCurrency(value)}
+                    className="mb-4"
+                  />
+                  <Statistic
+                    title="Gastos Mensuales"
+                    value={monthlyExpenses}
+                    precision={2}
+                    prefix={<ArrowDownOutlined />}
+                    valueStyle={{ color: '#cf1322' }}
+                    formatter={(value) => formatCurrency(value)}
+                  />
+                </Card>
+              </Col>
             )}
-
-            {selectedEndpoint === "/expenses" && (
-              <ExpenseTable
-                entries={paginatedEntries}
-                categories={categories}
-                accounts={accounts}
-                onDelete={() => {
-                  fetchData(selectedEndpoint);
-                  fetchMonthlyData();
-                }}
-                onEdit={openEditModal}
-                onOpenContentModal={openContentModal}
-                onOpenModal={openModal}
-              />
-            )}
-
-            {selectedEndpoint === "/transfers" && (
-              <TransactionTable
-                entries={paginatedEntries}
-                categories={categories}
-                accounts={accounts}
-                onDelete={() => {
-                  fetchData(selectedEndpoint);
-                  fetchMonthlyData();
-                }}
-                onEdit={openEditModal}
-                onOpenContentModal={openContentModal}
-                onOpenModal={openModal}
-              />
-            )}
-          </div>
+          </Row>
         </div>
       </div>
 
-      {/* Navegación de meses */}
-      <div className="fixed bottom-0 w-full bg-white border-t shadow-md">
-        <div className="max-w-7xl mx-auto px-6 py-2">
-          <div className="flex items-center justify-center space-x-4">
-            <Button
-              type="text"
-              icon={<ChevronLeft className="w-4 h-4" />}
-              onClick={handlePreviousMonth}
-              className="hover:bg-gray-100"
-            />
+      {/* Navegación entre categorías */}
+      <div className="bg-white border-b">
+        <div className="max-w-7xl mx-auto">
+          <Header onNavClick={handleNavClick} />
+        </div>
+      </div>
+    </div>
 
-            <div className="flex overflow-x-auto space-x-2 px-2">
-              {getMonthsArray().map((date) => {
-                const isCurrentMonth = formatDate(date, "yyyy-MM") === formatDate(currentMonth, "yyyy-MM");
-                return (
-                  <button
-                    key={date.getTime()}
-                    onClick={() => setCurrentMonth(date)}
-                    className={`
+      {/* Contenido principal */ }
+  <div className="max-w-full py-4 mx-auto  ">
+    <div className="bg-white  shadow-sm border">
+      <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 450px)' }}>
+        {error && (
+          <div className="p-2 bg-red-50 border-l-4 border-red-500 text-red-700">
+            <p className="flex items-center">
+              <AlertCircle className="w-5 h-5 mr-2" />
+              {error}
+            </p>
+          </div>
+        )}
+
+        {selectedEndpoint === "/incomes" && (
+          <IncomeTable
+            entries={paginatedEntries}
+            categories={categories}
+            accounts={accounts}
+            onDelete={() => {
+              fetchData(selectedEndpoint);
+              fetchMonthlyData();
+            }}
+            onEdit={openEditModal}
+            onOpenContentModal={openContentModal}
+            onOpenModal={openModal}
+          />
+        )}
+
+        {selectedEndpoint === "/expenses" && (
+          <ExpenseTable
+            entries={paginatedEntries}
+            categories={categories}
+            accounts={accounts}
+            onDelete={() => {
+              fetchData(selectedEndpoint);
+              fetchMonthlyData();
+            }}
+            onEdit={openEditModal}
+            onOpenContentModal={openContentModal}
+            onOpenModal={openModal}
+          />
+        )}
+
+        {selectedEndpoint === "/transfers" && (
+          <TransactionTable
+            entries={paginatedEntries}
+            categories={categories}
+            accounts={accounts}
+            onDelete={() => {
+              fetchData(selectedEndpoint);
+              fetchMonthlyData();
+            }}
+            onEdit={openEditModal}
+            onOpenContentModal={openContentModal}
+            onOpenModal={openModal}
+          />
+        )}
+      </div>
+    </div>
+  </div>
+
+  {/* Navegación de meses */ }
+  <div className="fixed bottom-0 w-full bg-white border-t shadow-md">
+    <div className="max-w-7xl mx-auto px-6 py-2">
+      <div className="flex items-center justify-center space-x-4">
+        <Button
+          type="text"
+          icon={<ChevronLeft className="w-4 h-4" />}
+          onClick={handlePreviousMonth}
+          className="hover:bg-gray-100"
+        />
+
+        <div className="flex overflow-x-auto space-x-2 px-2">
+          {getMonthsArray().map((date) => {
+            const isCurrentMonth = formatDate(date, "yyyy-MM") === formatDate(currentMonth, "yyyy-MM");
+            return (
+              <button
+                key={date.getTime()}
+                onClick={() => setCurrentMonth(date)}
+                className={`
                       px-4 py-2 text-sm font-medium transition-all
                       ${isCurrentMonth
-                        ? "bg-blue-50 text-blue-600 border border-blue-200"
-                        : "text-gray-600 hover:bg-gray-50"
-                      }
+                    ? "bg-blue-50 text-blue-600 border border-blue-200"
+                    : "text-gray-600 hover:bg-gray-50"
+                  }
                     `}
-                  >
-                    {formatDate(date, "MMMM yyyy")}
-                  </button>
-                );
-              })}
-            </div>
-
-            <Button
-              type="text"
-              icon={<ChevronRight className="w-4 h-4" />}
-              onClick={handleNextMonth}
-              className="hover:bg-gray-100"
-            />
-          </div>
+              >
+                {formatDate(date, "MMMM yyyy")}
+              </button>
+            );
+          })}
         </div>
-      </div>
 
-      {/* Modales */}
+        <Button
+          type="text"
+          icon={<ChevronRight className="w-4 h-4" />}
+          onClick={handleNextMonth}
+          className="hover:bg-gray-100"
+        />
+      </div>
+    </div>
+  </div>
+
+  {/* Modales */ }
       <AddEntryModal
         isOpen={isModalOpen}
         onClose={closeModal}
@@ -593,17 +630,12 @@ const TransactionsDashboard = () => {
         transactionToEdit={editTransaction}
         transactionType={transactionType}
       />
-
-
-
-
-
       <VoucherContentModal
         isOpen={isContentModalOpen}
         onClose={closeContentModal}
         voucherContent={selectedVoucherContent}
       />
-    </div>
+    </div >
   );
 };
 

@@ -31,6 +31,7 @@ const AddExpense = () => {
   const [tipo, setTipo] = useState("");
   const [accounts, setAccounts] = useState([]);
   const [date, setDate] = useState(dayjs());
+  const [proveedores, setProveedores] = useState("");
 
 
 
@@ -96,11 +97,26 @@ const AddExpense = () => {
   useEffect(() => {
 
     fetchAccounts();
+    fetchProveedores();
 
   }, []);
 
 
   //---------------------------FETCH---------------------------//
+
+
+
+
+  const fetchProveedores = async () => {
+    try {
+      const response = await fetch(`${apiUrl}/providers`);
+      const data = await response.json();
+      // Filtrar las cuentas, excluyendo los préstamos
+      setProveedores(data);
+    } catch (error) {
+      console.error("Error al obtener las cuentas:", error);
+    }
+  };
 
 
 
@@ -327,7 +343,6 @@ const AddExpense = () => {
               className="w-64" // Clase para ajustar el ancho
             />
 
-
             <div className="flex items-center justify-end space-x-4">
               <span className="text-gray-600">Proveedor:</span>
               <Select
@@ -336,12 +351,13 @@ const AddExpense = () => {
                   setproveedor(value);
                 }}
                 className="w-64"
-                placeholder="Selecciona un cajero"
+                placeholder="Selecciona un proveedor"
               >
-                <option value="Proveedor 1">Proveedor 1</option>
-                <option value="Proveedor 2">Proveedor 2</option>
-                <option value="Proveedor 3">Proveedor 3</option>
-
+                {Array.isArray(proveedores) && proveedores.map(provider => (
+                  <Select.Option key={provider.id} value={provider.id}>
+                    {provider.nombre_comercial}
+                  </Select.Option>
+                ))}
               </Select>
             </div>
           </div>
@@ -449,7 +465,7 @@ const AddExpense = () => {
             disabled={!isExpenseSaved} // Deshabilitar el botón si el Egreso no ha sido guardado
             onClick={handleDownloadPDF}
             className="bg-transparent border border-[#007072] text-[#007072] hover:bg-[#007072] hover:text-white"
-            style={{ borderRadius: 0 }} // Eliminar redondez de los bordes
+            style={{ borderRadius: 2 }} // Eliminar redondez de los bordes
           >
             Descargar PDF
           </Button>
@@ -468,7 +484,7 @@ const AddExpense = () => {
               loading={loading}
               onClick={() => document.getElementById("bulkUploadInput").click()}
               className="bg-transparent border border-[#007072] text-[#007072] hover:bg-[#007072] hover:text-white"
-              style={{ borderRadius: 0 }} // Eliminar redondez de los bordes
+              style={{ borderRadius: 2 }} // Eliminar redondez de los bordes
             >
               Cargar Egresos Masivos
             </Button>
@@ -477,11 +493,11 @@ const AddExpense = () => {
             onClick={handleCancel}
 
             className="bg-transparent border border-gray-500 text-gray-500 hover:bg-gray-500 hover:text-white"
-            style={{ borderRadius: 0 }} // Eliminar redondez de los bordes
+            style={{ borderRadius: 2 }} // Eliminar redondez de los bordes
           >
             Cancelar
           </Button>
-          <Button onClick={handleSave} type="primary" className="bg-[#007072]" style={{ borderRadius: 0 }}>
+          <Button onClick={handleSave} type="primary" className="bg-[#007072]" style={{ borderRadius: 2 }}>
             Aceptar
           </Button>
         </Space>
