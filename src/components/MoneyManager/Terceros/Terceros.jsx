@@ -85,6 +85,26 @@ const Terceros = () => {
         text: "El proveedor se ha guardado correctamente.",
         confirmButtonColor: "#3085d6",
       });
+      setFormData({
+        tipoTercero: 'clientes',
+        tipoPersona: 'natural',
+        tipoIdentificacion: 'cc',
+        identificacion: '',
+        nombreComercial: '',
+        codigoSucursal: '',
+        nombresContacto: '',
+        apellidosContacto: '',
+        ciudad: '',
+        direccion: '',
+        nombresContactoFacturacion: '',
+        apellidosContactoFacturacion: '',
+        correoElectronicoFacturacion: '',
+        tipoRegimen: 'regimenComún',
+        telefonoFacturacion: '',
+        codigoPostal: '',
+        nit: '',
+        dv: '',
+      });
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -200,13 +220,13 @@ const Terceros = () => {
 
       {tipoTercero === 'proveedores' && (
         <Card>
-          <Title level={4}>Datos básicos</Title>
+          <Title level={4}> <span style={{ color: 'red' }}>*</span>Datos básicos</Title>
           <Space direction="vertical" size="middle" className="w-full">
             <Row gutter={[24, 16]}>
               {/* Columna 1 (Datos básicos) */}
               <Col span={8}>
                 <div>
-                  <Text strong className="block mb-1">
+                  <Text strong className="block mb-1" style={{ color: '#007072' }}>
                     Tipo de persona
                   </Text>
                   <Select
@@ -219,9 +239,10 @@ const Terceros = () => {
                   </Select>
                 </div>
 
+
                 {/* Tipo de identificación se ajusta según el tipo de persona */}
                 <div>
-                  <Text strong className="block mb-1">
+                  <Text strong className="block mb-1" style={{ color: '#007072' }}>
                     Tipo de identificación
                   </Text>
                   <Select
@@ -240,8 +261,8 @@ const Terceros = () => {
                 {/* Identificación: un solo campo para persona, dos para empresa */}
                 {formData.tipoPersona === 'natural' ? (
                   <div>
-                    <Text strong className="block mb-1">
-                      Identificación
+                    <Text strong className="block mb-1" style={{ color: '#007072' }}>
+                      <span style={{ color: 'red' }}>*</span>Identificación
                     </Text>
                     <Input
                       placeholder="Numero de Cédula"
@@ -274,7 +295,7 @@ const Terceros = () => {
                 )}
 
                 <div>
-                  <Text strong className="block mb-1">
+                  <Text strong className="block mb-1" style={{ color: '#007072' }}>
                     Código de la sucursal
                   </Text>
                   <Input
@@ -288,14 +309,15 @@ const Terceros = () => {
               <Col span={8}>
                 <div>
                   <Input
-                    placeholder="Nombres"
+                    placeholder="* Nombres"
                     value={formData.nombresContacto}
                     onChange={(e) => handleInputChange('nombresContacto', e.target.value)}
+                    style={{ paddingLeft: '10px' }} // Opcional: para ajustar el padding
                   />
                 </div>
                 <div>
                   <Input
-                    placeholder="Apellidos"
+                    placeholder="* Apellidos"
                     value={formData.apellidosContacto}
                     onChange={(e) => handleInputChange('apellidosContacto', e.target.value)}
                   />
@@ -349,7 +371,7 @@ const Terceros = () => {
                   />
                 </div>
                 <div>
-                  <Text strong className="block mb-1">
+                  <Text strong className="block mb-1" style={{ color: '#007072' }}>
                     Tipo de régimen IVA
                   </Text>
                   <Select

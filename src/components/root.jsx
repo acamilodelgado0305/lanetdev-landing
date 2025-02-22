@@ -234,8 +234,12 @@ export default function Root() {
             hoverClass: "hover:text-[#007072] hover:text-white",
           },
           {
-            to: "/index/moneymanager/terceros", label: "Terceros", icon: <DotIcon />, color: "text-green-400",
-            hoverClass: "hover:text-green-400 hover:text-white",
+            to: "/index/moneymanager/terceros", label: "Terceros", icon: <DotIcon />, color: "text-[#007072]",
+            hoverClass: "hover:text-[#007072] hover:text-white",
+          },
+          {
+            to: "/index/moneymanager/proveedores", label: "Proveedores", icon: <DotIcon />, color: "text-[#007072]",
+            hoverClass: "hover:text-[#007072] hover:text-white",
           },
         ],
       },
