@@ -354,8 +354,8 @@ export default function Root() {
         {/* Sidebar */}
         <div
           className={`${isExpanded ? "w-48" : "w-18"} 
-                bg-gray-200 text-black ${isOpen ? "block" : "hidden"} 
-                lg:block fixed top-0 left-0 h-full transition-all duration-300`}
+                bg-white text-black ${isOpen ? "block" : "hidden"} 
+               p-4 lg:block fixed top-0 left-0 h-full transition-all duration-300`}
         >
           {/* {isExpanded && (
             <UserProfileHeader
