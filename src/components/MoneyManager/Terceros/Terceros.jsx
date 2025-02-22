@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Info, Plus, X } from 'lucide-react';
 import { Button, message, Card, Input, Select, Radio, Space, Row, Col, Typography } from 'antd';
 import { RedoOutlined, SaveOutlined } from '@ant-design/icons';
+import Swal from "sweetalert2";
 
-const { Title, Text } = Typography;
-const { Option } = Select;
 
 const Terceros = () => {
   const [tipoTercero, setTipoTercero] = useState('clientes');
@@ -14,7 +13,6 @@ const Terceros = () => {
     tipoIdentificacion: 'cc',
     identificacion: '',
     nombreComercial: '',
-    correoElectronico: '',
     codigoSucursal: '',
     nombresContacto: '',
     apellidosContacto: '',
@@ -23,27 +21,32 @@ const Terceros = () => {
     nombresContactoFacturacion: '',
     apellidosContactoFacturacion: '',
     correoElectronicoFacturacion: '',
-    tipoRegimenIVA: 'regimenComún',
+    tipoRegimen: 'regimenComún',
     telefonoFacturacion: '',
     codigoPostal: '',
+    nit: '',
+    dv: '',
   });
 
+
+  const apiUrl = import.meta.env.VITE_API_FINANZAS;
+  const { Title, Text } = Typography;
+  const { Option } = Select;
+
   useEffect(() => {
-    // Cuando tipoTercero cambia, actualizamos el valor de tipoPersona y tipoIdentificacion
     if (formData.tipoPersona === 'juridica') {
       setFormData((prevState) => ({
         ...prevState,
-        tipoIdentificacion: 'nit', // Si es empresa, por defecto 'NIT'
+        tipoIdentificacion: 'nit',
       }));
     } else {
       setFormData((prevState) => ({
         ...prevState,
-        tipoIdentificacion: 'cc', // Si es persona, por defecto 'Cédula de ciudadanía'
+        tipoIdentificacion: 'cc',
       }));
     }
   }, [formData.tipoPersona]);
 
-  // Función para manejar cambios en los campos del formulario
   const handleInputChange = (field, value) => {
     setFormData((prevState) => ({
       ...prevState,
@@ -51,7 +54,6 @@ const Terceros = () => {
     }));
   };
 
-  // Función para manejar la selección del tipo de tercero
   const handleTipoTerceroChange = (value) => {
     setTipoTercero(value);
     setFormData((prevState) => ({
@@ -60,7 +62,6 @@ const Terceros = () => {
     }));
   };
 
-  // Función para manejar el cambio de tipo de persona
   const handleTipoPersonaChange = (value) => {
     setFormData((prevState) => ({
       ...prevState,
@@ -68,12 +69,32 @@ const Terceros = () => {
     }));
   };
 
-  // Función para guardar los datos
-  const handleSave = () => {
-    // Aquí se muestra en la consola para verificar que los datos estén listos para enviarse
-    console.log('Datos enviados:', formData);
-    message.success('Los datos han sido guardados correctamente.');
+  const handleSave = async () => {
+    try {
+      const response = await fetch(`${apiUrl}/providers`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) throw new Error("No se pudo guardar el proveedor.");
+
+      Swal.fire({
+        icon: "success",
+        title: "Proveedor Registrado",
+        text: "El proveedor se ha guardado correctamente.",
+        confirmButtonColor: "#3085d6",
+      });
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.message || "Inténtalo de nuevo.",
+        confirmButtonColor: "#d33",
+      });
+    }
   };
+
 
   // Función para cancelar y limpiar los datos
   const handleCancel = () => {
@@ -93,7 +114,7 @@ const Terceros = () => {
           <Button
             onClick={handleCancel}
             className="bg-transparent border border-gray-500 text-gray-500 hover:bg-gray-500 hover:text-white"
-           
+
           >
             Cancelar
           </Button>
@@ -333,8 +354,8 @@ const Terceros = () => {
                   </Text>
                   <Select
                     className="w-full"
-                    value={formData.tipoRegimenIVA}
-                    onChange={(value) => handleInputChange('tipoRegimenIVA', value)}
+                    value={formData.tipoRegimen}
+                    onChange={(value) => handleInputChange('tipoRegimen', value)}
                   >
                     <Option value="regimenComún">Régimen Común</Option>
                     <Option value="regimenSimplificado">Régimen Simplificado</Option>
