@@ -10,10 +10,9 @@ const Terceros = () => {
   const [formData, setFormData] = useState({
     tipoTercero: 'clientes',
     tipoPersona: 'natural',
-    tipoIdentificacion: 'cc',
+    tipoIdentificacion: 'cc', // Cambié tipoIdentificacion a tipo_identificacion
     identificacion: '',
     nombreComercial: '',
-    correoElectronico: '',
     codigoSucursal: '',
     nombresContacto: '',
     apellidosContacto: '',
@@ -22,9 +21,11 @@ const Terceros = () => {
     nombresContactoFacturacion: '',
     apellidosContactoFacturacion: '',
     correoElectronicoFacturacion: '',
-    tipoRegimenIVA: 'regimenComún',
+    tipoRegimen: 'regimenComún',
     telefonoFacturacion: '',
     codigoPostal: '',
+    nit: '', // NIT para empresa
+    dv: '',  // DV para empresa
   });
 
 
@@ -74,37 +75,25 @@ const Terceros = () => {
 
   const handleSave = async () => {
     try {
-      console.log('Datos enviados:', formData);
-      const method = "POST";
-      const endpoint = `${apiUrl}/providers`;
-      const response = await fetch(endpoint, {
-        method,
+      const response = await fetch(`${apiUrl}/providers`, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error("No se pudo guardar el proveedor.");
 
-      // Notificación de éxito
       Swal.fire({
         icon: "success",
         title: "Proveedor Registrado",
         text: "El proveedor se ha guardado correctamente.",
         confirmButtonColor: "#3085d6",
       });
-
-      // Cerrar el formulario o hacer alguna otra acción
-      onClose();
-      if (onProviderAdded) onProviderAdded();
-
     } catch (error) {
-      // En caso de error, mostrar un mensaje de error
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "No se pudo guardar el proveedor. Inténtalo de nuevo.",
+        text: error.message || "Inténtalo de nuevo.",
         confirmButtonColor: "#d33",
       });
     }
@@ -369,8 +358,8 @@ const Terceros = () => {
                   </Text>
                   <Select
                     className="w-full"
-                    value={formData.tipoRegimenIVA}
-                    onChange={(value) => handleInputChange('tipoRegimenIVA', value)}
+                    value={formData.tipoRegimen}
+                    onChange={(value) => handleInputChange('tipoRegimen', value)}
                   >
                     <Option value="regimenComún">Régimen Común</Option>
                     <Option value="regimenSimplificado">Régimen Simplificado</Option>
