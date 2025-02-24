@@ -7,7 +7,6 @@ import Swal from "sweetalert2";
 
 const Terceros = () => {
   const [tipoTercero, setTipoTercero] = useState('clientes');
-   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     tipoTercero: 'clientes',
     tipoPersona: 'natural',
@@ -126,38 +125,25 @@ const Terceros = () => {
   return (
     <div className="p-6 max-w-[1200px] mx-auto bg-white shadow">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white p-4 shadow-md flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <div className="bg-[#007072] p-2 ">
-            <FileTextOutlined className=" text-white" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-[#007072] text-sm">Terceros /</span>
-            <Title level={3}>
-              Crear
-            </Title>
-          </div>
-        </div>
+      <div className="flex justify-between items-center mb-6 mr-10">
+        <Title level={3} className="mb-0">
+          Crear un tercero
+        </Title>
+        {/* Botones */}
         <Space>
-
-         
-
-          <div className="px-6 py-4 flex justify-end">
-           
-           
-          </div>
-          <Button onClick={handleCancel}
+          <Button
+            onClick={handleCancel}
             className="bg-transparent border border-gray-500 text-gray-500 hover:bg-gray-500 hover:text-white"
 
           >
             Cancelar
           </Button>
-          <Button onClick={handleSave} type="primary" className="bg-[#007072]" style={{ borderRadius: 2 }}>
-            Guardar
+          <Button onClick={handleSave} type="primary" className="bg-[#007072]" >
+            Aceptar
           </Button>
         </Space>
-      </div>
 
+      </div>
 
       {/* Tipo de tercero */}
       <Card className="mb-6" bordered={false}>
