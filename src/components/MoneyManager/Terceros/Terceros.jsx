@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Info, Plus, X } from 'lucide-react';
 import { Button, message, Card, Input, Select, Radio, Space, Row, Col, Typography } from 'antd';
-import { RedoOutlined, SaveOutlined } from '@ant-design/icons';
+import { RedoOutlined, SaveOutlined, FileTextOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 
 const Terceros = () => {
   const [tipoTercero, setTipoTercero] = useState('clientes');
+   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     tipoTercero: 'clientes',
     tipoPersona: 'natural',
@@ -27,6 +29,7 @@ const Terceros = () => {
     telefonoFacturacion: '',
     codigoPostal: '',
   });
+  
 
   useEffect(() => {
     // Cuando tipoTercero cambia, actualizamos el valor de tipoPersona y tipoIdentificacion
@@ -49,6 +52,10 @@ const Terceros = () => {
       ...prevState,
       [field]: value,
     }));
+  };
+
+  const handleCancel = () => {
+    navigate(-1); // Navega hacia atrás en la historia del navegador
   };
 
   // Función para manejar la selección del tipo de tercero
@@ -75,34 +82,41 @@ const Terceros = () => {
     message.success('Los datos han sido guardados correctamente.');
   };
 
-  // Función para cancelar y limpiar los datos
-  const handleCancel = () => {
-    setFormData({});
-    message.info('La acción ha sido cancelada.');
-  };
 
   return (
     <div className="p-6 max-w-[1200px] mx-auto bg-white shadow">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6 mr-10">
-        <Title level={3} className="mb-0">
-          Crear un tercero
-        </Title>
-        {/* Botones */}
+      <div className="sticky top-0 z-10 bg-white p-4 shadow-md flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <div className="bg-[#007072] p-2 ">
+            <FileTextOutlined className=" text-white" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[#007072] text-sm">Terceros /</span>
+            <Title level={3}>
+              Crear
+            </Title>
+          </div>
+        </div>
         <Space>
-          <Button
-            onClick={handleCancel}
-            className="bg-transparent border border-gray-500 text-gray-500 hover:bg-gray-500 hover:text-white"
+
+         
+
+          <div className="px-6 py-4 flex justify-end">
            
-          >
+           
+          </div>
+          <Button onClick={handleCancel}
+            className="bg-transparent border border-gray-500 text-gray-500 hover:bg-gray-500 hover:text-white"
+            style={{ borderRadius: 2 }} >
             Cancelar
           </Button>
-          <Button onClick={handleSave} type="primary" className="bg-[#007072]" >
-            Aceptar
+          <Button onClick={handleSave} type="primary" className="bg-[#007072]" style={{ borderRadius: 2 }}>
+            Guardar
           </Button>
         </Space>
-
       </div>
+
 
       {/* Tipo de tercero */}
       <Card className="mb-6" bordered={false}>

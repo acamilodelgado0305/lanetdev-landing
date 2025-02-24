@@ -19,7 +19,7 @@ import { useParams } from 'react-router-dom'; //
 const { Title, Text } = Typography;
 
 
-const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
+const AddIncome = ({ onTransactionAdded }) => {
   const { id } = useParams(); // Obtener el ID de la URL
   const navigate = useNavigate();
   // Inicializa el hook useNavigaten
@@ -85,6 +85,12 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
     fetchAccounts();
     fetchCashiers();
   }, []);
+
+  useEffect(() => {
+    const totalAmount = calculateTotalAmount();
+    const commission = totalAmount * (CommissionPorcentaje / 100);
+    setCashierCommission(commission);
+  }, [fevAmount, diversoAmount, otherIncome, CommissionPorcentaje]);
 
 
   //---------------------------FETCH---------------------------//
@@ -222,6 +228,14 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
 
   //--------------------------FUNCIONES
 
+
+  const calculateTotalAmount = () => {
+    const fev = parseFloat(fevAmount) || 0;
+    const diverso = parseFloat(diversoAmount) || 0;
+    const otros = parseFloat(otherIncome) || 0;
+    return fev + diverso + otros;
+  };
+
   const handleAmountChange = (e, field) => {
     const rawValue = e.target.value.replace(/\D/g, ''); // Eliminar caracteres no numéricos
     const numericValue = rawValue ? parseInt(rawValue, 10) : 0; // Convertir a número
@@ -313,7 +327,20 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
         icon: "success",
         title: id ? "Ingreso Actualizado" : "Ingreso Registrado",
         text: id ? "El ingreso se ha actualizado correctamente" : "El ingreso se ha registrado correctamente",
+        showCancelButton: true,
+        confirmButtonText: "Aceptar",
+        cancelButtonText: "Descargar PDF",
         confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#5cb85c",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Si el usuario hace clic en "Aceptar", navegar hacia atrás
+          navigate(-1);
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
+          // Si el usuario hace clic en "Descargar PDF", descargar el PDF y luego navegar hacia atrás
+          handleDownloadPDF();
+          navigate(-1);
+        }
       });
 
       // ... (código existente)
@@ -533,10 +560,11 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
               <div className="bg-gray-50 p-4 ">
                 <Title level={5}>Resumen</Title>
                 <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span>Total Ingresos:</span>
+                  <div className="bg-[#007072] text-white rounded-md py-2 px-4 flex justify-between items-center">
+                    <span className="text-white text-xl">Total a cobrar</span>
                     <span className="font-bold text-lg">{formatCurrency(amount)}</span>
                   </div>
+
                   <div className="flex justify-between">
                     <span>Efectivo Recibido:</span>
                     <Input
@@ -674,16 +702,6 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
           </div>
         </div>
         <Space>
-
-          <Button
-            disabled={!isIncomeSaved}  // Deshabilitar el botón si el ingreso no ha sido guardado
-            onClick={handleDownloadPDF}
-            className="bg-transparent border border-[#007072] text-[#007072] hover:bg-[#007072] hover:text-white"
-            style={{ borderRadius: 0 }}
-          >
-            Descargar PDF
-          </Button>
-
           <div className="px-6 py-4 flex justify-end">
             <input
               type="file"
