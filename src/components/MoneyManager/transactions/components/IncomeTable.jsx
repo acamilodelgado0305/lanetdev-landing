@@ -59,7 +59,7 @@ const IncomeTable = ({ onDelete, categories = [], accounts = [] }) => {
     useEffect(() => {
         let filtered = [...entries];
 
-        {/*Apply date range filter
+      
         if (dateRange && dateRange[0] && dateRange[1]) {
             const startDate = new Date(dateRange[0]);
             const endDate = new Date(dateRange[1]);
@@ -71,7 +71,7 @@ const IncomeTable = ({ onDelete, categories = [], accounts = [] }) => {
                     return isValid(entryDate) && isWithinInterval(entryDate, { start: startDate, end: endDate });
                 });
             }
-        }*/}
+        }
 
         // Apply search text filters
         filtered = filtered.filter(entry =>
