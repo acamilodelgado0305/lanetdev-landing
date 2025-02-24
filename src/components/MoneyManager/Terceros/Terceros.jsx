@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Info, Plus, X } from 'lucide-react';
 import { Button, message, Card, Input, Select, Radio, Space, Row, Col, Typography } from 'antd';
-import { RedoOutlined, SaveOutlined, FileTextOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { RedoOutlined, SaveOutlined } from '@ant-design/icons';
+import Swal from "sweetalert2";
 
-const { Title, Text } = Typography;
-const { Option } = Select;
 
 const Terceros = () => {
   const [tipoTercero, setTipoTercero] = useState('clientes');
@@ -16,7 +14,6 @@ const Terceros = () => {
     tipoIdentificacion: 'cc',
     identificacion: '',
     nombreComercial: '',
-    correoElectronico: '',
     codigoSucursal: '',
     nombresContacto: '',
     apellidosContacto: '',
@@ -25,28 +22,32 @@ const Terceros = () => {
     nombresContactoFacturacion: '',
     apellidosContactoFacturacion: '',
     correoElectronicoFacturacion: '',
-    tipoRegimenIVA: 'regimenComún',
+    tipoRegimen: 'regimenComún',
     telefonoFacturacion: '',
     codigoPostal: '',
+    nit: '',
+    dv: '',
   });
-  
+
+
+  const apiUrl = import.meta.env.VITE_API_FINANZAS;
+  const { Title, Text } = Typography;
+  const { Option } = Select;
 
   useEffect(() => {
-    // Cuando tipoTercero cambia, actualizamos el valor de tipoPersona y tipoIdentificacion
     if (formData.tipoPersona === 'juridica') {
       setFormData((prevState) => ({
         ...prevState,
-        tipoIdentificacion: 'nit', // Si es empresa, por defecto 'NIT'
+        tipoIdentificacion: 'nit',
       }));
     } else {
       setFormData((prevState) => ({
         ...prevState,
-        tipoIdentificacion: 'cc', // Si es persona, por defecto 'Cédula de ciudadanía'
+        tipoIdentificacion: 'cc',
       }));
     }
   }, [formData.tipoPersona]);
 
-  // Función para manejar cambios en los campos del formulario
   const handleInputChange = (field, value) => {
     setFormData((prevState) => ({
       ...prevState,
@@ -54,11 +55,6 @@ const Terceros = () => {
     }));
   };
 
-  const handleCancel = () => {
-    navigate(-1); // Navega hacia atrás en la historia del navegador
-  };
-
-  // Función para manejar la selección del tipo de tercero
   const handleTipoTerceroChange = (value) => {
     setTipoTercero(value);
     setFormData((prevState) => ({
@@ -67,7 +63,6 @@ const Terceros = () => {
     }));
   };
 
-  // Función para manejar el cambio de tipo de persona
   const handleTipoPersonaChange = (value) => {
     setFormData((prevState) => ({
       ...prevState,
@@ -75,13 +70,58 @@ const Terceros = () => {
     }));
   };
 
-  // Función para guardar los datos
-  const handleSave = () => {
-    // Aquí se muestra en la consola para verificar que los datos estén listos para enviarse
-    console.log('Datos enviados:', formData);
-    message.success('Los datos han sido guardados correctamente.');
+  const handleSave = async () => {
+    try {
+      const response = await fetch(`${apiUrl}/providers`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) throw new Error("No se pudo guardar el proveedor.");
+
+      Swal.fire({
+        icon: "success",
+        title: "Proveedor Registrado",
+        text: "El proveedor se ha guardado correctamente.",
+        confirmButtonColor: "#3085d6",
+      });
+      setFormData({
+        tipoTercero: 'clientes',
+        tipoPersona: 'natural',
+        tipoIdentificacion: 'cc',
+        identificacion: '',
+        nombreComercial: '',
+        codigoSucursal: '',
+        nombresContacto: '',
+        apellidosContacto: '',
+        ciudad: '',
+        direccion: '',
+        nombresContactoFacturacion: '',
+        apellidosContactoFacturacion: '',
+        correoElectronicoFacturacion: '',
+        tipoRegimen: 'regimenComún',
+        telefonoFacturacion: '',
+        codigoPostal: '',
+        nit: '',
+        dv: '',
+      });
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.message || "Inténtalo de nuevo.",
+        confirmButtonColor: "#d33",
+      });
+    }
   };
 
+
+  // Función para cancelar y limpiar los datos
+  const handleCancel = () => {
+    setFormData({});
+    message.info('La acción ha sido cancelada.');
+  };
 
   return (
     <div className="p-6 max-w-[1200px] mx-auto bg-white shadow">
@@ -108,7 +148,8 @@ const Terceros = () => {
           </div>
           <Button onClick={handleCancel}
             className="bg-transparent border border-gray-500 text-gray-500 hover:bg-gray-500 hover:text-white"
-            style={{ borderRadius: 2 }} >
+
+          >
             Cancelar
           </Button>
           <Button onClick={handleSave} type="primary" className="bg-[#007072]" style={{ borderRadius: 2 }}>
@@ -193,13 +234,13 @@ const Terceros = () => {
 
       {tipoTercero === 'proveedores' && (
         <Card>
-          <Title level={4}>Datos básicos</Title>
+          <Title level={4}> <span style={{ color: 'red' }}>*</span>Datos básicos</Title>
           <Space direction="vertical" size="middle" className="w-full">
             <Row gutter={[24, 16]}>
               {/* Columna 1 (Datos básicos) */}
               <Col span={8}>
                 <div>
-                  <Text strong className="block mb-1">
+                  <Text strong className="block mb-1" style={{ color: '#007072' }}>
                     Tipo de persona
                   </Text>
                   <Select
@@ -212,9 +253,10 @@ const Terceros = () => {
                   </Select>
                 </div>
 
+
                 {/* Tipo de identificación se ajusta según el tipo de persona */}
                 <div>
-                  <Text strong className="block mb-1">
+                  <Text strong className="block mb-1" style={{ color: '#007072' }}>
                     Tipo de identificación
                   </Text>
                   <Select
@@ -233,8 +275,8 @@ const Terceros = () => {
                 {/* Identificación: un solo campo para persona, dos para empresa */}
                 {formData.tipoPersona === 'natural' ? (
                   <div>
-                    <Text strong className="block mb-1">
-                      Identificación
+                    <Text strong className="block mb-1" style={{ color: '#007072' }}>
+                      <span style={{ color: 'red' }}>*</span>Identificación
                     </Text>
                     <Input
                       placeholder="Numero de Cédula"
@@ -267,7 +309,7 @@ const Terceros = () => {
                 )}
 
                 <div>
-                  <Text strong className="block mb-1">
+                  <Text strong className="block mb-1" style={{ color: '#007072' }}>
                     Código de la sucursal
                   </Text>
                   <Input
@@ -281,14 +323,15 @@ const Terceros = () => {
               <Col span={8}>
                 <div>
                   <Input
-                    placeholder="Nombres"
+                    placeholder="* Nombres"
                     value={formData.nombresContacto}
                     onChange={(e) => handleInputChange('nombresContacto', e.target.value)}
+                    style={{ paddingLeft: '10px' }} // Opcional: para ajustar el padding
                   />
                 </div>
                 <div>
                   <Input
-                    placeholder="Apellidos"
+                    placeholder="* Apellidos"
                     value={formData.apellidosContacto}
                     onChange={(e) => handleInputChange('apellidosContacto', e.target.value)}
                   />
@@ -342,13 +385,13 @@ const Terceros = () => {
                   />
                 </div>
                 <div>
-                  <Text strong className="block mb-1">
+                  <Text strong className="block mb-1" style={{ color: '#007072' }}>
                     Tipo de régimen IVA
                   </Text>
                   <Select
                     className="w-full"
-                    value={formData.tipoRegimenIVA}
-                    onChange={(value) => handleInputChange('tipoRegimenIVA', value)}
+                    value={formData.tipoRegimen}
+                    onChange={(value) => handleInputChange('tipoRegimen', value)}
                   >
                     <Option value="regimenComún">Régimen Común</Option>
                     <Option value="regimenSimplificado">Régimen Simplificado</Option>
