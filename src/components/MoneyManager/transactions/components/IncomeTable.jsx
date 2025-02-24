@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Table, Input, Drawer, Button, Checkbox, DatePicker, Dropdown, Menu, Card, Tag, Tooltip, Space, Typography, Divider } from "antd";
-import { format as formatDate, subMonths, addMonths, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
+import { format as formatDate, subMonths, addMonths, startOfMonth, endOfMonth, isWithinInterval, isValid } from "date-fns";
 import { es } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -54,35 +54,39 @@ const IncomeTable = ({ onDelete, categories = [], accounts = [] }) => {
         }, 500);
     };
 
-    // Update filtered entries when entries, search text, or date range changes
+  
+
     useEffect(() => {
         let filtered = [...entries];
 
-        // Apply date range filter
+        {/*Apply date range filter
         if (dateRange && dateRange[0] && dateRange[1]) {
-            filtered = filtered.filter(entry => {
-                const entryDate = new Date(entry.date);
-                return isWithinInterval(entryDate, { start: dateRange[0], end: dateRange[1] });
-            });
-        }
+            const startDate = new Date(dateRange[0]);
+            const endDate = new Date(dateRange[1]);
+
+            // Validar que las fechas sean válidas
+            if (isValid(startDate) && isValid(endDate)) {
+                filtered = filtered.filter(entry => {
+                    const entryDate = new Date(entry.date);
+                    return isValid(entryDate) && isWithinInterval(entryDate, { start: startDate, end: endDate });
+                });
+            }
+        }*/}
 
         // Apply search text filters
         filtered = filtered.filter(entry =>
             Object.keys(searchText).every(key => {
                 if (!searchText[key]) return true;
-
                 if (key === 'category_id') {
                     return getCategoryName(entry[key])
                         .toLowerCase()
                         .includes(searchText[key].toLowerCase());
                 }
-
                 if (key === 'account_id') {
                     return getAccountName(entry[key])
                         .toLowerCase()
                         .includes(searchText[key].toLowerCase());
                 }
-
                 return entry[key] ?
                     entry[key].toString().toLowerCase().includes(searchText[key].toLowerCase()) :
                     true;
@@ -149,14 +153,14 @@ const IncomeTable = ({ onDelete, categories = [], accounts = [] }) => {
         setDateRange([startOfMonth(now), endOfMonth(now)]);
     };
 
-    const handleDateRangeChange = (dates) => {
+    /*const handleDateRangeChange = (dates) => {
         simulateLoading();
         if (dates && dates.length === 2) {
             setDateRange([dates[0].toDate(), dates[1].toDate()]);
         } else {
             setDateRange(null);
         }
-    };
+    };*/
 
     // Row selection handlers
     const onSelectChange = (newSelectedRowKeys) => {
@@ -624,11 +628,11 @@ const IncomeTable = ({ onDelete, categories = [], accounts = [] }) => {
                         <div className="flex flex-wrap items-center gap-4">
                             <div>
                                 <Text strong className="mr-2">Rango de fechas:</Text>
-                                <RangePicker
+                               {/*} <RangePicker
                                     value={dateRange ? [dateRange[0], dateRange[1]] : null}
                                     onChange={handleDateRangeChange}
                                     format="DD/MM/YYYY"
-                                />
+                                />*/}
                             </div>
 
                             <Divider type="vertical" style={{ height: '24px' }} />
@@ -658,10 +662,10 @@ const IncomeTable = ({ onDelete, categories = [], accounts = [] }) => {
             {error && (
                 <div className="mb-4 p-4 bg-red-50 text-red-700 rounded border border-red-200">
                     <p className="font-medium">{error}</p>
-                    <Button 
-                        type="primary" 
-                        danger 
-                        onClick={fetchData} 
+                    <Button
+                        type="primary"
+                        danger
+                        onClick={fetchData}
                         className="mt-2"
                     >
                         Reintentar
@@ -700,7 +704,7 @@ const IncomeTable = ({ onDelete, categories = [], accounts = [] }) => {
 
                     return (
                         <Table.Summary fixed>
-                           
+
                         </Table.Summary>
                     );
                 }}
@@ -796,7 +800,7 @@ const IncomeTable = ({ onDelete, categories = [], accounts = [] }) => {
                 </div>
             </Drawer>
 
-            
+
         </>
     );
 };
