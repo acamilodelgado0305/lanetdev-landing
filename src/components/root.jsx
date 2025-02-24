@@ -111,6 +111,11 @@ export default function Root() {
         hoverClass: "hover:bg-[#7d4fff] hover:text-white",
         disabled: true
       },
+      {
+        to: "/index/cobro-cartera", label: "Cobro de Cartera", icon: <BankOutlined />, color: "text-gray-500",
+        hoverClass: "hover:text-gray-500 hover:text-white",
+        disabled: true,
+      },
 
       {
         label: "Comunicación",
@@ -177,11 +182,7 @@ export default function Root() {
             hoverClass: "hover:text-[#007072] hover:text-white",
             disabled: true,
           },
-          {
-            to: "/index/moneymanager/cotizacion", label: "Estudio de mercadeo", icon: <DotIcon />, color: "text-[#007072]",
-            hoverClass: "hover:text-[#007072] hover:text-white",
-            disabled: true,
-          },
+          
 
         ],
       },
@@ -234,12 +235,8 @@ export default function Root() {
             hoverClass: "hover:text-[#007072] hover:text-white",
           },
           {
-            to: "/index/moneymanager/terceros", label: "Terceros", icon: <DotIcon />, color: "text-[#007072]",
-            hoverClass: "hover:text-[#007072] hover:text-white",
-          },
-          {
-            to: "/index/moneymanager/proveedores", label: "Proveedores", icon: <DotIcon />, color: "text-[#007072]",
-            hoverClass: "hover:text-[#007072] hover:text-white",
+            to: "/index/moneymanager/terceros", label: "Proveedores", icon: <DotIcon />, color: "text-[#007072]",
+            hoverClass:  "hover:text-[#007072] hover:text-white",
           },
         ],
       },
@@ -259,7 +256,7 @@ export default function Root() {
         disabled: true,
       },
       {
-        to: "/index/recursoHumanos", label: "Recuersos Humanos", icon: <BankOutlined />, color: "text-[#007072]",
+        to: "/index/recursoHumanos", label: "Recursos Humanos", icon: <BankOutlined />, color: "text-[#007072]",
         hoverClass: "hover:text-[#007072] hover:text-white",
         disabled: true,
       },
@@ -306,11 +303,7 @@ export default function Root() {
         hoverClass: "hover:text-gray-500 hover:text-white",
         disabled: true,
       },
-      {
-        to: "/index/cobro-cartera", label: "Cobro de Cartera", icon: <BankOutlined />, color: "text-gray-500",
-        hoverClass: "hover:text-gray-500 hover:text-white",
-        disabled: true,
-      },
+      
       {
         to: "/index/tienda", label: "Navegacion de Archivos", icon: <ShoppingCartOutlined />, color: "text-gray-500",
         hoverClass: "hover:text-gray-500 hover:text-white",

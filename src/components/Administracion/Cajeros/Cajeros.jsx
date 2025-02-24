@@ -122,28 +122,28 @@ const CashiersPage = () => {
     <div className="p-6 w-full mx-auto">
       {/* Header Section */}
       <div className="mb-6 flex justify-between items-center">
-        <div className="flex items-center gap-2">
+        <div className="flex p-4 items-center gap-2">
           <div className="bg-[#007072] p-2 ">
             <FileTextOutlined className=" text-white" />
           </div>
           <div className="flex flex-col">
-            <span className="text-[#007072] text-sm">Cajeros /</span>
-            <Title level={3} className="!m-0 !p-0">
-              Dashboard
+           
+            <Title level={3} className="!m-0 !p-0 text-[#007072] ">
+            Cajeros / dashboard
             </Title>
           </div>
         </div>
 
-        <button
+        <Button
           onClick={() => navigate('/index/terceros/cajeros/nuevo')}
           type="button"
-          className="flex items-center justify-center gap-2 p-2 bg-transparent border border-[#007072] text-[#007072] hover:bg-[#007072] hover:text-white transition-all duration-200"
-          style={{ borderRadius: 0 }}
+          className="flex items-center justify-center gap-2 p-4  bg-[#007072] border border-[#007072] text-white "
+
         >
-          
+
           Nuevo Cajero
-        </button>
-     
+        </Button>
+
       </div>
 
       {/* Statistics Cards */}
