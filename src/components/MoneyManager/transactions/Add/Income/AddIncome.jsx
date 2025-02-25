@@ -16,6 +16,8 @@ const apiUrl = import.meta.env.VITE_API_FINANZAS;
 import VoucherSection from "../../components/VoucherSection";
 import { useParams } from 'react-router-dom'; //
 
+
+import html2pdf from 'html2pdf.js';
 const { Title, Text } = Typography;
 
 
@@ -581,9 +583,7 @@ const AddIncome = ({ onTransactionAdded }) => {
               </div>
             </div>
 
-            <div className={`p-4 text-center ${isCashMatch ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-              {isCashMatch ? 'Los valores coinciden correctamente' : '¡Error! Hay un descuadre en el arqueo'}
-            </div>
+            {renderDiscrepancyMessage()}
           </div>
 
           <Divider />
@@ -606,47 +606,121 @@ const AddIncome = ({ onTransactionAdded }) => {
     return null;
   };
 
-  const handleDownloadPDF = async () => {
-    if (!printRef.current) return;
 
-    try {
-      const element = printRef.current;
-      const { jsPDF } = await import('jspdf');
-      const { default: html2canvas } = await import('html2canvas');
+  const renderDiscrepancyMessage = () => {
+    const totalAmount = calculateTotalAmount();
+    const cashReceivedValue = parseFloat(cashReceived) || 0;
+    const difference = cashReceivedValue - totalAmount;
+    const isCashMatch = Math.abs(difference) < 0.01; // Tolerancia para evitar problemas de redondeo
 
-      const canvas = await html2canvas(element);
-      const data = canvas.toDataURL('image/png');
+    let messageText, messageClass, differenceText, questionText;
 
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'px',
-        format: 'a4',
-      });
+    if (isCashMatch) {
+      messageText = 'Los valores coinciden correctamente';
+      messageClass = 'bg-green-100 text-green-700';
+      differenceText = '';
+    } else if (difference > 0) {
+      messageText = '¡Alerta! Hay un excedente en el arqueo';
+      messageClass = 'bg-yellow-100 text-yellow-700';
+      differenceText = `Sobran ${formatCurrency(difference)}`;
+      questionText = '¿Por qué hay dinero extra? Verifique posibles errores en el registro de ventas.';
+    } else {
+      messageText = '¡Error! Hay un déficit en el arqueo';
+      messageClass = 'bg-red-100 text-red-700';
+      differenceText = `Faltan ${formatCurrency(Math.abs(difference))}`;
+      questionText = '¿Por qué falta dinero? Revise posibles errores de cobro o si hubo retiros no registrados.';
+    }
 
-      const imgProperties = pdf.getImageProperties(data);
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProperties.height * pdfWidth) / imgProperties.width;
+    return (
+      <div className={`p-4 rounded-lg mb-4 ${messageClass}`}>
+        <h3 className="font-bold text-lg mb-2">{messageText}</h3>
 
-      pdf.addImage(data, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`arqueo_${arqueoNumber || 'sin_numero'}.pdf`);
+        {!isCashMatch && (
+          <div className="flex flex-col space-y-2">
+            <div className="text-2xl font-bold mb-3">
+              Diferencia: {differenceText}
+            </div>
 
-      Swal.fire({
-        icon: 'success',
-        title: 'PDF Generado',
-        text: 'El comprobante se ha descargado correctamente',
-      });
-    } catch (error) {
-      console.error('Error al generar PDF:', error);
+            <div className="space-y-2 text-sm">
+              <div className=" justify-between">
+                <div>Efectivo esperado:</div>
+                <div>{formatCurrency(totalAmount)}</div>
+              </div>
+
+              <div className=" justify-between">
+                <div>Efectivo recibido:</div>
+                <div>{formatCurrency(cashReceivedValue)}</div>
+              </div>
+            </div>
+
+            <div className="mt-3 border-t pt-3 italic">
+              {questionText}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const handleDownloadPDF = () => {
+    if (!printRef.current) {
+      console.error('La referencia para imprimir no existe');
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: 'No se pudo generar el PDF. Por favor, intente de nuevo.',
+        text: 'No se pudo generar el PDF. Referencia no encontrada.',
       });
+      return;
     }
+
+    // Mostrar indicador de carga
+    Swal.fire({
+      title: 'Generando PDF',
+      text: 'Por favor espere...',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    const element = printRef.current;
+
+    // Opciones para html2pdf
+    const opt = {
+      margin: [10, 10, 10, 10],
+      filename: `arqueo_${arqueoNumber || 'sin_numero'}_${date?.format('YYYYMMDD') || 'fecha'}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        logging: true,
+        letterRendering: true
+      },
+      jsPDF: {
+        unit: 'mm',
+        format: 'a4',
+        orientation: 'portrait'
+      }
+    };
+
+    // Generar PDF con html2pdf
+    html2pdf().from(element).set(opt).save()
+      .then(() => {
+        Swal.fire({
+          icon: 'success',
+          title: 'PDF Generado',
+          text: 'El comprobante se ha descargado correctamente',
+        });
+      })
+      .catch(error => {
+        console.error('Error al generar PDF:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: `No se pudo generar el PDF: ${error.message}`,
+        });
+      });
   };
-
-
-
   const renderVentaInputs = () => {
     if (isVentaChecked) {
       return (
