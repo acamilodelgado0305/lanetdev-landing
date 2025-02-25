@@ -25,6 +25,7 @@
     "fetch": "^1.1.0",
     "framer-motion": "^11.5.4",
     "html2canvas": "^1.4.1",
+    "html2pdf.js": "^0.10.2",
     "jspdf": "^2.5.2",
     "jwt-decode": "^4.0.0",
     "keep-react": "^1.1.2",
