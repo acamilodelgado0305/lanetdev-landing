@@ -1,40 +1,249 @@
-import React, { useState, useEffect } from 'react';
-import { Button, Table, Input, Tooltip, Dropdown, Menu, Drawer } from 'antd';
-import { format as formatDate } from 'date-fns';
-import _ from 'lodash';
-import ExpenseDetailModal from './ExpenseDetailModal';
+import React, { useState, useEffect } from "react";
+import { Table, Input, Drawer, Button, Checkbox, DatePicker, Dropdown, Menu, Card, Tag, Tooltip, Space, Typography, Divider, Select } from "antd";
+import { format as formatDate, subMonths, addMonths, startOfMonth, endOfMonth, isWithinInterval, isValid } from "date-fns";
+import { es } from "date-fns/locale";
+import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 import axios from "axios";
-const ExpenseTable = ({
-    entries,
-    categories = [],
-    accounts = [],
-    onDelete,
-}) => {
-    const [isModalOpen, setIsModalOpen] = useState(false);
+import {
+    LeftOutlined,
+    RightOutlined,
+    DownloadOutlined,
+    FilterOutlined,
+    EllipsisOutlined,
+    DeleteOutlined,
+    ExportOutlined,
+    SearchOutlined,
+    CalendarOutlined,
+    CheckCircleOutlined,
+    MenuOutlined,
+    EditOutlined
+} from "@ant-design/icons";
+
+const { RangePicker } = DatePicker;
+const { Title, Text } = Typography;
+
+const ExpenseTable = ({ categories = [], accounts = [] }) => {
+    const navigate = useNavigate();
+
     const [selectedEntry, setSelectedEntry] = useState(null);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedImages, setSelectedImages] = useState([]);
-    const [providers, setProviders] = useState({});
     const [searchText, setSearchText] = useState({});
-    const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
+
+    // State variables for selection and date filtering
+    const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+    const [currentMonth, setCurrentMonth] = useState(new Date());
+    const [dateRange, setDateRange] = useState([startOfMonth(new Date()), endOfMonth(new Date())]);
+    const [showFilters, setShowFilters] = useState(false);
+    const [filteredEntries, setFilteredEntries] = useState([]);
+    const [entriesLoading, setEntriesLoading] = useState(true);
+    const [entries, setEntries] = useState([]);
+    const [error, setError] = useState(null);
+    const [typeFilter, setTypeFilter] = useState(null);
+
+    const [providers, setProviders] = useState([]);
+    const [providerFilter, setProviderFilter] = useState(null);
+
+
+
+    // Fetch data when component mounts
+    useEffect(() => {
+        fetchData();
+        fetchProviders(); // Add this to fetch providers data
+    }, []);
+
+
+
+    const fetchProviders = async () => {
+        try {
+            // Obtener la URL base de la API desde las variables de entorno o usar un valor por defecto
+            const API_BASE_URL = import.meta.env.VITE_API_FINANZAS || '/api';
+
+            // Realizar la solicitud GET a la API para obtener los proveedores
+            const response = await axios.get(`${API_BASE_URL}/providers`);
+
+            // Acceder directamente a los datos de la respuesta
+            const providersArray = response.data;
+
+            // Verificar que tenemos datos y guardarlos en el estado
+            if (Array.isArray(providersArray) && providersArray.length > 0) {
+                console.log("Proveedores cargados:", providersArray);
+                setProviders(providersArray);
+            } else {
+                console.log("La respuesta no tiene el formato esperado:", response.data);
+                setProviders([]);
+            }
+        } catch (error) {
+            // Manejar errores de la solicitud
+            console.error('Error al obtener los proveedores:', error);
+
+            // Mostrar una alerta al usuario en caso de fallo
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudieron cargar los proveedores. Por favor, intente de nuevo.',
+            });
+
+            // Establecer un array vacío en el estado en caso de error
+            setProviders([]);
+        }
+    };
+
+    // Función para obtener el nombre de un proveedor por su ID
+    const getProviderName = (providerId) => {
+        // Verificar que providerId existe
+        if (!providerId) return "Proveedor no especificado";
+
+        // Buscar el proveedor en el array de proveedores usando el id
+        const provider = providers.find(provider => provider.id === providerId);
+
+        // Retornar el nombre comercial si se encuentra el proveedor, o un mensaje por defecto si no
+        return provider ? provider.nombre_comercial : "Proveedor no encontrado";
+    };
+
+
+    // Simulate loading when changing date or filter
+    const simulateLoading = () => {
+        setEntriesLoading(true);
+        setTimeout(() => {
+            setEntriesLoading(false);
+        }, 500);
+    };
 
     useEffect(() => {
-        const fetchProviders = async () => {
-            try {
-                const response = await axios.get(`${API_BASE_URL}/providers`);
-                const data = response.data;
-                const providerMap = data.reduce((acc, provider) => {
-                    acc[provider.id] = provider.razon_social || provider.nombre_comercial || "Proveedor no encontrado";
-                    return acc;
-                }, {});
-                setProviders(providerMap);
-            } catch (error) {
-                console.error('Error obteniendo proveedores:', error);
-            }
-        };
+        let filtered = [...entries];
 
-        fetchProviders();
-    }, []);
+        // Filtro por tipo
+        if (typeFilter) {
+            filtered = filtered.filter(entry => entry.type === typeFilter);
+        }
+
+        // Filtro por cajero
+        if (providerFilter) {
+            filtered = filtered.filter(entry => entry.cashier_id === providerFilter);
+        }
+
+        // Filtro por fecha
+        if (dateRange && dateRange[0] && dateRange[1]) {
+            const startDate = new Date(dateRange[0]);
+            const endDate = new Date(dateRange[1]);
+
+            // Validar que las fechas sean válidas
+            if (isValid(startDate) && isValid(endDate)) {
+                filtered = filtered.filter(entry => {
+                    const entryDate = new Date(entry.date);
+                    return isValid(entryDate) && isWithinInterval(entryDate, { start: startDate, end: endDate });
+                });
+            }
+        }
+
+        // Aplicar filtros de texto de búsqueda
+        filtered = filtered.filter(entry =>
+            Object.keys(searchText).every(key => {
+                if (!searchText[key]) return true;
+                if (key === 'category_id') {
+                    return getCategoryName(entry[key])
+                        .toLowerCase()
+                        .includes(searchText[key].toLowerCase());
+                }
+                if (key === 'account_id') {
+                    return getAccountName(entry[key])
+                        .toLowerCase()
+                        .includes(searchText[key].toLowerCase());
+                }
+                if (key === 'cashier_id') {
+                    return getProviderName(entry[key])
+                        .toLowerCase()
+                        .includes(searchText[key].toLowerCase());
+                }
+                return entry[key] ?
+                    entry[key].toString().toLowerCase().includes(searchText[key].toLowerCase()) :
+                    true;
+            })
+        );
+
+        setFilteredEntries(filtered);
+    }, [entries, searchText, dateRange, typeFilter, providerFilter, providers]);
+
+    // Menú desplegable para el filtro de tipo
+    const typeOptions = ["commission", "Legal"]; // Ajusta según los tipos disponibles
+
+    const handleTypeFilterChange = (value) => {
+        setTypeFilter(value);
+    };
+
+
+    const handleProviderFilterChange = (value) => {
+        setProviderFilter(value);
+    };
+
+    useEffect(() => {
+        let filtered = [...entries];
+
+        // Filtro por fecha
+        if (dateRange && dateRange[0] && dateRange[1]) {
+            const startDate = new Date(dateRange[0]);
+            const endDate = new Date(dateRange[1]);
+
+            // Validar que las fechas sean válidas
+            if (isValid(startDate) && isValid(endDate)) {
+                filtered = filtered.filter(entry => {
+                    const entryDate = new Date(entry.date);
+                    return isValid(entryDate) && isWithinInterval(entryDate, { start: startDate, end: endDate });
+                });
+            }
+        }
+
+        // Filtro por tipo
+        if (typeFilter) {
+            filtered = filtered.filter(entry => entry.type === typeFilter);
+        }
+
+        // Filtro por proveedor
+        if (providerFilter) {
+            filtered = filtered.filter(entry => entry.provider_id === providerFilter);
+        }
+
+        // Aplicar filtros de texto de búsqueda
+        filtered = filtered.filter(entry =>
+            Object.keys(searchText).every(key => {
+                if (!searchText[key]) return true;
+
+                // Filtro para categoría
+                if (key === 'category_id') {
+                    return getCategoryName(entry[key])
+                        .toLowerCase()
+                        .includes(searchText[key].toLowerCase());
+                }
+
+                // Filtro para cuenta
+                if (key === 'account_id') {
+                    return getAccountName(entry[key])
+                        .toLowerCase()
+                        .includes(searchText[key].toLowerCase());
+                }
+
+                // Filtro para proveedor
+                if (key === 'provider_id') {
+                    return getProviderName(entry[key])
+                        .toLowerCase()
+                        .includes(searchText[key].toLowerCase());
+                }
+
+                // Filtro genérico para otros campos
+                return entry[key] ?
+                    entry[key].toString().toLowerCase().includes(searchText[key].toLowerCase()) :
+                    true;
+            })
+        );
+
+        setFilteredEntries(filtered);
+    }, [entries, searchText, dateRange, typeFilter, providerFilter, providers, categories, accounts]);
+
+    const handleRowClick = (record) => {
+        navigate(`/index/moneymanager/ingresos/view/${record.id}`);
+    };
 
     const handleSearch = (value, dataIndex) => {
         setSearchText((prev) => ({
@@ -43,18 +252,186 @@ const ExpenseTable = ({
         }));
     };
 
+    const fetchData = async () => {
+        setEntriesLoading(true);
+        try {
+            const API_BASE_URL = import.meta.env.VITE_API_FINANZAS || '/api';
+            const response = await axios.get(`${API_BASE_URL}/expenses`);
+            const sortedEntries = response.data.sort((a, b) => new Date(b.date) - new Date(a.date));
+            setEntries(sortedEntries);
+            setFilteredEntries(sortedEntries);
+            setError(null);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+            setError("Error al cargar los datos");
+            Swal.fire({
+                title: 'Error',
+                text: 'No se pudieron cargar los datos. Intente nuevamente.',
+                icon: 'error',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Entendido'
+            });
+        } finally {
+            setEntriesLoading(false);
+        }
+    };
+
+    // Month navigation handlers
+    const goToPreviousMonth = () => {
+        simulateLoading();
+        const prevMonth = subMonths(currentMonth, 1);
+        setCurrentMonth(prevMonth);
+        setDateRange([startOfMonth(prevMonth), endOfMonth(prevMonth)]);
+    };
+
+    const goToNextMonth = () => {
+        simulateLoading();
+        const nextMonth = addMonths(currentMonth, 1);
+        setCurrentMonth(nextMonth);
+        setDateRange([startOfMonth(nextMonth), endOfMonth(nextMonth)]);
+    };
+
+    const goToCurrentMonth = () => {
+        simulateLoading();
+        const now = new Date();
+        setCurrentMonth(now);
+        setDateRange([startOfMonth(now), endOfMonth(now)]);
+    };
+
+
+
+    // Row selection handlers
+    const onSelectChange = (newSelectedRowKeys) => {
+        setSelectedRowKeys(newSelectedRowKeys);
+    };
+
+    const rowSelection = {
+        selectedRowKeys,
+        onChange: onSelectChange,
+        columnWidth: 48,
+        selections: [
+            Table.SELECTION_ALL,
+            Table.SELECTION_INVERT,
+            {
+                key: 'none',
+                text: 'Deseleccionar todo',
+                onSelect: () => setSelectedRowKeys([]),
+            },
+        ],
+    };
+
+    // Batch operations with selected rows
+    const handleBatchOperation = (operation) => {
+        if (selectedRowKeys.length === 0) {
+            Swal.fire({
+                title: 'Selección vacía',
+                text: 'Por favor, seleccione al menos un registro',
+                icon: 'warning',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Entendido'
+            });
+            return;
+        }
+
+        const selectedItems = entries.filter(item => selectedRowKeys.includes(item.id));
+
+        switch (operation) {
+            case 'download':
+                // Logic to download all vouchers from selected items
+                const allVouchers = selectedItems.flatMap(item => item.voucher || []);
+                if (allVouchers.length > 0) {
+                    downloadAllImages(allVouchers);
+                } else {
+                    Swal.fire({
+                        title: 'Sin comprobantes',
+                        text: 'No hay comprobantes disponibles para descargar',
+                        icon: 'info',
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'Entendido'
+                    });
+                }
+                break;
+            case 'export':
+                // Export selected items to CSV or Excel
+                console.log("Exportar seleccionados:", selectedItems);
+                // Add your export logic here
+                break;
+            case 'edit':
+                // Navigate to edit page for the selected item (only works with one selection)
+                if (selectedRowKeys.length > 1) {
+                    Swal.fire({
+                        title: 'Múltiples selecciones',
+                        text: 'Solo puede editar un registro a la vez',
+                        icon: 'warning',
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'Entendido'
+                    });
+                } else {
+                    navigate(`/index/moneymanager/ingresos/view/${selectedRowKeys[0]}`);
+                }
+                break;
+            case 'delete':
+                // Delete selected items
+                Swal.fire({
+                    title: '¿Está seguro?',
+                    text: `¿Desea eliminar ${selectedRowKeys.length} registro(s) seleccionado(s)?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Call delete function for each selected ID
+                        const deletePromises = selectedRowKeys.map(id => handleDeleteItem(id));
+
+                        Promise.all(deletePromises)
+                            .then(() => {
+                                Swal.fire(
+                                    '¡Eliminado!',
+                                    'Los registros han sido eliminados.',
+                                    'success'
+                                );
+                                setSelectedRowKeys([]);
+                                // Refresh data after deletion
+                                fetchData();
+                                // Also call parent onDelete if provided
+                                if (onDelete) onDelete();
+                            })
+                            .catch(error => {
+                                console.error("Error eliminando registros:", error);
+                                Swal.fire(
+                                    'Error',
+                                    'Hubo un problema al eliminar los registros.',
+                                    'error'
+                                );
+                            });
+                    }
+                });
+                break;
+            default:
+                break;
+        }
+    };
 
     const formatCurrency = (amount) => {
-        return new Intl.NumberFormat("en-US", {
+        return new Intl.NumberFormat("es-CO", {
             style: "currency",
-            currency: "USD",
-            minimumFractionDigits: 2,
+            currency: "COP",
+            minimumFractionDigits: 0,
         }).format(amount);
     };
 
-    const getCategoryName = (categoryId) => {
-        const category = categories.find((cat) => cat.id === categoryId);
-        return category ? category.name : "Sin categoría";
+    const handleDeleteItem = async (id) => {
+        try {
+            const API_BASE_URL = import.meta.env.VITE_API_FINANZAS || '/api';
+            await axios.delete(`${API_BASE_URL}/expenses/${id}`);
+            return id; // Return the id for confirmation
+        } catch (error) {
+            console.error(`Error eliminando el ingreso ${id}:`, error);
+            throw error;
+        }
     };
 
     const getAccountName = (accountId) => {
@@ -62,51 +439,133 @@ const ExpenseTable = ({
         return account ? account.name : "Cuenta no encontrada";
     };
 
+
+
+    const getCategoryName = (categoryId) => {
+        const category = categories.find((cat) => cat.id === categoryId);
+        return category ? category.name : "Categoría no encontrada";
+    };
+
+    const downloadImage = async (url) => {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error("No se pudo descargar el archivo.");
+            }
+            const blob = await response.blob();
+
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = url.split("/").pop();
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Limpia la URL temporal
+            URL.revokeObjectURL(link.href);
+        } catch (error) {
+            console.error("Error al descargar el archivo:", error);
+        }
+    };
+
+    const downloadAllImages = async (urls) => {
+        try {
+            await Promise.all(urls.map((url) => downloadImage(url)));
+        } catch (error) {
+            console.error("Error al descargar las imágenes:", error);
+        }
+    };
+
+    const openDrawer = (images) => {
+        setSelectedImages(images);
+        setIsDrawerOpen(true);
+    };
+
+    const closeDrawer = () => {
+        setIsDrawerOpen(false);
+        setSelectedImages([]);
+    };
+
+    const renderDate = (date) => {
+        try {
+            const parsedDate = new Date(date);
+            if (isNaN(parsedDate.getTime())) {
+                return "Fecha inválida";
+            }
+            return formatDate(parsedDate, "d MMM yyyy", { locale: es });
+        } catch (error) {
+            console.error("Error al formatear la fecha:", error);
+            return "Fecha inválida";
+        }
+    };
+
     const columns = [
         {
             title: (
-                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                    Fecha
-                    <Input
-                        placeholder="Buscar"
-                        onChange={(e) => handleSearch(e.target.value, "date")}
-                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
-                    />
-                </div>
+                <Tooltip title="Número de Egreso">
+                    <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                        N° de egreso
+                        <Input
+                            prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                            placeholder="Buscar"
+                            onChange={(e) => handleSearch(e.target.value, "invoice_number")}
+                            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                        />
+                    </div>
+                </Tooltip>
             ),
-            dataIndex: 'date',
-            key: 'date',
-            filterSearch: true,
-            render: (text) => formatDate(new Date(text), "d MMM yyyy"),
-            sorter: (a, b) => new Date(a.date) - new Date(b.date),
-            sortDirections: ["descend", "ascend"],
-            onFilter: (value, record) =>
-                record.date && record.date.toLowerCase().includes(searchText["date"] || ""),
+            dataIndex: "invoice_number",
+            key: "invoice_number",
+            sorter: (a, b) => a.invoice_number - b.invoice_number,
+            render: (text) => <a>{text || "No disponible"}</a>,
+            width: 110,
         },
         {
             title: (
-                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                    Descripción
+                <Tooltip title="Fecha de registro">
+                    <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                        Fecha
+                        <Input
+                            prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                            placeholder="Buscar"
+                            onChange={(e) => handleSearch(e.target.value, "date")}
+                            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                        />
+                    </div>
+                </Tooltip>
+            ),
+            dataIndex: "date",
+            key: "date",
+            render: (text) => renderDate(text),
+            sorter: (a, b) => new Date(a.date) - new Date(b.date),
+            sortDirections: ["descend", "ascend"],
+            width: 120,
+        },
+        {
+            title: (
+                <div className="flex flex-col" style={{ margin: "2px 0", gap: 1, lineHeight: 1 }}>
+                    Titulo
                     <Input
-                        placeholder="Buscar"
+                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+
                         onChange={(e) => handleSearch(e.target.value, "description")}
-                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                        style={{ marginTop: 2, padding: 4, height: 25, fontSize: 12 }}
                     />
                 </div>
             ),
             dataIndex: "description",
             key: "description",
-            sorter: (a, b) => a.amount - b.amount,
+            sorter: (a, b) => a.description.localeCompare(b.description),
             sortDirections: ["ascend", "descend"],
-            onFilter: (value, record) =>
-                record.description &&
-                record.description.toLowerCase().includes(searchText["description"] || ""),
+            ellipsis: true,
+            width: 300,
         },
         {
             title: (
-                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
                     Cuenta
                     <Input
+                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
                         placeholder="Buscar"
                         onChange={(e) => handleSearch(e.target.value, "account_id")}
                         style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
@@ -115,221 +574,335 @@ const ExpenseTable = ({
             ),
             dataIndex: "account_id",
             key: "account_id",
+            render: (id) => <Tag color="blue">{getAccountName(id)}</Tag>,
             sorter: (a, b) => getAccountName(a.account_id).localeCompare(getAccountName(b.account_id)),
             sortDirections: ["ascend", "descend"],
-            onFilter: (value, record) =>
-                record.account_id &&
-                record.account_id.toLowerCase().includes(searchText["account_id"] || ""),
+            width: 150,
         },
         {
             title: (
-                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                    Categoría
-                    <Input
-                        placeholder="Buscar"
-                        onChange={(e) => handleSearch(e.target.value, "category_id")}
-                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
-                    />
-                </div>
-            ),
-            dataIndex: 'category_id',
-            key: 'category_id',
-            sorter: (a, b) => getAccountName(a.category_id).localeCompare(getAccountName(b.category_id)),
-            sortDirections: ["ascend", "descend"],
-            onFilter: (value, record) =>
-                record.category_id &&
-                record.category_id.toLowerCase().includes(searchText["category_id"] || ""),
-        },
-        {
-            title: (
-                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                    Monto
-                    <Input
-                        placeholder="Buscar"
-                        onChange={(e) => handleSearch(e.target.value, "amount")}
-                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
-                    />
-                </div>
-            ),
-            dataIndex: 'amount',
-            key: "amount",
-            render: (amount) => formatCurrency(amount),
-            sorter: (a, b) => a.amount - b.amount,
-            sortDirections: ["descend", "ascend"],
-            onFilter: (value, record) =>
-                record.amount &&
-                record.amount.toLowerCase().includes(searchText["amount"] || ""),
-        },
-        {
-            title: (
-                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                    Impuestos
-                    <Input
-                        placeholder="Buscar"
-                        onChange={(e) => handleSearch(e.target.value, "tax_type")}
-                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
-                    />
-                </div>
-            ),
-            dataIndex: 'tax_type',
-            key: 'tax_type',
-            sorter: (a, b) => a.amount - b.amount,
-            sortDirections: ["ascend", "descend"],
-            onFilter: (value, record) =>
-                record.tax_type &&
-                record.tax_type.toLowerCase().includes(searchText["tax_type"] || ""),
-        },
-        {
-            title: (
-                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                <div className="flex flex-col" style={{ margin: "2px 0", gap: 1, lineHeight: 1 }}>
                     Proveedor
                     <Input
-                        placeholder="Buscar"
+                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                        placeholder="Buscar proveedor"
                         onChange={(e) => handleSearch(e.target.value, "provider_id")}
-                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                        style={{ marginTop: 2, padding: 4, height: 25, fontSize: 12 }}
                     />
                 </div>
             ),
-            dataIndex: 'provider_id',
-            render: (id) => providers[id] || "Proveedor no encontrado",
-            sorter: (a, b) => a.provider_id - b.provider_id,
-            sortDirections: ["ascend", "descend"],
-            onFilter: (value, record) =>
-                record.provider_id &&
-                record.provider_id.toLowerCase().includes(searchText["provider_id"] || ""),
-        },
-        {
-            title: (
-                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                    Retención
-                    <Input
-                        placeholder="Buscar"
-                        onChange={(e) => handleSearch(e.target.value, "retention_type")}
-                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
-                    />
-                </div>
-            ),
-            dataIndex: 'retention_type',
-            key: 'retention_type',
-            render: (retention) => (
-                <span>{retention || 'Sin información'}</span>
-            ),
+            dataIndex: "provider_id", // Asumiendo que este es el campo en tus datos de gastos
+            key: "provider_id",
+            render: (providerId) => <Tag color="orange">{getProviderName(providerId)}</Tag>,
             sorter: (a, b) => {
-                if (!a.retention_type) return 1;
-                if (!b.retention_type) return -1;
-                return a.retention_type.localeCompare(b.retention_type);
+                const nameA = getProviderName(a.provider_id) || "";
+                const nameB = getProviderName(b.provider_id) || "";
+                return nameA.localeCompare(nameB);
             },
             sortDirections: ["ascend", "descend"],
-            onFilter: (value, record) =>
-                record.retention_type &&
-                record.retention_type.toLowerCase().includes(searchText["retention_type"] || ""),
+            width: 150,
         },
+
         {
             title: (
-                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                    Estado
+                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Total Neto
                     <Input
+                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
                         placeholder="Buscar"
-                        onChange={(e) => handleSearch(e.target.value, "estado")}
+                        onChange={(e) => handleSearch(e.target.value, "total_net")}
                         style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
                     />
                 </div>
             ),
-            dataIndex: 'estado',
-            key: 'estado',
-            render: (estado) => (
-                <span>{estado ? 'Activo' : 'Inactivo'}</span> // Muestra 'Activo' si estado es true, 'Inactivo' si es false
-            ),
-            sorter: (a, b) => a.estado - b.estado,
-            sortDirections: ["ascend", "descend"],
-            onFilter: (value, record) =>
-                record.estado &&
-                record.estado.toLowerCase().includes(searchText["estado"] || ""),
+            dataIndex: "total_net",
+            key: "total_net",
+            render: (total_net) => <span className="font-bold">{formatCurrency(total_net)}</span>,
+            sorter: (a, b) => a.total_net - b.total_net,
+            sortDirections: ["descend", "ascend"],
+            width: 140,
         },
+
+
         {
-            title: (
-                <div className="flex flex-col " style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                    Comprobante
-                </div>
-            ),
+            title: "Comprobante",
             dataIndex: "voucher",
             key: "voucher",
             render: (vouchers) =>
                 Array.isArray(vouchers) && vouchers.length > 0 ? (
-                    <a
+                    <Button
+                        type="link"
                         onClick={(e) => {
                             e.stopPropagation();
                             openDrawer(vouchers);
                         }}
-                        className="text-blue-500 underline"
                     >
                         Ver comprobante
-                    </a>
+                    </Button>
                 ) : (
                     "—"
                 ),
-        },
+            width: 130,
+        }
     ];
-    const openModal = (entry) => {
-        setSelectedEntry(entry);
-        setIsModalOpen(true);
-    };
 
-    const closeModal = () => {
-        setIsModalOpen(false);
-        setSelectedEntry(null);
-    };
-    const closeDrawer = () => {
-        setIsDrawerOpen(false);
-        setSelectedImages([]);
-    };
-    const openDrawer = (images) => {
-        setSelectedImages(images);
-        setIsDrawerOpen(true);
-    };
-
+    // More compact columns for responsive layout
+    const mobileColumns = columns.filter(col =>
+        ["arqueo_number", "date", "description", "amount", "voucher"].includes(col.dataIndex)
+    );
 
     return (
         <>
-            <div className="overflow-auto h-[39em]">
-                <Table
-                    dataSource={entries.filter((entry) =>
-                        Object.keys(searchText).every((key) =>
-                            entry[key] ? entry[key].toString().toLowerCase().includes(searchText[key]) : true
-                        )
-                    )}
-                    columns={columns}
-                    rowKey={(record) => record.id}
-                    pagination={{ pageSize: 10 }}
-                    bordered
-                    onRow={(record) => ({
-                        onClick: () => openModal(record),
-                    })}
-                    rowClassName="clickable-row"
-                />
-                <style>
-                    {`
-                .ant-table-cell {
-                    padding: 8px !important;  /* 🔹 Reduce el padding de las celdas */
-                    font-size: 14px; /* 🔹 Reduce el tamaño del texto */
-                }
+            {/* Jira-style Top Bar */}
+            <Card className="mb-4 shadow-sm" bodyStyle={{ padding: "12px 16px" }}>
+                <div className="flex justify-between items-center">
+                    {/* Left side: Actions */}
+                    <div className="flex items-center space-x-1">
+                        <Tooltip title="Descargar">
+                            <Button
+                                type="default"
+                                icon={<DownloadOutlined />}
+                                onClick={() => handleBatchOperation('download')}
+                            />
+                        </Tooltip>
 
-                .compact-row {
-                    height: 24px !important; /* 🔹 Reduce la altura de la fila */
+                        <Tooltip title="Exportar">
+                            <Button
+                                type="default"
+                                icon={<ExportOutlined />}
+                                onClick={() => handleBatchOperation('export')}
+                            />
+                        </Tooltip>
+
+                        <Tooltip title="Editar">
+                            <Button
+                                type="default"
+                                icon={<EditOutlined />}
+                                onClick={() => handleBatchOperation('edit')}
+                            />
+                        </Tooltip>
+
+                        <Tooltip title="Eliminar">
+                            <Button
+                                type="default"
+                                icon={<DeleteOutlined />}
+                                onClick={() => handleBatchOperation('delete')}
+                            />
+                        </Tooltip>
+
+                        <Button
+                            icon={<FilterOutlined />}
+                            onClick={() => setShowFilters(!showFilters)}
+                        >
+                            {showFilters ? "Ocultar filtros" : "Mostrar filtros"}
+                        </Button>
+                    </div>
+
+                    {/* Right side: Date navigation */}
+                    <div className="flex items-center">
+                        <Tooltip title="Mes actual">
+                            <Button
+                                icon={<CalendarOutlined />}
+                                onClick={goToCurrentMonth}
+                                className="mr-2"
+                            >
+                                Hoy
+                            </Button>
+                        </Tooltip>
+
+                        <Button
+                            icon={<LeftOutlined />}
+                            onClick={goToPreviousMonth}
+                            className="mr-1"
+                        />
+
+                        <span className="font-medium px-3 py-1 bg-gray-100 rounded">
+                            {formatDate(currentMonth, "MMMM yyyy", { locale: es })}
+                        </span>
+
+                        <Button
+                            icon={<RightOutlined />}
+                            onClick={goToNextMonth}
+                            className="ml-1"
+                        />
+                    </div>
+                </div>
+
+                {showFilters && (
+                    <div className="mt-4 p-3 bg-gray-50 rounded">
+                        <div className="flex flex-wrap items-center gap-4">
+                            {/* Cashier filter dropdown */}
+                            <Select
+                                placeholder="Filtrar por proveedor"
+                                style={{ width: 200 }}
+                                onChange={handleProviderFilterChange}
+                                value={providerFilter || undefined}
+                                loading={providers.length === 0}
+                                allowClear
+                            >
+                                {providers.map((provider) => (
+                                    <Select.Option key={provider.id} value={provider.id}>
+                                        {provider.nombre_comercial}
+                                    </Select.Option>
+                                ))}
+                            </Select>
+                            <Select
+                                placeholder="Filtrar por tipo"
+                                style={{ width: 150 }}
+                                onChange={handleTypeFilterChange}
+                                value={typeFilter || undefined}
+                                allowClear
+                            >
+                                {typeOptions.map((type) => (
+                                    <Select.Option key={type} value={type}>
+                                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                                    </Select.Option>
+                                ))}
+                            </Select>
+
+                            <Divider type="vertical" style={{ height: '24px' }} />
+
+                            <div className="flex items-center">
+                                <Text strong className="mr-2">Seleccionados:</Text>
+                                <Tag color="blue">
+                                    {selectedRowKeys.length} de {filteredEntries.length} registros
+                                </Tag>
+
+                                {selectedRowKeys.length > 0 && (
+                                    <Button
+                                        type="link"
+                                        size="small"
+                                        onClick={() => setSelectedRowKeys([])}
+                                    >
+                                        Limpiar selección
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </Card>
+
+            {/* Error message if data loading fails */}
+            {error && (
+                <div className="mb-4 p-4 bg-red-50 text-red-700 rounded border border-red-200">
+                    <p className="font-medium">{error}</p>
+                    <Button
+                        type="primary"
+                        danger
+                        onClick={fetchData}
+                        className="mt-2"
+                    >
+                        Reintentar
+                    </Button>
+                </div>
+            )}
+
+            {/* Enhanced Table with Jira styling */}
+            <Table
+                rowSelection={rowSelection}
+                dataSource={filteredEntries}
+                columns={columns}
+                rowKey={(record) => record.id}
+                pagination={{
+                    pageSize: 10,
+                    showSizeChanger: true,
+                    showTotal: (total, range) => `${range[0]}-${range[1]} de ${total} registros`
+                }}
+                bordered
+                size="middle"
+                loading={entriesLoading}
+                onRow={(record) => ({
+                    onClick: (e) => {
+                        // Prevent navigation when clicking on checkbox or buttons
+                        if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') {
+                            handleRowClick(record);
+                        }
+                    },
+                })}
+                rowClassName="hover:bg-gray-50 transition-colors"
+                scroll={{ x: 'max-content' }}
+                summary={pageData => {
+                    if (pageData.length === 0) return null;
+
+                    const totalAmount = pageData.reduce((total, item) => total + (item.amount || 0), 0);
+
+                    return (
+                        <Table.Summary fixed>
+
+                        </Table.Summary>
+                    );
+                }}
+            />
+
+            <style>
+                {`
+                .ant-table-cell {
+                    padding: 12px !important;
+                    font-size: 14px;
+                }
+                
+                .ant-table-thead > tr > th {
+                    background-color: #f5f5f5;
+                    font-weight: 600;
+                }
+                
+                .ant-table-row:hover {
+                    cursor: pointer;
+                }
+                
+                /* Prevent checkbox click from navigating */
+                .ant-checkbox-wrapper {
+                    cursor: default;
+                }
+                
+                /* Style Tag components */
+                .ant-tag {
+                    margin-right: 0;
+                }
+                
+                /* Improved input styling */
+                .ant-input-affix-wrapper {
+                    border-radius: 4px;
+                }
+                
+                /* Custom card header */
+                .ant-card-head {
+                    min-height: auto;
+                    padding: 0;
+                }
+                
+                /* Jira-style hover */
+                .hover\\:bg-gray-50:hover {
+                    background-color: #f9f9f9;
+                }
+                
+                /* Transitions */
+                .transition-colors {
+                    transition: background-color 0.3s ease;
                 }
                 `}
-                </style>
-                <style jsx>{`.clickable-row {cursor: pointer;}`}</style>
+            </style>
 
-            </div>
             <Drawer
                 visible={isDrawerOpen}
                 onClose={closeDrawer}
                 placement="right"
                 width={420}
+                title="Comprobantes de ingresos"
+                extra={
+                    selectedImages.length > 1 && (
+                        <Button
+                            type="primary"
+                            onClick={() => downloadAllImages(selectedImages)}
+                            icon={<DownloadOutlined />}
+                        >
+                            Descargar todas
+                        </Button>
+                    )
+                }
             >
-                <div className="flex flex-col items-center">
-                    <h1 className="mb-8">Comprobantes de ingresos</h1>
+                <div className="flex flex-col">
                     <div className="flex flex-wrap gap-4 justify-center mb-4">
                         {selectedImages.map((image, index) => (
                             <div key={index} className="relative w-60 h-80">
@@ -339,35 +912,20 @@ const ExpenseTable = ({
                                     className="w-full h-full object-cover border rounded-md"
                                 />
                                 <Button
-                                    type="link"
-                                    className="mx-20 absolute bottom-2 text-white bg-green-600"
+                                    type="primary"
+                                    className="absolute bottom-2 left-1/2 transform -translate-x-1/2"
                                     onClick={() => downloadImage(image)}
+                                    icon={<DownloadOutlined />}
                                 >
                                     Descargar
                                 </Button>
                             </div>
                         ))}
                     </div>
-                    {selectedImages.length > 1 && (
-                        <Button type="primary" onClick={() => downloadAllImages(selectedImages)} className=" text-white bg-green-600">
-                            Descargar todas
-                        </Button>
-                    )}
-                    <Button key="close" onClick={closeDrawer} className="mt-4">
-                        Cerrar
-                    </Button>
                 </div>
             </Drawer>
-            {/* Modal de detalles */}
-            <ExpenseDetailModal
-                isOpen={isModalOpen}
-                onClose={closeModal}
-                entry={selectedEntry}
-                getCategoryName={getCategoryName}
-                getAccountName={getAccountName}
-                formatCurrency={formatCurrency}
-                onDelete={onDelete}
-            />
+
+
         </>
     );
 };

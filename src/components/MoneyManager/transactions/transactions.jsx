@@ -14,7 +14,7 @@ import {
   Share2,
   Zap
 } from 'lucide-react';
-import { PlusOutlined, SwapOutlined , ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
+import { PlusOutlined, SwapOutlined, ArrowUpOutlined, ArrowDownOutlined, DollarOutlined } from '@ant-design/icons';
 import AddEntryModal from "./addModal";
 import VoucherContentModal from "./ViewImageModal";
 import TransactionTable from "./components/TransactionTable";
@@ -69,7 +69,7 @@ const TransactionsDashboard = () => {
   const [categories, setCategories] = useState([]);
   const [editTransaction, setEditTransaction] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
-  const [activeTab, setActiveTab] = useState("incomes");
+  const [activeTab, setActiveTab] = useState("resumen");
   const { userRole } = useAuth();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [monthlyBalance, setMonthlyBalance] = useState(0);
@@ -299,6 +299,27 @@ const TransactionsDashboard = () => {
                   </Title>
                 </div>
               </div>
+
+              <div className="pl-24 mt-4 flex items-center justify-end space-x-2">
+                <div className="bg-white p-2 rounded shadow-sm text-center flex-none w-26">
+                  <h3 className="text-gray-500 text-[10px] font-medium uppercase">Ingresos Totales</h3>
+                  <p className="text-green-600 text-sm font-semibold mt-1 truncate">
+                    {formatCurrency(totalIncome)}
+                  </p>
+                </div>
+                <div className="bg-white p-2 rounded shadow-sm text-center flex-none w-26">
+                  <h3 className="text-gray-500 text-[10px] font-medium uppercase">Egresos Totales</h3>
+                  <p className="text-red-600 text-sm font-semibold mt-1 truncate">
+                    {formatCurrency(totalExpenses)}
+                  </p>
+                </div>
+                <div className="bg-white p-2 rounded shadow-sm text-center flex-none w-26">
+                  <h3 className="text-gray-500 text-[10px] font-medium uppercase">Balance Total</h3>
+                  <p className="text-blue-600 text-sm font-semibold mt-1 truncate">
+                    {formatCurrency(balance)}
+                  </p>
+                </div>
+              </div>
             </div>
 
             <Space size="middle">
@@ -394,15 +415,12 @@ const TransactionsDashboard = () => {
           totalIncome={totalIncome}
           totalExpenses={totalExpenses}
           balance={balance}
-          monthlyIncome={monthlyIncome}
-          monthlyExpenses={monthlyExpenses}
-          monthlyBalance={monthlyBalance}
-          userRole={userRole}
+
         />
       ) : (
         <div className="flex-1 overflow-auto">
           <div className="max-w-full mx-auto px-4  pt-3">
-            <div className="bg-white shadow rounded">
+            <div className="bg-gray rounded">
               {error && (
                 <div className="p-4 bg-red-50 border-l-4 border-red-500 text-red-700">
                   <div className="flex items-center">
@@ -420,6 +438,10 @@ const TransactionsDashboard = () => {
                   onDelete={handleDelete}
                   onEdit={openEditModal}
                   onOpenContentModal={openContentModal}
+                  monthlyIncome={monthlyIncome}
+                  monthlyExpenses={monthlyExpenses}
+                  monthlyBalance={monthlyBalance}
+
                 />
               )}
 

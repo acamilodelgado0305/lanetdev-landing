@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Table, Input, Drawer, Button, Checkbox, DatePicker, Dropdown, Menu, Card, Tag, Tooltip, Space, Typography, Divider } from "antd";
+import { Table, Input, Drawer, Button, Checkbox, DatePicker, Dropdown, Menu, Card, Tag, Tooltip, Space, Typography, Divider, Select, Row, Col, Statistic } from "antd";
 import { format as formatDate, subMonths, addMonths, startOfMonth, endOfMonth, isWithinInterval, isValid } from "date-fns";
 import { es } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
@@ -17,13 +17,20 @@ import {
     CalendarOutlined,
     CheckCircleOutlined,
     MenuOutlined,
-    EditOutlined
+    EditOutlined,
+    DollarOutlined,
+    ArrowUpOutlined,
+    ArrowDownOutlined
 } from "@ant-design/icons";
 
 const { RangePicker } = DatePicker;
 const { Title, Text } = Typography;
 
-const IncomeTable = ({ onDelete, categories = [], accounts = [] }) => {
+const IncomeTable = ({ categories = [], accounts = [], monthlyIncome,
+    monthlyExpenses,
+    monthlyBalance,
+    userRole,
+    balance }) => {
     const navigate = useNavigate();
 
     const [selectedEntry, setSelectedEntry] = useState(null);
@@ -40,11 +47,50 @@ const IncomeTable = ({ onDelete, categories = [], accounts = [] }) => {
     const [entriesLoading, setEntriesLoading] = useState(true);
     const [entries, setEntries] = useState([]);
     const [error, setError] = useState(null);
+    const [typeFilter, setTypeFilter] = useState(null);
+
+    const [cashiers, setCashiers] = useState([]);
+    const [cashierFilter, setCashierFilter] = useState(null);
+
+
 
     // Fetch data when component mounts
     useEffect(() => {
         fetchData();
+        fetchCashiers(); // Add this to fetch cashiers data
     }, []);
+
+
+
+    const fetchCashiers = async () => {
+        try {
+            const API_BASE_URL = import.meta.env.VITE_API_TERCEROS || '/api';
+            const response = await axios.get(`${API_BASE_URL}/cajeros`);
+
+            // Acceder al array de cajeros dentro de response.data.data
+            const cashiersArray = response.data.data || [];
+
+            // Map only the needed fields
+            const mappedCashiers = cashiersArray.map(cashier => ({
+                id_cajero: cashier.id_cajero,
+                nombre: cashier.nombre,
+            }));
+            setCashiers(mappedCashiers);
+        } catch (error) {
+            console.error('Error al obtener los cajeros:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudieron cargar los cajeros. Por favor, intente de nuevo.',
+            });
+        }
+    };
+
+
+    const getCashierName = (cashierId) => {
+        const cashier = cashiers.find((cash) => cash.id_cajero === cashierId);
+        return cashier ? cashier.nombre : "Cajero no encontrado";
+    };
 
     // Simulate loading when changing date or filter
     const simulateLoading = () => {
@@ -54,17 +100,82 @@ const IncomeTable = ({ onDelete, categories = [], accounts = [] }) => {
         }, 500);
     };
 
-  
-
     useEffect(() => {
         let filtered = [...entries];
 
-      
+        // Filtro por tipo
+        if (typeFilter) {
+            filtered = filtered.filter(entry => entry.type === typeFilter);
+        }
+
+        // Filtro por cajero
+        if (cashierFilter) {
+            filtered = filtered.filter(entry => entry.cashier_id === cashierFilter);
+        }
+
+        // Filtro por fecha
         if (dateRange && dateRange[0] && dateRange[1]) {
             const startDate = new Date(dateRange[0]);
             const endDate = new Date(dateRange[1]);
 
             // Validar que las fechas sean válidas
+            if (isValid(startDate) && isValid(endDate)) {
+                filtered = filtered.filter(entry => {
+                    const entryDate = new Date(entry.date);
+                    return isValid(entryDate) && isWithinInterval(entryDate, { start: startDate, end: endDate });
+                });
+            }
+        }
+
+        // Aplicar filtros de texto de búsqueda
+        filtered = filtered.filter(entry =>
+            Object.keys(searchText).every(key => {
+                if (!searchText[key]) return true;
+                if (key === 'category_id') {
+                    return getCategoryName(entry[key])
+                        .toLowerCase()
+                        .includes(searchText[key].toLowerCase());
+                }
+                if (key === 'account_id') {
+                    return getAccountName(entry[key])
+                        .toLowerCase()
+                        .includes(searchText[key].toLowerCase());
+                }
+                if (key === 'cashier_id') {
+                    return getCashierName(entry[key])
+                        .toLowerCase()
+                        .includes(searchText[key].toLowerCase());
+                }
+                return entry[key] ?
+                    entry[key].toString().toLowerCase().includes(searchText[key].toLowerCase()) :
+                    true;
+            })
+        );
+
+        setFilteredEntries(filtered);
+    }, [entries, searchText, dateRange, typeFilter, cashierFilter, cashiers]);
+
+    // Menú desplegable para el filtro de tipo
+    const typeOptions = ["arqueo", "otro"]; // Ajusta según los tipos disponibles
+
+    const handleTypeFilterChange = (value) => {
+        setTypeFilter(value);
+    };
+
+
+    const handleCashierFilterChange = (value) => {
+        setCashierFilter(value);
+    };
+
+
+    useEffect(() => {
+        let filtered = [...entries];
+
+        if (dateRange && dateRange[0] && dateRange[1]) {
+            const startDate = new Date(dateRange[0]);
+            const endDate = new Date(dateRange[1]);
+
+            // Validate dates are valid
             if (isValid(startDate) && isValid(endDate)) {
                 filtered = filtered.filter(entry => {
                     const entryDate = new Date(entry.date);
@@ -87,6 +198,11 @@ const IncomeTable = ({ onDelete, categories = [], accounts = [] }) => {
                         .toLowerCase()
                         .includes(searchText[key].toLowerCase());
                 }
+                if (key === 'cashier_id') {
+                    return getCashierName(entry[key])
+                        .toLowerCase()
+                        .includes(searchText[key].toLowerCase());
+                }
                 return entry[key] ?
                     entry[key].toString().toLowerCase().includes(searchText[key].toLowerCase()) :
                     true;
@@ -94,7 +210,7 @@ const IncomeTable = ({ onDelete, categories = [], accounts = [] }) => {
         );
 
         setFilteredEntries(filtered);
-    }, [entries, searchText, dateRange]);
+    }, [entries, searchText, dateRange, cashiers]);
 
     const handleRowClick = (record) => {
         navigate(`/index/moneymanager/ingresos/view/${record.id}`);
@@ -403,13 +519,13 @@ const IncomeTable = ({ onDelete, categories = [], accounts = [] }) => {
         },
         {
             title: (
-                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                <div className="flex flex-col" style={{ margin: "2px 0", gap: 1, lineHeight: 1 }}>
                     Titulo
                     <Input
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                        placeholder="Buscar"
+
                         onChange={(e) => handleSearch(e.target.value, "description")}
-                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                        style={{ marginTop: 2, padding: 4, height: 25, fontSize: 12 }}
                     />
                 </div>
             ),
@@ -447,15 +563,15 @@ const IncomeTable = ({ onDelete, categories = [], accounts = [] }) => {
                     <Input
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
                         placeholder="Buscar"
-                        onChange={(e) => handleSearch(e.target.value, "cashier_name")}
+                        onChange={(e) => handleSearch(e.target.value, "cashier_id")}
                         style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
                     />
                 </div>
             ),
-            dataIndex: "cashier_name",
-            key: "cashier_name",
-            sorter: (a, b) => a.cashier_name.localeCompare(b.cashier_name),
-            render: (text) => <Tag color="purple">{text || "No disponible"}</Tag>,
+            dataIndex: "cashier_id",
+            key: "cashier_id",
+            sorter: (a, b) => getCashierName(a.cashier_id).localeCompare(getCashierName(b.cashier_id)),
+            render: (cashierId) => <Tag color="purple">{getCashierName(cashierId)}</Tag>,
             width: 150,
         },
         {
@@ -541,15 +657,11 @@ const IncomeTable = ({ onDelete, categories = [], accounts = [] }) => {
         }
     ];
 
-    // More compact columns for responsive layout
-    const mobileColumns = columns.filter(col =>
-        ["arqueo_number", "date", "description", "amount", "voucher"].includes(col.dataIndex)
-    );
+
 
     return (
         <>
-            {/* Jira-style Top Bar */}
-            <Card className="mb-4 shadow-sm" bodyStyle={{ padding: "12px 16px" }}>
+            <Card className="mb-4 " >
                 <div className="flex justify-between items-center">
                     {/* Left side: Actions */}
                     <div className="flex items-center space-x-1">
@@ -560,7 +672,6 @@ const IncomeTable = ({ onDelete, categories = [], accounts = [] }) => {
                                 onClick={() => handleBatchOperation('download')}
                             />
                         </Tooltip>
-
                         <Tooltip title="Exportar">
                             <Button
                                 type="default"
@@ -568,7 +679,6 @@ const IncomeTable = ({ onDelete, categories = [], accounts = [] }) => {
                                 onClick={() => handleBatchOperation('export')}
                             />
                         </Tooltip>
-
                         <Tooltip title="Editar">
                             <Button
                                 type="default"
@@ -576,7 +686,6 @@ const IncomeTable = ({ onDelete, categories = [], accounts = [] }) => {
                                 onClick={() => handleBatchOperation('edit')}
                             />
                         </Tooltip>
-
                         <Tooltip title="Eliminar">
                             <Button
                                 type="default"
@@ -584,13 +693,34 @@ const IncomeTable = ({ onDelete, categories = [], accounts = [] }) => {
                                 onClick={() => handleBatchOperation('delete')}
                             />
                         </Tooltip>
-
                         <Button
                             icon={<FilterOutlined />}
                             onClick={() => setShowFilters(!showFilters)}
                         >
                             {showFilters ? "Ocultar filtros" : "Mostrar filtros"}
                         </Button>
+                    </div>
+
+                    {/* Right side: Balances */}
+                    <div className="flex items-center justify-end space-x-2"> {/* Espaciado entre elementos */}
+                        <div className="bg-white p-2 rounded shadow-sm text-center flex-none w-26">
+                            <h3 className="text-gray-500 text-[10px] font-medium uppercase">Ingresos</h3>
+                            <p className="text-green-600 text-sm font-semibold mt-1 truncate">
+                                {formatCurrency(monthlyIncome)}
+                            </p>
+                        </div>
+                        <div className="bg-white p-2 rounded shadow-sm text-center flex-none w-26">
+                            <h3 className="text-gray-500 text-[10px] font-medium uppercase">Egresos</h3>
+                            <p className="text-red-600 text-sm font-semibold mt-1 truncate">
+                                {formatCurrency(monthlyExpenses)}
+                            </p>
+                        </div>
+                        <div className="bg-white p-2 rounded shadow-sm text-center flex-none w-26">
+                            <h3 className="text-gray-500 text-[10px] font-medium uppercase">Balance</h3>
+                            <p className="text-blue-600 text-sm font-semibold mt-1 truncate">
+                                {formatCurrency(monthlyBalance)}
+                            </p>
+                        </div>
                     </div>
 
                     {/* Right side: Date navigation */}
@@ -604,17 +734,14 @@ const IncomeTable = ({ onDelete, categories = [], accounts = [] }) => {
                                 Hoy
                             </Button>
                         </Tooltip>
-
                         <Button
                             icon={<LeftOutlined />}
                             onClick={goToPreviousMonth}
                             className="mr-1"
                         />
-
                         <span className="font-medium px-3 py-1 bg-gray-100 rounded">
                             {formatDate(currentMonth, "MMMM yyyy", { locale: es })}
                         </span>
-
                         <Button
                             icon={<RightOutlined />}
                             onClick={goToNextMonth}
@@ -626,23 +753,40 @@ const IncomeTable = ({ onDelete, categories = [], accounts = [] }) => {
                 {showFilters && (
                     <div className="mt-4 p-3 bg-gray-50 rounded">
                         <div className="flex flex-wrap items-center gap-4">
-                            <div>
-                                <Text strong className="mr-2">Rango de fechas:</Text>
-                               {/*} <RangePicker
-                                    value={dateRange ? [dateRange[0], dateRange[1]] : null}
-                                    onChange={handleDateRangeChange}
-                                    format="DD/MM/YYYY"
-                                />*/}
-                            </div>
-
+                            {/* Cashier filter dropdown */}
+                            <Select
+                                placeholder="Filtrar por cajero"
+                                style={{ width: 200 }}
+                                onChange={handleCashierFilterChange}
+                                value={cashierFilter || undefined}
+                                loading={cashiers.length === 0}
+                                allowClear
+                            >
+                                {cashiers.map((cashier) => (
+                                    <Select.Option key={cashier.id_cajero} value={cashier.id_cajero}>
+                                        {cashier.nombre}
+                                    </Select.Option>
+                                ))}
+                            </Select>
+                            <Select
+                                placeholder="Filtrar por tipo"
+                                style={{ width: 150 }}
+                                onChange={handleTypeFilterChange}
+                                value={typeFilter || undefined}
+                                allowClear
+                            >
+                                {typeOptions.map((type) => (
+                                    <Select.Option key={type} value={type}>
+                                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                                    </Select.Option>
+                                ))}
+                            </Select>
                             <Divider type="vertical" style={{ height: '24px' }} />
-
                             <div className="flex items-center">
                                 <Text strong className="mr-2">Seleccionados:</Text>
                                 <Tag color="blue">
                                     {selectedRowKeys.length} de {filteredEntries.length} registros
                                 </Tag>
-
                                 {selectedRowKeys.length > 0 && (
                                     <Button
                                         type="link"
