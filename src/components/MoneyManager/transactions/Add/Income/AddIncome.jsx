@@ -560,7 +560,7 @@ const AddIncome = ({ onTransactionAdded }) => {
               <div className="bg-gray-50 p-4 ">
                 <Title level={5}>Resumen</Title>
                 <div className="space-y-3">
-                  <div className="bg-[#007072] text-white rounded-md py-2 px-4 flex justify-between items-center">
+                  <div className="bg-[#0052CC] text-white rounded-md py-2 px-4 flex justify-between items-center">
                     <span className="text-white text-xl">Total a cobrar</span>
                     <span className="font-bold text-lg">{formatCurrency(amount)}</span>
                   </div>
@@ -763,11 +763,11 @@ const AddIncome = ({ onTransactionAdded }) => {
     <div className="p-6 max-w-[1200px] mx-auto bg-white shadow">
       <div className="sticky top-0 z-10 bg-white p-4 shadow-md flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <div className="bg-[#007072] p-2 ">
+          <div className="bg-[#0052CC] p-2 ">
             <FileTextOutlined className=" text-white" />
           </div>
           <div className="flex flex-col">
-            <span className="text-[#007072] text-sm">Ingresos /</span>
+            <span className="text-[#0052CC] text-sm">Ingresos /</span>
             <Title level={3}>
               {id ? 'Editar' : 'Crear'}
             </Title>
@@ -787,7 +787,7 @@ const AddIncome = ({ onTransactionAdded }) => {
               icon={<UploadOutlined />}
               loading={loading}
               onClick={() => document.getElementById("bulkUploadInput").click()}
-              className="bg-transparent border border-[#007072] text-[#007072] hover:bg-[#007072] hover:text-white"
+              className="bg-transparent border border-[#0052CC] text-[#0052CC] hover:bg-[#0052CC] hover:text-white"
               style={{ borderRadius: 2 }}
             >
               Cargar Ingresos Masivos
@@ -798,7 +798,7 @@ const AddIncome = ({ onTransactionAdded }) => {
             style={{ borderRadius: 2 }} >
             Cancelar
           </Button>
-          <Button onClick={handleSave} type="primary" className="bg-[#007072]" style={{ borderRadius: 2 }}>
+          <Button onClick={handleSave} type="primary" className="bg-[#0052CC]" style={{ borderRadius: 2 }}>
             Guardar
           </Button>
         </Space>

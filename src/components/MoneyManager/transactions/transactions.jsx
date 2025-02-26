@@ -12,14 +12,15 @@ import {
   ArrowLeftRight,
   FileText, // Changed from FileTextOutlined to FileText
   Share2,
-  Zap
+  Zap,
+   TrendingDown, BarChart2
 } from 'lucide-react';
 import { PlusOutlined, SwapOutlined, ArrowUpOutlined, ArrowDownOutlined, DollarOutlined } from '@ant-design/icons';
 import AddEntryModal from "./addModal";
 import VoucherContentModal from "./ViewImageModal";
 import TransactionTable from "./components/TransactionTable";
 import ExpenseTable from "./components/ExpenseTable";
-import IncomeTable from "./components/IncomeTable";
+import IncomeTable from "./Add/Income/IncomeTable";
 import Summary from "./Summary";
 import { useAuth } from '../../Context/AuthProvider';
 import {
@@ -300,29 +301,49 @@ const TransactionsDashboard = () => {
                 </div>
               </div>
 
-              <div className="pl-24 mt-4 flex items-center justify-end space-x-2">
-                <div className="bg-white p-2 rounded shadow-sm text-center flex-none w-26">
-                  <h3 className="text-gray-500 text-[10px] font-medium uppercase">Ingresos Totales</h3>
-                  <p className="text-green-600 text-sm font-semibold mt-1 truncate">
-                    {formatCurrency(totalIncome)}
-                  </p>
-                </div>
-                <div className="bg-white p-2 rounded shadow-sm text-center flex-none w-26">
-                  <h3 className="text-gray-500 text-[10px] font-medium uppercase">Egresos Totales</h3>
-                  <p className="text-red-600 text-sm font-semibold mt-1 truncate">
-                    {formatCurrency(totalExpenses)}
-                  </p>
-                </div>
-                <div className="bg-white p-2 rounded shadow-sm text-center flex-none w-26">
-                  <h3 className="text-gray-500 text-[10px] font-medium uppercase">Balance Total</h3>
-                  <p className="text-blue-600 text-sm font-semibold mt-1 truncate">
-                    {formatCurrency(balance)}
-                  </p>
-                </div>
-              </div>
+
             </div>
 
             <Space size="middle">
+
+              <div>
+                <div className="px-4 py-2">
+                  <div className="pl-24 mt-4 flex items-center justify-end space-x-3">
+                    {/* Tarjeta de Ingresos */}
+                    <div className="bg-white  rounded-lg text-center flex-none w-32 transition-all duration-200 hover:shadow-md">
+                      <div className="flex items-center justify-center mb-1">
+                        <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+                        <h3 className="text-gray-600 text-xs font-semibold uppercase">Ingresos</h3>
+                      </div>
+                      <p className="text-green-600 text-sm font-bold mt-1 truncate">
+                        {formatCurrency(totalIncome)}
+                      </p>
+                    </div>
+
+                    {/* Tarjeta de Egresos */}
+                    <div className="bg-white rounded-lg  text-center flex-none w-32 transition-all duration-200 hover:shadow-md">
+                      <div className="flex items-center justify-center mb-1">
+                        <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
+                        <h3 className="text-gray-600 text-xs font-semibold uppercase">Egresos</h3>
+                      </div>
+                      <p className="text-red-600 text-sm font-bold mt-1 truncate">
+                        {formatCurrency(totalExpenses)}
+                      </p>
+                    </div>
+
+                    {/* Tarjeta de Balance */}
+                    <div className="bg-white rounded-lg text-center flex-none w-32 transition-all duration-200 hover:shadow-md">
+                      <div className="flex items-center justify-center mb-1">
+                        <BarChart2 className="h-4 w-4 text-blue-500 mr-1" />
+                        <h3 className="text-gray-600 text-xs font-semibold uppercase">Balance</h3>
+                      </div>
+                      <p className="text-blue-600 text-sm font-bold mt-1 truncate">
+                        {formatCurrency(balance)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
               <Button
                 type="primary"
                 icon={<PlusOutlined />}
@@ -438,10 +459,6 @@ const TransactionsDashboard = () => {
                   onDelete={handleDelete}
                   onEdit={openEditModal}
                   onOpenContentModal={openContentModal}
-                  monthlyIncome={monthlyIncome}
-                  monthlyExpenses={monthlyExpenses}
-                  monthlyBalance={monthlyBalance}
-
                 />
               )}
 

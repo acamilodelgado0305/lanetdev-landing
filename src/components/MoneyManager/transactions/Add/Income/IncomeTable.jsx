@@ -26,11 +26,7 @@ import {
 const { RangePicker } = DatePicker;
 const { Title, Text } = Typography;
 
-const IncomeTable = ({ categories = [], accounts = [], monthlyIncome,
-    monthlyExpenses,
-    monthlyBalance,
-    userRole,
-    balance }) => {
+const IncomeTable = ({ categories = [], accounts = [] }) => {
     const navigate = useNavigate();
 
     const [selectedEntry, setSelectedEntry] = useState(null);
@@ -49,8 +45,16 @@ const IncomeTable = ({ categories = [], accounts = [], monthlyIncome,
     const [error, setError] = useState(null);
     const [typeFilter, setTypeFilter] = useState(null);
 
+
+
     const [cashiers, setCashiers] = useState([]);
     const [cashierFilter, setCashierFilter] = useState(null);
+    const [monthlyBalance, setMonthlyBalance] = useState(0);
+    const [monthlyIncome, setMonthlyIncome] = useState(0);
+    const [monthlyExpenses, setMonthlyExpenses] = useState(0);
+
+    const [loadingMonthlyData, setLoadingMonthlyData] = useState(false);
+
 
 
 
@@ -60,6 +64,9 @@ const IncomeTable = ({ categories = [], accounts = [], monthlyIncome,
         fetchCashiers(); // Add this to fetch cashiers data
     }, []);
 
+    useEffect(() => {
+        fetchMonthlyData();
+    }, [currentMonth]);
 
 
     const fetchCashiers = async () => {
@@ -103,22 +110,22 @@ const IncomeTable = ({ categories = [], accounts = [], monthlyIncome,
     useEffect(() => {
         let filtered = [...entries];
 
-        // Filtro por tipo
+        // Filter by type
         if (typeFilter) {
             filtered = filtered.filter(entry => entry.type === typeFilter);
         }
 
-        // Filtro por cajero
+        // Filter by cashier
         if (cashierFilter) {
             filtered = filtered.filter(entry => entry.cashier_id === cashierFilter);
         }
 
-        // Filtro por fecha
+        // Filter by date range
         if (dateRange && dateRange[0] && dateRange[1]) {
             const startDate = new Date(dateRange[0]);
             const endDate = new Date(dateRange[1]);
 
-            // Validar que las fechas sean válidas
+            // Validate that dates are valid
             if (isValid(startDate) && isValid(endDate)) {
                 filtered = filtered.filter(entry => {
                     const entryDate = new Date(entry.date);
@@ -127,7 +134,7 @@ const IncomeTable = ({ categories = [], accounts = [], monthlyIncome,
             }
         }
 
-        // Aplicar filtros de texto de búsqueda
+        // Apply search text filters
         filtered = filtered.filter(entry =>
             Object.keys(searchText).every(key => {
                 if (!searchText[key]) return true;
@@ -247,6 +254,34 @@ const IncomeTable = ({ categories = [], accounts = [], monthlyIncome,
         }
     };
 
+    const fetchMonthlyData = async () => {
+        // Format the current month as yyyy-MM for the API
+        const monthYear = formatDate(currentMonth, "yyyy-MM");
+        setLoadingMonthlyData(true);
+
+        try {
+            const API_BASE_URL = import.meta.env.VITE_API_FINANZAS || '/api';
+            const response = await axios.get(`${API_BASE_URL}/balance/month/${monthYear}`);
+
+            // Extract and parse the financial data
+            const { total_incomes, total_expenses, net_balance } = response.data;
+            const balanceValue = parseFloat(net_balance) || 0;
+            const incomeValue = parseFloat(total_incomes) || 0;
+            const expensesValue = parseFloat(total_expenses) || 0;
+
+            // Update state with the fetched values
+            setMonthlyBalance(balanceValue);
+            setMonthlyIncome(incomeValue);
+            setMonthlyExpenses(expensesValue);
+        } catch (err) {
+            setError("Error al cargar los datos mensuales");
+            console.error("Error fetching monthly data:", err.response ? err.response.data : err.message);
+        } finally {
+            setLoadingMonthlyData(false);
+        }
+    };
+
+
     // Month navigation handlers
     const goToPreviousMonth = () => {
         simulateLoading();
@@ -345,7 +380,7 @@ const IncomeTable = ({ categories = [], accounts = [], monthlyIncome,
                         confirmButtonText: 'Entendido'
                     });
                 } else {
-                    navigate(`/index/moneymanager/ingresos/view/${selectedRowKeys[0]}`);
+                    navigate(`/index/moneymanager/ingresos/edit/${selectedRowKeys[0]}`);
                 }
                 break;
             case 'delete':
@@ -374,8 +409,7 @@ const IncomeTable = ({ categories = [], accounts = [], monthlyIncome,
                                 setSelectedRowKeys([]);
                                 // Refresh data after deletion
                                 fetchData();
-                                // Also call parent onDelete if provided
-                                if (onDelete) onDelete();
+
                             })
                             .catch(error => {
                                 console.error("Error eliminando registros:", error);
@@ -701,30 +735,31 @@ const IncomeTable = ({ categories = [], accounts = [], monthlyIncome,
                         </Button>
                     </div>
 
-                    {/* Right side: Balances */}
-                    <div className="flex items-center justify-end space-x-2"> {/* Espaciado entre elementos */}
-                        <div className="bg-white p-2 rounded shadow-sm text-center flex-none w-26">
-                            <h3 className="text-gray-500 text-[10px] font-medium uppercase">Ingresos</h3>
-                            <p className="text-green-600 text-sm font-semibold mt-1 truncate">
-                                {formatCurrency(monthlyIncome)}
-                            </p>
-                        </div>
-                        <div className="bg-white p-2 rounded shadow-sm text-center flex-none w-26">
-                            <h3 className="text-gray-500 text-[10px] font-medium uppercase">Egresos</h3>
-                            <p className="text-red-600 text-sm font-semibold mt-1 truncate">
-                                {formatCurrency(monthlyExpenses)}
-                            </p>
-                        </div>
-                        <div className="bg-white p-2 rounded shadow-sm text-center flex-none w-26">
-                            <h3 className="text-gray-500 text-[10px] font-medium uppercase">Balance</h3>
-                            <p className="text-blue-600 text-sm font-semibold mt-1 truncate">
-                                {formatCurrency(monthlyBalance)}
-                            </p>
-                        </div>
-                    </div>
 
-                    {/* Right side: Date navigation */}
+
                     <div className="flex items-center">
+                        <div className="mr-3">
+                            <div className="flex items-center justify-end space-x-2">
+                                <div className="bg-white p-2 rounded text-center flex-none w-26">
+                                    <h3 className="text-gray-500 text-[10px] font-medium uppercase">Ingresos</h3>
+                                    <p className="text-green-600 text-sm font-semibold mt-1 truncate">
+                                        {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyIncome)}
+                                    </p>
+                                </div>
+                                <div className="bg-white p-2 rounded text-center flex-none w-26">
+                                    <h3 className="text-gray-500 text-[10px] font-medium uppercase">Egresos</h3>
+                                    <p className="text-red-600 text-sm font-semibold mt-1 truncate">
+                                        {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyExpenses)}
+                                    </p>
+                                </div>
+                                <div className="bg-white p-2 rounded  text-center flex-none w-26">
+                                    <h3 className="text-gray-500 text-[10px] font-medium uppercase">Balance</h3>
+                                    <p className="text-blue-600 text-sm font-semibold mt-1 truncate">
+                                        {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyBalance)}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                         <Tooltip title="Mes actual">
                             <Button
                                 icon={<CalendarOutlined />}
