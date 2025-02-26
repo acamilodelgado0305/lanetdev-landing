@@ -47,18 +47,18 @@ const AddIncome = ({ onTransactionAdded }) => {
 
 
   const [arqueoCategoryId, setArqueoCategoryId] = useState(null);
-  const [isArqueoChecked, setIsArqueoChecked] = useState(false);
+  const [isArqueoChecked, setIsArqueoChecked] = useState(true);
   const [isVentaChecked, setIsVentaChecked] = useState(false);
 
   const [startPeriod, setStartPeriod] = useState(null);
   const [endPeriod, setEndPeriod] = useState(null);
-  const [cashierName, setCashierName] = useState("");
   const [arqueoNumber, setArqueoNumber] = useState("");
   const [otherIncome, setOtherIncome] = useState("");
   const [cashReceived, setCashReceived] = useState("");
   const [cashierCommission, setCashierCommission] = useState("");
   const [CommissionPorcentaje, setCommissionPorcentaje] = useState("");
   const [isIncomeSaved, setIsIncomeSaved] = useState(false);
+  const [cashierid, setCashierid] = useState(null);
 
   const [stats, setStats] = useState({
     totalCashiers: 0,
@@ -142,36 +142,34 @@ const AddIncome = ({ onTransactionAdded }) => {
     try {
       setLoading(true);
       const response = await fetch(`${import.meta.env.VITE_API_TERCEROS}/cajeros`);
-
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
       const responseData = await response.json();
       const cashiersArray = responseData.data || [];
-
-      // Mapear solo los campos necesarios
+      
+      // Mapear solo los campos necesarios, incluyendo el id_cajero
       const mappedCashiers = cashiersArray.map(cashier => ({
+        id_cajero: cashier.id_cajero, // Incluimos el ID del cajero
         nombre: cashier.nombre,
         comision_porcentaje: cashier.comision_porcentaje
       }));
-
-      setCashiers(mappedCashiers);
-
-      // Si necesitas mantener las estadísticas, puedes calcularlas con los datos simplificados
-
+      
+      setCashiers(mappedCashiers); // Actualizamos el estado con los cajeros mapeados
     } catch (error) {
       console.error('Error al obtener los cajeros:', error);
-      setCashiers([]);
+      setCashiers([]); // Limpiamos la lista de cajeros en caso de error
       Swal.fire({
         icon: 'error',
         title: 'Error',
         text: 'No se pudieron cargar los cajeros. Por favor, intente de nuevo.',
       });
     } finally {
-      setLoading(false);
+      setLoading(false); // Finalizamos el estado de carga
     }
   };
+
+
   const fetchIncomeData = async () => {
     try {
       const response = await fetch(`${apiUrl}/incomes/${id}`);
@@ -193,7 +191,7 @@ const AddIncome = ({ onTransactionAdded }) => {
         setIsArqueoChecked(true);
         setFevAmount(data.amountfev?.toString() || "");
         setDiversoAmount(data.amountdiverse?.toString() || "");
-        setCashierName(data.cashier_name || "");
+        setCashierid(data.cashier_id || "");
         setArqueoNumber(data.arqueo_number?.toString() || "");
         setOtherIncome(data.other_income?.toString() || "");
         setCashReceived(data.cash_received?.toString() || "");
@@ -293,7 +291,7 @@ const AddIncome = ({ onTransactionAdded }) => {
           ...baseRequestBody,
           amountfev: parseFloat(fevAmount) || 0,
           amountdiverse: parseFloat(diversoAmount) || 0,
-          cashier_name: cashierName,
+          cashier_id: cashierid,
           arqueo_number: parseInt(arqueoNumber),
           other_income: parseFloat(otherIncome) || 0,
           cash_received: parseFloat(cashReceived) || 0,
@@ -371,7 +369,7 @@ const AddIncome = ({ onTransactionAdded }) => {
     setComentarios("");
     setImageUrls([]);
     setDate(dayjs());
-    setCashierName("");
+    setCashierid("");
     setArqueoNumber("");
     setOtherIncome("");
     setCashReceived("");
@@ -429,11 +427,11 @@ const AddIncome = ({ onTransactionAdded }) => {
           <div className="flex items-center justify-end space-x-4">
             <span className="text-gray-600">Cajero:</span>
             <Select
-              value={cashierName}
+              value={cashierid} // Usamos el ID del cajero seleccionado
               onChange={(value, option) => {
-                setCashierName(value);
-                // Actualizar la comisión basada en el cajero seleccionado
-                const selectedCashier = cashiers.find(c => c.nombre === value);
+                setCashierid(value); // Actualizamos el ID del cajero seleccionado
+                // Buscar el cajero seleccionado basado en su ID
+                const selectedCashier = cashiers.find(c => c.id_cajero === value);
                 if (selectedCashier) {
                   // Guardar el porcentaje de comisión del cajero seleccionado
                   setCommissionPorcentaje(parseFloat(selectedCashier.comision_porcentaje));
@@ -444,10 +442,10 @@ const AddIncome = ({ onTransactionAdded }) => {
             >
               {cashiers.map((cashier) => (
                 <Select.Option
-                  key={cashier.nombre}
-                  value={cashier.nombre}
+                  key={cashier.id_cajero} // Usamos el ID como clave única
+                  value={cashier.id_cajero} // Usamos el ID como valor
                 >
-                  {cashier.nombre}
+                  {cashier.nombre} {/* Mostramos el nombre en la interfaz */}
                 </Select.Option>
               ))}
             </Select>

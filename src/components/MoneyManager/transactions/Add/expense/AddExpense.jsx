@@ -12,7 +12,7 @@ import { useNavigate } from 'react-router-dom'; // Importa useNavigate
 const apiUrl = import.meta.env.VITE_API_FINANZAS;
 import ExpenseVoucherSection from "./ExpenseVoucherSection";
 import { useParams } from 'react-router-dom'; //
-import NewExpenseTable from "./ExpenseTable";
+import NewExpenseTable from "./ProductsTable";
 
 const { Title, Text } = Typography;
 

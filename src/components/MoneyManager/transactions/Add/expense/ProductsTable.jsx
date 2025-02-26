@@ -351,10 +351,10 @@ const NewExpenseTable = ({
                 style={{ width: '80px' }}
                 onChange={(value) => handleRetentionChange('reteIVA', value)}
               >
-              
+
                 <Select.Option value="15">15%</Select.Option>
                 <Select.Option value="0">0%</Select.Option>
-                
+
               </Select>
             </div>
             <div style={{ textAlign: 'right', color: '#ff4d4f' }}>-{formatCurrency(totals.reteIVA)}</div>
@@ -378,9 +378,8 @@ const NewExpenseTable = ({
             </div>
             <div style={{ textAlign: 'right', color: '#ff4d4f' }}>-{formatCurrency(totals.reteICA)}</div>
           </div>
-
           <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '8px', marginTop: '8px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            <div className="bg-[#007072] text-white rounded-md py-2 px-4 flex justify-between items-center">
               <div style={{ textAlign: 'right', fontWeight: 'bold', fontSize: '16px' }}>Total Neto:</div>
               <div style={{ textAlign: 'right', fontWeight: 'bold', fontSize: '16px' }}>{formatCurrency(totals.totalNeto)}</div>
             </div>
