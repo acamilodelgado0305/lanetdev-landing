@@ -34,6 +34,7 @@ import AddIncome from "./components/MoneyManager/transactions/Add/Income/AddInco
 import AddExpense from "./components/MoneyManager/transactions/Add/expense/AddExpense.jsx";
 import CashiersPage from "./components/Administracion/Cajeros/Cajeros.jsx";
 import AddCajero from "./components/Administracion/Cajeros/AddCajero.jsx";
+import IncomeView from "./components/MoneyManager/transactions/Add/Income/ViewIncome.jsx";
 import 'antd/dist/reset.css';
 
 
@@ -105,6 +106,10 @@ const router = createBrowserRouter([
           },
           {
             path: "ingresos/view/:id",
+            element: <IncomeView />,
+          },
+          {
+            path: "ingresos/edit/:id",
             element: <AddIncome />,
           },
           {

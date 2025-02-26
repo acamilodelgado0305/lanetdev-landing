@@ -120,12 +120,17 @@ const Header = ({ }) => {
               className="flex items-center"
               style={{
                 backgroundColor: '#0052CC',
-                height: '32px',
+                height: '40px', // Aumentamos la altura del botón para acomodar el texto más grande
                 borderRadius: '3px',
-                padding: '0 10px'
+                padding: '0 10px', // Ajustamos el padding para dar más espacio
+                fontSize: '20px', // Tamaño de fuente más grande para el texto "Crear"
+                fontWeight: 'bold', // Opcional: Agregamos negrita para mayor énfasis
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}
             >
-              <Plus className="w-4 h-4 mr-1" />
+              <Plus className="w-6 h-6 mr-2" /> {/* Aumentamos el tamaño del ícono */}
               Crear
             </Button>
 
