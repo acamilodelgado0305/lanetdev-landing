@@ -134,7 +134,7 @@ export const deleteUser = async (id, token) => {
 };
 
 // Función para subir una imagen (en caso de que tengas esta funcionalidad)
-export const uploadImage = async (file, token) => {
+/* export const uploadImage = async (file, token) => {
     const formData = new FormData();
     formData.append('image', file);
 
@@ -150,7 +150,25 @@ export const uploadImage = async (file, token) => {
         console.error('Error al subir la imagen:', error);
         throw error;
     }
+}; */
+export const uploadImage = async (file, token) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const response = await authApi.post('/upload-file', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                Authorization: `Bearer ${token}`
+            },
+        });
+        return response.data.filePath || response.data.fileUrl;
+    } catch (error) {
+        console.error('Error al subir la imagen:', error);
+        throw error;
+    }
 };
+
 export const updateProfilePicture = async (userId, profilePictureUrl, authToken) => {
     try {
         const response = await authApi.put(

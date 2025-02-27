@@ -22,7 +22,7 @@ const ImageUploader = ({ userId, authToken, onUploadSuccess }) => {
         setIsUploading(true);
 
         try {
-            const imageUrl = await uploadImage(selectedFile); // Subir la imagen
+            const imageUrl = await uploadImage(selectedFile, authToken); // Subir la imagen
             console.log("URL de la imagen subida:", imageUrl);
 
             // Actualizar la URL en el backend
