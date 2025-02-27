@@ -147,14 +147,14 @@ const AddIncome = ({ onTransactionAdded }) => {
       }
       const responseData = await response.json();
       const cashiersArray = responseData.data || [];
-      
+
       // Mapear solo los campos necesarios, incluyendo el id_cajero
       const mappedCashiers = cashiersArray.map(cashier => ({
         id_cajero: cashier.id_cajero, // Incluimos el ID del cajero
         nombre: cashier.nombre,
         comision_porcentaje: cashier.comision_porcentaje
       }));
-      
+
       setCashiers(mappedCashiers); // Actualizamos el estado con los cajeros mapeados
     } catch (error) {
       console.error('Error al obtener los cajeros:', error);
@@ -510,20 +510,22 @@ const AddIncome = ({ onTransactionAdded }) => {
               </div>
             </div>
 
-            <div className="space-y-4">
-              {/* Contenedor flex para alinear el título y el texto en rojo */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Title level={4} style={{ margin: 0 }}>Donde ingresa el dinero*</Title>
-              </div>
-              <AccountSelector
-                selectedAccount={account}
-                onAccountSelect={(value) => setAccount(value)}
-                accounts={accounts}
-              />
-            </div>
+
           </div>
 
           <Divider />
+
+          <div className="space-y-4">
+            {/* Contenedor flex para alinear el título y el texto en rojo */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Title level={4} style={{ margin: 0 }}>Donde ingresa el dinero*</Title>
+            </div>
+            <AccountSelector
+              selectedAccount={account}
+              onAccountSelect={(value) => setAccount(value)}
+              accounts={accounts}
+            />
+          </div>
 
           <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
