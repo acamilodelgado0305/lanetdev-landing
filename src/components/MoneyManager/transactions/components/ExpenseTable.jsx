@@ -56,7 +56,8 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
     // Fetch data when component mounts
     useEffect(() => {
         fetchData();
-        fetchProviders(); // Add this to fetch providers data
+        fetchProviders();
+
     }, []);
 
     useEffect(() => {
@@ -71,7 +72,44 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
             const API_BASE_URL = import.meta.env.VITE_API_FINANZAS || '/api';
 
             // Realizar la solicitud GET a la API para obtener los proveedores
-            const response = await axios.get(`${API_BASE_URL}/providers`);
+            const response = await axios.get(`${API_BASE_URL}/terceros`);
+
+            // Acceder directamente a los datos de la respuesta
+            const providersArray = response.data;
+
+            // Verificar que tenemos datos y guardarlos en el estado
+            if (Array.isArray(providersArray) && providersArray.length > 0) {
+                console.log("Proveedores cargados:", providersArray);
+                setProviders(providersArray);
+            } else {
+                console.log("La respuesta no tiene el formato esperado:", response.data);
+                setProviders([]);
+            }
+        } catch (error) {
+            // Manejar errores de la solicitud
+            console.error('Error al obtener los proveedores:', error);
+
+            // Mostrar una alerta al usuario en caso de fallo
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudieron cargar los proveedores. Por favor, intente de nuevo.',
+            });
+
+            // Establecer un array vacío en el estado en caso de error
+            setProviders([]);
+        }
+    };
+
+
+
+    const fetchTerceros = async () => {
+        try {
+            // Obtener la URL base de la API desde las variables de entorno o usar un valor por defecto
+            const API_BASE_URL = import.meta.env.VITE_API_FINANZAS || '/api';
+
+            // Realizar la solicitud GET a la API para obtener los proveedores
+            const response = await axios.get(`${API_BASE_URL}/terceros`);
 
             // Acceder directamente a los datos de la respuesta
             const providersArray = response.data;
@@ -109,7 +147,7 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
         const provider = providers.find(provider => provider.id === providerId);
 
         // Retornar el nombre comercial si se encuentra el proveedor, o un mensaje por defecto si no
-        return provider ? provider.nombre_comercial : "Proveedor no encontrado";
+        return provider ? provider.nombre : "Proveedor no encontrado";
     };
 
 
@@ -797,7 +835,7 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
                             >
                                 {providers.map((provider) => (
                                     <Select.Option key={provider.id} value={provider.id}>
-                                        {provider.nombre_comercial}
+                                        {provider.nombre}
                                     </Select.Option>
                                 ))}
                             </Select>
