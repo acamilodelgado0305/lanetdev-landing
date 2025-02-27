@@ -123,12 +123,12 @@ const CashiersPage = () => {
       {/* Header Section */}
       <div className="mb-6 flex justify-between items-center">
         <div className="flex p-4 items-center gap-2">
-          <div className="bg-[#007072] p-2 ">
+          <div className="bg-[#0052CC] p-2 ">
             <FileTextOutlined className=" text-white" />
           </div>
           <div className="flex flex-col">
            
-            <Title level={3} className="!m-0 !p-0 text-[#007072] ">
+            <Title level={3} className="!m-0 !p-0 text-[#0052CC] ">
             Cajeros / dashboard
             </Title>
           </div>
@@ -137,7 +137,7 @@ const CashiersPage = () => {
         <Button
           onClick={() => navigate('/index/terceros/cajeros/nuevo')}
           type="button"
-          className="flex items-center justify-center gap-2 p-4  bg-[#007072] border border-[#007072] text-white "
+          className="flex items-center justify-center gap-2 p-4  bg-[#0052CC] border border-[#0052CC] text-white "
 
         >
 
@@ -154,7 +154,7 @@ const CashiersPage = () => {
               title="Total de Cajeros"
               value={stats.totalCashiers}
               prefix={<UserOutlined />}
-              valueStyle={{ color: '#007072 ' }}
+              valueStyle={{ color: '#0052CC ' }}
             />
           </Card>
         </Col>
@@ -176,7 +176,7 @@ const CashiersPage = () => {
               title="Cajeros Activos"
               value={stats.activeCashiers}
               prefix={<BankOutlined />}
-              valueStyle={{ color: '#007072 ' }}
+              valueStyle={{ color: '#0052CC ' }}
             />
           </Card>
         </Col>

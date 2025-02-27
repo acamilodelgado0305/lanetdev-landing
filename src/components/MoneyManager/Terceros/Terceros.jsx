@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Info, Plus, X } from 'lucide-react';
 import { Button, message, Card, Input, Select, Radio, Space, Row, Col, Typography } from 'antd';
-import { RedoOutlined, SaveOutlined } from '@ant-design/icons';
+import { RedoOutlined, SaveOutlined, FileTextOutlined } from '@ant-design/icons';
 import Swal from "sweetalert2";
 
 
 const Terceros = () => {
-  const [tipoTercero, setTipoTercero] = useState('clientes');
+ 
   const [formData, setFormData] = useState({
-    tipoTercero: 'clientes',
     tipoPersona: 'natural',
     tipoIdentificacion: 'cc',
     identificacion: '',
@@ -54,13 +53,7 @@ const Terceros = () => {
     }));
   };
 
-  const handleTipoTerceroChange = (value) => {
-    setTipoTercero(value);
-    setFormData((prevState) => ({
-      ...prevState,
-      tipoTercero: value,
-    }));
-  };
+ 
 
   const handleTipoPersonaChange = (value) => {
     setFormData((prevState) => ({
@@ -86,7 +79,6 @@ const Terceros = () => {
         confirmButtonColor: "#3085d6",
       });
       setFormData({
-        tipoTercero: 'clientes',
         tipoPersona: 'natural',
         tipoIdentificacion: 'cc',
         identificacion: '',
@@ -124,101 +116,30 @@ const Terceros = () => {
 
   return (
     <div className="p-6 max-w-[1200px] mx-auto bg-white shadow">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6 mr-10">
-        <Title level={3} className="mb-0">
-          Crear un tercero
-        </Title>
-        {/* Botones */}
+      <div className="sticky top-0 z-10 bg-white p-4 shadow-md flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <div className="bg-[#0052CC] p-2 ">
+            <FileTextOutlined className=" text-white" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[#0052CC] text-sm">Proveedor /</span>
+            <Title level={3}>
+              Crear
+            </Title>
+          </div>
+        </div>
         <Space>
-          <Button
-            onClick={handleCancel}
+          
+          <Button onClick={handleCancel}
             className="bg-transparent border border-gray-500 text-gray-500 hover:bg-gray-500 hover:text-white"
-
-          >
+            style={{ borderRadius: 2 }} >
             Cancelar
           </Button>
-          <Button onClick={handleSave} type="primary" className="bg-[#007072]" >
-            Aceptar
+          <Button onClick={handleSave} type="primary" className="bg-[#0052CC]" style={{ borderRadius: 2 }}>
+            Guardar
           </Button>
         </Space>
-
-      </div>
-
-      {/* Tipo de tercero */}
-      <Card className="mb-6" bordered={false}>
-        <Title level={5}>Tipo de tercero</Title>
-        <Radio.Group
-          value={tipoTercero}
-          onChange={(e) => handleTipoTerceroChange(e.target.value)}
-          className="w-full"
-        >
-          <Row gutter={[24, 16]}>
-            <Col span={8}>
-              <Radio value="clientes" style={{ display: 'flex', alignItems: 'flex-start' }}>
-                <div>
-                  <div className="font-medium">Clientes</div>
-                  <Text type="secondary" className="text-sm">
-                    Personas o empresas a las cuales necesitas generarles una cotización y/o una factura de venta
-                  </Text>
-                </div>
-              </Radio>
-            </Col>
-            <Col span={8}>
-              <Radio value="proveedores" style={{ display: 'flex', alignItems: 'flex-start' }}>
-                <div>
-                  <div className="font-medium">Proveedores</div>
-                  <Text type="secondary" className="text-sm">
-                    Todas las personas o empresas a las cuales les compras bienes o servicios
-                  </Text>
-                </div>
-              </Radio>
-            </Col>
-            <Col span={8}>
-              <Radio value="cajero" style={{ display: 'flex', alignItems: 'flex-start' }}>
-                <div>
-                  <div className="font-medium">Cajero</div>
-                  <Text type="secondary" className="text-sm">
-                    Información específica para cajeros
-                  </Text>
-                </div>
-              </Radio>
-            </Col>
-          </Row>
-        </Radio.Group>
-      </Card>
-
-      {/* Renderizado condicional según el tipo de tercero */}
-      {tipoTercero === 'clientes' && (
-        <Card>
-          <Title level={4}>Información para Clientes</Title>
-          <Space direction="vertical" size="middle" className="w-full">
-            <div>
-              <Text strong className="block mb-1">
-                Nombre comercial
-              </Text>
-              <Input
-                placeholder="Nombre comercial"
-                value={formData.nombreComercial}
-                onChange={(e) => handleInputChange('nombreComercial', e.target.value)}
-              />
-            </div>
-            <div>
-              <Text strong className="block mb-1">
-                Correo electrónico
-              </Text>
-              <Input
-                placeholder="Correo electrónico"
-                value={formData.correoElectronico}
-                onChange={(e) => handleInputChange('correoElectronico', e.target.value)}
-                type="email"
-              />
-            </div>
-          </Space>
-        </Card>
-      )}
-
-      {tipoTercero === 'proveedores' && (
+      </div>     
         <Card>
           <Title level={4}> <span style={{ color: 'red' }}>*</span>Datos básicos</Title>
           <Space direction="vertical" size="middle" className="w-full">
@@ -226,7 +147,7 @@ const Terceros = () => {
               {/* Columna 1 (Datos básicos) */}
               <Col span={8}>
                 <div>
-                  <Text strong className="block mb-1" style={{ color: '#007072' }}>
+                  <Text strong className="block mb-1" style={{ color: '#0052CC' }}>
                     Tipo de persona
                   </Text>
                   <Select
@@ -242,7 +163,7 @@ const Terceros = () => {
 
                 {/* Tipo de identificación se ajusta según el tipo de persona */}
                 <div>
-                  <Text strong className="block mb-1" style={{ color: '#007072' }}>
+                  <Text strong className="block mb-1" style={{ color: '#0052CC' }}>
                     Tipo de identificación
                   </Text>
                   <Select
@@ -261,7 +182,7 @@ const Terceros = () => {
                 {/* Identificación: un solo campo para persona, dos para empresa */}
                 {formData.tipoPersona === 'natural' ? (
                   <div>
-                    <Text strong className="block mb-1" style={{ color: '#007072' }}>
+                    <Text strong className="block mb-1" style={{ color: '#0052CC' }}>
                       <span style={{ color: 'red' }}>*</span>Identificación
                     </Text>
                     <Input
@@ -295,7 +216,7 @@ const Terceros = () => {
                 )}
 
                 <div>
-                  <Text strong className="block mb-1" style={{ color: '#007072' }}>
+                  <Text strong className="block mb-1" style={{ color: '#0052CC' }}>
                     Código de la sucursal
                   </Text>
                   <Input
@@ -371,7 +292,7 @@ const Terceros = () => {
                   />
                 </div>
                 <div>
-                  <Text strong className="block mb-1" style={{ color: '#007072' }}>
+                  <Text strong className="block mb-1" style={{ color: '#0052CC' }}>
                     Tipo de régimen IVA
                   </Text>
                   <Select
@@ -401,40 +322,6 @@ const Terceros = () => {
             </Row>
           </Space>
         </Card>
-      )}
-
-
-      {tipoTercero === 'cajero' && (
-        <Card>
-          <Title level={4}>Información para Cajeros</Title>
-          <Space direction="vertical" size="middle" className="w-full">
-            <div>
-              <Text strong className="block mb-1">
-                Número de caja
-              </Text>
-              <Input
-                placeholder="Número de caja"
-                value={formData.numeroCaja}
-                onChange={(e) => handleInputChange('numeroCaja', e.target.value)}
-              />
-            </div>
-            <div>
-              <Text strong className="block mb-1">
-                Turno asignado
-              </Text>
-              <Select
-                className="w-full"
-                value={formData.turnoAsignado}
-                onChange={(value) => handleInputChange('turnoAsignado', value)}
-              >
-                <Option value="mañana">Mañana</Option>
-                <Option value="tarde">Tarde</Option>
-                <Option value="noche">Noche</Option>
-              </Select>
-            </div>
-          </Space>
-        </Card>
-      )}
     </div>
   );
 };
