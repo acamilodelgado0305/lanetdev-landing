@@ -16,10 +16,12 @@ const apiUrl = import.meta.env.VITE_API_FINANZAS;
 import VoucherSection from "../../components/VoucherSection";
 import { useParams } from 'react-router-dom'; //
 
+
+import html2pdf from 'html2pdf.js';
 const { Title, Text } = Typography;
 
 
-const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
+const AddIncome = ({ onTransactionAdded }) => {
   const { id } = useParams(); // Obtener el ID de la URL
   const navigate = useNavigate();
   // Inicializa el hook useNavigaten
@@ -45,18 +47,18 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
 
 
   const [arqueoCategoryId, setArqueoCategoryId] = useState(null);
-  const [isArqueoChecked, setIsArqueoChecked] = useState(false);
+  const [isArqueoChecked, setIsArqueoChecked] = useState(true);
   const [isVentaChecked, setIsVentaChecked] = useState(false);
 
   const [startPeriod, setStartPeriod] = useState(null);
   const [endPeriod, setEndPeriod] = useState(null);
-  const [cashierName, setCashierName] = useState("");
   const [arqueoNumber, setArqueoNumber] = useState("");
   const [otherIncome, setOtherIncome] = useState("");
   const [cashReceived, setCashReceived] = useState("");
   const [cashierCommission, setCashierCommission] = useState("");
   const [CommissionPorcentaje, setCommissionPorcentaje] = useState("");
   const [isIncomeSaved, setIsIncomeSaved] = useState(false);
+  const [cashierid, setCashierid] = useState(null);
 
   const [stats, setStats] = useState({
     totalCashiers: 0,
@@ -85,6 +87,12 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
     fetchAccounts();
     fetchCashiers();
   }, []);
+
+  useEffect(() => {
+    const totalAmount = calculateTotalAmount();
+    const commission = totalAmount * (CommissionPorcentaje / 100);
+    setCashierCommission(commission);
+  }, [fevAmount, diversoAmount, otherIncome, CommissionPorcentaje]);
 
 
   //---------------------------FETCH---------------------------//
@@ -134,36 +142,34 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
     try {
       setLoading(true);
       const response = await fetch(`${import.meta.env.VITE_API_TERCEROS}/cajeros`);
-
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
       const responseData = await response.json();
       const cashiersArray = responseData.data || [];
-
-      // Mapear solo los campos necesarios
+      
+      // Mapear solo los campos necesarios, incluyendo el id_cajero
       const mappedCashiers = cashiersArray.map(cashier => ({
+        id_cajero: cashier.id_cajero, // Incluimos el ID del cajero
         nombre: cashier.nombre,
         comision_porcentaje: cashier.comision_porcentaje
       }));
-
-      setCashiers(mappedCashiers);
-
-      // Si necesitas mantener las estadísticas, puedes calcularlas con los datos simplificados
-
+      
+      setCashiers(mappedCashiers); // Actualizamos el estado con los cajeros mapeados
     } catch (error) {
       console.error('Error al obtener los cajeros:', error);
-      setCashiers([]);
+      setCashiers([]); // Limpiamos la lista de cajeros en caso de error
       Swal.fire({
         icon: 'error',
         title: 'Error',
         text: 'No se pudieron cargar los cajeros. Por favor, intente de nuevo.',
       });
     } finally {
-      setLoading(false);
+      setLoading(false); // Finalizamos el estado de carga
     }
   };
+
+
   const fetchIncomeData = async () => {
     try {
       const response = await fetch(`${apiUrl}/incomes/${id}`);
@@ -185,7 +191,7 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
         setIsArqueoChecked(true);
         setFevAmount(data.amountfev?.toString() || "");
         setDiversoAmount(data.amountdiverse?.toString() || "");
-        setCashierName(data.cashier_name || "");
+        setCashierid(data.cashier_id || "");
         setArqueoNumber(data.arqueo_number?.toString() || "");
         setOtherIncome(data.other_income?.toString() || "");
         setCashReceived(data.cash_received?.toString() || "");
@@ -221,6 +227,14 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
 
 
   //--------------------------FUNCIONES
+
+
+  const calculateTotalAmount = () => {
+    const fev = parseFloat(fevAmount) || 0;
+    const diverso = parseFloat(diversoAmount) || 0;
+    const otros = parseFloat(otherIncome) || 0;
+    return fev + diverso + otros;
+  };
 
   const handleAmountChange = (e, field) => {
     const rawValue = e.target.value.replace(/\D/g, ''); // Eliminar caracteres no numéricos
@@ -277,7 +291,7 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
           ...baseRequestBody,
           amountfev: parseFloat(fevAmount) || 0,
           amountdiverse: parseFloat(diversoAmount) || 0,
-          cashier_name: cashierName,
+          cashier_id: cashierid,
           arqueo_number: parseInt(arqueoNumber),
           other_income: parseFloat(otherIncome) || 0,
           cash_received: parseFloat(cashReceived) || 0,
@@ -313,7 +327,20 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
         icon: "success",
         title: id ? "Ingreso Actualizado" : "Ingreso Registrado",
         text: id ? "El ingreso se ha actualizado correctamente" : "El ingreso se ha registrado correctamente",
+        showCancelButton: true,
+        confirmButtonText: "Aceptar",
+        cancelButtonText: "Descargar PDF",
         confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#5cb85c",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Si el usuario hace clic en "Aceptar", navegar hacia atrás
+          navigate(-1);
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
+          // Si el usuario hace clic en "Descargar PDF", descargar el PDF y luego navegar hacia atrás
+          handleDownloadPDF();
+          navigate(-1);
+        }
       });
 
       // ... (código existente)
@@ -342,7 +369,7 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
     setComentarios("");
     setImageUrls([]);
     setDate(dayjs());
-    setCashierName("");
+    setCashierid("");
     setArqueoNumber("");
     setOtherIncome("");
     setCashReceived("");
@@ -400,11 +427,11 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
           <div className="flex items-center justify-end space-x-4">
             <span className="text-gray-600">Cajero:</span>
             <Select
-              value={cashierName}
+              value={cashierid} // Usamos el ID del cajero seleccionado
               onChange={(value, option) => {
-                setCashierName(value);
-                // Actualizar la comisión basada en el cajero seleccionado
-                const selectedCashier = cashiers.find(c => c.nombre === value);
+                setCashierid(value); // Actualizamos el ID del cajero seleccionado
+                // Buscar el cajero seleccionado basado en su ID
+                const selectedCashier = cashiers.find(c => c.id_cajero === value);
                 if (selectedCashier) {
                   // Guardar el porcentaje de comisión del cajero seleccionado
                   setCommissionPorcentaje(parseFloat(selectedCashier.comision_porcentaje));
@@ -415,10 +442,10 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
             >
               {cashiers.map((cashier) => (
                 <Select.Option
-                  key={cashier.nombre}
-                  value={cashier.nombre}
+                  key={cashier.id_cajero} // Usamos el ID como clave única
+                  value={cashier.id_cajero} // Usamos el ID como valor
                 >
-                  {cashier.nombre}
+                  {cashier.nombre} {/* Mostramos el nombre en la interfaz */}
                 </Select.Option>
               ))}
             </Select>
@@ -533,10 +560,11 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
               <div className="bg-gray-50 p-4 ">
                 <Title level={5}>Resumen</Title>
                 <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span>Total Ingresos:</span>
+                  <div className="bg-[#0052CC] text-white rounded-md py-2 px-4 flex justify-between items-center">
+                    <span className="text-white text-xl">Total a cobrar</span>
                     <span className="font-bold text-lg">{formatCurrency(amount)}</span>
                   </div>
+
                   <div className="flex justify-between">
                     <span>Efectivo Recibido:</span>
                     <Input
@@ -553,9 +581,7 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
               </div>
             </div>
 
-            <div className={`p-4 text-center ${isCashMatch ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-              {isCashMatch ? 'Los valores coinciden correctamente' : '¡Error! Hay un descuadre en el arqueo'}
-            </div>
+            {renderDiscrepancyMessage()}
           </div>
 
           <Divider />
@@ -578,47 +604,121 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
     return null;
   };
 
-  const handleDownloadPDF = async () => {
-    if (!printRef.current) return;
 
-    try {
-      const element = printRef.current;
-      const { jsPDF } = await import('jspdf');
-      const { default: html2canvas } = await import('html2canvas');
+  const renderDiscrepancyMessage = () => {
+    const totalAmount = calculateTotalAmount();
+    const cashReceivedValue = parseFloat(cashReceived) || 0;
+    const difference = cashReceivedValue - totalAmount;
+    const isCashMatch = Math.abs(difference) < 0.01; // Tolerancia para evitar problemas de redondeo
 
-      const canvas = await html2canvas(element);
-      const data = canvas.toDataURL('image/png');
+    let messageText, messageClass, differenceText, questionText;
 
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'px',
-        format: 'a4',
-      });
+    if (isCashMatch) {
+      messageText = 'Los valores coinciden correctamente';
+      messageClass = 'bg-green-100 text-green-700';
+      differenceText = '';
+    } else if (difference > 0) {
+      messageText = '¡Alerta! Hay un excedente en el arqueo';
+      messageClass = 'bg-yellow-100 text-yellow-700';
+      differenceText = `Sobran ${formatCurrency(difference)}`;
+      questionText = '¿Por qué hay dinero extra? Verifique posibles errores en el registro de ventas.';
+    } else {
+      messageText = '¡Error! Hay un déficit en el arqueo';
+      messageClass = 'bg-red-100 text-red-700';
+      differenceText = `Faltan ${formatCurrency(Math.abs(difference))}`;
+      questionText = '¿Por qué falta dinero? Revise posibles errores de cobro o si hubo retiros no registrados.';
+    }
 
-      const imgProperties = pdf.getImageProperties(data);
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProperties.height * pdfWidth) / imgProperties.width;
+    return (
+      <div className={`p-4 rounded-lg mb-4 ${messageClass}`}>
+        <h3 className="font-bold text-lg mb-2">{messageText}</h3>
 
-      pdf.addImage(data, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`arqueo_${arqueoNumber || 'sin_numero'}.pdf`);
+        {!isCashMatch && (
+          <div className="flex flex-col space-y-2">
+            <div className="text-2xl font-bold mb-3">
+              Diferencia: {differenceText}
+            </div>
 
-      Swal.fire({
-        icon: 'success',
-        title: 'PDF Generado',
-        text: 'El comprobante se ha descargado correctamente',
-      });
-    } catch (error) {
-      console.error('Error al generar PDF:', error);
+            <div className="space-y-2 text-sm">
+              <div className=" justify-between">
+                <div>Efectivo esperado:</div>
+                <div>{formatCurrency(totalAmount)}</div>
+              </div>
+
+              <div className=" justify-between">
+                <div>Efectivo recibido:</div>
+                <div>{formatCurrency(cashReceivedValue)}</div>
+              </div>
+            </div>
+
+            <div className="mt-3 border-t pt-3 italic">
+              {questionText}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const handleDownloadPDF = () => {
+    if (!printRef.current) {
+      console.error('La referencia para imprimir no existe');
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: 'No se pudo generar el PDF. Por favor, intente de nuevo.',
+        text: 'No se pudo generar el PDF. Referencia no encontrada.',
       });
+      return;
     }
+
+    // Mostrar indicador de carga
+    Swal.fire({
+      title: 'Generando PDF',
+      text: 'Por favor espere...',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    const element = printRef.current;
+
+    // Opciones para html2pdf
+    const opt = {
+      margin: [10, 10, 10, 10],
+      filename: `arqueo_${arqueoNumber || 'sin_numero'}_${date?.format('YYYYMMDD') || 'fecha'}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        logging: true,
+        letterRendering: true
+      },
+      jsPDF: {
+        unit: 'mm',
+        format: 'a4',
+        orientation: 'portrait'
+      }
+    };
+
+    // Generar PDF con html2pdf
+    html2pdf().from(element).set(opt).save()
+      .then(() => {
+        Swal.fire({
+          icon: 'success',
+          title: 'PDF Generado',
+          text: 'El comprobante se ha descargado correctamente',
+        });
+      })
+      .catch(error => {
+        console.error('Error al generar PDF:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: `No se pudo generar el PDF: ${error.message}`,
+        });
+      });
   };
-
-
-
   const renderVentaInputs = () => {
     if (isVentaChecked) {
       return (
@@ -663,27 +763,17 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
     <div className="p-6 max-w-[1200px] mx-auto bg-white shadow">
       <div className="sticky top-0 z-10 bg-white p-4 shadow-md flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <div className="bg-[#007072] p-2 ">
+          <div className="bg-[#0052CC] p-2 ">
             <FileTextOutlined className=" text-white" />
           </div>
           <div className="flex flex-col">
-            <span className="text-[#007072] text-sm">Ingresos /</span>
+            <span className="text-[#0052CC] text-sm">Ingresos /</span>
             <Title level={3}>
               {id ? 'Editar' : 'Crear'}
             </Title>
           </div>
         </div>
         <Space>
-
-          <Button
-            disabled={!isIncomeSaved}  // Deshabilitar el botón si el ingreso no ha sido guardado
-            onClick={handleDownloadPDF}
-            className="bg-transparent border border-[#007072] text-[#007072] hover:bg-[#007072] hover:text-white"
-            style={{ borderRadius: 0 }}
-          >
-            Descargar PDF
-          </Button>
-
           <div className="px-6 py-4 flex justify-end">
             <input
               type="file"
@@ -697,7 +787,7 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
               icon={<UploadOutlined />}
               loading={loading}
               onClick={() => document.getElementById("bulkUploadInput").click()}
-              className="bg-transparent border border-[#007072] text-[#007072] hover:bg-[#007072] hover:text-white"
+              className="bg-transparent border border-[#0052CC] text-[#0052CC] hover:bg-[#0052CC] hover:text-white"
               style={{ borderRadius: 2 }}
             >
               Cargar Ingresos Masivos
@@ -708,7 +798,7 @@ const AddIncome = ({ onTransactionAdded, transactionToEdit }) => {
             style={{ borderRadius: 2 }} >
             Cancelar
           </Button>
-          <Button onClick={handleSave} type="primary" className="bg-[#007072]" style={{ borderRadius: 2 }}>
+          <Button onClick={handleSave} type="primary" className="bg-[#0052CC]" style={{ borderRadius: 2 }}>
             Guardar
           </Button>
         </Space>

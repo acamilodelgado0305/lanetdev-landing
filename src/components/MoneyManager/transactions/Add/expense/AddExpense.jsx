@@ -12,7 +12,7 @@ import { useNavigate } from 'react-router-dom'; // Importa useNavigate
 const apiUrl = import.meta.env.VITE_API_FINANZAS;
 import ExpenseVoucherSection from "./ExpenseVoucherSection";
 import { useParams } from 'react-router-dom'; //
-import NewExpenseTable from "./ExpenseTable";
+import NewExpenseTable from "./ProductsTable";
 
 const { Title, Text } = Typography;
 
@@ -303,7 +303,7 @@ const AddExpense = () => {
     <div className="border-b-2 border-gray-200 pb-4 mb-6 space-y-3">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-semibold text-[#007072] mb-4">Nuevo comprobante de Egreso</h1>
+        <h1 className="text-2xl font-bold text-gray-800 mb-4">COMPROBANTE DE EGRESO</h1>
 
           <div className="flex items-center space-x-4">
             <span className="text-gray-600">Titulo.</span>
@@ -449,11 +449,11 @@ const AddExpense = () => {
     <div className="p-6 max-w-[1200px] mx-auto bg-white shadow">
       <div className="sticky top-0 z-10 bg-white p-4 shadow-md flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <div className="bg-[#007072] p-2 ">
+          <div className="bg-[#0052CC] p-2 ">
             <FileTextOutlined className=" text-white" />
           </div>
           <div className="flex flex-col">
-            <span className="text-[#007072] text-sm">Egresos /</span>
+            <span className="text-[#0052CC] text-sm">Egresos /</span>
             <Title level={3}>
               {id ? 'Editar' : 'Nuevo'}
             </Title>
@@ -464,7 +464,7 @@ const AddExpense = () => {
           <Button
             disabled={!isExpenseSaved} // Deshabilitar el botón si el Egreso no ha sido guardado
             onClick={handleDownloadPDF}
-            className="bg-transparent border border-[#007072] text-[#007072] hover:bg-[#007072] hover:text-white"
+            className="bg-transparent border border-[#0052CC] text-[#0052CC] hover:bg-[#0052CC] hover:text-white"
             style={{ borderRadius: 2 }} // Eliminar redondez de los bordes
           >
             Descargar PDF
@@ -483,7 +483,7 @@ const AddExpense = () => {
               icon={<UploadOutlined />}
               loading={loading}
               onClick={() => document.getElementById("bulkUploadInput").click()}
-              className="bg-transparent border border-[#007072] text-[#007072] hover:bg-[#007072] hover:text-white"
+              className="bg-transparent border border-[#0052CC] text-[#0052CC] hover:bg-[#0052CC] hover:text-white"
               style={{ borderRadius: 2 }} // Eliminar redondez de los bordes
             >
               Cargar Egresos Masivos
@@ -497,7 +497,7 @@ const AddExpense = () => {
           >
             Cancelar
           </Button>
-          <Button onClick={handleSave} type="primary" className="bg-[#007072]" style={{ borderRadius: 2 }}>
+          <Button onClick={handleSave} type="primary" className="bg-[#0052CC]" style={{ borderRadius: 2 }}>
             Aceptar
           </Button>
         </Space>

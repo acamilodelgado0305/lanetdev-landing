@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Table, Input, Drawer, Button, Checkbox, DatePicker, Dropdown, Menu, Card, Tag, Tooltip, Space, Typography, Divider, Select } from "antd";
+import { Table, Input, Drawer, Button, Checkbox, DatePicker, Dropdown, Menu, Card, Tag, Tooltip, Space, Typography, Divider, Select, Row, Col, Statistic } from "antd";
 import { format as formatDate, subMonths, addMonths, startOfMonth, endOfMonth, isWithinInterval, isValid } from "date-fns";
 import { es } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
@@ -17,13 +17,16 @@ import {
     CalendarOutlined,
     CheckCircleOutlined,
     MenuOutlined,
-    EditOutlined
+    EditOutlined,
+    DollarOutlined,
+    ArrowUpOutlined,
+    ArrowDownOutlined
 } from "@ant-design/icons";
 
 const { RangePicker } = DatePicker;
 const { Title, Text } = Typography;
 
-const ExpenseTable = ({ categories = [], accounts = [] }) => {
+const IncomeTable = ({ categories = [], accounts = [] }) => {
     const navigate = useNavigate();
 
     const [selectedEntry, setSelectedEntry] = useState(null);
@@ -42,76 +45,59 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
     const [error, setError] = useState(null);
     const [typeFilter, setTypeFilter] = useState(null);
 
-    const [providers, setProviders] = useState([]);
-    const [providerFilter, setProviderFilter] = useState(null);
 
-      const [monthlyBalance, setMonthlyBalance] = useState(0);
-        const [monthlyIncome, setMonthlyIncome] = useState(0);
-        const [monthlyExpenses, setMonthlyExpenses] = useState(0);
-    
-        const [loadingMonthlyData, setLoadingMonthlyData] = useState(false);
+
+    const [cashiers, setCashiers] = useState([]);
+    const [cashierFilter, setCashierFilter] = useState(null);
+    const [monthlyBalance, setMonthlyBalance] = useState(0);
+    const [monthlyIncome, setMonthlyIncome] = useState(0);
+    const [monthlyExpenses, setMonthlyExpenses] = useState(0);
+
+    const [loadingMonthlyData, setLoadingMonthlyData] = useState(false);
+
 
 
 
     // Fetch data when component mounts
     useEffect(() => {
         fetchData();
-        fetchProviders(); // Add this to fetch providers data
+        fetchCashiers(); // Add this to fetch cashiers data
     }, []);
 
     useEffect(() => {
-            fetchMonthlyData();
-        }, [currentMonth]);
+        fetchMonthlyData();
+    }, [currentMonth]);
 
 
-
-    const fetchProviders = async () => {
+    const fetchCashiers = async () => {
         try {
-            // Obtener la URL base de la API desde las variables de entorno o usar un valor por defecto
-            const API_BASE_URL = import.meta.env.VITE_API_FINANZAS || '/api';
+            const API_BASE_URL = import.meta.env.VITE_API_TERCEROS || '/api';
+            const response = await axios.get(`${API_BASE_URL}/cajeros`);
 
-            // Realizar la solicitud GET a la API para obtener los proveedores
-            const response = await axios.get(`${API_BASE_URL}/providers`);
+            // Acceder al array de cajeros dentro de response.data.data
+            const cashiersArray = response.data.data || [];
 
-            // Acceder directamente a los datos de la respuesta
-            const providersArray = response.data;
-
-            // Verificar que tenemos datos y guardarlos en el estado
-            if (Array.isArray(providersArray) && providersArray.length > 0) {
-                console.log("Proveedores cargados:", providersArray);
-                setProviders(providersArray);
-            } else {
-                console.log("La respuesta no tiene el formato esperado:", response.data);
-                setProviders([]);
-            }
+            // Map only the needed fields
+            const mappedCashiers = cashiersArray.map(cashier => ({
+                id_cajero: cashier.id_cajero,
+                nombre: cashier.nombre,
+            }));
+            setCashiers(mappedCashiers);
         } catch (error) {
-            // Manejar errores de la solicitud
-            console.error('Error al obtener los proveedores:', error);
-
-            // Mostrar una alerta al usuario en caso de fallo
+            console.error('Error al obtener los cajeros:', error);
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'No se pudieron cargar los proveedores. Por favor, intente de nuevo.',
+                text: 'No se pudieron cargar los cajeros. Por favor, intente de nuevo.',
             });
-
-            // Establecer un array vacío en el estado en caso de error
-            setProviders([]);
         }
     };
 
-    // Función para obtener el nombre de un proveedor por su ID
-    const getProviderName = (providerId) => {
-        // Verificar que providerId existe
-        if (!providerId) return "Proveedor no especificado";
 
-        // Buscar el proveedor en el array de proveedores usando el id
-        const provider = providers.find(provider => provider.id === providerId);
-
-        // Retornar el nombre comercial si se encuentra el proveedor, o un mensaje por defecto si no
-        return provider ? provider.nombre_comercial : "Proveedor no encontrado";
+    const getCashierName = (cashierId) => {
+        const cashier = cashiers.find((cash) => cash.id_cajero === cashierId);
+        return cashier ? cashier.nombre : "Cajero no encontrado";
     };
-
 
     // Simulate loading when changing date or filter
     const simulateLoading = () => {
@@ -124,22 +110,22 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
     useEffect(() => {
         let filtered = [...entries];
 
-        // Filtro por tipo
+        // Filter by type
         if (typeFilter) {
             filtered = filtered.filter(entry => entry.type === typeFilter);
         }
 
-        // Filtro por cajero
-        if (providerFilter) {
-            filtered = filtered.filter(entry => entry.cashier_id === providerFilter);
+        // Filter by cashier
+        if (cashierFilter) {
+            filtered = filtered.filter(entry => entry.cashier_id === cashierFilter);
         }
 
-        // Filtro por fecha
+        // Filter by date range
         if (dateRange && dateRange[0] && dateRange[1]) {
             const startDate = new Date(dateRange[0]);
             const endDate = new Date(dateRange[1]);
 
-            // Validar que las fechas sean válidas
+            // Validate that dates are valid
             if (isValid(startDate) && isValid(endDate)) {
                 filtered = filtered.filter(entry => {
                     const entryDate = new Date(entry.date);
@@ -148,7 +134,7 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
             }
         }
 
-        // Aplicar filtros de texto de búsqueda
+        // Apply search text filters
         filtered = filtered.filter(entry =>
             Object.keys(searchText).every(key => {
                 if (!searchText[key]) return true;
@@ -163,7 +149,7 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
                         .includes(searchText[key].toLowerCase());
                 }
                 if (key === 'cashier_id') {
-                    return getProviderName(entry[key])
+                    return getCashierName(entry[key])
                         .toLowerCase()
                         .includes(searchText[key].toLowerCase());
                 }
@@ -174,29 +160,29 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
         );
 
         setFilteredEntries(filtered);
-    }, [entries, searchText, dateRange, typeFilter, providerFilter, providers]);
+    }, [entries, searchText, dateRange, typeFilter, cashierFilter, cashiers]);
 
     // Menú desplegable para el filtro de tipo
-    const typeOptions = ["commission", "Legal"]; // Ajusta según los tipos disponibles
+    const typeOptions = ["arqueo", "otro"]; // Ajusta según los tipos disponibles
 
     const handleTypeFilterChange = (value) => {
         setTypeFilter(value);
     };
 
 
-    const handleProviderFilterChange = (value) => {
-        setProviderFilter(value);
+    const handleCashierFilterChange = (value) => {
+        setCashierFilter(value);
     };
+
 
     useEffect(() => {
         let filtered = [...entries];
 
-        // Filtro por fecha
         if (dateRange && dateRange[0] && dateRange[1]) {
             const startDate = new Date(dateRange[0]);
             const endDate = new Date(dateRange[1]);
 
-            // Validar que las fechas sean válidas
+            // Validate dates are valid
             if (isValid(startDate) && isValid(endDate)) {
                 filtered = filtered.filter(entry => {
                     const entryDate = new Date(entry.date);
@@ -205,43 +191,25 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
             }
         }
 
-        // Filtro por tipo
-        if (typeFilter) {
-            filtered = filtered.filter(entry => entry.type === typeFilter);
-        }
-
-        // Filtro por proveedor
-        if (providerFilter) {
-            filtered = filtered.filter(entry => entry.provider_id === providerFilter);
-        }
-
-        // Aplicar filtros de texto de búsqueda
+        // Apply search text filters
         filtered = filtered.filter(entry =>
             Object.keys(searchText).every(key => {
                 if (!searchText[key]) return true;
-
-                // Filtro para categoría
                 if (key === 'category_id') {
                     return getCategoryName(entry[key])
                         .toLowerCase()
                         .includes(searchText[key].toLowerCase());
                 }
-
-                // Filtro para cuenta
                 if (key === 'account_id') {
                     return getAccountName(entry[key])
                         .toLowerCase()
                         .includes(searchText[key].toLowerCase());
                 }
-
-                // Filtro para proveedor
-                if (key === 'provider_id') {
-                    return getProviderName(entry[key])
+                if (key === 'cashier_id') {
+                    return getCashierName(entry[key])
                         .toLowerCase()
                         .includes(searchText[key].toLowerCase());
                 }
-
-                // Filtro genérico para otros campos
                 return entry[key] ?
                     entry[key].toString().toLowerCase().includes(searchText[key].toLowerCase()) :
                     true;
@@ -249,7 +217,7 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
         );
 
         setFilteredEntries(filtered);
-    }, [entries, searchText, dateRange, typeFilter, providerFilter, providers, categories, accounts]);
+    }, [entries, searchText, dateRange, cashiers]);
 
     const handleRowClick = (record) => {
         navigate(`/index/moneymanager/ingresos/view/${record.id}`);
@@ -266,7 +234,7 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
         setEntriesLoading(true);
         try {
             const API_BASE_URL = import.meta.env.VITE_API_FINANZAS || '/api';
-            const response = await axios.get(`${API_BASE_URL}/expenses`);
+            const response = await axios.get(`${API_BASE_URL}/incomes`);
             const sortedEntries = response.data.sort((a, b) => new Date(b.date) - new Date(a.date));
             setEntries(sortedEntries);
             setFilteredEntries(sortedEntries);
@@ -285,7 +253,6 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
             setEntriesLoading(false);
         }
     };
-
 
     const fetchMonthlyData = async () => {
         // Format the current month as yyyy-MM for the API
@@ -314,6 +281,7 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
         }
     };
 
+
     // Month navigation handlers
     const goToPreviousMonth = () => {
         simulateLoading();
@@ -336,7 +304,14 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
         setDateRange([startOfMonth(now), endOfMonth(now)]);
     };
 
-
+    /*const handleDateRangeChange = (dates) => {
+        simulateLoading();
+        if (dates && dates.length === 2) {
+            setDateRange([dates[0].toDate(), dates[1].toDate()]);
+        } else {
+            setDateRange(null);
+        }
+    };*/
 
     // Row selection handlers
     const onSelectChange = (newSelectedRowKeys) => {
@@ -405,7 +380,7 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
                         confirmButtonText: 'Entendido'
                     });
                 } else {
-                    navigate(`/index/moneymanager/ingresos/view/${selectedRowKeys[0]}`);
+                    navigate(`/index/moneymanager/ingresos/edit/${selectedRowKeys[0]}`);
                 }
                 break;
             case 'delete':
@@ -434,7 +409,7 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
                                 setSelectedRowKeys([]);
                                 // Refresh data after deletion
                                 fetchData();
-                               
+
                             })
                             .catch(error => {
                                 console.error("Error eliminando registros:", error);
@@ -463,7 +438,7 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
     const handleDeleteItem = async (id) => {
         try {
             const API_BASE_URL = import.meta.env.VITE_API_FINANZAS || '/api';
-            await axios.delete(`${API_BASE_URL}/expenses/${id}`);
+            await axios.delete(`${API_BASE_URL}/incomes/${id}`);
             return id; // Return the id for confirmation
         } catch (error) {
             console.error(`Error eliminando el ingreso ${id}:`, error);
@@ -475,8 +450,6 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
         const account = accounts.find((acc) => acc.id === accountId);
         return account ? account.name : "Cuenta no encontrada";
     };
-
-
 
     const getCategoryName = (categoryId) => {
         const category = categories.find((cat) => cat.id === categoryId);
@@ -539,21 +512,21 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
     const columns = [
         {
             title: (
-                <Tooltip title="Número de Egreso">
+                <Tooltip title="Número de arqueo">
                     <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                        N° de egreso
+                        N° Arqueo
                         <Input
                             prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
                             placeholder="Buscar"
-                            onChange={(e) => handleSearch(e.target.value, "invoice_number")}
+                            onChange={(e) => handleSearch(e.target.value, "arqueo_number")}
                             style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
                         />
                     </div>
                 </Tooltip>
             ),
-            dataIndex: "invoice_number",
-            key: "invoice_number",
-            sorter: (a, b) => a.invoice_number - b.invoice_number,
+            dataIndex: "arqueo_number",
+            key: "arqueo_number",
+            sorter: (a, b) => a.arqueo_number - b.arqueo_number,
             render: (text) => <a>{text || "No disponible"}</a>,
             width: 110,
         },
@@ -616,51 +589,86 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
             sortDirections: ["ascend", "descend"],
             width: 150,
         },
-        {
-            title: (
-                <div className="flex flex-col" style={{ margin: "2px 0", gap: 1, lineHeight: 1 }}>
-                    Proveedor
-                    <Input
-                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                        placeholder="Buscar proveedor"
-                        onChange={(e) => handleSearch(e.target.value, "provider_id")}
-                        style={{ marginTop: 2, padding: 4, height: 25, fontSize: 12 }}
-                    />
-                </div>
-            ),
-            dataIndex: "provider_id", // Asumiendo que este es el campo en tus datos de gastos
-            key: "provider_id",
-            render: (providerId) => <Tag color="orange">{getProviderName(providerId)}</Tag>,
-            sorter: (a, b) => {
-                const nameA = getProviderName(a.provider_id) || "";
-                const nameB = getProviderName(b.provider_id) || "";
-                return nameA.localeCompare(nameB);
-            },
-            sortDirections: ["ascend", "descend"],
-            width: 150,
-        },
 
         {
             title: (
                 <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                    Total Neto
+                    Cajero
                     <Input
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
                         placeholder="Buscar"
-                        onChange={(e) => handleSearch(e.target.value, "total_net")}
+                        onChange={(e) => handleSearch(e.target.value, "cashier_id")}
                         style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
                     />
                 </div>
             ),
-            dataIndex: "total_net",
-            key: "total_net",
-            render: (total_net) => <span className="font-bold">{formatCurrency(total_net)}</span>,
-            sorter: (a, b) => a.total_net - b.total_net,
+            dataIndex: "cashier_id",
+            key: "cashier_id",
+            sorter: (a, b) => getCashierName(a.cashier_id).localeCompare(getCashierName(b.cashier_id)),
+            render: (cashierId) => <Tag color="purple">{getCashierName(cashierId)}</Tag>,
+            width: 150,
+        },
+        {
+            title: (
+                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Monto Total
+                    <Input
+                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                        placeholder="Buscar"
+                        onChange={(e) => handleSearch(e.target.value, "amount")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                    />
+                </div>
+            ),
+            dataIndex: "amount",
+            key: "amount",
+            render: (amount) => <span className="font-bold">{formatCurrency(amount)}</span>,
+            sorter: (a, b) => a.amount - b.amount,
             sortDirections: ["descend", "ascend"],
             width: 140,
         },
-
-
+        {
+            title: (
+                <Tooltip title="Fecha de inicio">
+                    <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                        Fecha de inicio
+                        <Input
+                            prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                            placeholder="Buscar"
+                            onChange={(e) => handleSearch(e.target.value, "start_period")}
+                            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                        />
+                    </div>
+                </Tooltip>
+            ),
+            dataIndex: "start_period",
+            key: "start_period",
+            render: (text) => renderDate(text),
+            sorter: (a, b) => new Date(a.start_period || 0) - new Date(b.start_period || 0),
+            sortDirections: ["descend", "ascend"],
+            width: 120,
+        },
+        {
+            title: (
+                <Tooltip title="Fecha de finalizacion">
+                    <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                        Fecha de Finalización
+                        <Input
+                            prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                            placeholder="Buscar"
+                            onChange={(e) => handleSearch(e.target.value, "end_period")}
+                            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                        />
+                    </div>
+                </Tooltip>
+            ),
+            dataIndex: "end_period",
+            key: "end_period",
+            render: (text) => renderDate(text),
+            sorter: (a, b) => new Date(a.end_period || 0) - new Date(b.end_period || 0),
+            sortDirections: ["descend", "ascend"],
+            width: 120,
+        },
         {
             title: "Comprobante",
             dataIndex: "voucher",
@@ -683,15 +691,11 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
         }
     ];
 
-    // More compact columns for responsive layout
-    const mobileColumns = columns.filter(col =>
-        ["arqueo_number", "date", "description", "amount", "voucher"].includes(col.dataIndex)
-    );
+
 
     return (
         <>
-            {/* Jira-style Top Bar */}
-            <Card className="mb-4 shadow-sm" bodyStyle={{ padding: "12px 16px" }}>
+            <Card className="mb-4 " >
                 <div className="flex justify-between items-center">
                     {/* Left side: Actions */}
                     <div className="flex items-center space-x-1">
@@ -702,7 +706,6 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
                                 onClick={() => handleBatchOperation('download')}
                             />
                         </Tooltip>
-
                         <Tooltip title="Exportar">
                             <Button
                                 type="default"
@@ -710,7 +713,6 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
                                 onClick={() => handleBatchOperation('export')}
                             />
                         </Tooltip>
-
                         <Tooltip title="Editar">
                             <Button
                                 type="default"
@@ -718,7 +720,6 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
                                 onClick={() => handleBatchOperation('edit')}
                             />
                         </Tooltip>
-
                         <Tooltip title="Eliminar">
                             <Button
                                 type="default"
@@ -726,7 +727,6 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
                                 onClick={() => handleBatchOperation('delete')}
                             />
                         </Tooltip>
-
                         <Button
                             icon={<FilterOutlined />}
                             onClick={() => setShowFilters(!showFilters)}
@@ -735,52 +735,54 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
                         </Button>
                     </div>
 
+
+
                     <div className="flex items-center">
-                                            <div className="mr-3">
-                                                <div className="flex items-center justify-end space-x-2">
-                                                    <div className="bg-white p-2 rounded text-center flex-none w-26">
-                                                        <h3 className="text-gray-500 text-[10px] font-medium uppercase">Ingresos</h3>
-                                                        <p className="text-green-600 text-sm font-semibold mt-1 truncate">
-                                                            {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyIncome)}
-                                                        </p>
-                                                    </div>
-                                                    <div className="bg-white p-2 rounded text-center flex-none w-26">
-                                                        <h3 className="text-gray-500 text-[10px] font-medium uppercase">Egresos</h3>
-                                                        <p className="text-red-600 text-sm font-semibold mt-1 truncate">
-                                                            {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyExpenses)}
-                                                        </p>
-                                                    </div>
-                                                    <div className="bg-white p-2 rounded  text-center flex-none w-26">
-                                                        <h3 className="text-gray-500 text-[10px] font-medium uppercase">Balance</h3>
-                                                        <p className="text-blue-600 text-sm font-semibold mt-1 truncate">
-                                                            {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyBalance)}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <Tooltip title="Mes actual">
-                                                <Button
-                                                    icon={<CalendarOutlined />}
-                                                    onClick={goToCurrentMonth}
-                                                    className="mr-2"
-                                                >
-                                                    Hoy
-                                                </Button>
-                                            </Tooltip>
-                                            <Button
-                                                icon={<LeftOutlined />}
-                                                onClick={goToPreviousMonth}
-                                                className="mr-1"
-                                            />
-                                            <span className="font-medium px-3 py-1 bg-gray-100 rounded">
-                                                {formatDate(currentMonth, "MMMM yyyy", { locale: es })}
-                                            </span>
-                                            <Button
-                                                icon={<RightOutlined />}
-                                                onClick={goToNextMonth}
-                                                className="ml-1"
-                                            />
-                                        </div>
+                        <div className="mr-3">
+                            <div className="flex items-center justify-end space-x-2">
+                                <div className="bg-white p-2 rounded text-center flex-none w-26">
+                                    <h3 className="text-gray-500 text-[10px] font-medium uppercase">Ingresos</h3>
+                                    <p className="text-green-600 text-sm font-semibold mt-1 truncate">
+                                        {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyIncome)}
+                                    </p>
+                                </div>
+                                <div className="bg-white p-2 rounded text-center flex-none w-26">
+                                    <h3 className="text-gray-500 text-[10px] font-medium uppercase">Egresos</h3>
+                                    <p className="text-red-600 text-sm font-semibold mt-1 truncate">
+                                        {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyExpenses)}
+                                    </p>
+                                </div>
+                                <div className="bg-white p-2 rounded  text-center flex-none w-26">
+                                    <h3 className="text-gray-500 text-[10px] font-medium uppercase">Balance</h3>
+                                    <p className="text-blue-600 text-sm font-semibold mt-1 truncate">
+                                        {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyBalance)}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <Tooltip title="Mes actual">
+                            <Button
+                                icon={<CalendarOutlined />}
+                                onClick={goToCurrentMonth}
+                                className="mr-2"
+                            >
+                                Hoy
+                            </Button>
+                        </Tooltip>
+                        <Button
+                            icon={<LeftOutlined />}
+                            onClick={goToPreviousMonth}
+                            className="mr-1"
+                        />
+                        <span className="font-medium px-3 py-1 bg-gray-100 rounded">
+                            {formatDate(currentMonth, "MMMM yyyy", { locale: es })}
+                        </span>
+                        <Button
+                            icon={<RightOutlined />}
+                            onClick={goToNextMonth}
+                            className="ml-1"
+                        />
+                    </div>
                 </div>
 
                 {showFilters && (
@@ -788,16 +790,16 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
                         <div className="flex flex-wrap items-center gap-4">
                             {/* Cashier filter dropdown */}
                             <Select
-                                placeholder="Filtrar por proveedor"
+                                placeholder="Filtrar por cajero"
                                 style={{ width: 200 }}
-                                onChange={handleProviderFilterChange}
-                                value={providerFilter || undefined}
-                                loading={providers.length === 0}
+                                onChange={handleCashierFilterChange}
+                                value={cashierFilter || undefined}
+                                loading={cashiers.length === 0}
                                 allowClear
                             >
-                                {providers.map((provider) => (
-                                    <Select.Option key={provider.id} value={provider.id}>
-                                        {provider.nombre_comercial}
+                                {cashiers.map((cashier) => (
+                                    <Select.Option key={cashier.id_cajero} value={cashier.id_cajero}>
+                                        {cashier.nombre}
                                     </Select.Option>
                                 ))}
                             </Select>
@@ -814,15 +816,12 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
                                     </Select.Option>
                                 ))}
                             </Select>
-
                             <Divider type="vertical" style={{ height: '24px' }} />
-
                             <div className="flex items-center">
                                 <Text strong className="mr-2">Seleccionados:</Text>
                                 <Tag color="blue">
                                     {selectedRowKeys.length} de {filteredEntries.length} registros
                                 </Tag>
-
                                 {selectedRowKeys.length > 0 && (
                                     <Button
                                         type="link"
@@ -985,4 +984,4 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
     );
 };
 
-export default ExpenseTable;
+export default IncomeTable;
