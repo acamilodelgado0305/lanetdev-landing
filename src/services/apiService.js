@@ -153,7 +153,7 @@ export const deleteUser = async (id, token) => {
 }; */
 export const uploadImage = async (file, token) => {
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('myFile', file);
 
     try {
         const response = await authApi.post('/upload-file', formData, {

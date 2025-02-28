@@ -325,6 +325,7 @@ const IndexConfig = () => {
                 }}
               >
                 Editar Perfil
+
               </Button>
               <Button
                 danger
@@ -340,6 +341,7 @@ const IndexConfig = () => {
               </Button>
             </Card>
           )}
+
         </Content>
       </Layout>
       <Modal
@@ -384,6 +386,7 @@ const IndexConfig = () => {
             Guardar Cambios
           </Button>
         </Form>
+
       </Modal>
 
 
