@@ -379,7 +379,7 @@ const NewExpenseTable = ({
             <div style={{ textAlign: 'right', color: '#ff4d4f' }}>-{formatCurrency(totals.reteICA)}</div>
           </div>
           <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '8px', marginTop: '8px' }}>
-            <div className="bg-[#007072] text-white rounded-md py-2 px-4 flex justify-between items-center">
+            <div className="bg-[#0052CC] text-white rounded-md py-2 px-4 flex justify-between items-center">
               <div style={{ textAlign: 'right', fontWeight: 'bold', fontSize: '16px' }}>Total Neto:</div>
               <div style={{ textAlign: 'right', fontWeight: 'bold', fontSize: '16px' }}>{formatCurrency(totals.totalNeto)}</div>
             </div>

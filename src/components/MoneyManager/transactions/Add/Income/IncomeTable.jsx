@@ -22,6 +22,7 @@ import {
     ArrowUpOutlined,
     ArrowDownOutlined
 } from "@ant-design/icons";
+import FloatingActionMenu from "../../FloatingActionMenu";
 
 const { RangePicker } = DatePicker;
 const { Title, Text } = Typography;
@@ -56,6 +57,33 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
     const [loadingMonthlyData, setLoadingMonthlyData] = useState(false);
 
 
+
+
+
+    const handleEditSelected = () => {
+        if (selectedRowKeys.length === 1) {
+            navigate(`/index/moneymanager/ingresos/edit/${selectedRowKeys[0]}`);
+        }
+    };
+
+    const handleDeleteSelected = () => {
+        // Use the existing batch delete logic
+        handleBatchOperation('delete');
+    };
+
+    const handleDownloadSelected = () => {
+        // Use the existing batch download logic
+        handleBatchOperation('download');
+    };
+
+    const handleExportSelected = () => {
+        // Use the existing batch export logic
+        handleBatchOperation('export');
+    };
+
+    const clearSelection = () => {
+        setSelectedRowKeys([]);
+    };
 
 
     // Fetch data when component mounts
@@ -517,7 +545,7 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
                         N° Arqueo
                         <Input
                             prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                            placeholder="Buscar"
+                          
                             onChange={(e) => handleSearch(e.target.value, "arqueo_number")}
                             style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
                         />
@@ -537,7 +565,6 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
                         Fecha
                         <Input
                             prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                            placeholder="Buscar"
                             onChange={(e) => handleSearch(e.target.value, "date")}
                             style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
                         />
@@ -576,7 +603,6 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
                     Cuenta
                     <Input
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                        placeholder="Buscar"
                         onChange={(e) => handleSearch(e.target.value, "account_id")}
                         style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
                     />
@@ -596,7 +622,6 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
                     Cajero
                     <Input
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                        placeholder="Buscar"
                         onChange={(e) => handleSearch(e.target.value, "cashier_id")}
                         style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
                     />
@@ -614,7 +639,6 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
                     Monto Total
                     <Input
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                        placeholder="Buscar"
                         onChange={(e) => handleSearch(e.target.value, "amount")}
                         style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
                     />
@@ -631,10 +655,9 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
             title: (
                 <Tooltip title="Fecha de inicio">
                     <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                        Fecha de inicio
+                        Desde
                         <Input
                             prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                            placeholder="Buscar"
                             onChange={(e) => handleSearch(e.target.value, "start_period")}
                             style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
                         />
@@ -652,10 +675,9 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
             title: (
                 <Tooltip title="Fecha de finalizacion">
                     <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                        Fecha de Finalización
+                       Hasta
                         <Input
                             prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                            placeholder="Buscar"
                             onChange={(e) => handleSearch(e.target.value, "end_period")}
                             style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
                         />
@@ -695,64 +717,33 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
 
     return (
         <>
-            <Card className="mb-4 " >
-                <div className="flex justify-between items-center">
+            <div className="bg-white py-2 px-5 shadow-sm">
+                <div className="flex  justify-between items-center">
                     {/* Left side: Actions */}
-                    <div className="flex items-center space-x-1">
-                        <Tooltip title="Descargar">
-                            <Button
-                                type="default"
-                                icon={<DownloadOutlined />}
-                                onClick={() => handleBatchOperation('download')}
-                            />
-                        </Tooltip>
-                        <Tooltip title="Exportar">
-                            <Button
-                                type="default"
-                                icon={<ExportOutlined />}
-                                onClick={() => handleBatchOperation('export')}
-                            />
-                        </Tooltip>
-                        <Tooltip title="Editar">
-                            <Button
-                                type="default"
-                                icon={<EditOutlined />}
-                                onClick={() => handleBatchOperation('edit')}
-                            />
-                        </Tooltip>
-                        <Tooltip title="Eliminar">
-                            <Button
-                                type="default"
-                                icon={<DeleteOutlined />}
-                                onClick={() => handleBatchOperation('delete')}
-                            />
-                        </Tooltip>
+                    <div className="flex items-center space-x-1">      
                         <Button
                             icon={<FilterOutlined />}
                             onClick={() => setShowFilters(!showFilters)}
                         >
-                            {showFilters ? "Ocultar filtros" : "Mostrar filtros"}
+                            {showFilters ? "Filtro" : "Filtro"}
                         </Button>
                     </div>
-
-
-
                     <div className="flex items-center">
                         <div className="mr-3">
-                            <div className="flex items-center justify-end space-x-2">
-                                <div className="bg-white p-2 rounded text-center flex-none w-26">
+                            <div className="flex items-center justify-end ">
+                                <div className="bg-white px-2  text-center flex-none w-26">
                                     <h3 className="text-gray-500 text-[10px] font-medium uppercase">Ingresos</h3>
                                     <p className="text-green-600 text-sm font-semibold mt-1 truncate">
                                         {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyIncome)}
                                     </p>
                                 </div>
-                                <div className="bg-white p-2 rounded text-center flex-none w-26">
+                                <div className="bg-white px-2  text-center flex-none w-26">
                                     <h3 className="text-gray-500 text-[10px] font-medium uppercase">Egresos</h3>
                                     <p className="text-red-600 text-sm font-semibold mt-1 truncate">
                                         {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyExpenses)}
                                     </p>
                                 </div>
-                                <div className="bg-white p-2 rounded  text-center flex-none w-26">
+                                <div className="px-2 bg-white text-center flex-none w-26">
                                     <h3 className="text-gray-500 text-[10px] font-medium uppercase">Balance</h3>
                                     <p className="text-blue-600 text-sm font-semibold mt-1 truncate">
                                         {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyBalance)}
@@ -786,7 +777,7 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
                 </div>
 
                 {showFilters && (
-                    <div className="mt-4 p-3 bg-gray-50 rounded">
+                    <div className="mt-4 p-3 bg-white ">
                         <div className="flex flex-wrap items-center gap-4">
                             {/* Cashier filter dropdown */}
                             <Select
@@ -835,7 +826,7 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
                         </div>
                     </div>
                 )}
-            </Card>
+            </div>
 
             {/* Error message if data loading fails */}
             {error && (
@@ -853,41 +844,36 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
             )}
 
             {/* Enhanced Table with Jira styling */}
-            <Table
-                rowSelection={rowSelection}
-                dataSource={filteredEntries}
-                columns={columns}
-                rowKey={(record) => record.id}
-                pagination={{
-                    pageSize: 10,
-                    showSizeChanger: true,
-                    showTotal: (total, range) => `${range[0]}-${range[1]} de ${total} registros`
-                }}
-                bordered
-                size="middle"
-                loading={entriesLoading}
-                onRow={(record) => ({
-                    onClick: (e) => {
-                        // Prevent navigation when clicking on checkbox or buttons
-                        if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') {
-                            handleRowClick(record);
-                        }
-                    },
-                })}
-                rowClassName="hover:bg-gray-50 transition-colors"
-                scroll={{ x: 'max-content' }}
-                summary={pageData => {
-                    if (pageData.length === 0) return null;
-
-                    const totalAmount = pageData.reduce((total, item) => total + (item.amount || 0), 0);
-
-                    return (
-                        <Table.Summary fixed>
-
-                        </Table.Summary>
-                    );
-                }}
-            />
+            <div className="rounded-none">
+    <Table
+    className="px-7 py-5"
+        rowSelection={rowSelection}
+        dataSource={filteredEntries}
+        columns={columns}
+        rowKey={(record) => record.id}
+        pagination={{
+            pageSize: 10,
+            showSizeChanger: true,
+            showTotal: (total, range) => `${range[0]}-${range[1]} de ${total} registros`
+        }}
+        bordered
+        size="middle"
+        loading={entriesLoading}
+        onRow={(record) => ({
+            onClick: (e) => {
+                if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') {
+                    handleRowClick(record);
+                }
+            },
+        })}
+        rowClassName="hover:bg-gray-50 transition-colors"
+        scroll={{ x: 'max-content' }}
+        summary={pageData => {
+            if (pageData.length === 0) return null;
+            const totalAmount = pageData.reduce((total, item) => total + (item.amount || 0), 0);
+        }}
+    />
+</div>
 
             <style>
                 {`
@@ -957,7 +943,7 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
                 }
             >
                 <div className="flex flex-col">
-                    <div className="flex flex-wrap gap-4 justify-center mb-4">
+                    <div className="flex flex-wrap gap-4 justify-center mb-4 ">
                         {selectedImages.map((image, index) => (
                             <div key={index} className="relative w-60 h-80">
                                 <img
@@ -978,6 +964,15 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
                     </div>
                 </div>
             </Drawer>
+
+            <FloatingActionMenu
+                selectedRowKeys={selectedRowKeys}
+                onEdit={handleEditSelected}
+                onDelete={handleDeleteSelected}
+                onDownload={handleDownloadSelected}
+                onExport={handleExportSelected}
+                onClearSelection={clearSelection}
+            />
 
 
         </>

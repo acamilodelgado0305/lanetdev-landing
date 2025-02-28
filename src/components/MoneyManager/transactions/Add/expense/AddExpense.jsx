@@ -11,7 +11,7 @@ import axios from "axios";
 import { useNavigate } from 'react-router-dom'; // Importa useNavigate
 const apiUrl = import.meta.env.VITE_API_FINANZAS;
 import ExpenseVoucherSection from "./ExpenseVoucherSection";
-import { useParams } from 'react-router-dom'; //
+import { useParams, useLocation} from 'react-router-dom'; //
 import NewExpenseTable from "./ProductsTable";
 
 const { Title, Text } = Typography;
@@ -20,7 +20,8 @@ const { Title, Text } = Typography;
 const AddExpense = () => {
   const { id } = useParams(); // Obtener el ID de la URL
   const navigate = useNavigate();
-  // Inicializa el hook useNavigaten
+    const location = useLocation();
+    const returnTab = location.state?.returnTab || 'egresos';
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("");
   const [account, setAccount] = useState("");
@@ -81,9 +82,8 @@ const AddExpense = () => {
   const printRef = useRef();
 
   const handleCancel = () => {
-    navigate(-1); // Navega hacia atrás en la historia del navegador
+    navigate('/index/moneymanager/transactions', { state: { activeTab: returnTab } });
   };
-
 
   useEffect(() => {
     if (id) {

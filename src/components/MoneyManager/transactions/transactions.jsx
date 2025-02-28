@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { format as formatDate, startOfMonth, endOfMonth, subMonths, addMonths } from "date-fns";
 import axios from "axios";
 import { Modal, message, Button, Card, Row, Col, Statistic, Typography, Tabs, Space } from "antd";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   TrendingUp,
   CreditCard,
@@ -13,7 +13,7 @@ import {
   FileText, // Changed from FileTextOutlined to FileText
   Share2,
   Zap,
-   TrendingDown, BarChart2
+  TrendingDown, BarChart2
 } from 'lucide-react';
 import { PlusOutlined, SwapOutlined, ArrowUpOutlined, ArrowDownOutlined, DollarOutlined } from '@ant-design/icons';
 import AddEntryModal from "./addModal";
@@ -44,13 +44,10 @@ const formatCurrency = (amount) => {
   }).format(amount);
 };
 
-
-
-
-
-
 const TransactionsDashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState(location.state?.activeTab || "resumen");
   const [isContentModalOpen, setIsContentModalOpen] = useState(false);
   const [selectedVoucherContent, setSelectedVoucherContent] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -70,7 +67,6 @@ const TransactionsDashboard = () => {
   const [categories, setCategories] = useState([]);
   const [editTransaction, setEditTransaction] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
-  const [activeTab, setActiveTab] = useState("resumen");
   const { userRole } = useAuth();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [monthlyBalance, setMonthlyBalance] = useState(0);
@@ -287,13 +283,13 @@ const TransactionsDashboard = () => {
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b sticky top-0 z-10 shadow-sm">
+      <div className="bg-white sticky  z-10 shadow-sm">
         <div className="max-w-7x2 mx-auto px-4 py-2">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
               <div className="flex items-center gap-2">
 
-                <div className="pt-6 pl-4 pr-4 flex flex-col">
+                <div className="pt-10 pl-4 pr-4 flex flex-col">
                   <span className="text-gray-400 text-sm ">Área de Contabilidad</span>
                   <Title level={2} className="text-lg font-bold">
                     Gestión de Transacciones
@@ -305,43 +301,30 @@ const TransactionsDashboard = () => {
             </div>
 
             <Space size="middle">
-
               <div>
-                <div className="px-4 py-2">
-                  <div className="pl-24 mt-4 flex items-center justify-end space-x-3">
-                    {/* Tarjeta de Ingresos */}
-                    <div className="bg-white  rounded-lg text-center flex-none w-32 transition-all duration-200 hover:shadow-md">
-                      <div className="flex items-center justify-center mb-1">
-                        <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-                        <h3 className="text-gray-600 text-xs font-semibold uppercase">Ingresos</h3>
-                      </div>
-                      <p className="text-green-600 text-sm font-bold mt-1 truncate">
+                <div className="mt-10">
+                  <div className="flex items-center justify-end space-x-2">
+                    <div className="px-2 rounded text-center flex-none w-26">
+                      <h3 className="text-gray-500 text-[10px] font-medium uppercase">Ingresos totales</h3>
+                      <p className="text-green-600 text-sm font-semibold mt-1 truncate">
                         {formatCurrency(totalIncome)}
                       </p>
                     </div>
-
-                    {/* Tarjeta de Egresos */}
-                    <div className="bg-white rounded-lg  text-center flex-none w-32 transition-all duration-200 hover:shadow-md">
-                      <div className="flex items-center justify-center mb-1">
-                        <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
-                        <h3 className="text-gray-600 text-xs font-semibold uppercase">Egresos</h3>
-                      </div>
-                      <p className="text-red-600 text-sm font-bold mt-1 truncate">
+                    <div className="px-2 rounded text-center flex-none w-26">
+                      <h3 className="text-gray-500 text-[10px] font-medium uppercase">Egresos totales</h3>
+                      <p className="text-red-600 text-sm font-semibold mt-1 truncate">
                         {formatCurrency(totalExpenses)}
                       </p>
                     </div>
-
-                    {/* Tarjeta de Balance */}
-                    <div className="bg-white rounded-lg text-center flex-none w-32 transition-all duration-200 hover:shadow-md">
-                      <div className="flex items-center justify-center mb-1">
-                        <BarChart2 className="h-4 w-4 text-blue-500 mr-1" />
-                        <h3 className="text-gray-600 text-xs font-semibold uppercase">Balance</h3>
-                      </div>
-                      <p className="text-blue-600 text-sm font-bold mt-1 truncate">
+                    <div className="px-2 rounded  text-center flex-none w-26">
+                      <h3 className="text-gray-500 text-[10px] font-medium uppercase">Balance</h3>
+                      <p className="text-blue-600 text-sm font-semibold mt-1 truncate">
                         {formatCurrency(balance)}
                       </p>
                     </div>
+
                   </div>
+
                 </div>
               </div>
               <Button
@@ -355,7 +338,7 @@ const TransactionsDashboard = () => {
                   alignItems: 'center',
                   gap: '4px'
                 }}
-                onClick={() => handleNavigate('/index/moneymanager/transactions/nuevoingreso')}
+                onClick={() => navigate('/index/moneymanager/transactions/nuevoingreso', { state: { returnTab: 'incomes' } })}
               >
                 Crear Ingreso
               </Button>
@@ -372,7 +355,7 @@ const TransactionsDashboard = () => {
                   alignItems: 'center',
                   gap: '4px'
                 }}
-                onClick={() => handleNavigate('/index/moneymanager/transactions/nuevoegreso')}
+                onClick={() => navigate('/index/moneymanager/transactions/nuevoegreso', { state: { returnTab: 'expenses' } })}
               >
                 Crear Egreso
               </Button>
@@ -396,10 +379,10 @@ const TransactionsDashboard = () => {
           </div>
 
           {/* Tabs - Similar to the project management tabs */}
-          <div className="border-b">
-            <div className="flex space-x-4 overflow-x-auto">
+          <div className="mt-[-1em] border-b-4 border-gray-300 ">
+            <div className="flex  overflow-x-auto">
               <div
-                className={`py-2 px-4 cursor-pointer border-b-2 ${activeTab === 'resumen' ? 'border-[#0052CC] text-[#0052CC]' : 'border-transparent text-gray-600'}`}
+                className={`py-2 px-4 cursor-pointer border-b-3 ${activeTab === 'resumen' ? 'border-[#0052CC] text-[#0052CC]' : 'border-transparent text-gray-600'}`}
                 onClick={() => handleTabChange('resumen')}
               >
                 Resumen
@@ -427,8 +410,6 @@ const TransactionsDashboard = () => {
         </div>
       </div>
 
-      {/* Action Bar */}
-
 
       {activeTab === "resumen" ? (
         // Usar el componente Summary importado
@@ -439,8 +420,8 @@ const TransactionsDashboard = () => {
 
         />
       ) : (
-        <div className="flex-1 overflow-auto">
-          <div className="max-w-full mx-auto px-4  pt-3">
+        <div className="bg-blue-900 bg-opacity-20 shadow-lg overflow-auto"> 
+          <div className="max-w-full mx-auto  ">
             <div className="bg-gray rounded">
               {error && (
                 <div className="p-4 bg-red-50 border-l-4 border-red-500 text-red-700">

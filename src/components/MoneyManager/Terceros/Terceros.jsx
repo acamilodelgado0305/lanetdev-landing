@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Info, Plus, X } from 'lucide-react';
 import { Button, message, Card, Input, Select, Radio, Space, Row, Col, Typography } from 'antd';
 import { RedoOutlined, SaveOutlined, FileTextOutlined } from '@ant-design/icons';
@@ -6,6 +7,7 @@ import Swal from "sweetalert2";
 
 
 const Terceros = () => {
+   const navigate = useNavigate();
  
   const [formData, setFormData] = useState({
     tipoPersona: 'natural',
@@ -110,8 +112,7 @@ const Terceros = () => {
 
   // Función para cancelar y limpiar los datos
   const handleCancel = () => {
-    setFormData({});
-    message.info('La acción ha sido cancelada.');
+    navigate(-1);
   };
 
   return (
