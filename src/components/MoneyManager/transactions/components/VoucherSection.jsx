@@ -175,7 +175,7 @@ const VoucherSection = ({ onVoucherChange, initialVouchers = [], entryId }) => {
                 open={isImageModalOpen}
                 onCancel={() => setIsImageModalOpen(false)}
                 footer={null}
-                width={800}
+                width={400}
                 centered
             >
                 {currentImage && currentImage.endsWith('.pdf') ? (
