@@ -6,19 +6,20 @@ import { useAuth } from './Context/AuthProvider';
 const PrivateRoute = ({ children, allowedRoles }) => {
     const { userRole, authToken, restoringSession } = useAuth();
     const [loadingDelay, setLoadingDelay] = useState(true);
+    const [isValidUser, setIsValidUser] = useState(true);
 
     useEffect(() => {
-        // Establecer un retraso de 1 segundo antes de que desaparezca el indicador de carga
+        const storedUserId = sessionStorage.getItem('userId');
+        if (!storedUserId) {
+            setIsValidUser(false);
+        }
         const timer = setTimeout(() => {
             setLoadingDelay(false);
         }, 1000);
-
-        // Limpiar el temporizador si el componente se desmonta antes
         return () => clearTimeout(timer);
     }, []);
 
     if (loadingDelay || restoringSession) {
-        // Mostrar el spinner de "antd" mientras se carga la sesión
         return (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
                 <Spin size="large" tip="Cargando..." />
@@ -26,17 +27,13 @@ const PrivateRoute = ({ children, allowedRoles }) => {
         );
     }
 
-    if (!authToken) {
-        // Redirigir al login si no hay token
+    if (!authToken || !isValidUser) {
         return <Navigate to="/login" />;
     }
 
     if (allowedRoles && !allowedRoles.includes(userRole)) {
-
         return <Navigate to="/access-denied" />;
     }
-
-    // Si todo está correcto, renderizar el componente hijo
     return children;
 };
 

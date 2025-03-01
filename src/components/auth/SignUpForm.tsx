@@ -10,7 +10,7 @@ interface SignUpFormInputs {
     email: string;
     password: string;
     confirmPassword: string;
-    role: 'superadmin' | 'admin' | 'user';
+    role: 'superadmin' | 'cajero' | 'usuario' | 'tecnico';
 }
 
 interface SignUpModalProps {

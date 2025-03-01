@@ -169,7 +169,7 @@ const IndexConfig = () => {
       dataIndex: "role",
       render: (role) => {
         if (!role) return <Tag color="default">No asignado</Tag>;
-        const color = role.toLowerCase() === "admin" ? "geekblue" : "green";
+        const color = role.toLowerCase() === "cajero" ? "geekblue" : "green";
         return <Tag color={color}>{role.toUpperCase()}</Tag>;
       },
     },

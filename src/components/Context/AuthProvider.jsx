@@ -38,6 +38,8 @@ export const AuthProvider = ({ children }) => {
             }
         } catch (error) {
             console.error('Error al iniciar sesión:', error.message);
+            setUser(null);
+            setUserRole(null);
             throw error;
         } finally {
             setLoading(false);
@@ -48,7 +50,6 @@ export const AuthProvider = ({ children }) => {
     const restoreSession = async () => {
         setRestoringSession(true);
         try {
-
             const storedUserId = sessionStorage.getItem('userId');
 
             if (storedUserId) {
