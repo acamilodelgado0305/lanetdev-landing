@@ -41,49 +41,84 @@ const ExpenseVoucherSection = ({ onVoucherChange, initialVouchers = [], entryId 
     }, [imageUrls]);
 
     const handleImageUpload = async (files) => {
-        if (files.length === 0) return;
-        setIsUploading(true);
+        if (files.length === 0 || isUploading) return;  // Evitar que se dispare si ya está en proceso de carga
+        setIsUploading(true);  // Marcar como cargando
+
+        // Filtrar archivos que ya están en imageUrls para no subirlos de nuevo
+        const newFiles = files.filter(file => {
+            const fileName = file.name;
+            return !imageUrls.some(url => url.includes(fileName));  // Verifica si ya existe el archivo en imageUrls
+        });
+
+        if (newFiles.length === 0) {
+            message.info('Las imágenes ya han sido subidas');  // Si no hay archivos nuevos, mostrar un mensaje
+            setIsUploading(false);
+            return;
+        }
 
         try {
-            const uploadPromises = files.map(file => uploadImage(file));
+            const uploadPromises = newFiles.map(file => uploadImage(file)); // Subir solo los archivos nuevos
             const uploadedUrls = await Promise.all(uploadPromises);
 
-            setImageUrls(prev => [...prev, ...uploadedUrls]);
-            message.success('Comprobantes agregados correctamente');
+            // Filtrar las URLs duplicadas antes de agregar
+            const newUrls = uploadedUrls.filter(url => !imageUrls.includes(url));
+
+            if (newUrls.length > 0) {
+                setImageUrls(prev => [...prev, ...newUrls]);  // Agregar solo las URLs no duplicadas
+                message.success('Comprobantes agregados correctamente');
+            }
         } catch (error) {
             console.error('Error al subir imágenes:', error);
             message.error('Error al subir los comprobantes');
         } finally {
-            setIsUploading(false);
+            setIsUploading(false);  // Marcar como no cargando
         }
     };
+
 
     const handleDeleteVoucher = (indexToDelete) => {
         setImageUrls(prev => prev.filter((_, index) => index !== indexToDelete));
         message.success('Comprobante eliminado');
     };
 
-    const { Dragger } = Upload;
-
     const uploadProps = {
         name: 'file',
         multiple: true,
         beforeUpload: (file) => {
             const isImage = file.type.startsWith('image/');
-            if (!isImage) {
-                message.error('Solo se permiten archivos de imagen');
-                return false;
+            const isPDF = file.type === 'application/pdf';
+            if (!isImage && !isPDF) {
+                message.error('Solo se permiten archivos de imagen o PDF');
+                return false;  // No permitir archivos no válidos
             }
-            return false;
+            return true;
         },
         onChange: (info) => {
             const { fileList } = info;
-            const files = fileList.map(file => file.originFileObj);
-            handleImageUpload(files);
+            const files = fileList.map(file => file.originFileObj);  // Obtener solo los archivos
+            handleImageUpload(files);  // Subir los archivos solo si no hay carga en proceso
         },
-        showUploadList: false,
+        showUploadList: false,  // No mostrar la lista de archivos subidos
     };
 
+    const renderFilePreview = (url) => {
+        const isImage = url.startsWith('http') && (url.includes('.jpg') || url.includes('.png') || url.includes('.gif'));
+        const isPDF = url.endsWith('.pdf');
+        if (isImage) {
+            return <img src={url} alt="Comprobante" className="w-full h-32 object-cover rounded-lg shadow-sm" />;
+        }
+        if (isPDF) {
+            return (
+                <iframe
+                    src={url}
+                    title="Vista previa PDF"
+                    className="w-full h-32 border rounded-lg"
+                />
+            );
+        }
+        return null;
+    };
+    const { Dragger } = Upload;
     return (
         <Card
             title="Comprobantes"
@@ -107,7 +142,7 @@ const ExpenseVoucherSection = ({ onVoucherChange, initialVouchers = [], entryId 
                             Haz clic o arrastra archivos aquí para subirlos
                         </p>
                         <p className="text-gray-400 text-sm">
-                            Soporta: JPG, PNG, GIF
+                            Soporta: JPG, PNG, GIF, PDF
                         </p>
                     </Dragger>
 
@@ -123,11 +158,7 @@ const ExpenseVoucherSection = ({ onVoucherChange, initialVouchers = [], entryId 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                 {imageUrls.map((url, index) => (
                     <div key={index} className="relative group">
-                        <img
-                            src={url}
-                            alt={`Comprobante ${index + 1}`}
-                            className="w-full h-32 object-cover rounded-lg shadow-sm"
-                        />
+                        {renderFilePreview(url)}
                         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all rounded-lg flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
                             <button
                                 onClick={() => {
@@ -161,10 +192,16 @@ const ExpenseVoucherSection = ({ onVoucherChange, initialVouchers = [], entryId 
                 open={isImageModalOpen}
                 onCancel={() => setIsImageModalOpen(false)}
                 footer={null}
-                width={800}
+                width={400}
                 centered
             >
-                {currentImage && (
+                {currentImage && currentImage.endsWith('.pdf') ? (
+                    <iframe
+                        src={currentImage}
+                        title="Vista previa PDF"
+                        className="w-full h-96 border-0 bg-white"
+                    />
+                ) : (
                     <img
                         src={currentImage}
                         alt="Comprobante"
