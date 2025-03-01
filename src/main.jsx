@@ -87,7 +87,7 @@ const router = createBrowserRouter([
       {
         path: "moneymanager",
         element: (
-          <PrivateRoute allowedRoles={['superadmin', 'admin']}>
+          <PrivateRoute allowedRoles={['superadmin', 'cajero']}>
             <IndexMoneyManager />
           </PrivateRoute>
         ),
