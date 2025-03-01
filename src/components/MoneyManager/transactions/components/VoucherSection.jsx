@@ -10,7 +10,6 @@ const VoucherSection = ({ onVoucherChange, initialVouchers = [], entryId }) => {
     const [isUploading, setIsUploading] = useState(false);
     const [imageUrls, setImageUrls] = useState(initialVouchers);
 
-
     useEffect(() => {
         const fetchVouchers = async () => {
             if (!entryId) return;
@@ -70,8 +69,9 @@ const VoucherSection = ({ onVoucherChange, initialVouchers = [], entryId }) => {
         multiple: true,
         beforeUpload: (file) => {
             const isImage = file.type.startsWith('image/');
-            if (!isImage) {
-                message.error('Solo se permiten archivos de imagen');
+            const isPDF = file.type === 'application/pdf';
+            if (!isImage && !isPDF) {
+                message.error('Solo se permiten archivos de imagen o PDF');
                 return false;
             }
             return false;
@@ -82,6 +82,24 @@ const VoucherSection = ({ onVoucherChange, initialVouchers = [], entryId }) => {
             handleImageUpload(files);
         },
         showUploadList: false,
+    };
+
+    const renderFilePreview = (url) => {
+        const isImage = url.startsWith('http') && (url.includes('.jpg') || url.includes('.png') || url.includes('.gif'));
+        const isPDF = url.endsWith('.pdf');
+        if (isImage) {
+            return <img src={url} alt="Comprobante" className="w-full h-32 object-cover rounded-lg shadow-sm" />;
+        }
+        if (isPDF) {
+            return (
+                <iframe
+                    src={url}
+                    title="Vista previa PDF"
+                    className="w-full h-32 border rounded-lg"
+                />
+            );
+        }
+        return null;
     };
 
     return (
@@ -107,7 +125,7 @@ const VoucherSection = ({ onVoucherChange, initialVouchers = [], entryId }) => {
                             Haz clic o arrastra archivos aquí para subirlos
                         </p>
                         <p className="text-gray-400 text-sm">
-                            Soporta: JPG, PNG, GIF
+                            Soporta: JPG, PNG, GIF, PDF
                         </p>
                     </Dragger>
 
@@ -123,11 +141,7 @@ const VoucherSection = ({ onVoucherChange, initialVouchers = [], entryId }) => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                 {imageUrls.map((url, index) => (
                     <div key={index} className="relative group">
-                        <img
-                            src={url}
-                            alt={`Comprobante ${index + 1}`}
-                            className="w-full h-32 object-cover rounded-lg shadow-sm"
-                        />
+                        {renderFilePreview(url)}
                         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all rounded-lg flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
                             <button
                                 onClick={() => {
@@ -164,7 +178,13 @@ const VoucherSection = ({ onVoucherChange, initialVouchers = [], entryId }) => {
                 width={800}
                 centered
             >
-                {currentImage && (
+                {currentImage && currentImage.endsWith('.pdf') ? (
+                    <iframe
+                        src={currentImage}
+                        title="Vista previa PDF"
+                        className="w-full h-96 border-0 bg-white"
+                    />
+                ) : (
                     <img
                         src={currentImage}
                         alt="Comprobante"
