@@ -106,8 +106,9 @@ const SignUpModal: React.FC<SignUpModalProps> = ({ isOpen, onClose }) => {
                         render={({ field }) => (
                             <Select {...field} placeholder="Selecciona un rol">
                                 <Select.Option value="superadmin">Superadmin</Select.Option>
-                                <Select.Option value="admin">Admin</Select.Option>
-                                <Select.Option value="user">User</Select.Option>
+                                <Select.Option value="cajero">Cajero</Select.Option>
+                                <Select.Option value="usuario">Usuario</Select.Option>
+                                <Select.Option value="tecnico">Técnico</Select.Option>
                             </Select>
                         )}
                     />
