@@ -40,29 +40,45 @@ const VoucherSection = ({ onVoucherChange, initialVouchers = [], entryId }) => {
     }, [imageUrls]);
 
     const handleImageUpload = async (files) => {
-        if (files.length === 0) return;
-        setIsUploading(true);
+        if (files.length === 0 || isUploading) return;  // Evitar que se dispare si ya está en proceso de carga
+        setIsUploading(true);  // Marcar como cargando
+
+        // Filtrar archivos que ya están en imageUrls para no subirlos de nuevo
+        const newFiles = files.filter(file => {
+            const fileName = file.name;
+            return !imageUrls.some(url => url.includes(fileName));  // Verifica si ya existe el archivo en imageUrls
+        });
+
+        if (newFiles.length === 0) {
+            message.info('Las imágenes ya han sido subidas');  // Si no hay archivos nuevos, mostrar un mensaje
+            setIsUploading(false);
+            return;
+        }
 
         try {
-            const uploadPromises = files.map(file => uploadImage(file));
+            const uploadPromises = newFiles.map(file => uploadImage(file)); // Subir solo los archivos nuevos
             const uploadedUrls = await Promise.all(uploadPromises);
 
-            setImageUrls(prev => [...prev, ...uploadedUrls]);
-            message.success('Comprobantes agregados correctamente');
+            // Filtrar las URLs duplicadas antes de agregar
+            const newUrls = uploadedUrls.filter(url => !imageUrls.includes(url));
+
+            if (newUrls.length > 0) {
+                setImageUrls(prev => [...prev, ...newUrls]);  // Agregar solo las URLs no duplicadas
+                message.success('Comprobantes agregados correctamente');
+            }
         } catch (error) {
             console.error('Error al subir imágenes:', error);
             message.error('Error al subir los comprobantes');
         } finally {
-            setIsUploading(false);
+            setIsUploading(false);  // Marcar como no cargando
         }
     };
+
 
     const handleDeleteVoucher = (indexToDelete) => {
         setImageUrls(prev => prev.filter((_, index) => index !== indexToDelete));
         message.success('Comprobante eliminado');
     };
-
-    const { Dragger } = Upload;
 
     const uploadProps = {
         name: 'file',
@@ -72,16 +88,16 @@ const VoucherSection = ({ onVoucherChange, initialVouchers = [], entryId }) => {
             const isPDF = file.type === 'application/pdf';
             if (!isImage && !isPDF) {
                 message.error('Solo se permiten archivos de imagen o PDF');
-                return false;
+                return false;  // No permitir archivos no válidos
             }
-            return false;
+            return true;
         },
         onChange: (info) => {
             const { fileList } = info;
-            const files = fileList.map(file => file.originFileObj);
-            handleImageUpload(files);
+            const files = fileList.map(file => file.originFileObj);  // Obtener solo los archivos
+            handleImageUpload(files);  // Subir los archivos solo si no hay carga en proceso
         },
-        showUploadList: false,
+        showUploadList: false,  // No mostrar la lista de archivos subidos
     };
 
     const renderFilePreview = (url) => {
@@ -101,7 +117,7 @@ const VoucherSection = ({ onVoucherChange, initialVouchers = [], entryId }) => {
         }
         return null;
     };
-
+    const { Dragger } = Upload;
     return (
         <Card
             title="Comprobantes"
