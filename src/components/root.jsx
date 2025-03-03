@@ -157,7 +157,7 @@ export default function Root() {
 
       { label: "COMPAÑIA", isTitle: true, color: "text-[#007072]" },
 
-      (userRole === "admin" || userRole === "superadmin") && {
+      (userRole === "cajero" || userRole === "superadmin") && {
         label: "Contabilidad",
         icon: <DollarCircleOutlined />,
         color: "text-[#007072]",
@@ -182,7 +182,7 @@ export default function Root() {
             hoverClass: "hover:text-[#007072] hover:text-white",
             disabled: true,
           },
-          
+
 
         ],
       },
@@ -236,7 +236,7 @@ export default function Root() {
           },
           {
             to: "/index/moneymanager/terceros", label: "Proveedores", icon: <DotIcon />, color: "text-[#007072]",
-            hoverClass:  "hover:text-[#007072] hover:text-white",
+            hoverClass: "hover:text-[#007072] hover:text-white",
           },
         ],
       },
@@ -303,7 +303,7 @@ export default function Root() {
         hoverClass: "hover:text-gray-500 hover:text-white",
         disabled: true,
       },
-      
+
       {
         to: "/index/tienda", label: "Navegacion de Archivos", icon: <ShoppingCartOutlined />, color: "text-gray-500",
         hoverClass: "hover:text-gray-500 hover:text-white",

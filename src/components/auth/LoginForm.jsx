@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import Swal from 'sweetalert2';
-import { requestPasswordRecovery } from "../../services/apiService"
+import { requestPasswordRecovery } from "../../services/apiService";
 import { useAuth } from '../Context/AuthProvider';
 import { useNavigate } from 'react-router-dom';
+import picture from '../../images/F.png'; // Asegúrate de que la imagen esté correctamente importada
+
 const LoginForm = () => {
     const [isRecoverPassword, setIsRecoverPassword] = useState(false); // Estado para alternar entre login y recuperación
     const { register, handleSubmit, formState: { errors }, reset } = useForm();
@@ -49,30 +51,38 @@ const LoginForm = () => {
     };
 
     return (
-        <div className="w-full h-full flex items-center justify-center bg-gray-100">
-            <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+        <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-blue-100 via-blue-200 to-blue-300">
+            <div className="bg-white p-8 rounded-xl shadow-xl max-w-md w-full">
+                {/* Imagen pequeña en la parte superior */}
+                <div className="flex justify-center mb-6">
+                    <img src={picture} alt="Logo" className="w-16 h-16 opacity-60" /> {/* Ajustar el tamaño y opacidad de la imagen */}
+                </div>
+
                 {isRecoverPassword ? (
                     <>
-                        <h2 className="text-2xl font-bold mb-6 text-center">Recuperar Contraseña</h2>
+                        <h2 className="text-3xl font-extrabold mb-6 text-center text-gray-800">Recuperar Contraseña</h2>
                         <form onSubmit={handleSubmit(handleRecoverPassword)}>
-                            <div className="mb-4">
-                                <label htmlFor="email" className="block text-sm font-medium text-gray-700">Correo Electrónico</label>
+                            <div className="mb-6">
+                                <label htmlFor="email" className="block text-sm font-semibold text-gray-700">Correo Electrónico</label>
                                 <input
                                     id="email"
-                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    className="mt-2 block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
                                     type="email"
                                     {...register('email', { required: 'El correo electrónico es requerido' })}
                                 />
                                 {errors.email && <p className="text-red-500 text-xs mt-2">{errors.email.message}</p>}
                             </div>
-                            <button type="submit" className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md shadow hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <button
+                                type="submit"
+                                className="w-full bg-blue-600 text-white py-3 px-4 rounded-xl shadow-lg hover:bg-blue-700 transition duration-300 focus:outline-none focus:ring-4 focus:ring-blue-300"
+                            >
                                 Recuperar Contraseña
                             </button>
                         </form>
-                        <div className="mt-4 text-center">
+                        <div className="mt-6 text-center">
                             <button
                                 onClick={() => setIsRecoverPassword(false)}
-                                className="text-indigo-600 hover:underline text-sm focus:outline-none"
+                                className="text-blue-600 text-sm font-semibold hover:underline focus:outline-none"
                             >
                                 Volver a Iniciar Sesión
                             </button>
@@ -80,36 +90,39 @@ const LoginForm = () => {
                     </>
                 ) : (
                     <>
-                        <h2 className="text-2xl font-bold mb-6 text-center">Iniciar Sesión</h2>
+                        <h2 className="text-3xl font-extrabold mb-6 text-center text-gray-800">Iniciar Sesión</h2>
                         <form onSubmit={handleSubmit(handleLogin)}>
-                            <div className="mb-4">
-                                <label htmlFor="email" className="block text-sm font-medium text-gray-700">Correo Electrónico</label>
+                            <div className="mb-6">
+                                <label htmlFor="email" className="block text-sm font-semibold text-gray-700">Correo Electrónico</label>
                                 <input
                                     id="email"
-                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    className="mt-2 block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
                                     type="email"
                                     {...register('email', { required: 'El correo electrónico es requerido' })}
                                 />
                                 {errors.email && <p className="text-red-500 text-xs mt-2">{errors.email.message}</p>}
                             </div>
-                            <div className="mb-4">
-                                <label htmlFor="password" className="block text-sm font-medium text-gray-700">Contraseña</label>
+                            <div className="mb-6">
+                                <label htmlFor="password" className="block text-sm font-semibold text-gray-700">Contraseña</label>
                                 <input
                                     id="password"
-                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    className="mt-2 block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
                                     type="password"
                                     {...register('password', { required: 'La contraseña es requerida' })}
                                 />
                                 {errors.password && <p className="text-red-500 text-xs mt-2">{errors.password.message}</p>}
                             </div>
-                            <button type="submit" className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md shadow hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <button
+                                type="submit"
+                                className="w-full bg-blue-600 text-white py-3 px-4 rounded-xl shadow-lg hover:bg-blue-700 transition duration-300 focus:outline-none focus:ring-4 focus:ring-blue-300"
+                            >
                                 Iniciar Sesión
                             </button>
                         </form>
-                        <div className="mt-4 text-center">
+                        <div className="mt-6 text-center">
                             <button
                                 onClick={() => setIsRecoverPassword(true)}
-                                className="text-indigo-600 hover:underline text-sm focus:outline-none"
+                                className="text-blue-600 text-sm font-semibold hover:underline focus:outline-none"
                             >
                                 ¿Olvidaste tu contraseña?
                             </button>
