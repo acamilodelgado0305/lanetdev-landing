@@ -19,6 +19,7 @@ import {
     MenuOutlined,
     EditOutlined
 } from "@ant-design/icons";
+import FloatingActionMenu from "../FloatingActionMenu";
 
 const { RangePicker } = DatePicker;
 const { Title, Text } = Typography;
@@ -50,6 +51,33 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
     const [monthlyExpenses, setMonthlyExpenses] = useState(0);
 
     const [loadingMonthlyData, setLoadingMonthlyData] = useState(false);
+
+
+
+    const handleEditSelected = () => {
+        if (selectedRowKeys.length === 1) {
+            navigate(`/index/moneymanager/ingresos/edit/${selectedRowKeys[0]}`);
+        }
+    };
+
+    const handleDeleteSelected = () => {
+        // Use the existing batch delete logic
+        handleBatchOperation('delete');
+    };
+
+    const handleDownloadSelected = () => {
+        // Use the existing batch download logic
+        handleBatchOperation('download');
+    };
+
+    const handleExportSelected = () => {
+        // Use the existing batch export logic
+        handleBatchOperation('export');
+    };
+
+    const clearSelection = () => {
+        setSelectedRowKeys([]);
+    };
 
 
 
@@ -656,152 +684,116 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
     return (
         <>
             {/* Jira-style Top Bar */}
-            <Card className="mb-4 shadow-sm" bodyStyle={{ padding: "12px 16px" }}>
-                <div className="flex justify-between items-center">
-                    {/* Left side: Actions */}
-                    <div className="flex items-center space-x-1">
-                        <Tooltip title="Descargar">
-                            <Button
-                                type="default"
-                                icon={<DownloadOutlined />}
-                                onClick={() => handleBatchOperation('download')}
-                            />
-                        </Tooltip>
-
-                        <Tooltip title="Exportar">
-                            <Button
-                                type="default"
-                                icon={<ExportOutlined />}
-                                onClick={() => handleBatchOperation('export')}
-                            />
-                        </Tooltip>
-
-                        <Tooltip title="Editar">
-                            <Button
-                                type="default"
-                                icon={<EditOutlined />}
-                                onClick={() => handleBatchOperation('edit')}
-                            />
-                        </Tooltip>
-
-                        <Tooltip title="Eliminar">
-                            <Button
-                                type="default"
-                                icon={<DeleteOutlined />}
-                                onClick={() => handleBatchOperation('delete')}
-                            />
-                        </Tooltip>
-
-                        <Button
-                            icon={<FilterOutlined />}
-                            onClick={() => setShowFilters(!showFilters)}
-                        >
-                            {showFilters ? "Ocultar filtros" : "Mostrar filtros"}
-                        </Button>
-                    </div>
-
-                    <div className="flex items-center">
-                        <div className="mr-3">
-                            <div className="flex items-center justify-end space-x-2">
-                                <div className="bg-white p-2 rounded text-center flex-none w-26">
-                                    <h3 className="text-gray-500 text-[10px] font-medium uppercase">Ingresos</h3>
-                                    <p className="text-green-600 text-sm font-semibold mt-1 truncate">
-                                        {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyIncome)}
-                                    </p>
-                                </div>
-                                <div className="bg-white p-2 rounded text-center flex-none w-26">
-                                    <h3 className="text-gray-500 text-[10px] font-medium uppercase">Egresos</h3>
-                                    <p className="text-red-600 text-sm font-semibold mt-1 truncate">
-                                        {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyExpenses)}
-                                    </p>
-                                </div>
-                                <div className="bg-white p-2 rounded  text-center flex-none w-26">
-                                    <h3 className="text-gray-500 text-[10px] font-medium uppercase">Balance</h3>
-                                    <p className="text-blue-600 text-sm font-semibold mt-1 truncate">
-                                        {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyBalance)}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <Tooltip title="Mes actual">
-                            <Button
-                                icon={<CalendarOutlined />}
-                                onClick={goToCurrentMonth}
-                                className="mr-2"
-                            >
-                                Hoy
-                            </Button>
-                        </Tooltip>
-                        <Button
-                            icon={<LeftOutlined />}
-                            onClick={goToPreviousMonth}
-                            className="mr-1"
-                        />
-                        <span className="font-medium px-3 py-1 bg-gray-100 rounded">
-                            {formatDate(currentMonth, "MMMM yyyy", { locale: es })}
-                        </span>
-                        <Button
-                            icon={<RightOutlined />}
-                            onClick={goToNextMonth}
-                            className="ml-1"
-                        />
-                    </div>
-                </div>
-
-                {showFilters && (
-                    <div className="mt-4 p-3 bg-gray-50 rounded">
-                        <div className="flex flex-wrap items-center gap-4">
-                            {/* Cashier filter dropdown */}
-                            <Select
-                                placeholder="Filtrar por proveedor"
-                                style={{ width: 200 }}
-                                onChange={handleProviderFilterChange}
-                                value={providerFilter || undefined}
-                                loading={providers.length === 0}
-                                allowClear
-                            >
-                                {providers.map((provider) => (
-                                    <Select.Option key={provider.id} value={provider.id}>
-                                        {provider.nombre_comercial}
-                                    </Select.Option>
-                                ))}
-                            </Select>
-                            <Select
-                                placeholder="Filtrar por tipo"
-                                style={{ width: 150 }}
-                                onChange={handleTypeFilterChange}
-                                value={typeFilter || undefined}
-                                allowClear
-                            >
-                                {typeOptions.map((type) => (
-                                    <Select.Option key={type} value={type}>
-                                        {type.charAt(0).toUpperCase() + type.slice(1)}
-                                    </Select.Option>
-                                ))}
-                            </Select>
-
-                            <Divider type="vertical" style={{ height: '24px' }} />
-
-                            <div className="flex items-center">
-                                <Text strong className="mr-2">Seleccionados:</Text>
-                                <Tag color="blue">
-                                    {selectedRowKeys.length} de {filteredEntries.length} registros
-                                </Tag>
-
-                                {selectedRowKeys.length > 0 && (
-                                    <Button
-                                        type="link"
-                                        size="small"
-                                        onClick={() => setSelectedRowKeys([])}
-                                    >
-                                        Limpiar selección
-                                    </Button>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </Card>
+           <div className="bg-white py-2 px-5 shadow-sm">
+                           <div className="flex  justify-between items-center">
+                               {/* Left side: Actions */}
+                               <div className="flex items-center space-x-1">      
+                                   <Button
+                                       icon={<FilterOutlined />}
+                                       onClick={() => setShowFilters(!showFilters)}
+                                   >
+                                       {showFilters ? "Filtro" : "Filtro"}
+                                   </Button>
+                               </div>
+                               <div className="flex items-center">
+                                   <div className="mr-3">
+                                       <div className="flex items-center justify-end ">
+                                           <div className="bg-white px-2  text-center flex-none w-26">
+                                               <h3 className="text-gray-500 text-[10px] font-medium uppercase">Ingresos</h3>
+                                               <p className="text-green-600 text-sm font-semibold mt-1 truncate">
+                                                   {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyIncome)}
+                                               </p>
+                                           </div>
+                                           <div className="bg-white px-2  text-center flex-none w-26">
+                                               <h3 className="text-gray-500 text-[10px] font-medium uppercase">Egresos</h3>
+                                               <p className="text-red-600 text-sm font-semibold mt-1 truncate">
+                                                   {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyExpenses)}
+                                               </p>
+                                           </div>
+                                           <div className="px-2 bg-white text-center flex-none w-26">
+                                               <h3 className="text-gray-500 text-[10px] font-medium uppercase">Balance</h3>
+                                               <p className="text-blue-600 text-sm font-semibold mt-1 truncate">
+                                                   {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyBalance)}
+                                               </p>
+                                           </div>
+                                       </div>
+                                   </div>
+                                   <Tooltip title="Mes actual">
+                                       <Button
+                                           icon={<CalendarOutlined />}
+                                           onClick={goToCurrentMonth}
+                                           className="mr-2"
+                                       >
+                                           Hoy
+                                       </Button>
+                                   </Tooltip>
+                                   <Button
+                                       icon={<LeftOutlined />}
+                                       onClick={goToPreviousMonth}
+                                       className="mr-1"
+                                   />
+                                   <span className="font-medium px-3 py-1 bg-gray-100 rounded">
+                                       {formatDate(currentMonth, "MMMM yyyy", { locale: es })}
+                                   </span>
+                                   <Button
+                                       icon={<RightOutlined />}
+                                       onClick={goToNextMonth}
+                                       className="ml-1"
+                                   />
+                               </div>
+                           </div>
+           
+                           {showFilters && (
+                               <div className="mt-4 p-3 bg-white ">
+                                   <div className="flex flex-wrap items-center gap-4">
+                                       {/* Cashier filter dropdown */}
+                                       <Select
+                                           placeholder="Filtrar por cajero"
+                                           style={{ width: 200 }}
+                                           onChange={handleCashierFilterChange}
+                                           value={cashierFilter || undefined}
+                                           loading={cashiers.length === 0}
+                                           allowClear
+                                       >
+                                           {cashiers.map((cashier) => (
+                                               <Select.Option key={cashier.id_cajero} value={cashier.id_cajero}>
+                                                   {cashier.nombre}
+                                               </Select.Option>
+                                           ))}
+                                       </Select>
+                                       <Select
+                                           placeholder="Filtrar por tipo"
+                                           style={{ width: 150 }}
+                                           onChange={handleTypeFilterChange}
+                                           value={typeFilter || undefined}
+                                           allowClear
+                                       >
+                                           {typeOptions.map((type) => (
+                                               <Select.Option key={type} value={type}>
+                                                   {type.charAt(0).toUpperCase() + type.slice(1)}
+                                               </Select.Option>
+                                           ))}
+                                       </Select>
+                                       <Divider type="vertical" style={{ height: '24px' }} />
+                                       <div className="flex items-center">
+                                           <Text strong className="mr-2">Seleccionados:</Text>
+                                           <Tag color="blue">
+                                               {selectedRowKeys.length} de {filteredEntries.length} registros
+                                           </Tag>
+                                           {selectedRowKeys.length > 0 && (
+                                               <Button
+                                                   type="link"
+                                                   size="small"
+                                                   onClick={() => setSelectedRowKeys([])}
+                                               >
+                                                   Limpiar selección
+                                               </Button>
+                                           )}
+                                       </div>
+                                   </div>
+                               </div>
+                           )}
+                       </div>
 
             {/* Error message if data loading fails */}
             {error && (
@@ -820,6 +812,7 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
 
             {/* Enhanced Table with Jira styling */}
             <Table
+              className="px-7 py-5"
                 rowSelection={rowSelection}
                 dataSource={filteredEntries}
                 columns={columns}
@@ -944,6 +937,16 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
                     </div>
                 </div>
             </Drawer>
+
+
+            <FloatingActionMenu
+                selectedRowKeys={selectedRowKeys}
+                onEdit={handleEditSelected}
+                onDelete={handleDeleteSelected}
+                onDownload={handleDownloadSelected}
+                onExport={handleExportSelected}
+                onClearSelection={clearSelection}
+            />
 
 
         </>

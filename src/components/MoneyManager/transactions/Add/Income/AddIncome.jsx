@@ -11,7 +11,7 @@ import { uploadImage } from "../../../../../services/apiService";
 import dayjs from "dayjs";
 import { UploadOutlined, DownloadOutlined, FileTextOutlined } from "@ant-design/icons";
 import axios from "axios";
-import { useNavigate } from 'react-router-dom'; // Importa useNavigate
+import { useNavigate, useLocation  } from 'react-router-dom'; // Importa useNavigate
 const apiUrl = import.meta.env.VITE_API_FINANZAS;
 import VoucherSection from "../../components/VoucherSection";
 import { useParams } from 'react-router-dom'; //
@@ -24,7 +24,8 @@ const { Title, Text } = Typography;
 const AddIncome = ({ onTransactionAdded }) => {
   const { id } = useParams(); // Obtener el ID de la URL
   const navigate = useNavigate();
-  // Inicializa el hook useNavigaten
+  const location = useLocation();
+  const returnTab = location.state?.returnTab || 'resumen';
   const [transactionType, setTransactionType] = useState("expense");
   const [amount, setAmount] = useState("");
 
@@ -60,6 +61,8 @@ const AddIncome = ({ onTransactionAdded }) => {
   const [isIncomeSaved, setIsIncomeSaved] = useState(false);
   const [cashierid, setCashierid] = useState(null);
 
+  
+
   const [stats, setStats] = useState({
     totalCashiers: 0,
     avgCommission: 0
@@ -68,9 +71,8 @@ const AddIncome = ({ onTransactionAdded }) => {
   const printRef = useRef();
 
   const handleCancel = () => {
-    navigate(-1); // Navega hacia atrás en la historia del navegador
+    navigate('/index/moneymanager/transactions', { state: { activeTab: returnTab } });
   };
-
 
   useEffect(() => {
     if (id) {

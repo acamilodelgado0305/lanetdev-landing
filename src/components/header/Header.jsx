@@ -7,7 +7,8 @@ import {
   SettingOutlined,
   LogoutOutlined,
   QuestionCircleOutlined,
-  AppstoreOutlined
+  AppstoreOutlined,
+  LeftSquareOutlined
 } from '@ant-design/icons';
 import {
   Input,
@@ -83,9 +84,10 @@ const Header = ({ }) => {
   );
 
   return (
-    <div className="fixed top-0 left-0 w-full bg-white border-b border-gray-200 z-50 h-14 flex items-center px-4">
+    <div className="fixed top-0 left-0 w-full bg-white border-b border-gray-300 z-50 h-14 flex items-center px-4">
       <div className="w-full flex items-center justify-between">
         <div className="flex items-center space-x-4">
+        <LeftSquareOutlined className="text-[#44546f] text-xl cursor-pointer hover:bg-[#091e420f] p-2 rounded"/>
 
           <Link to="/index" className="flex items-center space-x-2">
             <img

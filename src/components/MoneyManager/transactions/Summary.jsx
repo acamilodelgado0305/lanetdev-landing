@@ -29,7 +29,7 @@ const Summary = ({
       setCuentas(data);
     } catch (err) {
       setError("Error al cargar las cuentas");
-      console.error("Error fetching accounts:", err);
+     
     }
   };
   
@@ -50,7 +50,7 @@ const Summary = ({
   const COLORS = ['#0052CC', '#00C7E6', '#36B37E', '#FF5630', '#6554C0', '#FFAB00'];
   
   return (
-    <div className="bg-gray-100">
+    <div className="bg-blue-900 bg-opacity-20  shadow-lg">
       {/* Header similar a Jira */}
       <div className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4">

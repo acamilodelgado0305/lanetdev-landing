@@ -54,11 +54,11 @@ const AddCajero = ({ onCashierAdded }) => {
     <div className="p-6 max-w-5xl mx-auto bg-white shadow-md rounded-md border border-gray-200">
       <div className="flex justify-between items-center border-b pb-4 mb-4">
         <div className="flex items-center gap-2">
-          <div className="bg-[#007072] p-2 rounded">
+          <div className="bg-[#0052CC] p-2 rounded">
             <FileTextOutlined className=" text-white" />
           </div>
           <div className="flex flex-col">
-            <span className="text[#007072] green-400 text-sm">Cajeros /</span>
+            <span className="text[#0052CC] green-400 text-sm">Cajeros /</span>
             <Title level={3} className="!m-0 !p-0">
               Crear
             </Title>
@@ -75,7 +75,7 @@ const AddCajero = ({ onCashierAdded }) => {
           >
             Cancelar
           </Button>
-          <Button onClick={handleSave} type="primary" className="bg-[#007072]" style={{ borderRadius: 0 }}>
+          <Button onClick={handleSave} type="primary" className="bg-[#0052CC]" style={{ borderRadius: 0 }}>
             Aceptar
           </Button>
 
