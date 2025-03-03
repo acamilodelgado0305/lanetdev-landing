@@ -420,7 +420,10 @@ const TransactionsDashboard = () => {
 
         />
       ) : (
-        <div className="bg-blue-900 bg-opacity-20 shadow-lg overflow-auto"> 
+        <div className="shadow-lg overflow-auto"
+          style={{
+            backgroundImage: "linear-gradient(to bottom, #f5f7fa, #c3cfe2)"
+          }}>
           <div className="max-w-full mx-auto  ">
             <div className="bg-gray rounded">
               {error && (

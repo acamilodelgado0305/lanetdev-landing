@@ -58,6 +58,11 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
     const [loadingMonthlyData, setLoadingMonthlyData] = useState(false);
 
 
+    //estados para el modal de vista:
+
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+
+
 
 
 
@@ -248,8 +253,16 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
         setFilteredEntries(filtered);
     }, [entries, searchText, dateRange, cashiers]);
 
+    // Función para manejar el clic en una fila
     const handleRowClick = (record) => {
-        navigate(`/index/moneymanager/ingresos/view/${record.id}`);
+        setSelectedEntry(record); // Almacena la entrada seleccionada
+        setIsViewModalOpen(true); // Abre el modal
+    };
+
+
+    const closeModal = () => {
+        setIsViewModalOpen(false);
+        setSelectedEntry(null);
     };
 
     const handleSearch = (value, dataIndex) => {
@@ -546,7 +559,7 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
                         N° Arqueo
                         <Input
                             prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                          
+
                             onChange={(e) => handleSearch(e.target.value, "arqueo_number")}
                             style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
                         />
@@ -676,7 +689,7 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
             title: (
                 <Tooltip title="Fecha de finalizacion">
                     <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                       Hasta
+                        Hasta
                         <Input
                             prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
                             onChange={(e) => handleSearch(e.target.value, "end_period")}
@@ -721,7 +734,7 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
             <div className="bg-white py-2 px-5 shadow-sm">
                 <div className="flex  justify-between items-center">
                     {/* Left side: Actions */}
-                    <div className="flex items-center space-x-1">      
+                    <div className="flex items-center space-x-1">
                         <Button
                             icon={<FilterOutlined />}
                             onClick={() => setShowFilters(!showFilters)}
@@ -846,35 +859,37 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
 
             {/* Enhanced Table with Jira styling */}
             <div className="rounded-none">
-    <Table
-    className="px-7 py-5"
-        rowSelection={rowSelection}
-        dataSource={filteredEntries}
-        columns={columns}
-        rowKey={(record) => record.id}
-        pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showTotal: (total, range) => `${range[0]}-${range[1]} de ${total} registros`
-        }}
-        bordered
-        size="middle"
-        loading={entriesLoading}
-        onRow={(record) => ({
-            onClick: (e) => {
-                if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') {
-                    handleRowClick(record);
-                }
-            },
-        })}
-        rowClassName="hover:bg-gray-50 transition-colors"
-        scroll={{ x: 'max-content' }}
-        summary={pageData => {
-            if (pageData.length === 0) return null;
-            const totalAmount = pageData.reduce((total, item) => total + (item.amount || 0), 0);
-        }}
-    />
-</div>
+                <Table
+                    className="px-7 py-5"
+                    rowSelection={rowSelection}
+                    dataSource={filteredEntries}
+                    columns={columns}
+                    rowKey={(record) => record.id}
+                    pagination={{
+                        pageSize: 10,
+                        showSizeChanger: true,
+                        showTotal: (total, range) => `${range[0]}-${range[1]} de ${total} registros`
+                    }}
+                    bordered
+                    size="middle"
+                    loading={entriesLoading}
+                    onRow={(record) => ({
+                        onClick: (e) => {
+                            if (e.target.tagName !== "INPUT" && e.target.tagName !== "BUTTON" && e.target.tagName !== "A") {
+                                handleRowClick(record);
+                            }
+                        },
+                    })}
+                    rowClassName="hover:bg-gray-50 transition-colors"
+                    scroll={{ x: 'max-content' }}
+                    summary={pageData => {
+                        if (pageData.length === 0) return null;
+                        const totalAmount = pageData.reduce((total, item) => total + (item.amount || 0), 0);
+                    }}
+                />
+            </div>
+
+            <ViewIncome entry={selectedEntry} visible={isViewModalOpen} onClose={closeModal} />
 
             <style>
                 {`
@@ -943,6 +958,9 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
                     )
                 }
             >
+
+
+                
                 <div className="flex flex-col">
                     <div className="flex flex-wrap gap-4 justify-center mb-4 ">
                         {selectedImages.map((image, index) => (

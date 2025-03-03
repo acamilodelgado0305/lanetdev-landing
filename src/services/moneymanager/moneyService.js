@@ -34,6 +34,8 @@ export const getAccounts = async () => {
     }
 };
 
+
+
 export const createAccount = async (userData) => {
     try {
         const response = await authApi.post('/accounts', userData); // Envía una solicitud POST al endpoint '/accounts'
