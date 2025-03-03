@@ -27,7 +27,6 @@ const { Title, Text } = Typography;
 
 const ExpenseTable = ({ categories = [], accounts = [] }) => {
     const navigate = useNavigate();
-
     const [selectedEntry, setSelectedEntry] = useState(null);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedImages, setSelectedImages] = useState([]);

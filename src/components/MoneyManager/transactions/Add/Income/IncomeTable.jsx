@@ -23,6 +23,7 @@ import {
     ArrowDownOutlined
 } from "@ant-design/icons";
 import FloatingActionMenu from "../../FloatingActionMenu";
+import ViewIncome from "./ViewIncome";
 
 const { RangePicker } = DatePicker;
 const { Title, Text } = Typography;
