@@ -155,31 +155,31 @@ export default function Root() {
       },
 
 
-      { label: "COMPAÑIA", isTitle: true, color: "text-[#007072]" },
+      { label: "COMPAÑIA", isTitle: true, color: "text-[#0052CC]" },
 
       (userRole === "cajero" || userRole === "superadmin") && {
         label: "Contabilidad",
         icon: <DollarCircleOutlined />,
-        color: "text-[#007072]",
+        color: "text-[#0052CC]",
         hoverClass: "hover:text-green-400 hover:text-white",
         hasSubmenu: true,
         submenuItems: [
           {
-            to: "/index/moneymanager/estadisticas", label: "Resumen", icon: <DotIcon />, color: "text-[#007072]",
-            hoverClass: "hover:text-[#007072] hover:text-white",
+            to: "/index/moneymanager/estadisticas", label: "Resumen", icon: <DotIcon />, color: "text-[#0052CC]",
+            hoverClass: "hover:text-[#0052CC] hover:text-white",
             disabled: true,
           },
           {
-            to: "/index/moneymanager/transactions", label: "Transacciones", icon: <DotIcon />, color: "text-[#007072]",
-            hoverClass: "hover:text-[#007072] hover:text-white",
+            to: "/index/moneymanager/transactions", label: "Transacciones", icon: <DotIcon />, color: "text-[#0052CC]",
+            hoverClass: "hover:text-[#0052CC] hover:text-white",
           },
           {
-            to: "/index/moneymanager/pagos-pendientes", label: "Pagos Recurrentes", icon: <DotIcon />, color: "text-[#007072]",
-            hoverClass: "hover:text-[#007072] hover:text-white",
+            to: "/index/moneymanager/pagos-pendientes", label: "Pagos Recurrentes", icon: <DotIcon />, color: "text-[#0052CC]",
+            hoverClass: "hover:text-[#0052CC] hover:text-white",
           },
           {
-            to: "/index/moneymanager/informes", label: "Informes", icon: <DotIcon />, color: "text-[#007072]",
-            hoverClass: "hover:text-[#007072] hover:text-white",
+            to: "/index/moneymanager/informes", label: "Informes", icon: <DotIcon />, color: "text-[#0052CC]",
+            hoverClass: "hover:text-[#0052CC] hover:text-white",
             disabled: true,
           },
 
@@ -191,73 +191,73 @@ export default function Root() {
         label: "Gestión de Red",
         icon: <IdcardOutlined />,
         hasSubmenu: true,
-        color: "text-[#007072]",
-        hoverClass: "hover:text-[#007072] hover:text-white",
+        color: "text-[#0052CC]",
+        hoverClass: "hover:text-[#0052CC] hover:text-white",
         disabled: true,
         submenuItems: [
           {
-            to: "/index/administracion/cajeros", label: "Direccionamiento Ip", icon: <DotIcon />, color: "text-[#007072]",
-            hoverClass: "hover:text-[#007072] hover:text-white",
+            to: "/index/administracion/cajeros", label: "Direccionamiento Ip", icon: <DotIcon />, color: "text-[#0052CC]",
+            hoverClass: "hover:text-[#0052CC] hover:text-white",
             disabled: true,
           },
           {
-            to: "/index/administracion/cajeros", label: "Monitoreo", icon: <DotIcon />, color: "text-[#007072]",
-            hoverClass: "hover:text-[#007072] hover:text-white",
+            to: "/index/administracion/cajeros", label: "Monitoreo", icon: <DotIcon />, color: "text-[#0052CC]",
+            hoverClass: "hover:text-[#0052CC] hover:text-white",
             disabled: true,
           },
           {
-            to: "/index/administracion/cajeros", label: "Aprovisinamiento de Red", icon: <DotIcon />, color: "text-[#007072]",
-            hoverClass: "hover:text-g[#007072] hover:text-white",
+            to: "/index/administracion/cajeros", label: "Aprovisinamiento de Red", icon: <DotIcon />, color: "text-[#0052CC]",
+            hoverClass: "hover:text-g[#0052CC] hover:text-white",
             disabled: true,
           },
           {
-            to: "/index/administracion/cajeros", label: "Conexion de routers", icon: <DotIcon />, color: "text-[#007072]",
-            hoverClass: "hover:text-[#007072] hover:text-white",
+            to: "/index/administracion/cajeros", label: "Conexion de routers", icon: <DotIcon />, color: "text-[#0052CC]",
+            hoverClass: "hover:text-[#0052CC] hover:text-white",
             disabled: true,
           },
 
         ],
       },
       {
-        to: "/index/inventario", label: "Inventario", icon: <ContainerOutlined />, color: "text-[#007072]",
-        hoverClass: "hover:text-[#007072] hover:text-white",
+        to: "/index/inventario", label: "Inventario", icon: <ContainerOutlined />, color: "text-[#0052CC]",
+        hoverClass: "hover:text-[#0052CC] hover:text-white",
         disabled: true,
       },
       {
         label: "Terceros",
         icon: <IdcardOutlined />,
-        color: "text-[#007072]",
-        hoverClass: "hover:text-[#007072] hover:text-white",
+        color: "text-[#0052CC]",
+        hoverClass: "hover:text-[#0052CC] hover:text-white",
         hasSubmenu: true,
         submenuItems: [
           {
-            to: "/index/terceros/cajeros", label: "Cajeros", icon: <DotIcon />, color: "text-[#007072]",
-            hoverClass: "hover:text-[#007072] hover:text-white",
+            to: "/index/terceros/cajeros", label: "Cajeros", icon: <DotIcon />, color: "text-[#0052CC]",
+            hoverClass: "hover:text-[#0052CC] hover:text-white",
           },
           {
-            to: "/index/moneymanager/terceros", label: "Proveedores", icon: <DotIcon />, color: "text-[#007072]",
-            hoverClass: "hover:text-[#007072] hover:text-white",
+            to: "/index/moneymanager/terceros", label: "Proveedores", icon: <DotIcon />, color: "text-[#0052CC]",
+            hoverClass: "hover:text-[#0052CC] hover:text-white",
           },
         ],
       },
       {
-        to: "/index/tienda", label: "Reportes", icon: <ShoppingCartOutlined />, color: "text-[#007072]",
-        hoverClass: "hover:text-[#007072] hover:text-white",
+        to: "/index/tienda", label: "Reportes", icon: <ShoppingCartOutlined />, color: "text-[#0052CC]",
+        hoverClass: "hover:text-[#0052CC] hover:text-white",
         disabled: true,
       },
       {
-        to: "/index/moneymanager/cotizacion", label: "Gestion de compras", icon: <DotChartOutlined />, color: "text-[#007072]",
-        hoverClass: "hover:text-[#007072] hover:text-white",
+        to: "/index/moneymanager/cotizacion", label: "Gestion de compras", icon: <DotChartOutlined />, color: "text-[#0052CC]",
+        hoverClass: "hover:text-[#0052CC] hover:text-white",
         disabled: true,
       },
       {
-        to: "/index/moneymanager/calendario", label: "Calendario", icon: <CalendarOutlined />, color: "text-[#007072]",
-        hoverClass: "hover:text-[#007072] hover:text-white",
+        to: "/index/moneymanager/calendario", label: "Calendario", icon: <CalendarOutlined />, color: "text-[#0052CC]",
+        hoverClass: "hover:text-[#0052CC] hover:text-white",
         disabled: true,
       },
       {
-        to: "/index/recursoHumanos", label: "Recursos Humanos", icon: <BankOutlined />, color: "text-[#007072]",
-        hoverClass: "hover:text-[#007072] hover:text-white",
+        to: "/index/recursoHumanos", label: "Recursos Humanos", icon: <BankOutlined />, color: "text-[#0052CC]",
+        hoverClass: "hover:text-[#0052CC] hover:text-white",
         disabled: true,
       },
 
@@ -393,8 +393,8 @@ export default function Root() {
                       }
                     }}
                     className={`group flex items-center w-full p-1 text-left 
-          ${link.color === "text-[#007072]"
-                        ? "hover:bg-[#007072]"
+          ${link.color === "text-[#0052CC]"
+                        ? "hover:bg-[#0052CC]"
                         : link.color === "text-blue-500"
                           ? "hover:bg-blue-500"
                           : link.color === "text-gray-500"
@@ -420,8 +420,8 @@ export default function Root() {
                           key={`${subItem.to}-${subIndex}`}
                           to={subItem.to}
                           className={`group flex items-center w-full p-1 text-left text-sm 
-                ${subItem.color === "text-[#007072]"
-                              ? "hover:bg-[#007072]"
+                ${subItem.color === "text-[#0052CC]"
+                              ? "hover:bg-[#0052CC]"
                               : subItem.color === "text-blue-500"
                                 ? "hover:bg-blue-500"
                                 : subItem.color === "text-gray-500"
@@ -445,8 +445,8 @@ export default function Root() {
                   key={`${link.to}-${index}`}
                   to={link.to}
                   className={`group flex items-center w-full p-1 text-left 
-        ${link.color === "text-[#007072]"
-                      ? "hover:bg-[#007072]"
+        ${link.color === "text-[#0052CC]"
+                      ? "hover:bg-[#0052CC]"
                       : link.color === "text-blue-500"
                         ? "hover:bg-blue-500"
                         : link.color === "text-gray-500"
