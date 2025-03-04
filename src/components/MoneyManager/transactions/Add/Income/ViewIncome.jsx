@@ -153,9 +153,6 @@ function ViewIncome({ entry, visible, onClose }) {
               
             </div>
 
-            <div className="border border-gray-200 flex items-center p-3">
-            </div>
-
             <div>
 
               <Button
