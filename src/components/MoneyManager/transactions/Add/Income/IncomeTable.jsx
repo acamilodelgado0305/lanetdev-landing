@@ -541,8 +541,11 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
 
     const renderDate = (date) => {
         try {
-            const zonedDate = DateTime.fromISO(date, { zone: "local" }).toLocaleString(DateTime.DATE_MED);
-            return zonedDate;
+            // Convierte la fecha en formato ISO a la zona horaria local
+            const localDate = DateTime.fromISO(date, { zone: "utc" }).toLocal();
+
+            // Formatea la fecha ajustada según la zona horaria local
+            return localDate.toFormat("d MMM yyyy");
         } catch (error) {
             console.error("Error al formatear la fecha:", error);
             return "Fecha inválida";
