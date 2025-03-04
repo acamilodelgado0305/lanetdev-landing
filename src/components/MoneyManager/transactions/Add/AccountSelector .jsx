@@ -12,7 +12,8 @@ const AccountSelector = ({
   accounts = [],
   selectedAccount,
   onAccountSelect,
-  
+  hiddenDetails = false
+
 }) => {
   const getAccountIcon = (type) => {
     const normalizedType = type?.toLowerCase()
@@ -91,9 +92,11 @@ const AccountSelector = ({
                     </div>
                     <div className="flex-grow">
                       <div className="text-sm font-medium">{acc.name}</div>
-                      <div className="text-xs text-gray-600">
-                        {formatCurrency(acc.balance || 0)}
-                      </div>
+                      {!hiddenDetails && (
+                        <div className="text-xs text-gray-600">
+                          {formatCurrency(acc.balance || 0)}
+                        </div>
+                      )}
                     </div>
                     {selectedAccount === acc.id.toString() && (
                       <div className="flex-shrink-0 text-blue-700">

@@ -99,10 +99,9 @@ function ViewIncome({ entry, visible, onClose }) {
   };
 
 
-  const handleEditSelected = (id) => {
-    navigate(`/index/moneymanager/ingresos/edit/${id}`);
+  const handleEditSelected = () => {
+    navigate(`/index/moneymanager/ingresos/edit/${entry.id}`);
   };
-
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("es-CO", {
       style: "currency",
@@ -141,10 +140,17 @@ function ViewIncome({ entry, visible, onClose }) {
           {/* Modal Header */}
           <div className="flex justify-between items-center p-4 border-b border-gray-200">
             <div className="flex items-center">
-              <div className="bg-blue-500 text-white px-3 py-1 font-semibold text-sm">
-                ARQ-{incomeData?.arqueo_number || "XX"}
+              <div className="bg-blue-700 text-white px-3 py-1 font-semibold text-sm">
+                {incomeData ? (
+                  <>
+                    {incomeData.type.toUpperCase()} - {incomeData?.arqueo_number || "XX"}
+                    
+                  </>
+                ) : (
+                  <p>Cargando detalles del ingreso...</p>
+                )}
               </div>
-              <h2 className="ml-3 font-medium text-lg">{incomeData?.description || "Detalles de Ingreso"}</h2>
+              
             </div>
 
             <div className="border border-gray-200 flex items-center p-3">
@@ -181,7 +187,7 @@ function ViewIncome({ entry, visible, onClose }) {
           {/* Modal Body */}
           {loading ? (
             <div className="flex justify-center items-center p-16">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700"></div>
             </div>
           ) : incomeData ? (
             <div>
@@ -213,10 +219,18 @@ function ViewIncome({ entry, visible, onClose }) {
                             <div className="text-sm text-gray-500">Cajero</div>
                             <p> {getCajeroName(incomeData.cashier_id)}</p>
                           </div>
-                          <div className="p-4 sm:col-span-2 border-b border-gray-200">
+                          <div className="border-b border-gray-200 p-4 w-[5">
                             <div className="text-sm text-gray-500">Tipo</div>
                             <div className="font-medium mt-1">{incomeData.type || "No especificado"}</div>
                           </div>
+                          <div className="border-b border-gray-200 p-4">
+                            <div className="text-xl font-bold text-blue-700">
+                              Período: {renderDate(incomeData.start_period)} - {renderDate(incomeData.end_period)}
+                            </div>
+                          </div>
+
+
+
                         </div>
                       </div>
                     </div>
@@ -234,12 +248,12 @@ function ViewIncome({ entry, visible, onClose }) {
                     <div className="bg-gray-50 p-4 border border-gray-200 border-b-0">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-700 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                           <h3 className="font-semibold text-gray-800">Desglose Financiero</h3>
                         </div>
-                        <div className="text-sm text-gray-500">ARQ-{incomeData?.arqueo_number || "XX"}</div>
+                        {<div className="text-sm text-gray-500">  {incomeData?.arqueo_number || "XX"}</div>}
                       </div>
                     </div>
 
@@ -290,7 +304,7 @@ function ViewIncome({ entry, visible, onClose }) {
                         <div className="font-bold text-gray-800">TOTAL</div>
                       </div>
                       <div className="w-2/5 text-right">
-                        <div className="font-bold text-lg text-blue-600 font-mono">{formatCurrency(incomeData.amount)}</div>
+                        <div className="font-bold text-lg text-blue-700 font-mono">{formatCurrency(incomeData.amount)}</div>
                       </div>
                     </div>
 
@@ -298,7 +312,7 @@ function ViewIncome({ entry, visible, onClose }) {
                     <div className="py-3 px-4 text-xs text-gray-500 border-l border-r border-b border-gray-200 bg-white">
                       <div className="flex justify-between">
                         <div>Fecha: {renderDate(incomeData.date)}</div>
-                        <div>Período: {renderDate(incomeData.start_period)} - {renderDate(incomeData.end_period)}</div>
+
                       </div>
                     </div>
                   </div>
