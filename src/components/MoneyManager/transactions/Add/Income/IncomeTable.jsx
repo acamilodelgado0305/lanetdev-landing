@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Table, Input, Drawer, Button, Checkbox, DatePicker, Dropdown, Menu, Card, Tag, Tooltip, Space, Typography, Divider, Select, Row, Col, Statistic } from "antd";
 import { format as formatDate, subMonths, addMonths, startOfMonth, endOfMonth, isWithinInterval, isValid } from "date-fns";
 import { es } from "date-fns/locale";
+import { DateTime } from "luxon";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import axios from "axios";
@@ -540,18 +541,8 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
 
     const renderDate = (date) => {
         try {
-            const parsedDate = new Date(date);
-
-            // Si la fecha no es válida, muestra un mensaje de error
-            if (isNaN(parsedDate.getTime())) {
-                return "Fecha inválida";
-            }
-
-            // Ajustar la fecha a la zona horaria local
-            const localDate = new Date(parsedDate.getTime() - parsedDate.getTimezoneOffset() * 60000);
-
-            // Formatear la fecha ajustada
-            return formatDate(localDate, 'd MMM yyyy', { locale: es });
+            const zonedDate = DateTime.fromISO(date, { zone: "local" }).toLocaleString(DateTime.DATE_MED);
+            return zonedDate;
         } catch (error) {
             console.error("Error al formatear la fecha:", error);
             return "Fecha inválida";
