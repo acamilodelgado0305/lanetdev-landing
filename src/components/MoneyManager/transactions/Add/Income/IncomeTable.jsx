@@ -541,10 +541,17 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
     const renderDate = (date) => {
         try {
             const parsedDate = new Date(date);
+
+            // Si la fecha no es válida, muestra un mensaje de error
             if (isNaN(parsedDate.getTime())) {
                 return "Fecha inválida";
             }
-            return formatDate(parsedDate, "d MMM yyyy", { locale: es });
+
+            // Ajustar la fecha a la zona horaria local
+            const localDate = new Date(parsedDate.getTime() - parsedDate.getTimezoneOffset() * 60000);
+
+            // Formatear la fecha ajustada
+            return formatDate(localDate, 'd MMM yyyy', { locale: es });
         } catch (error) {
             console.error("Error al formatear la fecha:", error);
             return "Fecha inválida";
@@ -960,7 +967,7 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
             >
 
 
-                
+
                 <div className="flex flex-col">
                     <div className="flex flex-wrap gap-4 justify-center mb-4 ">
                         {selectedImages.map((image, index) => (
