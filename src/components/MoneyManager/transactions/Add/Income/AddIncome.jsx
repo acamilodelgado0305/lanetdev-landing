@@ -11,7 +11,7 @@ import { uploadImage } from "../../../../../services/apiService";
 import dayjs from "dayjs";
 import { UploadOutlined, DownloadOutlined, FileTextOutlined } from "@ant-design/icons";
 import axios from "axios";
-import { useNavigate, useLocation  } from 'react-router-dom'; // Importa useNavigate
+import { useNavigate, useLocation } from 'react-router-dom'; // Importa useNavigate
 const apiUrl = import.meta.env.VITE_API_FINANZAS;
 import VoucherSection from "../../components/VoucherSection";
 import { useParams } from 'react-router-dom'; //
@@ -61,7 +61,9 @@ const AddIncome = ({ onTransactionAdded }) => {
   const [isIncomeSaved, setIsIncomeSaved] = useState(false);
   const [cashierid, setCashierid] = useState(null);
 
-  
+  const [isPdfMode, setIsPdfMode] = useState(false);
+
+
 
   const [stats, setStats] = useState({
     totalCashiers: 0,
@@ -92,10 +94,11 @@ const AddIncome = ({ onTransactionAdded }) => {
 
   useEffect(() => {
     const totalAmount = calculateTotalAmount();
-    const commission = totalAmount * (CommissionPorcentaje / 100);
+    const commission = CommissionPorcentaje > 0
+      ? totalAmount * (CommissionPorcentaje / 100)
+      : 0;
     setCashierCommission(commission);
   }, [fevAmount, diversoAmount, otherIncome, CommissionPorcentaje]);
-
 
   //---------------------------FETCH---------------------------//
 
@@ -294,10 +297,10 @@ const AddIncome = ({ onTransactionAdded }) => {
           amountfev: parseFloat(fevAmount) || 0,
           amountdiverse: parseFloat(diversoAmount) || 0,
           cashier_id: cashierid,
-          arqueo_number: parseInt(arqueoNumber),
+          arqueo_number: arqueoNumber,
           other_income: parseFloat(otherIncome) || 0,
           cash_received: parseFloat(cashReceived) || 0,
-          cashier_commission: commission,
+          cashier_commission: cashierCommission,
           start_period: startPeriod?.format("YYYY-MM-DD"),
           end_period: endPeriod?.format("YYYY-MM-DD")
         };
@@ -336,12 +339,16 @@ const AddIncome = ({ onTransactionAdded }) => {
         cancelButtonColor: "#5cb85c",
       }).then((result) => {
         if (result.isConfirmed) {
-          // Si el usuario hace clic en "Aceptar", navegar hacia atrás
-          navigate(-1);
+          // Navegar a transacciones con la pestaña de Ingresos activa
+          navigate('/index/moneymanager/transactions', {
+            state: { activeTab: 'incomes' }
+          });
         } else if (result.dismiss === Swal.DismissReason.cancel) {
-          // Si el usuario hace clic en "Descargar PDF", descargar el PDF y luego navegar hacia atrás
+          // Descargar PDF y luego navegar a transacciones con la pestaña de Ingresos activa
           handleDownloadPDF();
-          navigate(-1);
+          navigate('/index/moneymanager/transactions', {
+            state: { activeTab: 'incomes' }
+          });
         }
       });
 
@@ -431,12 +438,15 @@ const AddIncome = ({ onTransactionAdded }) => {
             <Select
               value={cashierid} // Usamos el ID del cajero seleccionado
               onChange={(value, option) => {
-                setCashierid(value); // Actualizamos el ID del cajero seleccionado
-                // Buscar el cajero seleccionado basado en su ID
+                setCashierid(value);
+                // Find the selected cashier
                 const selectedCashier = cashiers.find(c => c.id_cajero === value);
                 if (selectedCashier) {
-                  // Guardar el porcentaje de comisión del cajero seleccionado
-                  setCommissionPorcentaje(parseFloat(selectedCashier.comision_porcentaje));
+                  // Only set commission percentage if it's greater than 0
+                  const commissionPercentage = parseFloat(selectedCashier.comision_porcentaje) > 0
+                    ? parseFloat(selectedCashier.comision_porcentaje)
+                    : 0;
+                  setCommissionPorcentaje(commissionPercentage);
                 }
               }}
               className="w-64"
@@ -497,18 +507,34 @@ const AddIncome = ({ onTransactionAdded }) => {
             <div className="space-y-4">
               <Title level={4}>Periodo de Arqueo</Title>
               <div className="flex space-x-4">
-                <DatePicker
-                  value={startPeriod}
-                  onChange={(date) => setStartPeriod(date)}
-                  placeholder="Fecha Inicio"
-                  className="w-40"
-                />
-                <DatePicker
-                  value={endPeriod}
-                  onChange={(date) => setEndPeriod(date)}
-                  placeholder="Fecha Fin"
-                  className="w-40"
-                />
+                {isPdfMode ? (
+                  // Explicit text rendering for PDF
+                  <div className="w-40 border p-2 text-gray-700">
+                    {startPeriod ? startPeriod.format('DD/MM/YYYY') : 'No definido'}
+                  </div>
+                ) : (
+                  // Normal DatePicker for interactive mode
+                  <DatePicker
+                    value={startPeriod}
+                    onChange={(date) => setStartPeriod(date)}
+                    placeholder="Fecha Inicio"
+                    className="w-40"
+                  />
+                )}
+                {isPdfMode ? (
+                  // Explicit text rendering for PDF
+                  <div className="w-40 border p-2 text-gray-700">
+                    {endPeriod ? endPeriod.format('DD/MM/YYYY') : 'No definido'}
+                  </div>
+                ) : (
+                  // Normal DatePicker for interactive mode
+                  <DatePicker
+                    value={endPeriod}
+                    onChange={(date) => setEndPeriod(date)}
+                    placeholder="Fecha Fin"
+                    className="w-40"
+                  />
+                )}
               </div>
             </div>
 
@@ -526,6 +552,7 @@ const AddIncome = ({ onTransactionAdded }) => {
               selectedAccount={account}
               onAccountSelect={(value) => setAccount(value)}
               accounts={accounts}
+              hiddenDetails={isPdfMode}
             />
           </div>
 
@@ -675,6 +702,9 @@ const AddIncome = ({ onTransactionAdded }) => {
       return;
     }
 
+    // Set PDF mode to true before generating PDF
+    setIsPdfMode(true);
+
     // Mostrar indicador de carga
     Swal.fire({
       title: 'Generando PDF',
@@ -721,8 +751,13 @@ const AddIncome = ({ onTransactionAdded }) => {
           title: 'Error',
           text: `No se pudo generar el PDF: ${error.message}`,
         });
+      })
+      .finally(() => {
+        // Reset PDF mode after PDF generation is complete
+        setIsPdfMode(false);
       });
   };
+
   const renderVentaInputs = () => {
     if (isVentaChecked) {
       return (
