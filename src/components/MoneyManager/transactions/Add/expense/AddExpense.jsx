@@ -246,6 +246,7 @@ const AddExpense = () => {
         },
         body: JSON.stringify(requestBody),
       });
+    
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -259,6 +260,10 @@ const AddExpense = () => {
         title: id ? "Egreso Actualizado" : "Egreso Registrado",
         text: id ? "El Egreso se ha actualizado correctamente" : "El Egreso se ha registrado correctamente",
         confirmButtonColor: "#3085d6",
+      });
+
+      navigate('/index/moneymanager/transactions', {
+        state: { activeTab: 'expenses' }
       });
 
     } catch (error) {
