@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Table, Input, Drawer, Button, Checkbox, DatePicker, Dropdown, Menu, Card, Tag, Tooltip, Space, Typography, Divider, Select, Row, Col, Statistic } from "antd";
 import { format as formatDate, subMonths, addMonths, startOfMonth, endOfMonth, isWithinInterval, isValid } from "date-fns";
 import { es } from "date-fns/locale";
+import { DateTime } from "luxon";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import axios from "axios";
@@ -540,11 +541,11 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
 
     const renderDate = (date) => {
         try {
-            const parsedDate = new Date(date);
-            if (isNaN(parsedDate.getTime())) {
-                return "Fecha inválida";
-            }
-            return formatDate(parsedDate, "d MMM yyyy", { locale: es });
+            // Convierte la fecha en formato ISO a la zona horaria local
+            const localDate = DateTime.fromISO(date, { zone: "utc" }).toLocal();
+
+            // Formatea la fecha ajustada según la zona horaria local
+            return localDate.toFormat("d MMM yyyy");
         } catch (error) {
             console.error("Error al formatear la fecha:", error);
             return "Fecha inválida";
@@ -960,7 +961,7 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
             >
 
 
-                
+
                 <div className="flex flex-col">
                     <div className="flex flex-wrap gap-4 justify-center mb-4 ">
                         {selectedImages.map((image, index) => (
