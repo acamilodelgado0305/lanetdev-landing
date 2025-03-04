@@ -21,6 +21,7 @@ import {
 } from "@ant-design/icons";
 
 import FloatingActionMenu from "../FloatingActionMenu";
+import ViewExpense from "../Add/expense/ViewExpense";
 
 const { RangePicker } = DatePicker;
 const { Title, Text } = Typography;
@@ -51,6 +52,9 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
         const [monthlyExpenses, setMonthlyExpenses] = useState(0);
     
         const [loadingMonthlyData, setLoadingMonthlyData] = useState(false);
+
+
+        const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
 
         const handleEditSelected = () => {
@@ -317,7 +321,14 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
     }, [entries, searchText, dateRange, typeFilter, providerFilter, providers, categories, accounts]);
 
     const handleRowClick = (record) => {
-        navigate(`/index/moneymanager/ingresos/view/${record.id}`);
+        setSelectedEntry(record); // Almacena la entrada seleccionada
+        setIsViewModalOpen(true); // Abre el modal
+    };
+
+
+    const closeModal = () => {
+        setIsViewModalOpen(false);
+        setSelectedEntry(null);
     };
 
     const handleSearch = (value, dataIndex) => {
@@ -951,6 +962,8 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
                     );
                 }}
             />
+
+<ViewExpense entry={selectedEntry} visible={isViewModalOpen} onClose={closeModal} />
 
             <style>
                 {`
