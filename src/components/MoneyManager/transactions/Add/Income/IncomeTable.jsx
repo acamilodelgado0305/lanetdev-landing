@@ -541,11 +541,13 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
 
     const renderDate = (date) => {
         try {
-            // Convierte la fecha en formato ISO a la zona horaria local
-            const localDate = DateTime.fromISO(date, { zone: "utc" }).toLocal();
+            // Convierte la fecha a un objeto DateTime de Luxon
+            const parsedDate = DateTime.fromISO(date, { zone: 'utc' });
 
-            // Formatea la fecha ajustada según la zona horaria local
-            return localDate.toFormat("d MMM yyyy");
+            // Formatea la fecha tal como se recibió, sin ajustes en la hora
+            const formattedDate = parsedDate.toFormat("d MMM yyyy");
+
+            return formattedDate;
         } catch (error) {
             console.error("Error al formatear la fecha:", error);
             return "Fecha inválida";
