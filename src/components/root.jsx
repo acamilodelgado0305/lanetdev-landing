@@ -353,7 +353,7 @@ export default function Root() {
           className={`${isExpanded ? "w-48" : "w-18"} 
           border-r-2 border-gray-300
                 bg-white text-black ${isOpen ? "block" : "hidden"} 
-               p-4 lg:block fixed top-0 left-0 h-full transition-all duration-300`}
+               py-5 lg:block fixed top-0 left-0 h-full transition-all duration-300`}
         >
           {/* {isExpanded && (
             <UserProfileHeader

@@ -421,11 +421,9 @@ const TransactionsDashboard = () => {
         />
       ) : (
         <div className="shadow-lg overflow-auto"
-          style={{
-            backgroundImage: "linear-gradient(to bottom, #f5f7fa, #c3cfe2)"
-          }}>
+          >
           <div className="max-w-full mx-auto  ">
-            <div className="bg-gray rounded">
+            
               {error && (
                 <div className="p-4 bg-red-50 border-l-4 border-red-500 text-red-700">
                   <div className="flex items-center">
@@ -466,8 +464,7 @@ const TransactionsDashboard = () => {
                   onEdit={openEditModal}
                   onOpenContentModal={openContentModal}
                 />
-              )}
-            </div>
+              )}         
           </div>
         </div>
       )}
