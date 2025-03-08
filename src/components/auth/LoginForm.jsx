@@ -52,7 +52,7 @@ const LoginForm = () => {
 
     return (
         <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-blue-100 via-blue-200 to-blue-300">
-            <div className="bg-white p-8 rounded-xl shadow-xl max-w-md w-full">
+            <div className="bg-white p-8  shadow-xl max-w-md w-full">
                 {/* Imagen pequeña en la parte superior */}
                 <div className="flex justify-center mb-6">
                     <img src={picture} alt="Logo" className="w-16 h-16 opacity-60" /> {/* Ajustar el tamaño y opacidad de la imagen */}
@@ -66,7 +66,7 @@ const LoginForm = () => {
                                 <label htmlFor="email" className="block text-sm font-semibold text-gray-700">Correo Electrónico</label>
                                 <input
                                     id="email"
-                                    className="mt-2 block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
+                                    className="mt-2 block w-full px-4 py-3 border border-gray-300  shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
                                     type="email"
                                     {...register('email', { required: 'El correo electrónico es requerido' })}
                                 />
@@ -74,7 +74,7 @@ const LoginForm = () => {
                             </div>
                             <button
                                 type="submit"
-                                className="w-full bg-blue-600 text-white py-3 px-4 rounded-xl shadow-lg hover:bg-blue-700 transition duration-300 focus:outline-none focus:ring-4 focus:ring-blue-300"
+                                className="w-full bg-blue-600 text-white py-3 px-4  shadow-lg hover:bg-blue-700 transition duration-300 focus:outline-none focus:ring-4 focus:ring-blue-300"
                             >
                                 Recuperar Contraseña
                             </button>
@@ -96,7 +96,7 @@ const LoginForm = () => {
                                 <label htmlFor="email" className="block text-sm font-semibold text-gray-700">Correo Electrónico</label>
                                 <input
                                     id="email"
-                                    className="mt-2 block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
+                                    className="mt-2 block w-full px-4 py-3 border border-gray-300  shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
                                     type="email"
                                     {...register('email', { required: 'El correo electrónico es requerido' })}
                                 />

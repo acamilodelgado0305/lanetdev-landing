@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { TagOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import { Layout, Typography, Card, Button, Table, Tag, message, Modal } from "antd";
 import {
-  getCategories,
+  getCategorias,
   deleteCategory,
 } from "../../../services/moneymanager/moneyService";
 import AddCategoriesModal from "./addCategories";
@@ -25,7 +25,7 @@ const Categories = () => {
 
   const fetchCategories = async () => {
     try {
-      const data = await getCategories();
+      const data = await getCategorias();
       setCategories(data);
     } catch (err) {
       message.error("Error al cargar las categorías");

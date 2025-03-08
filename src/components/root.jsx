@@ -350,10 +350,10 @@ export default function Root() {
 
         {/* Sidebar */}
         <div
-          className={`${isExpanded ? "w-48" : "w-18"} 
+          className={`${isExpanded ? "w-60" : "w-18"} 
           border-r-2 border-gray-300
-                bg-white text-black ${isOpen ? "block" : "hidden"} 
-               p-4 lg:block fixed top-0 left-0 h-full transition-all duration-300`}
+                bg-white text-gray-800 ${isOpen ? "block" : "hidden"} 
+               py-5 lg:block fixed top-0 left-0 h-full transition-all duration-300`}
         >
           {/* {isExpanded && (
             <UserProfileHeader
@@ -364,7 +364,7 @@ export default function Root() {
               isExpanded={isExpanded}
             />
           )} */}
-          <div className="space-y-2 py-2 max-h-screen overflow-y-auto mt-10 my-4 bg-white"
+          <div className="space-y-2 py-2 max-h-screen overflow-y-auto mt-10 pl-4 my-4 bg-white"
             style={{
               scrollbarWidth: "none",
               msOverflowStyle: "none",
@@ -400,17 +400,18 @@ export default function Root() {
                           : link.color === "text-gray-500"
                             ? "hover:bg-gray-500"
                             : "hover:bg-[#7d4fff]"}  
-            ${link.color || "text-black"} text-sm ${link.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+            ${link.color || "text-gray-700"} text-sm ${link.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
+                    <span className="mr-2 group-hover:text-white">
+                      {activeSubMenu === link.label ? <UpOutlined /> : <DownOutlined />}
+                    </span>
                     <span className={`mr-1 ${link.color} group-hover:text-white`}>
                       {link.icon}
                     </span>
-                    <span className={`text-black group-hover:text-white ${link.hoverClass}`}>
+                    <span className={`text-gray-700 group-hover:text-white ${link.hoverClass}`}>
                       {isExpanded ? link.label : ""}
                     </span>
-                    <span className="ml-auto group-hover:text-white">
-                      {activeSubMenu === link.label ? <UpOutlined /> : <DownOutlined />}
-                    </span>
+                    
                   </button>
 
                   {activeSubMenu === link.label && isExpanded && (
@@ -427,12 +428,12 @@ export default function Root() {
                                 : subItem.color === "text-gray-500"
                                   ? "hover:bg-gray-500"
                                   : "hover:bg-[#7d4fff]"}  
-                ${subItem.color || "text-black"} text-sm ${subItem.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                ${subItem.color || "text-gray-700"} text-sm ${subItem.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
                           <span className={`mr-1 ${subItem.color} group-hover:text-white`}>
                             {subItem.icon}
                           </span>
-                          <span className={`text-black group-hover:text-white ${subItem.hoverClass}`}>
+                          <span className={`text-gray-700 group-hover:text-white ${subItem.hoverClass}`}>
                             {subItem.label}
                           </span>
                         </Link>
@@ -452,12 +453,12 @@ export default function Root() {
                         : link.color === "text-gray-500"
                           ? "hover:bg-gray-500"
                           : "hover:bg-[#7d4fff]"}  
-        ${link.color || "text-black"} text-sm ${link.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+        ${link.color || "text-gray-700"} text-sm ${link.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   <span className={`mr-1 ${link.color} group-hover:text-white`}>
                     {link.icon}
                   </span>
-                  <span className={`text-black group-hover:text-white ${link.hoverClass}`}>
+                  <span className={`text-gray-700 group-hover:text-white ${link.hoverClass}`}>
                     {isExpanded ? link.label : ""}
                   </span>
                 </Link>
@@ -472,14 +473,14 @@ export default function Root() {
             className="z-1000 flex items-center justify-center w-full p-2 text-left hover:bg-gray-700 text-sm absolute bottom-0"
           >
             <span className="ml-2">
-              {isExpanded ? <UpOutlined className="text-black" /> : <DownOutlined className="text-black" />}
+              {isExpanded ? <UpOutlined className="text-gray-700" /> : <DownOutlined className="text-gray-700" />}
             </span>
           </button>
         </div>
 
         {/* Contenido principal */}
         <Layout.Content
-          className={`flex-1 overflow-x-hidden overflow-y-auto mt-8 ${isExpanded ? "ml-[13.7em]" : "ml-[5.3em]"} h-screen`}
+          className={`flex-1 overflow-x-hidden overflow-y-auto mt-8 ${isExpanded ? "ml-[17.5em]" : "ml-[5.3em]"} h-screen`}
         >
           <Outlet context={{ setUnreadEmailsCount }} />
         </Layout.Content>
