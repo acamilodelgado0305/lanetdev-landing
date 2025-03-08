@@ -5,23 +5,15 @@ import { es } from "date-fns/locale";
 import { DateTime } from "luxon";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import DateNavigator from "../DateNavigator";
 import axios from "axios";
 import {
     LeftOutlined,
     RightOutlined,
     DownloadOutlined,
     FilterOutlined,
-    EllipsisOutlined,
-    DeleteOutlined,
-    ExportOutlined,
     SearchOutlined,
     CalendarOutlined,
-    CheckCircleOutlined,
-    MenuOutlined,
-    EditOutlined,
-    DollarOutlined,
-    ArrowUpOutlined,
-    ArrowDownOutlined
 } from "@ant-design/icons";
 import FloatingActionMenu from "../../FloatingActionMenu";
 import ViewIncome from "./ViewIncome";
@@ -40,7 +32,6 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
     // State variables for selection and date filtering
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
     const [currentMonth, setCurrentMonth] = useState(new Date());
-    const [dateRange, setDateRange] = useState([startOfMonth(new Date()), endOfMonth(new Date())]);
     const [showFilters, setShowFilters] = useState(false);
     const [filteredEntries, setFilteredEntries] = useState([]);
     const [entriesLoading, setEntriesLoading] = useState(true);
@@ -48,7 +39,19 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
     const [error, setError] = useState(null);
     const [typeFilter, setTypeFilter] = useState(null);
 
+    const [dateRange, setDateRange] = useState(() => {
+        const today = new Date();
+        return [startOfMonth(today), endOfMonth(today)];
+    });
 
+
+    const handleMonthChange = (newDate) => {
+        if (!newDate) {
+            console.warn("Fecha inválida detectada:", newDate);
+            return; // Evitamos asignar `false`
+        }
+        setDateRange([startOfMonth(newDate), endOfMonth(newDate)]);
+    };
 
     const [cashiers, setCashiers] = useState([]);
     const [cashierFilter, setCashierFilter] = useState(null);
@@ -299,7 +302,7 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
 
     const fetchMonthlyData = async () => {
         // Format the current month as yyyy-MM for the API
-        const monthYear = formatDate(currentMonth, "yyyy-MM");
+        const monthYear = formatDate(dateRange[0], "yyyy-MM");
         setLoadingMonthlyData(true);
 
         try {
@@ -768,28 +771,9 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
                                 </div>
                             </div>
                         </div>
-                        <Tooltip title="Mes actual">
-                            <Button
-                                icon={<CalendarOutlined />}
-                                onClick={goToCurrentMonth}
-                                className="mr-2"
-                            >
-                                Hoy
-                            </Button>
-                        </Tooltip>
-                        <Button
-                            icon={<LeftOutlined />}
-                            onClick={goToPreviousMonth}
-                            className="mr-1"
-                        />
-                        <span className="font-medium px-3 py-1 bg-gray-100 rounded">
-                            {formatDate(currentMonth, "MMMM yyyy", { locale: es })}
-                        </span>
-                        <Button
-                            icon={<RightOutlined />}
-                            onClick={goToNextMonth}
-                            className="ml-1"
-                        />
+                        <div>
+                            <DateNavigator onMonthChange={(dates) => setDateRange(dates)} />
+                        </div>
                     </div>
                 </div>
 
