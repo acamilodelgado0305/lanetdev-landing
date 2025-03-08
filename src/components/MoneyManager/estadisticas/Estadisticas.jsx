@@ -4,7 +4,7 @@ import {
   PieChart, Pie, Cell, LineChart, Line, Area, AreaChart
 } from 'recharts';
 import { ArrowUpRight, ArrowDownRight, DollarSign, AlertCircle, Calendar, TrendingUp, ArrowRight } from 'lucide-react';
-import { getAccounts, getCategories, getTransactions, getTransfers } from '../../../services/moneymanager/moneyService.js';
+import { getAccounts, getCategorias, getTransactions, getTransfers } from '../../../services/moneymanager/moneyService.js';
 import axios from 'axios';
 import { format as formatDate } from 'date-fns';
 import { Link } from "react-router-dom";
@@ -36,7 +36,7 @@ const Dashboard = () => {
         // Fetch general balance junto con los otros datos
         const [accountsData, categoriesData, transactionsData, transfersData, balanceData] = await Promise.all([
           getAccounts(),
-          getCategories(),
+          getCategorias(),
           getTransactions(),
           getTransfers(),
           axios.get(`${VITE_API_FINANZAS}/balance/general`),

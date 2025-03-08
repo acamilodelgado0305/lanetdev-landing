@@ -13,6 +13,7 @@ const apiUrl = import.meta.env.VITE_API_FINANZAS;
 import ExpenseVoucherSection from "./ExpenseVoucherSection";
 import { useParams, useLocation} from 'react-router-dom'; //
 import NewExpenseTable from "./ProductsTable";
+import { getCategorias } from "../../../../../services/moneymanager/moneyService";
 
 const { Title, Text } = Typography;
 
@@ -23,23 +24,24 @@ const AddExpense = () => {
     const location = useLocation();
     const returnTab = location.state?.returnTab || 'egresos';
   const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState("");
   const [account, setAccount] = useState("");
   const [voucher, setVoucher] = useState("");
   const [description, setDescription] = useState("");
   const [comentarios, setComentarios] = useState("");
-  const [categories, setCategories] = useState([]);
+  const [categorias, setCategorias] = useState([]);
   const [tipo, setTipo] = useState("");
   const [accounts, setAccounts] = useState([]);
   const [date, setDate] = useState(dayjs());
   const [proveedores, setProveedores] = useState("");
+ 
 
 
 
   const [loading, setLoading] = useState(false);
 
 
-  const [proveedor, setproveedor] = useState("");
+  const [proveedor, setProveedor] = useState("");
+  const [categoria, setcategoria] = useState("");
   const [facturaNumber, setFacturaNumber] = useState("");
   const [facturaProvNumber, setFacturaProvNumber] = useState("");
 
@@ -47,6 +49,8 @@ const AddExpense = () => {
 
   const [isExpenseSaved, setIsExpenseSaved] = useState(false);
   const [hasPercentageDiscount, setHasPercentageDiscount] = useState(false);
+  const [hiddenCatgoriesTable, setHiddenCatgoriesTable] = useState(false);
+  
 
   const [expenseTableData, setExpenseTableData] = useState({
     items: [],
@@ -98,8 +102,18 @@ const AddExpense = () => {
 
     fetchAccounts();
     fetchProveedores();
+    ObtenerCategorias();
 
   }, []);
+
+    const ObtenerCategorias = async () => {
+      try {
+        const data = await getCategorias();
+        setCategorias(data); // Almacena las categorías en el estado
+      } catch (err) {
+        console.error("Error al cargar las categorías:", err);
+      }
+    };
 
 
   //---------------------------FETCH---------------------------//
@@ -136,7 +150,9 @@ const AddExpense = () => {
     }
   };
 
-
+  const handleProveedorChange = (value) => {
+    setProveedor(value); // Actualiza el estado con el ID del proveedor seleccionado
+  };
 
 
   //-------------MONEDA--------------------
@@ -156,8 +172,9 @@ const AddExpense = () => {
       <div className="p-4" ref={printRef}>
         {renderInvoiceHeader()}
         <Divider />
-        // En AddExpense, donde renderizas NewExpenseTable:
+        
         <NewExpenseTable
+        hiddenDetails={hiddenCatgoriesTable}
           hasPercentageDiscount={hasPercentageDiscount}
           onDataChange={handleExpenseTableDataChange} // Añade esta línea
         />
@@ -189,11 +206,11 @@ const AddExpense = () => {
         user_id: parseInt(sessionStorage.getItem('userId')),
         tipo: tipo,
         date: date.format("YYYY-MM-DD[T]HH:mm:ss[Z]"),
-        proveedor: "bb85592f-4342-4e0a-947f-1aea52fb2e73",
+        proveedor: proveedor,
+        categoria:categoria,
         facturaNumber: facturaNumber,
         facturaProvNumber: facturaProvNumber,
         account_id: parseInt(account),
-
         voucher: voucher,
         description: description,
         comentarios: comentarios,
@@ -214,6 +231,7 @@ const AddExpense = () => {
           )
           .map(item => ({
             type: item.type,
+            categoria:item.categoria,
             product: item.product,
             description: item.description,
             quantity: parseFloat(item.quantity),
@@ -348,23 +366,67 @@ const AddExpense = () => {
               className="w-64" // Clase para ajustar el ancho
             />
 
-            <div className="flex items-center justify-end space-x-4">
+<div className="flex items-center justify-end space-x-4">
               <span className="text-gray-600">Proveedor:</span>
               <Select
-                value={proveedor}
-                onChange={(value, option) => {
-                  setproveedor(value);
-                }}
+                value={proveedor} // Usa el estado `proveedor`
+                onChange={handleProveedorChange} // Maneja el cambio de proveedor
                 className="w-64"
                 placeholder="Selecciona un proveedor"
               >
-                {Array.isArray(proveedores) && proveedores.map(provider => (
-                  <Select.Option key={provider.id} value={provider.id}>
-                    {provider.nombre_comercial}
-                  </Select.Option>
-                ))}
+                {Array.isArray(proveedores) &&
+                  proveedores.map((provider) => (
+                    <Select.Option key={provider.id} value={provider.id}>
+                      {provider.nombre_comercial}
+                    </Select.Option>
+                  ))}
               </Select>
             </div>
+            {!hiddenCatgoriesTable && (
+          <div className="flex items-center justify-end space-x-4">
+          <span className="text-gray-600">Categoria:</span>
+          <Select
+            value={categoria}
+            onChange={(value, option) => {
+              setcategoria(value);
+            }}
+            className="w-64"
+            placeholder="Selecciona una categoría"
+            dropdownRender={(menu) => (
+              <div>
+                {/* Renderiza las opciones normales */}
+                {menu}
+                {/* Agrega un separador y el botón "Crear categoría" */}
+                <Divider style={{ margin: '8px 0' }} />
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    padding: '8px',
+                    cursor: 'pointer',
+                  }}
+                  onMouseDown={(e) => e.preventDefault()} // Evita que el menú se cierre al hacer clic
+                  onClick={() => {
+                    // Aquí puedes abrir un modal o redirigir a la página de creación de categorías
+                    console.log("Redirigiendo a crear categoría...");
+                  }}
+                >
+                  <Text type="secondary" style={{ fontSize: '12px' }}>
+                    Nueva Categoría
+                  </Text>
+                </div>
+              </div>
+            )}
+          >
+            {Array.isArray(categorias) &&
+              categorias.map((categoria) => (
+                <Select.Option key={categoria.id} value={categoria.id}>
+                  {categoria.name}
+                </Select.Option>
+              ))}
+          </Select>
+        </div>
+        )}
           </div>
         </div>
         <div className="text-right space-y-4">
@@ -402,6 +464,14 @@ const AddExpense = () => {
             onChange={(e) => setHasPercentageDiscount(e.target.checked)}
           >
             Descuento en porcentaje
+          </Checkbox>
+        </Col>
+        <Col>
+          <Checkbox
+            checked={hiddenCatgoriesTable}
+            onChange={(e) => setHiddenCatgoriesTable(e.target.checked)}
+          >
+            Categoria por producto
           </Checkbox>
         </Col>
       </Row>

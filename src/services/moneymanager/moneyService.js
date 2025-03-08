@@ -70,7 +70,7 @@ export const updateAccount = async (categoryId, updatedData) => {
 
 //--------------------------------------CATEGORIES--------------------------------------------------------------
 
-export const getCategories = async () => {
+export const getCategorias = async () => {
     try {
         const response = await moneyApi.get('/categories');
         return response.data;
