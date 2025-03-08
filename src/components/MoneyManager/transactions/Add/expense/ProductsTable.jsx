@@ -1,10 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Select, Input, Button } from 'antd';
+import { Table, Select, Input, Button, Divider } from 'antd';
+import { getCategorias } from "../../../../../services/moneymanager/moneyService";
 
-const NewExpenseTable = ({
+
+const formatCurrency = (value) => {
+  return new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(value);
+};
+
+
+const ProductsTable = ({
   hasPercentageDiscount = false,
-  onDataChange, // New prop to communicate changes up
+  onDataChange,
+  hiddenDetails
 }) => {
+
+  const [categorias, setCategorias] = useState([]);
+  const [categoria, setcategoria] = useState([]);
   const [items, setItems] = useState([{
     key: '1',
     type: 'Gasto',
@@ -17,7 +33,8 @@ const NewExpenseTable = ({
     discount: 0.00,
     taxCharge: 0.00,
     taxWithholding: 0.00,
-    total: 0.00
+    total: 0.00,
+    categoria: "",
   }]);
 
   const [totals, setTotals] = useState({
@@ -58,6 +75,17 @@ const NewExpenseTable = ({
     return itemSubtotal + taxChargeAmount - taxWithholdingAmount;
   };
 
+
+  const ObtenerCategorias = async () => {
+    try {
+      const data = await getCategorias();
+      setCategorias(data); // Almacena las categorías en el estado
+    } catch (err) {
+      console.error("Error al cargar las categorías:", err);
+    }
+  };
+
+
   // En NewExpenseTable, actualiza el useEffect:
   useEffect(() => {
     if (onDataChange) {
@@ -72,6 +100,7 @@ const NewExpenseTable = ({
         items: validItems,
         totals
       });
+      ObtenerCategorias();
     }
   }, [items, totals]);
   useEffect(() => {
@@ -132,7 +161,8 @@ const NewExpenseTable = ({
       discount: 0.00,
       taxCharge: 0.00,
       taxWithholding: 0.00,
-      total: 0.00
+      total: 0.00,
+      categoria: "",
     }]);
   };
 
@@ -177,6 +207,64 @@ const NewExpenseTable = ({
         </Select>
       )
     },
+    // Columna "Categoría" condicional
+    ...(!hiddenDetails
+      ? [] // Si hiddenDetails es true, no incluir esta columna
+      : [
+        // Dentro de la columna 'Categoría' en la definición de columns
+        {
+          title: 'Categoría',
+          dataIndex: 'categoria',
+          width: 120,
+          render: (text, record) => {
+            // Obtener categorías usadas por otras filas
+            const usedCategories = items
+              .filter(item => item.key !== record.key)
+              .map(item => item.categoria);
+
+            // Filtrar categorías disponibles
+            const availableCategorias = categorias.filter(cat =>
+              !usedCategories.includes(cat.id)
+            );
+
+            return (
+              <Select
+                value={record.categoria} // Usar la categoría de la fila actual
+                onChange={(value) => handleValueChange(record.key, 'categoria', value)}
+                className="w-50"
+                placeholder="Selecciona una categoría"
+                dropdownRender={(menu) => (
+                  <div>
+                    {menu}
+                    <Divider style={{ margin: '8px 0' }} />
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        padding: '8px',
+                        cursor: 'pointer',
+                      }}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => {
+                        console.log("Redirigiendo a crear categoría...");
+                      }}
+                    >
+                      Crear categoría
+                    </div>
+                  </div>
+                )}
+              >
+                {/* Mostrar solo categorías disponibles */}
+                {availableCategorias.map((cat) => (
+                  <Select.Option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </Select.Option>
+                ))}
+              </Select>
+            );
+          },
+        }
+      ]),
     {
       title: 'Producto',
       dataIndex: 'product',
@@ -304,14 +392,7 @@ const NewExpenseTable = ({
     }
   ];
 
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(value);
-  };
+
 
   return (
     <div style={{ width: '100%' }}>
@@ -390,4 +471,4 @@ const NewExpenseTable = ({
   );
 };
 
-export default NewExpenseTable;
+export default ProductsTable;

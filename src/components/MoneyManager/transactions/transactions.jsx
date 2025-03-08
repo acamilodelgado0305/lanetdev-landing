@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { format as formatDate, startOfMonth, endOfMonth, subMonths, addMonths } from "date-fns";
 import axios from "axios";
-import { Modal, message, Button, Card, Row, Col, Statistic, Typography, Tabs, Space } from "antd";
+import { Modal, message, Button, Card, Row, Col, Statistic, Typography, Tabs, Space, Tooltip } from "antd";
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   TrendingUp,
@@ -16,16 +16,16 @@ import {
   TrendingDown, BarChart2
 } from 'lucide-react';
 import { PlusOutlined, SwapOutlined, ArrowUpOutlined, ArrowDownOutlined, DollarOutlined } from '@ant-design/icons';
-import AddEntryModal from "./addModal";
+
 import VoucherContentModal from "./ViewImageModal";
 import TransactionTable from "./components/TransactionTable";
-import ExpenseTable from "./components/ExpenseTable";
+import ExpenseTable from "./components/ExpenseTable/ExpenseTable";
 import IncomeTable from "./Add/Income/IncomeTable";
 import Summary from "./Summary";
 import { useAuth } from '../../Context/AuthProvider';
 import {
   getAccounts,
-  getCategories,
+  getCategorias,
   deleteTransaction,
   deleteTransfer
 } from "../../../services/moneymanager/moneyService";
@@ -33,6 +33,9 @@ import {
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
 const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
+
+
+import TransferModal from "./TransferModal";
 
 const formatCurrency = (amount) => {
   if (isNaN(amount)) return "$0.00";
@@ -125,7 +128,7 @@ const TransactionsDashboard = () => {
 
   const fetchCategories = async () => {
     try {
-      const data = await getCategories();
+      const data = await getCategorias();
       setCategories(data);
     } catch (error) {
       console.error("Error al obtener las categorías:", error);
@@ -281,7 +284,7 @@ const TransactionsDashboard = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="flex flex-col h-screen bg-gray-300">
       {/* Header */}
       <div className="bg-white sticky  z-10 shadow-sm">
         <div className="max-w-7x2 mx-auto px-4 py-2">
@@ -343,6 +346,8 @@ const TransactionsDashboard = () => {
                 Crear Ingreso
               </Button>
 
+
+
               <Button
                 type="primary"
                 icon={<ArrowDownOutlined />}
@@ -359,22 +364,25 @@ const TransactionsDashboard = () => {
               >
                 Crear Egreso
               </Button>
+              <Tooltip title="Crear Transferencia">
+                <Button
+                  type="primary"
+                  icon={<SwapOutlined />}
+                  style={{
+                    backgroundColor: '#0052CC',
+                    borderColor: '#0052CC',
+                    boxShadow: '0 2px 0 rgba(0, 0, 0, 0.045)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                  onClick={openTransferModal}
+                >
 
-              <Button
-                type="primary"
-                icon={<SwapOutlined />}
-                style={{
-                  backgroundColor: '#0052CC',
-                  borderColor: '#0052CC',
-                  boxShadow: '0 2px 0 rgba(0, 0, 0, 0.045)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px'
-                }}
-                onClick={() => handleNavigate('/index/moneymanager/transactions/nuevatransferencia')}
-              >
-                Crear Transferencia
-              </Button>
+                </Button>
+
+              </Tooltip>
+
             </Space>
           </div>
 
@@ -421,59 +429,56 @@ const TransactionsDashboard = () => {
         />
       ) : (
         <div className="shadow-lg overflow-auto"
-          style={{
-            backgroundImage: "linear-gradient(to bottom, #f5f7fa, #c3cfe2)"
-          }}>
+        >
           <div className="max-w-full mx-auto  ">
-            <div className="bg-gray rounded">
-              {error && (
-                <div className="p-4 bg-red-50 border-l-4 border-red-500 text-red-700">
-                  <div className="flex items-center">
-                    <AlertCircle className="w-5 h-5 mr-2" />
-                    {error}
-                  </div>
+
+            {error && (
+              <div className="p-4 bg-red-50 border-l-4 border-red-500 text-red-700">
+                <div className="flex items-center">
+                  <AlertCircle className="w-5 h-5 mr-2" />
+                  {error}
                 </div>
-              )}
+              </div>
+            )}
 
-              {activeTab === "incomes" && (
-                <IncomeTable
-                  entries={paginatedEntries}
-                  categories={categories}
-                  accounts={accounts}
-                  onDelete={handleDelete}
-                  onEdit={openEditModal}
-                  onOpenContentModal={openContentModal}
-                />
-              )}
+            {activeTab === "incomes" && (
+              <IncomeTable
+                entries={paginatedEntries}
+                categories={categories}
+                accounts={accounts}
+                onDelete={handleDelete}
+                onEdit={openEditModal}
+                onOpenContentModal={openContentModal}
+              />
+            )}
 
-              {activeTab === "expenses" && (
-                <ExpenseTable
-                  entries={paginatedEntries}
-                  categories={categories}
-                  accounts={accounts}
-                  onDelete={handleDelete}
-                  onEdit={openEditModal}
-                  onOpenContentModal={openContentModal}
-                />
-              )}
+            {activeTab === "expenses" && (
+              <ExpenseTable
+                entries={paginatedEntries}
+                categories={categories}
+                accounts={accounts}
+                onDelete={handleDelete}
+                onEdit={openEditModal}
+                onOpenContentModal={openContentModal}
+              />
+            )}
 
-              {activeTab === "transfers" && (
-                <TransactionTable
-                  entries={paginatedEntries}
-                  categories={categories}
-                  accounts={accounts}
-                  onDelete={handleDelete}
-                  onEdit={openEditModal}
-                  onOpenContentModal={openContentModal}
-                />
-              )}
-            </div>
+            {activeTab === "transfers" && (
+              <TransactionTable
+                entries={paginatedEntries}
+                categories={categories}
+                accounts={accounts}
+                onDelete={handleDelete}
+                onEdit={openEditModal}
+                onOpenContentModal={openContentModal}
+              />
+            )}
           </div>
         </div>
       )}
 
       {/* Modals */}
-      <AddEntryModal
+      <TransferModal
         isOpen={isModalOpen}
         onClose={closeModal}
         onTransactionAdded={handleEntryAdded}

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { Modal } from "antd";
 import { getTransactions } from "../../services/moneymanager/moneyService";
-import AddEntryModal from "./transactions/addModal";
+import TransferModal from "./transactions/TransferModal";
 
 
 const IndexMoneyManager = () => {
@@ -115,7 +115,7 @@ const IndexMoneyManager = () => {
  
 
       <main className="flex-1 bg-gray-100 w-full">
-        <div className="w-full h-auto">
+        <div className="w-full h-auto bg-gray-200">
           <Outlet />
         </div>
       </main>
@@ -128,7 +128,7 @@ const IndexMoneyManager = () => {
         footer={null}
       />
 
-      <AddEntryModal
+      <TransferModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onTransactionAdded={handleEntryAdded}
