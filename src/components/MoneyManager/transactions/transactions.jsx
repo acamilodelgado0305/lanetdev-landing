@@ -19,7 +19,7 @@ import { PlusOutlined, SwapOutlined, ArrowUpOutlined, ArrowDownOutlined, DollarO
 
 import VoucherContentModal from "./ViewImageModal";
 import TransactionTable from "./components/TransactionTable";
-import ExpenseTable from "./components/ExpenseTable";
+import ExpenseTable from "./components/ExpenseTable/ExpenseTable";
 import IncomeTable from "./Add/Income/IncomeTable";
 import Summary from "./Summary";
 import { useAuth } from '../../Context/AuthProvider';
@@ -284,7 +284,7 @@ const TransactionsDashboard = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-900">
+    <div className="flex flex-col h-screen bg-gray-300">
       {/* Header */}
       <div className="bg-white sticky  z-10 shadow-sm">
         <div className="max-w-7x2 mx-auto px-4 py-2">

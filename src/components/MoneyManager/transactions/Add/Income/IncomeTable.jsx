@@ -860,37 +860,37 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
                 </div>
             )}
 
-            {/* Enhanced Table with Jira styling */}
-            <div className="rounded-none">
-                <Table
-                    className="px-7 py-5"
-                    rowSelection={rowSelection}
-                    dataSource={filteredEntries}
-                    columns={columns}
-                    rowKey={(record) => record.id}
-                    pagination={{
-                        pageSize: 10,
-                        showSizeChanger: true,
-                        showTotal: (total, range) => `${range[0]}-${range[1]} de ${total} registros`
-                    }}
-                    bordered
-                    size="middle"
-                    loading={entriesLoading}
-                    onRow={(record) => ({
-                        onClick: (e) => {
-                            if (e.target.tagName !== "INPUT" && e.target.tagName !== "BUTTON" && e.target.tagName !== "A") {
-                                handleRowClick(record);
-                            }
-                        },
-                    })}
-                    rowClassName="hover:bg-gray-50 transition-colors"
-                    scroll={{ x: 'max-content' }}
-                    summary={pageData => {
-                        if (pageData.length === 0) return null;
-                        const totalAmount = pageData.reduce((total, item) => total + (item.amount || 0), 0);
-                    }}
-                />
+            <div className="px-5 py-2 bg-white">
+
+            <Table
+                rowSelection={rowSelection}
+                dataSource={filteredEntries}
+                columns={columns}
+                rowKey={(record) => record.id}
+                pagination={false} // Desactiva la paginación
+                bordered
+                size="middle"
+                loading={entriesLoading}
+                onRow={(record) => ({
+                    onClick: (e) => {
+                        if (e.target.tagName !== "INPUT" && e.target.tagName !== "BUTTON" && e.target.tagName !== "A") {
+                            handleRowClick(record);
+                        }
+                    },
+                })}
+                rowClassName="hover:bg-gray-50 transition-colors"
+                scroll={{ x: 'max-content' }}
+                summary={pageData => {
+                    if (pageData.length === 0) return null;
+                    const totalAmount = pageData.reduce((total, item) => total + (item.amount || 0), 0);
+                }}
+            />
+
             </div>
+
+           
+
+
 
             <ViewIncome entry={selectedEntry} visible={isViewModalOpen} onClose={closeModal} />
 

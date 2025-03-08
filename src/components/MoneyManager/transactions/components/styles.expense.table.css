@@ -1,0 +1,12 @@
+/* En tu archivo CSS */
+.thick-bordered-table .ant-table-cell {
+    border: 2px solid #f0f0f0 !important; /* Puedes ajustar el grosor (2px) y el color según necesites */
+  }
+  
+  .thick-bordered-table .ant-table-thead > tr > th {
+    border: 2px solid #f0f0f0 !important;
+  }
+  
+  .thick-bordered-table .ant-table-tbody > tr > td {
+    border: 2px solid #f0f0f0 !important;
+  }
