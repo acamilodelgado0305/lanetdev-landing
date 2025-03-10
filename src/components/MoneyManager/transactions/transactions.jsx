@@ -193,7 +193,7 @@ const TransactionsDashboard = () => {
     fetchAccounts();
     fetchGeneralBalance();
     fetchMonthlyData();
-    fetchData(tabToEndpoint[activeTab]);
+    /*  fetchData(tabToEndpoint[activeTab]); */
   }, [activeTab, refreshTrigger, currentMonth]);
 
   const applyFilters = (entriesToFilter = entries) => {

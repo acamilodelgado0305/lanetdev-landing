@@ -17,9 +17,9 @@ const IndexMoneyManager = () => {
 
   const navigate = useNavigate();
 
-  /* useEffect(() => {
+  useEffect(() => {
     fetchTransactions();
-  }, []); */
+  }, []);
 
   const fetchTransactions = async () => {
     try {
