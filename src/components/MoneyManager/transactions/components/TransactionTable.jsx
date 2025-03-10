@@ -812,7 +812,7 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
 
             {/* Enhanced Table with Jira styling */}
             <Table
-              className="px-7 py-5"
+              className="px-7 py-5 "
                 rowSelection={rowSelection}
                 dataSource={filteredEntries}
                 columns={columns}

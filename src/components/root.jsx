@@ -350,8 +350,8 @@ export default function Root() {
 
         {/* Sidebar */}
         <div
-          className={`${isExpanded ? "w-60" : "w-18"} 
-          border-r-2 border-gray-300
+          className={`border-2 border-gray-300 ${isExpanded ? "w-60" : "w-18"} 
+          
                 bg-white text-gray-800 ${isOpen ? "block" : "hidden"} 
                py-5 lg:block fixed top-0 left-0 h-full transition-all duration-300`}
         >
@@ -480,7 +480,7 @@ export default function Root() {
 
         {/* Contenido principal */}
         <Layout.Content
-          className={`flex-1 overflow-x-hidden overflow-y-auto mt-8 ${isExpanded ? "ml-[17.5em]" : "ml-[5.3em]"} h-screen`}
+          className={`flex-1 overflow-x-hidden overflow-y-auto mt-8 ${isExpanded ? "ml-[17.1em]" : "ml-[5.3em]"} h-screen`}
         >
           <Outlet context={{ setUnreadEmailsCount }} />
         </Layout.Content>

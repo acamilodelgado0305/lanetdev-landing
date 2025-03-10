@@ -16,7 +16,8 @@ const formatCurrency = (value) => {
 const ProductsTable = ({
   hasPercentageDiscount = false,
   onDataChange,
-  hiddenDetails
+  hiddenDetails,
+  hiddenImpuestos // Nueva prop para ocultar impuestos
 }) => {
 
   const [categorias, setCategorias] = useState([]);
@@ -48,33 +49,34 @@ const ProductsTable = ({
     reteICAPercentage: "0"
   });
 
-  const calculateItemTotal = (item) => {
-    const quantity = parseFloat(item.quantity) || 0;
-    const unitPrice = parseFloat(item.unitPrice) || 0;
-    const discount = parseFloat(item.discount) || 0;
-    const taxCharge = parseFloat(item.taxCharge) || 0;
-    const taxWithholding = parseFloat(item.taxWithholding) || 0;
+  // Función para calcular el total de un ítem
+const calculateItemTotal = (item) => {
+  const quantity = parseFloat(item.quantity) || 0;
+  const unitPrice = parseFloat(item.unitPrice) || 0;
+  const discount = parseFloat(item.discount) || 0;
+  // Solo aplica impuestos si hiddenImpuestos es true
+  const taxCharge = hiddenImpuestos ? parseFloat(item.taxCharge) || 0 : 0;
+  const taxWithholding = hiddenImpuestos ? parseFloat(item.taxWithholding) || 0 : 0;
 
-    // Calcular valor bruto
-    let itemSubtotal = quantity * unitPrice;
+  // Calcular valor bruto
+  let itemSubtotal = quantity * unitPrice;
 
-    // Aplicar descuento
-    const discountAmount = hasPercentageDiscount
-      ? itemSubtotal * (discount / 100)
-      : discount;
+  // Aplicar descuento
+  const discountAmount = hasPercentageDiscount
+    ? itemSubtotal * (discount / 100)
+    : discount;
 
-    itemSubtotal -= discountAmount;
+  itemSubtotal -= discountAmount;
 
-    // Aplicar impuesto cargo (IVA)
-    const taxChargeAmount = itemSubtotal * (taxCharge / 100);
+  // Aplicar impuesto cargo (IVA)
+  const taxChargeAmount = itemSubtotal * (taxCharge / 100);
 
-    // Aplicar retención
-    const taxWithholdingAmount = itemSubtotal * (taxWithholding / 100);
+  // Aplicar retención
+  const taxWithholdingAmount = itemSubtotal * (taxWithholding / 100);
 
-    // Total final
-    return itemSubtotal + taxChargeAmount - taxWithholdingAmount;
-  };
-
+  // Total final
+  return itemSubtotal + taxChargeAmount - taxWithholdingAmount;
+};
 
   const ObtenerCategorias = async () => {
     try {
@@ -103,6 +105,7 @@ const ProductsTable = ({
       ObtenerCategorias();
     }
   }, [items, totals]);
+  
   useEffect(() => {
     const newTotals = items.reduce((acc, item) => {
       const quantity = parseFloat(item.quantity) || 0;
@@ -129,9 +132,9 @@ const ProductsTable = ({
     // Subtotal después de descuentos
     const subtotal = newTotals.totalBruto - newTotals.descuentos;
 
-    // Calcular retenciones
-    const reteIVA = subtotal * (parseFloat(totals.reteIVAPercentage) / 100);
-    const reteICA = subtotal * (parseFloat(totals.reteICAPercentage) / 100);
+    // Calcular retenciones (solo si los impuestos no están ocultos)
+    const reteIVA = !hiddenImpuestos ? 0 : subtotal * (parseFloat(totals.reteIVAPercentage) / 100);
+    const reteICA = !hiddenImpuestos ? 0 : subtotal * (parseFloat(totals.reteICAPercentage) / 100);
 
     // Total neto final
     const totalNeto = subtotal - reteIVA - reteICA;
@@ -145,7 +148,7 @@ const ProductsTable = ({
       reteICA: reteICA,
       totalNeto: totalNeto
     });
-  }, [items, hasPercentageDiscount, totals.reteIVAPercentage, totals.reteICAPercentage]);
+  }, [items, hasPercentageDiscount, totals.reteIVAPercentage, totals.reteICAPercentage, hiddenImpuestos]);
 
   const handleAddRow = () => {
     const newKey = (items.length + 1).toString();
@@ -209,7 +212,7 @@ const ProductsTable = ({
     },
     // Columna "Categoría" condicional
     ...(!hiddenDetails
-      ? [] // Si hiddenDetails es true, no incluir esta columna
+      ? [] 
       : [
         // Dentro de la columna 'Categoría' en la definición de columns
         {
@@ -231,7 +234,7 @@ const ProductsTable = ({
               <Select
                 value={record.categoria} // Usar la categoría de la fila actual
                 onChange={(value) => handleValueChange(record.key, 'categoria', value)}
-                className="w-50"
+                className="w-[8em]"
                 placeholder="Selecciona una categoría"
                 dropdownRender={(menu) => (
                   <div>
@@ -329,46 +332,53 @@ const ProductsTable = ({
         />
       )
     },
-    {
-      title: 'Impuesto Cargo',
-      dataIndex: 'taxCharge',
-      width: 120,
-      render: (text, record) => (
-        <Select
-          value={text}
-          style={{ width: '100%' }}
-          onChange={(value) => handleValueChange(record.key, 'taxCharge', value)}
-        >
-          <Select.Option value="19">IVA 19%</Select.Option>
-          <Select.Option value="5">IVA 5%</Select.Option>
-          <Select.Option value="0">IVA 0%</Select.Option>
-          <Select.Option value="8">Ipoconsumo 8%</Select.Option>
-        </Select>
-      )
-    },
-    {
-      title: 'Impuesto Retención',
-      dataIndex: 'taxWithholding',
-      width: 120,
-      render: (text, record) => (
-        <Select
-          value={text}
-          style={{ width: '100%' }}
-          onChange={(value) => handleValueChange(record.key, 'taxWithholding', value)}
-        >
-          <Select.Option value="11">Rete 11%</Select.Option>
-          <Select.Option value="10">Rete 10%</Select.Option>
-          <Select.Option value="7">Rete 7%</Select.Option>
-          <Select.Option value="6">Rete 6%</Select.Option>
-          <Select.Option value="4">Rete 4%</Select.Option>
-          <Select.Option value="3.5">Rete 3.5%</Select.Option>
-          <Select.Option value="2.5">Rete 2.5%</Select.Option>
-          <Select.Option value="2">Rete 2%</Select.Option>
-          <Select.Option value="1">Rete 1%</Select.Option>
-          <Select.Option value="0">Rete 0%</Select.Option>
-        </Select>
-      )
-    },
+    
+    // Columna "Impuesto Cargo" condicional
+    ...(!hiddenImpuestos
+      ? []
+      : [
+          {
+            title: 'Impuesto Cargo',
+            dataIndex: 'taxCharge',
+            width: 120,
+            render: (text, record) => (
+              <Select
+                value={text}
+                style={{ width: '100%' }}
+                onChange={(value) => handleValueChange(record.key, 'taxCharge', value)}
+              >
+                <Select.Option value="19">IVA 19%</Select.Option>
+                <Select.Option value="5">IVA 5%</Select.Option>
+                <Select.Option value="0">IVA 0%</Select.Option>
+                <Select.Option value="8">Ipoconsumo 8%</Select.Option>
+              </Select>
+            )
+          },
+          {
+            title: 'Impuesto Retención',
+            dataIndex: 'taxWithholding',
+            width: 120,
+            render: (text, record) => (
+              <Select
+                value={text}
+                style={{ width: '100%' }}
+                onChange={(value) => handleValueChange(record.key, 'taxWithholding', value)}
+              >
+                <Select.Option value="11">Rete 11%</Select.Option>
+                <Select.Option value="10">Rete 10%</Select.Option>
+                <Select.Option value="7">Rete 7%</Select.Option>
+                <Select.Option value="6">Rete 6%</Select.Option>
+                <Select.Option value="4">Rete 4%</Select.Option>
+                <Select.Option value="3.5">Rete 3.5%</Select.Option>
+                <Select.Option value="2.5">Rete 2.5%</Select.Option>
+                <Select.Option value="2">Rete 2%</Select.Option>
+                <Select.Option value="1">Rete 1%</Select.Option>
+                <Select.Option value="0">Rete 0%</Select.Option>
+              </Select>
+            )
+          }
+        ]),
+    
     {
       title: 'Valor Total',
       dataIndex: 'total',
@@ -392,7 +402,67 @@ const ProductsTable = ({
     }
   ];
 
+  // Sección de resumen condicional para impuestos
+  const renderSummary = () => {
+    return (
+      <div style={{ marginTop: '16px', width: '100%', maxWidth: '400px', marginLeft: 'auto' }}>
+        <div style={{ border: '1px solid #f0f0f0', padding: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Total Bruto:</div>
+            <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.totalBruto)}</div>
 
+            <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Descuentos:</div>
+            <div style={{ textAlign: 'right', color: '#ff4d4f' }}>-{formatCurrency(totals.descuentos)}</div>
+
+            <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Subtotal:</div>
+            <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.subtotal)}</div>
+
+            {!hiddenImpuestos && (
+              <>
+                <div style={{ textAlign: 'right', fontWeight: 500, color: '#666', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                  <span style={{ marginRight: '8px' }}>ReteIVA:</span>
+                  <Select
+                    value={totals.reteIVAPercentage}
+                    style={{ width: '80px' }}
+                    onChange={(value) => handleRetentionChange('reteIVA', value)}
+                  >
+                    <Select.Option value="15">15%</Select.Option>
+                    <Select.Option value="0">0%</Select.Option>
+                  </Select>
+                </div>
+                <div style={{ textAlign: 'right', color: '#ff4d4f' }}>-{formatCurrency(totals.reteIVA)}</div>
+
+                <div style={{ textAlign: 'right', fontWeight: 500, color: '#666', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                  <span style={{ marginRight: '8px' }}>ReteICA:</span>
+                  <Select
+                    value={totals.reteICAPercentage}
+                    style={{ width: '80px' }}
+                    onChange={(value) => handleRetentionChange('reteICA', value)}
+                  >
+                    <Select.Option value="13.8">13.8%</Select.Option>
+                    <Select.Option value="11.04">11.04%</Select.Option>
+                    <Select.Option value="9.66">9.66%</Select.Option>|
+                    <Select.Option value="8">8%</Select.Option>
+                    <Select.Option value="7">7%</Select.Option>
+                    <Select.Option value="6.9">6.9%</Select.Option>
+                    <Select.Option value="4.14">4.14%</Select.Option>
+                    <Select.Option value="0">0%</Select.Option>
+                  </Select>
+                </div>
+                <div style={{ textAlign: 'right', color: '#ff4d4f' }}>-{formatCurrency(totals.reteICA)}</div>
+              </>
+            )}
+          </div>
+          <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '8px', marginTop: '8px' }}>
+            <div className="bg-[#0052CC] text-white rounded-md py-2 px-4 flex justify-between items-center">
+              <div style={{ textAlign: 'right', fontWeight: 'bold', fontSize: '16px' }}>Total Neto:</div>
+              <div style={{ textAlign: 'right', fontWeight: 'bold', fontSize: '16px' }}>{formatCurrency(totals.totalNeto)}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div style={{ width: '100%' }}>
@@ -413,60 +483,7 @@ const ProductsTable = ({
         + Agregar línea
       </Button>
 
-      <div style={{ marginTop: '16px', width: '100%', maxWidth: '400px', marginLeft: 'auto' }}>
-        <div style={{ border: '1px solid #f0f0f0', padding: '16px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Total Bruto:</div>
-            <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.totalBruto)}</div>
-
-            <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Descuentos:</div>
-            <div style={{ textAlign: 'right', color: '#ff4d4f' }}>-{formatCurrency(totals.descuentos)}</div>
-
-            <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Subtotal:</div>
-            <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.subtotal)}</div>
-
-            <div style={{ textAlign: 'right', fontWeight: 500, color: '#666', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-              <span style={{ marginRight: '8px' }}>ReteIVA:</span>
-              <Select
-                value={totals.reteIVAPercentage}
-                style={{ width: '80px' }}
-                onChange={(value) => handleRetentionChange('reteIVA', value)}
-              >
-
-                <Select.Option value="15">15%</Select.Option>
-                <Select.Option value="0">0%</Select.Option>
-
-              </Select>
-            </div>
-            <div style={{ textAlign: 'right', color: '#ff4d4f' }}>-{formatCurrency(totals.reteIVA)}</div>
-
-            <div style={{ textAlign: 'right', fontWeight: 500, color: '#666', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-              <span style={{ marginRight: '8px' }}>ReteICA:</span>
-              <Select
-                value={totals.reteICAPercentage}
-                style={{ width: '80px' }}
-                onChange={(value) => handleRetentionChange('reteICA', value)}
-              >
-                <Select.Option value="13.8">13.8%</Select.Option>
-                <Select.Option value="11.04">11.04%</Select.Option>
-                <Select.Option value="9.66">9.66%</Select.Option>|
-                <Select.Option value="8">8%</Select.Option>
-                <Select.Option value="7">7%</Select.Option>
-                <Select.Option value="6.9">6.9%</Select.Option>
-                <Select.Option value="4.14">4.14%</Select.Option>
-                <Select.Option value="0">0%</Select.Option>
-              </Select>
-            </div>
-            <div style={{ textAlign: 'right', color: '#ff4d4f' }}>-{formatCurrency(totals.reteICA)}</div>
-          </div>
-          <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '8px', marginTop: '8px' }}>
-            <div className="bg-[#0052CC] text-white rounded-md py-2 px-4 flex justify-between items-center">
-              <div style={{ textAlign: 'right', fontWeight: 'bold', fontSize: '16px' }}>Total Neto:</div>
-              <div style={{ textAlign: 'right', fontWeight: 'bold', fontSize: '16px' }}>{formatCurrency(totals.totalNeto)}</div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {renderSummary()}
     </div>
   );
 };
