@@ -411,7 +411,7 @@ export default function Root() {
                     <span className={`text-gray-700 group-hover:text-white ${link.hoverClass}`}>
                       {isExpanded ? link.label : ""}
                     </span>
-                    
+
                   </button>
 
                   {activeSubMenu === link.label && isExpanded && (
@@ -480,7 +480,7 @@ export default function Root() {
 
         {/* Contenido principal */}
         <Layout.Content
-          className={`flex-1 overflow-x-hidden overflow-y-auto mt-8 ${isExpanded ? "ml-[17.5em]" : "ml-[5.3em]"} h-screen`}
+          className={`flex-1 overflow-x-hidden overflow-y-auto ${isExpanded ? "ml-[17.5em]" : "ml-[5.3em]"} h-screen`}
         >
           <Outlet context={{ setUnreadEmailsCount }} />
         </Layout.Content>

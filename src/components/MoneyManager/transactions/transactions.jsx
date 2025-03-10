@@ -284,9 +284,9 @@ const TransactionsDashboard = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-300">
+    <div className="flex flex-col h-screen bg-gray-300 ">
       {/* Header */}
-      <div className="bg-white sticky  z-10 shadow-sm">
+      <div className="bg-white sticky  z-10 shadow-sm p-4">
         <div className="max-w-7x2 mx-auto px-4 py-2">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">

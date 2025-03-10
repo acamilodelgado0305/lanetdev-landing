@@ -17,9 +17,9 @@ const IndexMoneyManager = () => {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
+  /* useEffect(() => {
     fetchTransactions();
-  }, []);
+  }, []); */
 
   const fetchTransactions = async () => {
     try {
@@ -112,7 +112,7 @@ const IndexMoneyManager = () => {
 
   return (
     <div className="flex flex-col bg-gray-100">
- 
+
 
       <main className="flex-1 bg-gray-100 w-full">
         <div className="w-full h-auto bg-gray-200">
