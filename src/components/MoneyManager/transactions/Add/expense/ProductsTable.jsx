@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Select, Input, Button, Divider } from 'antd';
+import { Table, Select, Input, Button, Divider, Checkbox } from 'antd';
 import { getCategorias } from "../../../../../services/moneymanager/moneyService";
-
 
 const formatCurrency = (value) => {
   return new Intl.NumberFormat('es-CO', {
@@ -12,16 +11,12 @@ const formatCurrency = (value) => {
   }).format(value);
 };
 
-
-const ProductsTable = ({
-  hasPercentageDiscount = false,
-  onDataChange,
-  hiddenDetails,
-  hiddenImpuestos // Nueva prop para ocultar impuestos
-}) => {
+const ProductsTable = ({ onDataChange, onHiddenDetailsChange }) => {
+  const [hasPercentageDiscount, setHasPercentageDiscount] = useState(false);
+  const [hiddenDetails, setHiddenDetails] = useState(false);
+  const [hiddenImpuestos, setHiddenImpuestos] = useState(false);
 
   const [categorias, setCategorias] = useState([]);
-  const [categoria, setcategoria] = useState([]);
   const [items, setItems] = useState([{
     key: '1',
     type: 'Gasto',
@@ -42,53 +37,55 @@ const ProductsTable = ({
     totalBruto: 0,
     descuentos: 0,
     subtotal: 0,
-    reteIVA: 0,
-    reteICA: 0,
+    iva: 0,
+    retencion: 0,
     totalNeto: 0,
-    reteIVAPercentage: "0",
-    reteICAPercentage: "0"
+    ivaPercentage: "0",
+    retencionPercentage: "0",
+    totalImpuestos: 0 // Nueva propiedad para almacenar el total en impuestos
   });
 
-  // Función para calcular el total de un ítem
-const calculateItemTotal = (item) => {
-  const quantity = parseFloat(item.quantity) || 0;
-  const unitPrice = parseFloat(item.unitPrice) || 0;
-  const discount = parseFloat(item.discount) || 0;
-  // Solo aplica impuestos si hiddenImpuestos es true
-  const taxCharge = hiddenImpuestos ? parseFloat(item.taxCharge) || 0 : 0;
-  const taxWithholding = hiddenImpuestos ? parseFloat(item.taxWithholding) || 0 : 0;
+  // Notify parent when hiddenDetails changes
+  useEffect(() => {
+    if (onHiddenDetailsChange) {
+      onHiddenDetailsChange(hiddenDetails);
+    }
+  }, [hiddenDetails, onHiddenDetailsChange]);
 
-  // Calcular valor bruto
-  let itemSubtotal = quantity * unitPrice;
+  const calculateItemTotal = (item) => {
+    const quantity = parseFloat(item.quantity) || 0;
+    const unitPrice = parseFloat(item.unitPrice) || 0;
+    const discount = parseFloat(item.discount) || 0;
+    const taxCharge = hiddenImpuestos ? 0 : parseFloat(item.taxCharge) || 0;
+    const taxWithholding = hiddenImpuestos ? 0 : parseFloat(item.taxWithholding) || 0;
 
-  // Aplicar descuento
-  const discountAmount = hasPercentageDiscount
-    ? itemSubtotal * (discount / 100)
-    : discount;
+    const itemBruto = quantity * unitPrice;
+    const discountAmount = hasPercentageDiscount
+      ? itemBruto * (discount / 100)
+      : discount;
+    const itemSubtotal = itemBruto - discountAmount;
+    const taxChargeAmount = itemSubtotal * (taxCharge / 100);
+    const taxWithholdingAmount = itemSubtotal * (taxWithholding / 100);
 
-  itemSubtotal -= discountAmount;
+    return itemSubtotal + taxChargeAmount - taxWithholdingAmount;
+  };
 
-  // Aplicar impuesto cargo (IVA)
-  const taxChargeAmount = itemSubtotal * (taxCharge / 100);
-
-  // Aplicar retención
-  const taxWithholdingAmount = itemSubtotal * (taxWithholding / 100);
-
-  // Total final
-  return itemSubtotal + taxChargeAmount - taxWithholdingAmount;
-};
-
+  // Función para obtener categorías, se ejecuta solo una vez al montar el componente
   const ObtenerCategorias = async () => {
     try {
       const data = await getCategorias();
-      setCategorias(data); // Almacena las categorías en el estado
+      setCategorias(data);
     } catch (err) {
       console.error("Error al cargar las categorías:", err);
     }
   };
 
+  // Cargar categorías solo una vez al montar el componente
+  useEffect(() => {
+    ObtenerCategorias();
+  }, []); // Lista de dependencias vacía para ejecutar solo al montar
 
-  // En NewExpenseTable, actualiza el useEffect:
+  // Efecto para notificar cambios al componente padre
   useEffect(() => {
     if (onDataChange) {
       const validItems = items.filter(item =>
@@ -102,53 +99,48 @@ const calculateItemTotal = (item) => {
         items: validItems,
         totals
       });
-      ObtenerCategorias();
     }
-  }, [items, totals]);
-  
+  }, [items, totals, onDataChange]); // Nota: Aquí ya no llamamos a ObtenerCategorias
+
+  // Efecto para calcular totales
   useEffect(() => {
     const newTotals = items.reduce((acc, item) => {
+      const totalItem = calculateItemTotal(item);
       const quantity = parseFloat(item.quantity) || 0;
       const unitPrice = parseFloat(item.unitPrice) || 0;
       const discount = parseFloat(item.discount) || 0;
-
-      // Valor bruto por ítem
+  
       const itemBruto = quantity * unitPrice;
-
-      // Descuento por ítem
       const itemDiscount = hasPercentageDiscount
         ? itemBruto * (discount / 100)
         : discount;
-
-      acc.totalBruto += itemBruto;
+  
+      acc.totalBruto += totalItem;
       acc.descuentos += itemDiscount;
-
+  
       return acc;
     }, {
       totalBruto: 0,
       descuentos: 0
     });
-
-    // Subtotal después de descuentos
-    const subtotal = newTotals.totalBruto - newTotals.descuentos;
-
-    // Calcular retenciones (solo si los impuestos no están ocultos)
-    const reteIVA = !hiddenImpuestos ? 0 : subtotal * (parseFloat(totals.reteIVAPercentage) / 100);
-    const reteICA = !hiddenImpuestos ? 0 : subtotal * (parseFloat(totals.reteICAPercentage) / 100);
-
-    // Total neto final
-    const totalNeto = subtotal - reteIVA - reteICA;
-
+  
+    const subtotal = newTotals.totalBruto;
+    const iva = hiddenImpuestos ? subtotal * (parseFloat(totals.ivaPercentage) / 100) : 0;
+    const retencion = hiddenImpuestos ? subtotal * (parseFloat(totals.retencionPercentage) / 100) : 0;
+    const totalNeto = subtotal + iva - retencion;
+    const totalImpuestos = iva - retencion; // Cálculo del total en impuestos (IVA - Retención)
+  
     setTotals({
       ...totals,
       totalBruto: newTotals.totalBruto,
       descuentos: newTotals.descuentos,
       subtotal: subtotal,
-      reteIVA: reteIVA,
-      reteICA: reteICA,
-      totalNeto: totalNeto
+      iva: iva,
+      retencion: retencion,
+      totalNeto: totalNeto,
+      totalImpuestos: totalImpuestos // Guardamos el total en impuestos
     });
-  }, [items, hasPercentageDiscount, totals.reteIVAPercentage, totals.reteICAPercentage, hiddenImpuestos]);
+  }, [items, hasPercentageDiscount, totals.ivaPercentage, totals.retencionPercentage, hiddenImpuestos]);
 
   const handleAddRow = () => {
     const newKey = (items.length + 1).toString();
@@ -210,64 +202,58 @@ const calculateItemTotal = (item) => {
         </Select>
       )
     },
-    // Columna "Categoría" condicional
-    ...(!hiddenDetails
-      ? [] 
-      : [
-        // Dentro de la columna 'Categoría' en la definición de columns
-        {
-          title: 'Categoría',
-          dataIndex: 'categoria',
-          width: 120,
-          render: (text, record) => {
-            // Obtener categorías usadas por otras filas
-            const usedCategories = items
-              .filter(item => item.key !== record.key)
-              .map(item => item.categoria);
+    ...(hiddenDetails
+      ? [
+          {
+            title: 'Categoría',
+            dataIndex: 'categoria',
+            width: 120,
+            render: (text, record) => {
+              const usedCategories = items
+                .filter(item => item.key !== record.key)
+                .map(item => item.categoria);
+              const availableCategorias = categorias.filter(cat =>
+                !usedCategories.includes(cat.id)
+              );
 
-            // Filtrar categorías disponibles
-            const availableCategorias = categorias.filter(cat =>
-              !usedCategories.includes(cat.id)
-            );
-
-            return (
-              <Select
-                value={record.categoria} // Usar la categoría de la fila actual
-                onChange={(value) => handleValueChange(record.key, 'categoria', value)}
-                className="w-[8em]"
-                placeholder="Selecciona una categoría"
-                dropdownRender={(menu) => (
-                  <div>
-                    {menu}
-                    <Divider style={{ margin: '8px 0' }} />
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'center',
-                        padding: '8px',
-                        cursor: 'pointer',
-                      }}
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => {
-                        console.log("Redirigiendo a crear categoría...");
-                      }}
-                    >
-                      Crear categoría
+              return (
+                <Select
+                  value={record.categoria}
+                  onChange={(value) => handleValueChange(record.key, 'categoria', value)}
+                  className="w-[8em]"
+                  placeholder="Selecciona una categoría"
+                  dropdownRender={(menu) => (
+                    <div>
+                      {menu}
+                      <Divider style={{ margin: '8px 0' }} />
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'center',
+                          padding: '8px',
+                          cursor: 'pointer',
+                        }}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          console.log("Redirigiendo a crear categoría...");
+                        }}
+                      >
+                        Crear categoría
+                      </div>
                     </div>
-                  </div>
-                )}
-              >
-                {/* Mostrar solo categorías disponibles */}
-                {availableCategorias.map((cat) => (
-                  <Select.Option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </Select.Option>
-                ))}
-              </Select>
-            );
-          },
-        }
-      ]),
+                  )}
+                >
+                  {availableCategorias.map((cat) => (
+                    <Select.Option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </Select.Option>
+                  ))}
+                </Select>
+              );
+            },
+          }
+        ]
+      : []),
     {
       title: 'Producto',
       dataIndex: 'product',
@@ -332,11 +318,8 @@ const calculateItemTotal = (item) => {
         />
       )
     },
-    
-    // Columna "Impuesto Cargo" condicional
     ...(!hiddenImpuestos
-      ? []
-      : [
+      ? [
           {
             title: 'Impuesto Cargo',
             dataIndex: 'taxCharge',
@@ -377,13 +360,13 @@ const calculateItemTotal = (item) => {
               </Select>
             )
           }
-        ]),
-    
+        ]
+      : []),
     {
       title: 'Valor Total',
       dataIndex: 'total',
       width: 120,
-      render: (text) => text.toFixed(2)
+      render: (text) => formatCurrency(text)
     },
     {
       title: '',
@@ -402,7 +385,6 @@ const calculateItemTotal = (item) => {
     }
   ];
 
-  // Sección de resumen condicional para impuestos
   const renderSummary = () => {
     return (
       <div style={{ marginTop: '16px', width: '100%', maxWidth: '400px', marginLeft: 'auto' }}>
@@ -410,46 +392,50 @@ const calculateItemTotal = (item) => {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
             <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Total Bruto:</div>
             <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.totalBruto)}</div>
-
+  
             <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Descuentos:</div>
             <div style={{ textAlign: 'right', color: '#ff4d4f' }}>-{formatCurrency(totals.descuentos)}</div>
-
+  
             <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Subtotal:</div>
             <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.subtotal)}</div>
-
-            {!hiddenImpuestos && (
+  
+            {hiddenImpuestos && (
               <>
                 <div style={{ textAlign: 'right', fontWeight: 500, color: '#666', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-                  <span style={{ marginRight: '8px' }}>ReteIVA:</span>
+                  <span style={{ marginRight: '8px' }}>IVA:</span>
                   <Select
-                    value={totals.reteIVAPercentage}
-                    style={{ width: '80px' }}
-                    onChange={(value) => handleRetentionChange('reteIVA', value)}
+                    value={totals.ivaPercentage}
+                    style={{ width: '120px' }}
+                    onChange={(value) => handleRetentionChange('iva', value)}
                   >
-                    <Select.Option value="15">15%</Select.Option>
-                    <Select.Option value="0">0%</Select.Option>
+                    <Select.Option value="19">IVA 19%</Select.Option>
+                    <Select.Option value="5">IVA 5%</Select.Option>
+                    <Select.Option value="0">IVA 0%</Select.Option>
+                    <Select.Option value="8">Ipoconsumo 8%</Select.Option>
                   </Select>
                 </div>
-                <div style={{ textAlign: 'right', color: '#ff4d4f' }}>-{formatCurrency(totals.reteIVA)}</div>
-
+                <div style={{ textAlign: 'right', color: '#ff4d4f' }}>{formatCurrency(totals.iva)}</div>
+  
                 <div style={{ textAlign: 'right', fontWeight: 500, color: '#666', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-                  <span style={{ marginRight: '8px' }}>ReteICA:</span>
+                  <span style={{ marginRight: '8px' }}>Retención:</span>
                   <Select
-                    value={totals.reteICAPercentage}
-                    style={{ width: '80px' }}
-                    onChange={(value) => handleRetentionChange('reteICA', value)}
+                    value={totals.retencionPercentage}
+                    style={{ width: '120px' }}
+                    onChange={(value) => handleRetentionChange('retencion', value)}
                   >
-                    <Select.Option value="13.8">13.8%</Select.Option>
-                    <Select.Option value="11.04">11.04%</Select.Option>
-                    <Select.Option value="9.66">9.66%</Select.Option>|
-                    <Select.Option value="8">8%</Select.Option>
-                    <Select.Option value="7">7%</Select.Option>
-                    <Select.Option value="6.9">6.9%</Select.Option>
-                    <Select.Option value="4.14">4.14%</Select.Option>
-                    <Select.Option value="0">0%</Select.Option>
+                    <Select.Option value="11">Rete 11%</Select.Option>
+                    <Select.Option value="10">Rete 10%</Select.Option>
+                    <Select.Option value="7">Rete 7%</Select.Option>
+                    <Select.Option value="6">Rete 6%</Select.Option>
+                    <Select.Option value="4">Rete 4%</Select.Option>
+                    <Select.Option value="3.5">Rete 3.5%</Select.Option>
+                    <Select.Option value="2.5">Rete 2.5%</Select.Option>
+                    <Select.Option value="2">Rete 2%</Select.Option>
+                    <Select.Option value="1">Rete 1%</Select.Option>
+                    <Select.Option value="0">Rete 0%</Select.Option>
                   </Select>
                 </div>
-                <div style={{ textAlign: 'right', color: '#ff4d4f' }}>-{formatCurrency(totals.reteICA)}</div>
+                <div style={{ textAlign: 'right', color: '#ff4d4f' }}>-{formatCurrency(totals.retencion)}</div>
               </>
             )}
           </div>
@@ -458,14 +444,47 @@ const calculateItemTotal = (item) => {
               <div style={{ textAlign: 'right', fontWeight: 'bold', fontSize: '16px' }}>Total Neto:</div>
               <div style={{ textAlign: 'right', fontWeight: 'bold', fontSize: '16px' }}>{formatCurrency(totals.totalNeto)}</div>
             </div>
+            {/* Mostrar el total en impuestos justo después del total neto */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '8px' }}>
+              <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Total en Impuestos:</div>
+              <div style={{ textAlign: 'right', fontWeight: 500, color: totals.totalImpuestos >= 0 ? '#52c41a' : '#ff4d4f' }}>
+                {totals.totalImpuestos >= 0 ? '+' : ''}{formatCurrency(totals.totalImpuestos)}
+              </div>
+            </div>
           </div>
         </div>
       </div>
     );
   };
 
+  const renderOptions = () => {
+    return (
+      <div style={{ marginBottom: '16px' }}>
+        <Checkbox
+          checked={hasPercentageDiscount}
+          onChange={(e) => setHasPercentageDiscount(e.target.checked)}
+        >
+          Descuento en porcentaje
+        </Checkbox>
+        <Checkbox
+          checked={hiddenDetails}
+          onChange={(e) => setHiddenDetails(e.target.checked)}
+        >
+          Mostrar detalles (categorías)
+        </Checkbox>
+        <Checkbox
+          checked={!hiddenImpuestos}
+          onChange={(e) => setHiddenImpuestos(!e.target.checked)}
+        >
+          Incluir impuestos por producto
+        </Checkbox>
+      </div>
+    );
+  };
+
   return (
     <div style={{ width: '100%' }}>
+      {renderOptions()}
       <Table
         dataSource={items}
         columns={columns}
@@ -474,7 +493,6 @@ const calculateItemTotal = (item) => {
         bordered
         style={{ width: '100%' }}
       />
-
       <Button
         onClick={handleAddRow}
         type="dashed"
@@ -482,7 +500,6 @@ const calculateItemTotal = (item) => {
       >
         + Agregar línea
       </Button>
-
       {renderSummary()}
     </div>
   );

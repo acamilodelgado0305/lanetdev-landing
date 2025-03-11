@@ -343,7 +343,7 @@ const TransactionsDashboard = () => {
                 }}
                 onClick={() => navigate('/index/moneymanager/transactions/nuevoingreso', { state: { returnTab: 'incomes' } })}
               >
-                Crear Ingreso
+                Nuevo Ingreso
               </Button>
 
 
@@ -362,7 +362,7 @@ const TransactionsDashboard = () => {
                 }}
                 onClick={() => navigate('/index/moneymanager/transactions/nuevoegreso', { state: { returnTab: 'expenses' } })}
               >
-                Crear Egreso
+                Nuevo Egreso
               </Button>
               <Tooltip title="Crear Transferencia">
                 <Button
@@ -378,7 +378,7 @@ const TransactionsDashboard = () => {
                   }}
                   onClick={openTransferModal}
                 >
-
+                  Nueva Trasferencia
                 </Button>
 
               </Tooltip>
