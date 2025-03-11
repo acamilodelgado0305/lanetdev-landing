@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Table, Input, Drawer, Button, Checkbox, DatePicker, Dropdown, Menu, Card, Tag, Tooltip, Space, Typography, Divider, Select, Row, Col, Statistic } from "antd";
+import { Table, Input, Drawer, Button, Checkbox, DatePicker, Dropdown, Menu, Card, Tag, Tooltip, Typography, Divider, Select, Row, Col, Statistic } from "antd";
 import { format as formatDate, subMonths, addMonths, startOfMonth, endOfMonth, isWithinInterval, isValid } from "date-fns";
 import { es } from "date-fns/locale";
 import { DateTime } from "luxon";
@@ -737,7 +737,7 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
             <div className="bg-white py-2 px-5 shadow-sm">
                 <div className="flex  justify-between items-center">
                     {/* Left side: Actions */}
-                    <div className="flex items-center space-x-1">
+                    <div className="flex items-center ">
                         <Button
                             icon={<FilterOutlined />}
                             onClick={() => setShowFilters(!showFilters)}
@@ -745,7 +745,7 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
                             {showFilters ? "Filtro" : "Filtro"}
                         </Button>
                     </div>
-                    <div className="flex items-center">
+                    <div className="flex items-center ">
                         <div className="mr-3">
                             <div className="flex items-center justify-end ">
                                 <div className="bg-white px-2  text-center flex-none w-26">
