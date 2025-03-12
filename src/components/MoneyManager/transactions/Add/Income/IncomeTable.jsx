@@ -394,37 +394,7 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
         switch (operation) {
             case 'download':
                 // Logic to download all vouchers from selected items
-                const allVouchers = selectedItems.flatMap(item => item.voucher || []);
-                if (allVouchers.length > 0) {
-                    downloadAllImages(allVouchers);
-                } else {
-                    Swal.fire({
-                        title: 'Sin comprobantes',
-                        text: 'No hay comprobantes disponibles para descargar',
-                        icon: 'info',
-                        confirmButtonColor: '#3085d6',
-                        confirmButtonText: 'Entendido'
-                    });
-                }
-                break;
-            case 'export':
-                // Export selected items to CSV or Excel
-                console.log("Exportar seleccionados:", selectedItems);
-                // Add your export logic here
-                break;
-            case 'edit':
-                // Navigate to edit page for the selected item (only works with one selection)
-                if (selectedRowKeys.length > 1) {
-                    Swal.fire({
-                        title: 'Múltiples selecciones',
-                        text: 'Solo puede editar un registro a la vez',
-                        icon: 'warning',
-                        confirmButtonColor: '#3085d6',
-                        confirmButtonText: 'Entendido'
-                    });
-                } else {
-                    navigate(`/index/moneymanager/ingresos/edit/${selectedRowKeys[0]}`);
-                }
+               
                 break;
             case 'delete':
                 // Delete selected items
@@ -557,17 +527,25 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
     const columns = [
         {
             title: (
-                <Tooltip title="Número de arqueo">
-                    <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                        N° Arqueo
-                        <Input
-                            prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
 
-                            onChange={(e) => handleSearch(e.target.value, "arqueo_number")}
-                            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
-                        />
-                    </div>
-                </Tooltip>
+                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    N° Arqueo
+                    <input
+                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+
+                        onChange={(e) => handleSearch(e.target.value, "arqueo_number")}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: '1px solid #d9d9d9', // Borde gris claro
+                            borderRadius: 4, // Bordes redondeados para un diseño más profesional
+                            outline: 'none', // Elimina el borde de enfoque predeterminado del navegador
+                        }}
+                    />
+                </div>
+
             ),
             dataIndex: "arqueo_number",
             key: "arqueo_number",
@@ -577,16 +555,24 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
         },
         {
             title: (
-                <Tooltip title="Fecha de registro">
-                    <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                        Fecha
-                        <Input
-                            prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                            onChange={(e) => handleSearch(e.target.value, "date")}
-                            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
-                        />
-                    </div>
-                </Tooltip>
+
+                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Fecha
+                    <input
+                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                        onChange={(e) => handleSearch(e.target.value, "date")}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: '1px solid #d9d9d9', // Borde gris claro
+                            borderRadius: 4, // Bordes redondeados para un diseño más profesional
+                            outline: 'none', // Elimina el borde de enfoque predeterminado del navegador
+                        }}
+                    />
+                </div>
+
             ),
             dataIndex: "date",
             key: "date",
@@ -599,11 +585,19 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
             title: (
                 <div className="flex flex-col" style={{ margin: "2px 0", gap: 1, lineHeight: 1 }}>
                     Titulo
-                    <Input
-                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                    <input
+                        prefix={<SearchOutlined style={{ color: '#d9d9d9' }} />}
 
                         onChange={(e) => handleSearch(e.target.value, "description")}
-                        style={{ marginTop: 2, padding: 4, height: 25, fontSize: 12 }}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: '1px solid #d9d9d9', // Borde gris claro
+                            borderRadius: 4, // Bordes redondeados para un diseño más profesional
+                            outline: 'none', // Elimina el borde de enfoque predeterminado del navegador
+                        }}
                     />
                 </div>
             ),
@@ -618,10 +612,18 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
             title: (
                 <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
                     Cuenta
-                    <Input
+                    <input
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
                         onChange={(e) => handleSearch(e.target.value, "account_id")}
-                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: '1px solid #d9d9d9', // Borde gris claro
+                            borderRadius: 4, // Bordes redondeados para un diseño más profesional
+                            outline: 'none', // Elimina el borde de enfoque predeterminado del navegador
+                        }}
                     />
                 </div>
             ),
@@ -637,10 +639,18 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
             title: (
                 <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
                     Cajero
-                    <Input
+                    <input
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
                         onChange={(e) => handleSearch(e.target.value, "cashier_id")}
-                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: '1px solid #d9d9d9', // Borde gris claro
+                            borderRadius: 4, // Bordes redondeados para un diseño más profesional
+                            outline: 'none', // Elimina el borde de enfoque predeterminado del navegador
+                        }}
                     />
                 </div>
             ),
@@ -654,10 +664,18 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
             title: (
                 <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
                     Monto Total
-                    <Input
+                    <input
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
                         onChange={(e) => handleSearch(e.target.value, "amount")}
-                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: '1px solid #d9d9d9', // Borde gris claro
+                            borderRadius: 4, // Bordes redondeados para un diseño más profesional
+                            outline: 'none', // Elimina el borde de enfoque predeterminado del navegador
+                        }}
                     />
                 </div>
             ),
@@ -670,16 +688,24 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
         },
         {
             title: (
-                <Tooltip title="Fecha de inicio">
+                
                     <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
                         Desde
-                        <Input
+                        <input
                             prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
                             onChange={(e) => handleSearch(e.target.value, "start_period")}
-                            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                            style={{
+                                marginTop: 2,
+                                padding: 4,
+                                height: 28,
+                                fontSize: 12,
+                                border: '1px solid #d9d9d9', // Borde gris claro
+                                borderRadius: 4, // Bordes redondeados para un diseño más profesional
+                                outline: 'none', // Elimina el borde de enfoque predeterminado del navegador
+                            }}
                         />
                     </div>
-                </Tooltip>
+              
             ),
             dataIndex: "start_period",
             key: "start_period",
@@ -690,16 +716,24 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
         },
         {
             title: (
-                <Tooltip title="Fecha de finalizacion">
+                
                     <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
                         Hasta
                         <Input
                             prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
                             onChange={(e) => handleSearch(e.target.value, "end_period")}
-                            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                            style={{
+                                marginTop: 2,
+                                padding: 4,
+                                height: 28,
+                                fontSize: 12,
+                                border: '1px solid #d9d9d9', // Borde gris claro
+                                borderRadius: 4, // Bordes redondeados para un diseño más profesional
+                                outline: 'none', // Elimina el borde de enfoque predeterminado del navegador
+                            }}
                         />
                     </div>
-                </Tooltip>
+         
             ),
             dataIndex: "end_period",
             key: "end_period",
@@ -862,33 +896,33 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
 
             <div className="px-5 py-2 bg-white">
 
-            <Table
-                rowSelection={rowSelection}
-                dataSource={filteredEntries}
-                columns={columns}
-                rowKey={(record) => record.id}
-                pagination={false} // Desactiva la paginación
-                bordered
-                size="middle"
-                loading={entriesLoading}
-                onRow={(record) => ({
-                    onClick: (e) => {
-                        if (e.target.tagName !== "INPUT" && e.target.tagName !== "BUTTON" && e.target.tagName !== "A") {
-                            handleRowClick(record);
-                        }
-                    },
-                })}
-                rowClassName="hover:bg-gray-50 transition-colors"
-                scroll={{ x: 'max-content' }}
-                summary={pageData => {
-                    if (pageData.length === 0) return null;
-                    const totalAmount = pageData.reduce((total, item) => total + (item.amount || 0), 0);
-                }}
-            />
+                <Table
+                    rowSelection={rowSelection}
+                    dataSource={filteredEntries}
+                    columns={columns}
+                    rowKey={(record) => record.id}
+                    pagination={false} // Desactiva la paginación
+                    bordered
+                    size="middle"
+                    loading={entriesLoading}
+                    onRow={(record) => ({
+                        onClick: (e) => {
+                            if (e.target.tagName !== "INPUT" && e.target.tagName !== "BUTTON" && e.target.tagName !== "A") {
+                                handleRowClick(record);
+                            }
+                        },
+                    })}
+                    rowClassName="hover:bg-gray-50 transition-colors"
+                    scroll={{ x: 'max-content' }}
+                    summary={pageData => {
+                        if (pageData.length === 0) return null;
+                        const totalAmount = pageData.reduce((total, item) => total + (item.amount || 0), 0);
+                    }}
+                />
 
             </div>
 
-           
+
 
 
 

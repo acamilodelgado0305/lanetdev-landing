@@ -163,7 +163,7 @@ i {
 /* En tu archivo CSS */
 
 body {
-  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Inter', sans-serif;
   background-color: #f4f4f4;
   margin: 0;
   padding: 0;
@@ -303,7 +303,7 @@ input[type="email"]:focus {
   /* Esquinas redondeadas sutiles */
   color: #ffffff;
   /* Texto blanco nítido */
-  font-family: -apple-system, sans-serif;
+  font-family: 'Inter', sans-serif;
   /* Fuente de sistema consistente */
   font-size: 15px;
   /* Tamaño de texto legible */
@@ -337,7 +337,7 @@ input[type="email"]:focus {
   /* Esquinas redondeadas sutiles */
   color: #333;
   /* Texto gris oscuro */
-  font-family: -apple-system, sans-serif;
+  font-family: 'Inter', sans-serif;
   /* Fuente de sistema consistente */
   font-size: 15px;
   /* Tamaño de texto legible */
@@ -380,7 +380,7 @@ input[type="email"]:focus {
 
 /* Title styling */
 .main-title {
-  font-family: -apple-system, sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 24px;
   font-weight: bold;
   text-align: center;
@@ -412,7 +412,7 @@ input[type="email"]:focus {
 }
 
 .card-inner h3 {
-  font-family: -apple-system, sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 16px;
   font-weight: bold;
   color: #333;
@@ -426,7 +426,7 @@ input[type="email"]:focus {
 }
 
 .card h1 {
-  font-family: -apple-system, sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 36px;
   font-weight: bold;
   color: #333;

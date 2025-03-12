@@ -616,16 +616,24 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
     const columns = [
         {
             title: (
-                <Tooltip title="Número de Egreso">
+             
                     <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
                         N° de egreso
-                        <Input
+                        <input
                             prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
                             onChange={(e) => handleSearch(e.target.value, "invoice_number")}
-                            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                            style={{
+                                marginTop: 2,
+                                padding: 4,
+                                height: 28,
+                                fontSize: 12,
+                                border: '1px solid #d9d9d9', // Borde gris claro
+                                borderRadius: 4, // Bordes redondeados para un diseño más profesional
+                                outline: 'none', // Elimina el borde de enfoque predeterminado del navegador
+                            }}
                         />
                     </div>
-                </Tooltip>
+            
             ),
             dataIndex: "invoice_number",
             key: "invoice_number",
@@ -635,16 +643,24 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
         },
         {
             title: (
-                <Tooltip title="Fecha de registro">
+               
                     <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
                         Fecha
                         <Input
                             prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
                             onChange={(e) => handleSearch(e.target.value, "date")}
-                            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                            style={{
+                                marginTop: 2,
+                                padding: 4,
+                                height: 28,
+                                fontSize: 12,
+                                border: '1px solid #d9d9d9', // Borde gris claro
+                                borderRadius: 4, // Bordes redondeados para un diseño más profesional
+                                outline: 'none', // Elimina el borde de enfoque predeterminado del navegador
+                            }}
                         />
                     </div>
-                </Tooltip>
+               
             ),
             dataIndex: "date",
             key: "date",
@@ -657,11 +673,19 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
             title: (
                 <div className="flex flex-col" style={{ margin: "2px 0", gap: 1, lineHeight: 1 }}>
                     Titulo
-                    <Input
+                    <input
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
 
                         onChange={(e) => handleSearch(e.target.value, "description")}
-                        style={{ marginTop: 2, padding: 4, height: 25, fontSize: 12 }}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: '1px solid #d9d9d9', // Borde gris claro
+                            borderRadius: 4, // Bordes redondeados para un diseño más profesional
+                            outline: 'none', // Elimina el borde de enfoque predeterminado del navegador
+                        }}
                     />
                 </div>
             ),
@@ -676,10 +700,18 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
             title: (
                 <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
                     Cuenta
-                    <Input
+                    <input
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
                         onChange={(e) => handleSearch(e.target.value, "account_id")}
-                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: '1px solid #d9d9d9', // Borde gris claro
+                            borderRadius: 4, // Bordes redondeados para un diseño más profesional
+                            outline: 'none', // Elimina el borde de enfoque predeterminado del navegador
+                        }}
                     />
                 </div>
             ),
@@ -694,10 +726,18 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
             title: (
                 <div className="flex flex-col" style={{ margin: "2px 0", gap: 1, lineHeight: 1 }}>
                     Proveedor
-                    <Input
+                    <input
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
                         onChange={(e) => handleSearch(e.target.value, "provider_id")}
-                        style={{ marginTop: 2, padding: 4, height: 25, fontSize: 12 }}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: '1px solid #d9d9d9', // Borde gris claro
+                            borderRadius: 4, // Bordes redondeados para un diseño más profesional
+                            outline: 'none', // Elimina el borde de enfoque predeterminado del navegador
+                        }}
                     />
                 </div>
             ),
@@ -716,10 +756,18 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
             title: (
                 <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
                     Base
-                    <Input
+                    <input
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
                         onChange={(e) => handleSearch(e.target.value, "total_gross")}
-                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: '1px solid #d9d9d9', // Borde gris claro
+                            borderRadius: 4, // Bordes redondeados para un diseño más profesional
+                            outline: 'none', // Elimina el borde de enfoque predeterminado del navegador
+                        }}
                     />
                 </div>
             ),
@@ -734,10 +782,18 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
             title: (
                 <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
                     Impuestos
-                    <Input
+                    <input
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
                         onChange={(e) => handleSearch(e.target.value, "discounts")}
-                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: '1px solid #d9d9d9', // Borde gris claro
+                            borderRadius: 4, // Bordes redondeados para un diseño más profesional
+                            outline: 'none', // Elimina el borde de enfoque predeterminado del navegador
+                        }}
                     />
                 </div>
             ),
@@ -753,10 +809,18 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
             title: (
                 <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
                     Total Neto
-                    <Input
+                    <input
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
                         onChange={(e) => handleSearch(e.target.value, "total_net")}
-                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: '1px solid #d9d9d9', // Borde gris claro
+                            borderRadius: 4, // Bordes redondeados para un diseño más profesional
+                            outline: 'none', // Elimina el borde de enfoque predeterminado del navegador
+                        }}
                     />
                 </div>
             ),

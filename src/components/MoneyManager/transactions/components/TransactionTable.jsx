@@ -566,17 +566,25 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
     const columns = [
         {
             title: (
-                <Tooltip title="Número de Egreso">
+                
                     <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
                         De la cuenta
                         <Input
-                            placeholder="Buscar"
+                           
                             onChange={(e) => handleSearch(e.target.value, "from_account_id")}
-                            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                            style={{
+                                marginTop: 2,
+                                padding: 4,
+                                height: 28,
+                                fontSize: 12,
+                                border: '1px solid #d9d9d9', // Borde gris claro
+                                borderRadius: 4, // Bordes redondeados para un diseño más profesional
+                                outline: 'none', // Elimina el borde de enfoque predeterminado del navegador
+                            }}
                         />
 
                     </div>
-                </Tooltip>
+                
             ),
             dataIndex: "from_account_id",
             key: "from_account_id",
@@ -592,17 +600,25 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
         },
         {
             title: (
-                <Tooltip title="Fecha de registro">
+             
                     <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
                         A la cuenta
-                        <Input
-                        placeholder="Buscar"
+                        <input
+                        
                         onChange={(e) => handleSearch(e.target.value, "to_account_id")}
-                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: '1px solid #d9d9d9', // Borde gris claro
+                            borderRadius: 4, // Bordes redondeados para un diseño más profesional
+                            outline: 'none', // Elimina el borde de enfoque predeterminado del navegador
+                        }}
                     />
 
                     </div>
-                </Tooltip>
+             
             ),
             dataIndex: "to_account_id",
             key: "to_account_id",
@@ -619,11 +635,19 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
             title: (
                 <div className="flex flex-col" style={{ margin: "2px 0", gap: 1, lineHeight: 1 }}>
                     Titulo
-                    <Input
+                    <input
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
 
                         onChange={(e) => handleSearch(e.target.value, "description")}
-                        style={{ marginTop: 2, padding: 4, height: 25, fontSize: 12 }}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: '1px solid #d9d9d9', // Borde gris claro
+                            borderRadius: 4, // Bordes redondeados para un diseño más profesional
+                            outline: 'none', // Elimina el borde de enfoque predeterminado del navegador
+                        }}
                     />
                 </div>
             ),
@@ -639,11 +663,19 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
             title: (
                 <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
                     Monto
-                    <Input
+                    <input
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                        placeholder="Buscar"
+                       
                         onChange={(e) => handleSearch(e.target.value, "amount")}
-                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: '1px solid #d9d9d9', // Borde gris claro
+                            borderRadius: 4, // Bordes redondeados para un diseño más profesional
+                            outline: 'none', // Elimina el borde de enfoque predeterminado del navegador
+                        }}
                     />
                 </div>
             ),
@@ -817,11 +849,7 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
                 dataSource={filteredEntries}
                 columns={columns}
                 rowKey={(record) => record.id}
-                pagination={{
-                    pageSize: 10,
-                    showSizeChanger: true,
-                    showTotal: (total, range) => `${range[0]}-${range[1]} de ${total} registros`
-                }}
+               
                 bordered
                 size="middle"
                 loading={entriesLoading}
