@@ -290,13 +290,13 @@ const TransactionsDashboard = () => {
         <div className="max-w-7x2 mx-auto px-4 py-2">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center ">
 
                 <div className="pt-10 pl-4 pr-4 flex flex-col">
                   <span className="text-gray-400 text-sm ">Área de Contabilidad</span>
-                  <Title level={2} className="text-lg font-bold">
-                    Gestión de Transacciones
-                  </Title>
+                  <p level={2} className="text-2xl font-bold">
+                    GESTIÓN DE TRANSACCIONES
+                  </p>
                 </div>
               </div>
 
@@ -343,7 +343,7 @@ const TransactionsDashboard = () => {
                 }}
                 onClick={() => navigate('/index/moneymanager/transactions/nuevoingreso', { state: { returnTab: 'incomes' } })}
               >
-                Crear Ingreso
+                Nuevo Ingreso
               </Button>
 
 
@@ -362,7 +362,7 @@ const TransactionsDashboard = () => {
                 }}
                 onClick={() => navigate('/index/moneymanager/transactions/nuevoegreso', { state: { returnTab: 'expenses' } })}
               >
-                Crear Egreso
+                Nuevo Egreso
               </Button>
               <Tooltip title="Crear Transferencia">
                 <Button
@@ -378,7 +378,7 @@ const TransactionsDashboard = () => {
                   }}
                   onClick={openTransferModal}
                 >
-
+                  Nueva Trasferencia
                 </Button>
 
               </Tooltip>
@@ -390,25 +390,25 @@ const TransactionsDashboard = () => {
           <div className="mt-[-1em] border-b-4 border-gray-300 ">
             <div className="flex  overflow-x-auto">
               <div
-                className={`py-2 px-4 cursor-pointer border-b-3 ${activeTab === 'resumen' ? 'border-[#0052CC] text-[#0052CC]' : 'border-transparent text-gray-600'}`}
+                className={`py-2 px-4 cursor-pointer border-b-3 ${activeTab === 'resumen' ? 'border-gray-700 text-gray-700' : 'border-transparent text-gray-800'}`}
                 onClick={() => handleTabChange('resumen')}
               >
                 Resumen
               </div>
               <div
-                className={`py-2 px-4 cursor-pointer border-b-2 ${activeTab === 'incomes' ? 'border-[#0052CC] text-[#0052CC]' : 'border-transparent text-gray-600'}`}
+                className={`py-2 px-4 cursor-pointer border-b-2 ${activeTab === 'incomes' ? 'border-gray-700 text-gray-700' : 'border-transparent text-gray-800'}`}
                 onClick={() => handleTabChange('incomes')}
               >
                 Ingresos
               </div>
               <div
-                className={`py-2 px-4 cursor-pointer border-b-2 ${activeTab === 'expenses' ? 'border-[#0052CC] text-[#0052CC]' : 'border-transparent text-gray-600'}`}
+                className={`py-2 px-4 cursor-pointer border-b-2 ${activeTab === 'expenses' ? 'border-gray-700 text-gray-700' : 'border-transparent text-gray-800'}`}
                 onClick={() => handleTabChange('expenses')}
               >
                 Egresos
               </div>
               <div
-                className={`py-2 px-4 cursor-pointer border-b-2 ${activeTab === 'transfers' ? 'border-[#0052CC] text-[#0052CC]' : 'border-transparent text-gray-600'}`}
+                className={`py-2 px-4 cursor-pointer border-b-2 ${activeTab === 'transfers' ? 'border-gray-700 text-gray-700' : 'border-transparent text-gray-800'}`}
                 onClick={() => handleTabChange('transfers')}
               >
                 Transferencias

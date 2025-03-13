@@ -350,8 +350,8 @@ export default function Root() {
 
         {/* Sidebar */}
         <div
-          className={`${isExpanded ? "w-60" : "w-18"} 
-          border-r-2 border-gray-300
+          className={`border-2 border-gray-300 ${isExpanded ? "w-60" : "w-18"} 
+          
                 bg-white text-gray-800 ${isOpen ? "block" : "hidden"} 
                py-5 lg:block fixed top-0 left-0 h-full transition-all duration-300`}
         >
