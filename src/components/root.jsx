@@ -335,7 +335,7 @@ export default function Root() {
         {/* Botón de menú móvil */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="lg:hidden fixed top-4 left-4 bg-gray-800 text-white p-2 rounded-md shadow-lg transition-all duration-300 hover:bg-gray-700 z-50"
+          className="lg:hidden fixed top-4 left-4 bg-gray-800 text-white p-2 rounded-md shadow-lg transition-all duration-300 hover:bg-gray-700 z-10"
         >
           <MenuOutlined />
         </button>
