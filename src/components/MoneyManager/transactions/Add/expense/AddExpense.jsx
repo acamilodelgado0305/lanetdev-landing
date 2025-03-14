@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { IoClose } from "react-icons/io5";
 import AccountSelector from "../AccountSelector ";
 import CategorySelector from "../CategorySelector";
@@ -10,7 +10,7 @@ import { UploadOutlined, DownloadOutlined, FileTextOutlined } from "@ant-design/
 import axios from "axios";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import ExpenseVoucherSection from "./ExpenseVoucherSection";
-import NewExpenseTable from "./ProductsTable";
+import ProductsTable from "./ProductsTable";
 import { getCategorias } from "../../../../../services/moneymanager/moneyService";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -25,9 +25,10 @@ const AddExpense = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const returnTab = location.state?.returnTab || "egresos";
-  const [amount, setAmount] = useState("");
+  
+  // Estados para los campos del formulario
   const [account, setAccount] = useState("");
-  const [voucher, setVoucher] = useState("");
+  const [voucher, setVoucher] = useState([]);
   const [description, setDescription] = useState("");
   const [comentarios, setComentarios] = useState("");
   const [categorias, setCategorias] = useState([]);
@@ -43,6 +44,7 @@ const AddExpense = () => {
   const [isExpenseSaved, setIsExpenseSaved] = useState(false);
   const [isHiddenDetails, setIsHiddenDetails] = useState(false);
 
+  // Estado para la tabla de ítems y totales
   const [expenseTableData, setExpenseTableData] = useState({
     items: [],
     totals: {
@@ -58,6 +60,10 @@ const AddExpense = () => {
     },
   });
 
+  // Memoizar expenseTableData.items para evitar cambios innecesarios
+  const memoizedItems = useMemo(() => expenseTableData.items, [expenseTableData.items]);
+
+  // Cargar datos iniciales
   useEffect(() => {
     if (id) {
       fetchExpenseData();
@@ -67,48 +73,77 @@ const AddExpense = () => {
     ObtenerCategorias();
   }, [id]);
 
+  // Función para parsear valores numéricos que llegan como cadenas
+  const parseNumber = (value) => {
+    if (value === null || value === undefined || value === "") return 0;
+    return parseFloat(value) || 0;
+  };
+
+  // Función para manejar el campo voucher y evitar errores de JSON
+  const parseVoucher = (voucherData) => {
+    if (!voucherData || voucherData === "{}" || voucherData === "[]") return [];
+    if (typeof voucherData === "string") {
+      try {
+        const parsed = JSON.parse(voucherData);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (error) {
+        console.error("Error al parsear voucher:", error);
+        return [];
+      }
+    }
+    return Array.isArray(voucherData) ? voucherData : [];
+  };
+
+  // Función para cargar los datos del egreso existente
   const fetchExpenseData = async () => {
     try {
       const response = await fetch(`${apiUrl}/expenses/${id}`);
-      if (!response.ok) throw new Error("No se pudo obtener la información del egreso");
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`No se pudo obtener la información del egreso: ${response.status} - ${errorText}`);
+      }
       const data = await response.json();
-
-      setAmount(data.amount?.toString() || "");
+  
+      // Mapear los datos del backend al estado del formulario
       setAccount(data.account_id?.toString() || "");
       setDescription(data.description || "");
-      setComentarios(data.comentarios || "");
+      setComentarios(data.comments || "");
       setDate(data.date ? dayjs(data.date) : dayjs());
-      setProveedor(data.proveedor || "");
-      setCategoria(data.categoria || "");
-      setFacturaNumber(data.facturaNumber || "");
-      setFacturaProvNumber(data.facturaProvNumber || "");
-      setTipo(data.tipo || "");
-      setVoucher(data.voucher || "");
-
-      if (data.expense_items && data.expense_totals) {
+      setProveedor(data.provider_id || "");
+      setCategoria(data.category || "");
+      setFacturaNumber(data.invoice_number || "");
+      setFacturaProvNumber(data.provider_invoice_number || "");
+      setTipo(data.type || "");
+      setVoucher(parseVoucher(data.voucher));
+  
+      // Mapear ítems y totales
+      if (data.items) {
         setExpenseTableData({
-          items: data.expense_items.map(item => ({
-            type: item.type,
-            categoria: item.categoria,
-            product: item.product,
-            description: item.description,
-            quantity: item.quantity,
-            unitPrice: item.unit_price,
-            discount: item.discount,
-            taxCharge: item.tax_charge,
-            taxWithholding: item.tax_withholding,
-            total: item.total,
+          items: data.items.map(item => ({
+            id: item.id,
+            type: item.type || 'Gasto',
+            provider: item.provider || '',
+            product: item.product_name || '',
+            description: item.description || '',
+            quantity: parseFloat(item.quantity) || 1.00,
+            unitPrice: parseFloat(item.unit_price) || 0.00,
+            purchaseValue: parseFloat(item.purchase_value) || 0.00,
+            discount: parseFloat(item.discount) || 0.00,
+            taxCharge: parseFloat(item.tax_charge) || 0.00,
+            taxWithholding: parseFloat(item.tax_withholding) || 0.00,
+            total: parseFloat(item.total) || 0.00,
+            categoria: item.category || '',
           })),
           totals: {
-            totalBruto: data.expense_totals.total_bruto,
-            descuentos: data.expense_totals.descuentos,
-            subtotal: data.expense_totals.subtotal,
-            iva: data.expense_totals.iva,
-            retencion: data.expense_totals.retencion,
-            totalNeto: data.expense_totals.total_neto,
-            ivaPercentage: data.expense_totals.iva_percentage,
-            retencionPercentage: data.expense_totals.retencion_percentage,
-            totalImpuestos: data.expense_totals.total_impuestos,
+            totalBruto: parseFloat(data.total_gross) || 0,
+            descuentos: parseFloat(data.discounts) || 0,
+            subtotal: parseFloat(data.subtotal) || 0,
+            iva: parseFloat(data.ret_vat) || 0,
+            retencion: parseFloat(data.ret_ica) || 0,
+            totalNeto: parseFloat(data.total_net) || 0,
+            ivaPercentage: parseFloat(data.ret_vat_percentage) || "0",
+            retencionPercentage: parseFloat(data.ret_ica_percentage) || "0",
+            totalImpuestos: parseFloat(data.total_impuestos) || 0,
           },
         });
       }
@@ -122,6 +157,7 @@ const AddExpense = () => {
     }
   };
 
+  // Funciones para cargar datos de cuentas, proveedores y categorías
   const fetchAccounts = async () => {
     try {
       const response = await fetch(`${apiUrl}/accounts`);
@@ -165,15 +201,25 @@ const AddExpense = () => {
   };
 
   const handleExpenseTableDataChange = (data) => {
+    // Filtrar ítems válidos
     const validItems = data.items.filter(item =>
       item.product !== "" ||
       item.description !== "" ||
       item.unitPrice > 0 ||
       item.quantity > 0
     );
-    setExpenseTableData({
-      items: validItems,
-      totals: data.totals,
+
+    // Evitar actualizaciones innecesarias comparando el estado anterior
+    setExpenseTableData(prev => {
+      const newState = {
+        items: validItems,
+        totals: data.totals,
+      };
+      // Comparar profundamente para evitar actualizaciones innecesarias
+      if (JSON.stringify(prev) !== JSON.stringify(newState)) {
+        return newState;
+      }
+      return prev;
     });
   };
 
@@ -200,6 +246,7 @@ const AddExpense = () => {
     return date ? date.format("D MMM YYYY") : "N/A";
   };
 
+  // Función para guardar o actualizar el egreso
   const handleSave = async () => {
     try {
       if (!account) {
@@ -220,8 +267,8 @@ const AddExpense = () => {
         categoria: categoria,
         facturaNumber: facturaNumber,
         facturaProvNumber: facturaProvNumber,
-        account_id: parseInt(account),
-        voucher: voucher,
+        account_id: account,
+        voucher: JSON.stringify(Array.isArray(voucher) ? voucher : []),
         description: description,
         comentarios: comentarios,
         estado: true,
@@ -237,27 +284,28 @@ const AddExpense = () => {
             item.quantity > 0
           )
           .map(item => ({
+            id: item.id,
             type: item.type,
             categoria: item.categoria,
             product: item.product,
             description: item.description,
             quantity: parseFloat(item.quantity),
             unit_price: parseFloat(item.unitPrice),
-            discount: parseFloat(item.discount),
-            tax_charge: parseFloat(item.taxCharge),
-            tax_withholding: parseFloat(item.taxWithholding),
+            discount: parseFloat(item.discount || 0),
+            tax_charge: parseFloat(item.taxCharge || 0),
+            tax_withholding: parseFloat(item.taxWithholding || 0),
             total: parseFloat(item.total),
           })),
         expense_totals: {
-          total_bruto: expenseTableData.totals.totalBruto,
-          descuentos: expenseTableData.totals.descuentos,
-          subtotal: expenseTableData.totals.subtotal,
-          iva: expenseTableData.totals.iva,
-          retencion: expenseTableData.totals.retencion,
-          total_neto: expenseTableData.totals.totalNeto,
-          iva_percentage: expenseTableData.totals.ivaPercentage,
-          retencion_percentage: expenseTableData.totals.retencionPercentage,
-          total_impuestos: expenseTableData.totals.totalImpuestos,
+          total_bruto: parseFloat(expenseTableData.totals.totalBruto),
+          descuentos: parseFloat(expenseTableData.totals.descuentos),
+          subtotal: parseFloat(expenseTableData.totals.subtotal),
+          iva: parseFloat(expenseTableData.totals.iva),
+          retencion: parseFloat(expenseTableData.totals.retencion),
+          total_neto: parseFloat(expenseTableData.totals.totalNeto),
+          iva_percentage: parseFloat(expenseTableData.totals.ivaPercentage),
+          retencion_percentage: parseFloat(expenseTableData.totals.retencionPercentage),
+          total_impuestos: parseFloat(expenseTableData.totals.totalImpuestos),
         },
       };
 
@@ -272,9 +320,12 @@ const AddExpense = () => {
         body: JSON.stringify(requestBody),
       });
 
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+      }
 
-      await response.json();
+      const responseData = await response.json();
       setIsExpenseSaved(true);
 
       Swal.fire({
@@ -290,7 +341,7 @@ const AddExpense = () => {
         if (result.isConfirmed) {
           navigate("/index/moneymanager/transactions", { state: { activeTab: "expenses" } });
         } else if (result.dismiss === Swal.DismissReason.cancel) {
-          handleDownloadPDF();
+          handleDownloadPDF(responseData.data);
           navigate("/index/moneymanager/transactions", { state: { activeTab: "expenses" } });
         }
       });
@@ -299,13 +350,14 @@ const AddExpense = () => {
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "Hubo un error al procesar el egreso. Por favor, intente de nuevo.",
+        text: `Hubo un error al procesar el egreso: ${error.message}`,
         confirmButtonColor: "#d33",
       });
     }
   };
 
-  const handleDownloadPDF = () => {
+  // Función para descargar el PDF
+  const handleDownloadPDF = (expenseData) => {
     Swal.fire({
       title: "Generando PDF",
       text: "Por favor espere...",
@@ -337,7 +389,7 @@ const AddExpense = () => {
       doc.text(`Factura Proveedor N°: ${facturaProvNumber || "N/A"}`, 140, 42);
 
       // Expense Data as a Single Entry
-      const expenseData = [
+      const expenseDataForPDF = [
         {
           facturaNumber: facturaNumber || "N/A",
           description: description || "Sin descripción",
@@ -350,7 +402,7 @@ const AddExpense = () => {
         },
       ];
 
-      const tableData = expenseData.map(item => [
+      const tableData = expenseDataForPDF.map(item => [
         item.facturaNumber,
         item.description,
         renderDate(date),
@@ -462,9 +514,10 @@ const AddExpense = () => {
       <div className="p-4">
         {renderInvoiceHeader()}
         <Divider />
-        <NewExpenseTable
+        <ProductsTable
           onHiddenDetailsChange={handleHiddenDetailsChange}
           onDataChange={handleExpenseTableDataChange}
+          initialData={memoizedItems} // Usar ítems memoizados
         />
       </div>
     );
@@ -649,7 +702,7 @@ const AddExpense = () => {
         <Space>
           <Button
             disabled={!isExpenseSaved}
-            onClick={handleDownloadPDF}
+            onClick={() => handleDownloadPDF()}
             className="bg-transparent border border-[#0052CC] text-[#0052CC] hover:bg-[#0052CC] hover:text-white"
             style={{ borderRadius: 2 }}
           >
@@ -709,7 +762,7 @@ const AddExpense = () => {
       </div>
       <ExpenseVoucherSection
         onVoucherChange={setVoucher}
-        initialVouchers={voucher ? JSON.parse(voucher) : []}
+        initialVouchers={voucher}
         entryId={id}
       />
     </div>
