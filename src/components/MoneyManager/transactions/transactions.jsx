@@ -10,7 +10,7 @@ import {
   ChevronRight,
   AlertCircle,
   ArrowLeftRight,
-  FileText, // Changed from FileTextOutlined to FileText
+  FileText,
   Share2,
   Zap,
   TrendingDown, BarChart2
@@ -33,7 +33,6 @@ import {
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
 const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
-
 
 import TransferModal from "./TransferModal";
 
@@ -286,21 +285,18 @@ const TransactionsDashboard = () => {
   return (
     <div className="flex flex-col h-screen bg-white">
       {/* Header */}
-      <div className="px-4 bg-white sticky  z-10 shadow-sm">
+      <div className="px-4 bg-white sticky z-10 shadow-sm">
         <div className="max-w-full mx-auto py-2">
           <div className="flex justify-between items-center border-b-3 border-gray-300">
             <div className="flex items-center space-x-4">
-              <div className="flex items-center ">
-
-                <div className="pt-10  flex flex-col">
-                  <span className="text-gray-400 text-sm ">Área de Contabilidad</span>
+              <div className="flex items-center">
+                <div className="pt-10 flex flex-col">
+                  <span className="text-gray-400 text-sm">Área de Contabilidad</span>
                   <p level={2} className="text-2xl font-bold">
                     GESTIÓN DE TRANSACCIONES
                   </p>
                 </div>
               </div>
-
-
             </div>
 
             <Space size="middle">
@@ -319,15 +315,13 @@ const TransactionsDashboard = () => {
                         {formatCurrency(totalExpenses)}
                       </p>
                     </div>
-                    <div className="px-2 rounded  text-center flex-none w-26">
+                    <div className="px-2 rounded text-center flex-none w-26">
                       <h3 className="text-gray-500 text-[10px] font-medium uppercase">Balance</h3>
                       <p className="text-blue-600 text-sm font-semibold mt-1 truncate">
                         {formatCurrency(balance)}
                       </p>
                     </div>
-
                   </div>
-
                 </div>
               </div>
               <Button
@@ -341,13 +335,13 @@ const TransactionsDashboard = () => {
                 style={{
                   backgroundColor: "#36B37E",
                   borderColor: "#36B37E",
-                  borderRadius: "4px", // Bordes cuadrados con un toque suave
+                  borderRadius: "4px",
                   boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
                   display: "flex",
                   alignItems: "center",
                   gap: "8px",
                   padding: "6px 16px",
-                  height: "40px", // Altura uniforme
+                  height: "40px",
                   fontSize: "14px",
                   fontWeight: 500,
                   transition: "all 0.3s ease",
@@ -414,33 +408,48 @@ const TransactionsDashboard = () => {
                   Nueva Transferencia
                 </Button>
               </Tooltip>
-
             </Space>
           </div>
 
-          {/* Tabs - Similar to the project management tabs */}
-          <div className="mt-[-1em] border-b-4 border-gray-300 ">
-            <div className="flex  overflow-x-auto">
+          {/* Tabs - Mejoradas con indicador azul */}
+          <div className="mt-[-1em] border-b-4 border-gray-300">
+            <div className="flex overflow-x-auto">
               <div
-                className={`py-2 px-4 cursor-pointer border-b-3 ${activeTab === 'resumen' ? 'border-gray-700 text-gray-700' : 'border-transparent text-gray-800'}`}
+                className={`py-2 px-4 cursor-pointer border-b-4 transition-colors duration-200 ${
+                  activeTab === 'resumen'
+                    ? 'border-[#0052CC] text-[#0052CC] font-semibold'
+                    : 'border-transparent text-gray-800 hover:border-[#0052CC]-300 hover:text-[#0052CC]'
+                }`}
                 onClick={() => handleTabChange('resumen')}
               >
                 Resumen
               </div>
               <div
-                className={`py-2 px-4 cursor-pointer border-b-2 ${activeTab === 'incomes' ? 'border-gray-700 text-gray-700' : 'border-transparent text-gray-800'}`}
+                className={`py-2 px-4 cursor-pointer border-b-4 transition-colors duration-200 ${
+                  activeTab === 'incomes'
+                    ? 'border-blue-500 text-blue-500 font-semibold'
+                    : 'border-transparent text-gray-800 hover:border-blue-300 hover:text-blue-400'
+                }`}
                 onClick={() => handleTabChange('incomes')}
               >
                 Ingresos
               </div>
               <div
-                className={`py-2 px-4 cursor-pointer border-b-2 ${activeTab === 'expenses' ? 'border-gray-700 text-gray-700' : 'border-transparent text-gray-800'}`}
+                className={`py-2 px-4 cursor-pointer border-b-4 transition-colors duration-200 ${
+                  activeTab === 'expenses'
+                    ? 'border-blue-500 text-blue-500 font-semibold'
+                    : 'border-transparent text-gray-800 hover:border-blue-300 hover:text-blue-400'
+                }`}
                 onClick={() => handleTabChange('expenses')}
               >
                 Egresos
               </div>
               <div
-                className={`py-2 px-4 cursor-pointer border-b-2 ${activeTab === 'transfers' ? 'border-gray-700 text-gray-700' : 'border-transparent text-gray-800'}`}
+                className={`py-2 px-4 cursor-pointer border-b-4 transition-colors duration-200 ${
+                  activeTab === 'transfers'
+                    ? 'border-blue-500 text-blue-500 font-semibold'
+                    : 'border-transparent text-gray-800 hover:border-blue-300 hover:text-blue-400'
+                }`}
                 onClick={() => handleTabChange('transfers')}
               >
                 Transferencias
@@ -450,20 +459,16 @@ const TransactionsDashboard = () => {
         </div>
       </div>
 
-
       {activeTab === "resumen" ? (
         // Usar el componente Summary importado
         <Summary
           totalIncome={totalIncome}
           totalExpenses={totalExpenses}
           balance={balance}
-
         />
       ) : (
-        <div className="shadow-lg overflow-auto"
-        >
-          <div className="max-w-full mx-auto  ">
-
+        <div className="shadow-lg overflow-auto">
+          <div className="max-w-full mx-auto">
             {error && (
               <div className="p-4 bg-red-50 border-l-4 border-red-500 text-red-700">
                 <div className="flex items-center">
