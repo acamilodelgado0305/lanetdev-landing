@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { IoClose } from "react-icons/io5";
-import AccountSelector from "../AccountSelector ";
+import AccountSelector from "../AccountSelector";
 import CategorySelector from "../CategorySelector";
 import { DatePicker, Input, Button, Row, Col, Tabs, Card, Radio, Typography, Space, Checkbox, Divider, Select } from "antd";
 import {
