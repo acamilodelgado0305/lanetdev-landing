@@ -18,77 +18,65 @@ import {
   RightOutlined,
   DownOutlined,
   UpOutlined,
-  IdcardOutlined
+  IdcardOutlined,
+  SearchOutlined,
 } from "@ant-design/icons";
-import { Layout, Menu, Button, Tooltip } from "antd";
+import { Layout, Menu, Button, Tooltip, Input } from "antd";
 import { DotIcon } from "lucide-react";
-import Header from "../components/header/Header";
-import UserProfileHeader from "./user/UserProfileHeader";
+import { motion, AnimatePresence } from "framer-motion";
+import Header from "../components/header/Header"; // Asegúrate de que la ruta sea correcta
 import { useAuth } from "../components/Context/AuthProvider";
-import { Modal } from 'antd';
+
 const { Sider } = Layout;
+
 export default function Root() {
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
+  const [isHidden, setIsHidden] = useState(false);
   const [unreadEmailsCount, setUnreadEmailsCount] = useState(0);
-  const [isUserProfileOpen, setIsUserProfileOpen] = useState(false);
-  const [isModalVisible, setIsModalVisible] = useState(false); // Controla la visibilidad del modal
-  const [modalContent, setModalContent] = useState(null); // Contenido del modal
-  const [modalPosition, setModalPosition] = useState({ top: 20, left: window.innerWidth - 300 });
-
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [modalContent, setModalContent] = useState(null);
+  const [modalPosition, setModalPosition] = useState({
+    top: 20,
+    left: window.innerWidth - 300,
+  });
   const [activeSubMenu, setActiveSubMenu] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const { userRole } = useAuth();
+  const location = useLocation();
   const menuItemRef = useRef(null);
   const modalRef = useRef(null);
 
   useEffect(() => {
-    // Función que maneja el clic fuera del modal
     const handleClickOutside = (event) => {
       if (modalRef.current && !modalRef.current.contains(event.target)) {
-        setIsModalVisible(false); // Cierra el modal si se hace clic fuera de él
+        setIsModalVisible(false);
       }
     };
-
-    // Agregar el evento de clic al documento
     document.addEventListener("mousedown", handleClickOutside);
-
-    // Limpiar el evento cuando el componente se desmonte
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
-  // Definición de los enlaces principales del menú
   const mainMenuLinks = useMemo(
     () => [
       { to: "/index", label: "Dashboard", icon: <HomeOutlined /> },
-
-
-      { label: "CRM", isTitle: true, color: "text-[#7d4fff]" },
-
-
+      { label: "CRM", isTitle: true },
       userRole === "superadmin" && {
         to: "/index/clientes",
         label: "Clientes",
         icon: <TeamOutlined />,
-        color: "text-[#7d4fff]",
-        hoverClass: "hover:bg-[#7d4fff] hover:text-white",
       },
-
       {
         to: "/index/Instalaciones",
         label: "Instalaciones",
         icon: <HomeOutlined />,
-        color: "text-[#7d4fff]",
-        hoverClass: "hover:bg-[#7d4fff] hover:text-white",
-        disabled: true, // Agrega esta propiedad
+        disabled: true,
       },
-
       {
         label: "Finanzas",
         icon: <IdcardOutlined />,
-        color: "text-[#7d4fff]",
-        hoverClass: "hover:bg-[#7d4fff] hover:text-white",
         hasSubmenu: true,
         disabled: true,
         submenuItems: [
@@ -96,32 +84,25 @@ export default function Root() {
             to: "/index/administracion/cajeros",
             label: "Facturas",
             icon: <DotIcon />,
-            color: "text-[#7d4fff]",
-            hoverClass: "hover:bg-[#7d4fff] hover:text-white",
             disabled: true,
           },
         ],
       },
-
       {
         to: "/index/tickets",
         label: "Tickets",
         icon: <DotChartOutlined />,
-        color: "text-[#7d4fff]",
-        hoverClass: "hover:bg-[#7d4fff] hover:text-white",
-        disabled: true
-      },
-      {
-        to: "/index/cobro-cartera", label: "Cobro de Cartera", icon: <BankOutlined />, color: "text-gray-500",
-        hoverClass: "hover:text-gray-500 hover:text-white",
         disabled: true,
       },
-
+      {
+        to: "/index/cobro-cartera",
+        label: "Cobro de Cartera",
+        icon: <BankOutlined />,
+        disabled: true,
+      },
       {
         label: "Comunicación",
         icon: <MessageOutlined />,
-        color: "text-[#7d4fff]",
-        hoverClass: "hover:bg-[#7d4fff] hover:text-white",
         hasSubmenu: true,
         disabled: true,
         submenuItems: [
@@ -129,184 +110,172 @@ export default function Root() {
             to: "/index/comunicacion/notificaciones",
             label: "Notificaciones WhatsApp",
             icon: <DotChartOutlined />,
-            color: "text-[#7d4fff]",
-            hoverClass: "hover:bg-[#7d4fff] hover:text-white",
             disabled: true,
           },
           {
             to: "/index/comunicacion/multichat",
             label: "Multichat",
             icon: <DotChartOutlined />,
-            color: "text-[#7d4fff]",
-            hoverClass: "hover:bg-[#7d4fff] hover:text-white",
             disabled: true,
           },
         ],
-
       },
-
       {
         to: "/index/moneymanager/cotizacion",
         label: "Estudio de Mercado",
         icon: <DotChartOutlined />,
-        color: "text-[#7d4fff]",
-        hoverClass: "hover:bg-[#7d4fff] hover:text-white",
         disabled: true,
       },
-
-
-      { label: "COMPAÑIA", isTitle: true, color: "text-[#0052CC]" },
-
+      { label: "COMPAÑIA", isTitle: true },
       (userRole === "cajero" || userRole === "superadmin") && {
         label: "Contabilidad",
         icon: <DollarCircleOutlined />,
-        color: "text-[#0052CC]",
-        hoverClass: "hover:text-green-400 hover:text-white",
         hasSubmenu: true,
         submenuItems: [
           {
-            to: "/index/moneymanager/estadisticas", label: "Resumen", icon: <DotIcon />, color: "text-[#0052CC]",
-            hoverClass: "hover:text-[#0052CC] hover:text-white",
+            to: "/index/moneymanager/estadisticas",
+            label: "Resumen",
+            icon: <DotIcon />,
             disabled: true,
           },
           {
-            to: "/index/moneymanager/transactions", label: "Transacciones", icon: <DotIcon />, color: "text-[#0052CC]",
-            hoverClass: "hover:text-[#0052CC] hover:text-white",
+            to: "/index/moneymanager/transactions",
+            label: "Transacciones",
+            icon: <DotIcon />,
           },
           {
-            to: "/index/moneymanager/pagos-pendientes", label: "Pagos Recurrentes", icon: <DotIcon />, color: "text-[#0052CC]",
-            hoverClass: "hover:text-[#0052CC] hover:text-white",
+            to: "/index/moneymanager/pagos-pendientes",
+            label: "Pagos Recurrentes",
+            icon: <DotIcon />,
           },
           {
-            to: "/index/moneymanager/informes", label: "Informes", icon: <DotIcon />, color: "text-[#0052CC]",
-            hoverClass: "hover:text-[#0052CC] hover:text-white",
+            to: "/index/moneymanager/informes",
+            label: "Informes",
+            icon: <DotIcon />,
             disabled: true,
           },
-
-
         ],
       },
-
       {
         label: "Gestión de Red",
         icon: <IdcardOutlined />,
         hasSubmenu: true,
-        color: "text-[#0052CC]",
-        hoverClass: "hover:text-[#0052CC] hover:text-white",
         disabled: true,
         submenuItems: [
           {
-            to: "/index/administracion/cajeros", label: "Direccionamiento Ip", icon: <DotIcon />, color: "text-[#0052CC]",
-            hoverClass: "hover:text-[#0052CC] hover:text-white",
+            to: "/index/administracion/cajeros",
+            label: "Direccionamiento Ip",
+            icon: <DotIcon />,
             disabled: true,
           },
           {
-            to: "/index/administracion/cajeros", label: "Monitoreo", icon: <DotIcon />, color: "text-[#0052CC]",
-            hoverClass: "hover:text-[#0052CC] hover:text-white",
+            to: "/index/administracion/cajeros",
+            label: "Monitoreo",
+            icon: <DotIcon />,
             disabled: true,
           },
           {
-            to: "/index/administracion/cajeros", label: "Aprovisinamiento de Red", icon: <DotIcon />, color: "text-[#0052CC]",
-            hoverClass: "hover:text-g[#0052CC] hover:text-white",
+            to: "/index/administracion/cajeros",
+            label: "Aprovisinamiento de Red",
+            icon: <DotIcon />,
             disabled: true,
           },
           {
-            to: "/index/administracion/cajeros", label: "Conexion de routers", icon: <DotIcon />, color: "text-[#0052CC]",
-            hoverClass: "hover:text-[#0052CC] hover:text-white",
+            to: "/index/administracion/cajeros",
+            label: "Conexion de routers",
+            icon: <DotIcon />,
             disabled: true,
           },
-
         ],
       },
       {
-        to: "/index/inventario", label: "Inventario", icon: <ContainerOutlined />, color: "text-[#0052CC]",
-        hoverClass: "hover:text-[#0052CC] hover:text-white",
+        to: "/index/inventario",
+        label: "Inventario",
+        icon: <ContainerOutlined />,
         disabled: true,
       },
       {
         label: "Terceros",
         icon: <IdcardOutlined />,
-        color: "text-[#0052CC]",
-        hoverClass: "hover:text-[#0052CC] hover:text-white",
         hasSubmenu: true,
         submenuItems: [
           {
-            to: "/index/terceros/cajeros", label: "Cajeros", icon: <DotIcon />, color: "text-[#0052CC]",
-            hoverClass: "hover:text-[#0052CC] hover:text-white",
+            to: "/index/terceros/cajeros",
+            label: "Cajeros",
+            icon: <DotIcon />,
           },
           {
-            to: "/index/moneymanager/terceros", label: "Proveedores", icon: <DotIcon />, color: "text-[#0052CC]",
-            hoverClass: "hover:text-[#0052CC] hover:text-white",
+            to: "/index/moneymanager/terceros",
+            label: "Proveedores",
+            icon: <DotIcon />,
           },
         ],
       },
       {
-        to: "/index/tienda", label: "Reportes", icon: <ShoppingCartOutlined />, color: "text-[#0052CC]",
-        hoverClass: "hover:text-[#0052CC] hover:text-white",
+        to: "/index/tienda",
+        label: "Reportes",
+        icon: <ShoppingCartOutlined />,
         disabled: true,
       },
       {
-        to: "/index/moneymanager/cotizacion", label: "Gestion de compras", icon: <DotChartOutlined />, color: "text-[#0052CC]",
-        hoverClass: "hover:text-[#0052CC] hover:text-white",
+        to: "/index/moneymanager/cotizacion",
+        label: "Gestión de compras",
+        icon: <DotChartOutlined />,
         disabled: true,
       },
       {
-        to: "/index/moneymanager/calendario", label: "Calendario", icon: <CalendarOutlined />, color: "text-[#0052CC]",
-        hoverClass: "hover:text-[#0052CC] hover:text-white",
+        to: "/index/moneymanager/calendario",
+        label: "Calendario",
+        icon: <CalendarOutlined />,
         disabled: true,
       },
       {
-        to: "/index/recursoHumanos", label: "Recursos Humanos", icon: <BankOutlined />, color: "text-[#0052CC]",
-        hoverClass: "hover:text-[#0052CC] hover:text-white",
+        to: "/index/recursoHumanos",
+        label: "Recursos Humanos",
+        icon: <BankOutlined />,
         disabled: true,
       },
-
-
-      { label: "SISTEMA", isTitle: true, color: "text-blue-500" },
-
+      { label: "SISTEMA", isTitle: true },
       {
         to: "/index/config",
         label: "Configuración",
         icon: <SettingOutlined />,
-        color: "text-blue-500",
-        hoverClass: "hover:text-blue-500 hover:text-white",
-
-
       },
       {
         label: "Administración",
         icon: <IdcardOutlined />,
-        color: "text-blue-500",
-        hoverClass: "hover:text-blue-500 hover:text-white",
         hasSubmenu: true,
         disabled: true,
         submenuItems: [
           {
-            to: "/index/administracion/cajeros", label: "Portal Tecnicos", icon: <DotIcon />, color: "text-blue-500",
-            hoverClass: "hover:text-blue-500 hover:text-white",
+            to: "/index/administracion/cajeros",
+            label: "Portal Tecnicos",
+            icon: <DotIcon />,
           },
           {
-            to: "/index/administracion/cajeros", label: "Portal Clientes", icon: <DotIcon />, color: "text-blue-500",
-            hoverClass: "hover:text-blue-500 hover:text-white",
+            to: "/index/administracion/cajeros",
+            label: "Portal Clientes",
+            icon: <DotIcon />,
           },
         ],
       },
       { to: "", label: "", isSpace: true },
-
       {
-        to: "/index/tienda", label: "Tienda", icon: <ShoppingCartOutlined />, color: "text-gray-500",
-        hoverClass: "hover:text-gray-500 hover:text-white",
+        to: "/index/tienda",
+        label: "Tienda",
+        icon: <ShoppingCartOutlined />,
         disabled: true,
       },
       {
-        to: "/index/tareas", label: "Tareas", icon: <AppstoreAddOutlined />, color: "text-gray-500",
-        hoverClass: "hover:text-gray-500 hover:text-white",
+        to: "/index/tareas",
+        label: "Tareas",
+        icon: <AppstoreAddOutlined />,
         disabled: true,
       },
-
       {
-        to: "/index/tienda", label: "Navegacion de Archivos", icon: <ShoppingCartOutlined />, color: "text-gray-500",
-        hoverClass: "hover:text-gray-500 hover:text-white",
+        to: "/index/tienda",
+        label: "Navegación de Archivos",
+        icon: <ShoppingCartOutlined />,
         disabled: true,
       },
       { to: "", label: "", isSpace: true },
@@ -315,6 +284,7 @@ export default function Root() {
     ].filter(Boolean),
     [userRole]
   );
+
   const selectedKeys = useMemo(() => {
     const currentPath = location.pathname;
     return mainMenuLinks
@@ -325,197 +295,275 @@ export default function Root() {
       )
       .filter((path) => currentPath.startsWith(path));
   }, [location.pathname, mainMenuLinks]);
-  // Obtener la posición del ítem de menú cuando se hace clic
+
   const handleMenuItemClick = (e, submenuItems) => {
-    const rect = e.target.getBoundingClientRect(); // Obtener las coordenadas del ítem
+    const rect = e.target.getBoundingClientRect();
     setModalPosition({
-      top: rect.top + rect.height, // Justo debajo del ítem
-      left: rect.left + 40, // Aquí puedes aumentar el valor de 'left' para moverlo más a la derecha
+      top: rect.top + rect.height + 5,
+      left: rect.left + 40,
     });
-    setModalContent(submenuItems); // Establecer el contenido del submenú
-    setIsModalVisible(true); // Mostrar el modal
+    setModalContent(submenuItems);
+    setIsModalVisible(true);
   };
+
+  const filteredMenuLinks = useMemo(() => {
+    if (!searchQuery) return mainMenuLinks;
+    return mainMenuLinks.filter((link) => {
+      if (link.isTitle || link.isSpace) return true;
+      const labelMatch = link.label.toLowerCase().includes(searchQuery.toLowerCase());
+      const submenuMatch = link.hasSubmenu
+        ? link.submenuItems.some((subItem) =>
+          subItem.label.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        : false;
+      return labelMatch || submenuMatch;
+    });
+  }, [mainMenuLinks, searchQuery]);
 
   return (
     <>
-      <Header unreadEmailsCount={0} />
-      <Layout className="flex h-screen bg-white">
+
+      <div className="fixed top-0 left-0 w-screen flex bg-gray-100 z-40">
+        <Header
+          isSidebarExpanded={isExpanded}
+          isSidebarHidden={isHidden}
+          setIsExpanded={setIsExpanded}
+        />
+      </div>
+
+      <Layout className="flex h-screen bg-gray-100">
         {/* Botón de menú móvil */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="lg:hidden fixed top-4 left-4 bg-primary shadow-lg backdrop-blur-sm bg-opacity-90 text-white hover:bg-opacity-100 transition-all duration-300"
+          className="lg:hidden fixed top-4 left-4 bg-gray-800 text-white p-2 rounded-md shadow-lg transition-all duration-300 hover:bg-gray-700 z-10"
         >
           <MenuOutlined />
         </button>
 
+        {/* Botón para mostrar el sidebar cuando está⁠ oculto */}
+        <AnimatePresence>
+          {isHidden && (
+            <motion.button
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -20, opacity: 0 }}
+              onClick={() => setIsHidden(false)}
+              className="fixed top-1/2 left-0 transform -translate-y-1/2 bg-gray-800 text-white p-2 rounded-r-md shadow-lg transition-all duration-300 hover:bg-gray-700 z-50"
+            >
+              <RightOutlined className="text-sm" />
+            </motion.button>
+          )}
+        </AnimatePresence>
+
         {/* Sidebar */}
-        <div
-          className={`border-2 border-gray-300 ${isExpanded ? "w-60" : "w-18"} 
-          
-                bg-white text-gray-800 ${isOpen ? "block" : "hidden"} 
-               py-5 lg:block fixed top-0 left-0 h-full transition-all duration-300`}
-        >
-          {/* {isExpanded && (
-            <UserProfileHeader
-              className="mb-20"
-              onToggle={() => setIsOpen(false)}
-              isUserProfileOpen={isUserProfileOpen}
-              setIsUserProfileOpen={setIsUserProfileOpen}
-              isExpanded={isExpanded}
-            />
-          )} */}
-          <div className="space-y-2 py-2 max-h-screen overflow-y-auto mt-10 pl-4 my-4 bg-white"
-            style={{
-              scrollbarWidth: "none",
-              msOverflowStyle: "none",
-            }}>
-            {/* Menu Links */}
-            {mainMenuLinks.map((link, index) =>
-              link.isSpace ? (
-                <div key={`space-${index}`} className="py-0"></div> // Reducido el espacio vacío
-              ) : link.isTitle ? (
-                <div
-                  key={`title-${index}`}
-                  className={`py-1 text-xs font-bold uppercase ${link.color || "text-gray-500"} 
-        ${isExpanded ? "text-center" : "hidden"} w-full`}
-                >
-                  {link.label}
+        <AnimatePresence>
+          {(!isHidden || isOpen) && (
+            <motion.div
+              initial={{ x: -256 }}
+              animate={{ x: 0 }}
+              exit={{ x: -256 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className={`border-r border-gray-200 bg-white text-gray-800 ${isExpanded ? "w-64" : "w-16"
+                } py-5 lg:block fixed top-0 left-0 h-full transition-all duration-300 ease-in-out shadow-md z-50`}
+            >
+              {/* Barra de búsqueda (solo visible cuando el sidebar está expandido) */}
+              {isExpanded && (
+                <div className="px-4 py-2 ">
+                  <Input
+                    placeholder="Buscar..."
+                    prefix={<SearchOutlined className="text-gray-400" />}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full rounded-md border-gray-300 focus:border-gray-400 focus:ring-0"
+                  />
                 </div>
-              ) : link.hasSubmenu ? (
-                <div key={`submenu-${link.label}-${index}`}>
-                  <button
-                    ref={menuItemRef}
-                    onClick={(e) => {
-                      if (!isExpanded) {
-                        handleMenuItemClick(e, link.submenuItems);
-                      } else {
-                        setActiveSubMenu(activeSubMenu === link.label ? null : link.label);
-                      }
-                    }}
-                    className={`group flex items-center w-full p-1 text-left 
-          ${link.color === "text-[#0052CC]"
-                        ? "hover:bg-[#0052CC]"
-                        : link.color === "text-blue-500"
-                          ? "hover:bg-blue-500"
-                          : link.color === "text-gray-500"
-                            ? "hover:bg-gray-500"
-                            : "hover:bg-[#7d4fff]"}  
-            ${link.color || "text-gray-700"} text-sm ${link.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
-                  >
-                    <span className="mr-2 group-hover:text-white">
-                      {activeSubMenu === link.label ? <UpOutlined /> : <DownOutlined />}
-                    </span>
-                    <span className={`mr-1 ${link.color} group-hover:text-white`}>
-                      {link.icon}
-                    </span>
-                    <span className={`text-gray-700 group-hover:text-white ${link.hoverClass}`}>
-                      {isExpanded ? link.label : ""}
-                    </span>
-                    
-                  </button>
+              )}
 
-                  {activeSubMenu === link.label && isExpanded && (
-                    <div className="ml-2 space-y-1"> {/* Reducido el margen a la izquierda */}
-                      {link.submenuItems.map((subItem, subIndex) => (
-                        <Link
-                          key={`${subItem.to}-${subIndex}`}
-                          to={subItem.to}
-                          className={`group flex items-center w-full p-1 text-left text-sm 
-                ${subItem.color === "text-[#0052CC]"
-                              ? "hover:bg-[#0052CC]"
-                              : subItem.color === "text-blue-500"
-                                ? "hover:bg-blue-500"
-                                : subItem.color === "text-gray-500"
-                                  ? "hover:bg-gray-500"
-                                  : "hover:bg-[#7d4fff]"}  
-                ${subItem.color || "text-gray-700"} text-sm ${subItem.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
-                        >
-                          <span className={`mr-1 ${subItem.color} group-hover:text-white`}>
-                            {subItem.icon}
-                          </span>
-                          <span className={`text-gray-700 group-hover:text-white ${subItem.hoverClass}`}>
-                            {subItem.label}
-                          </span>
-                        </Link>
-                      ))}
+              <div
+                className="space-y-1 py-2 max-h-screen overflow-y-auto mt-4 pl-4 my-4"
+                style={{
+                  scrollbarWidth: "none",
+                  msOverflowStyle: "none",
+                }}
+              >
+                {/* Menu Links */}
+                {filteredMenuLinks.map((link, index) =>
+                  link.isSpace ? (
+                    <div key={`space-${index}`} className="py-2" />
+                  ) : link.isTitle ? (
+                    <div
+                      key={`title-${index}`}
+                      className={`py-2 px-4 text-xs font-semibold uppercase text-gray-400 ${isExpanded ? "block" : "hidden"
+                        }`}
+                    >
+                      {link.label}
                     </div>
-                  )}
-                </div>
-              ) : (
-                <Link
-                  key={`${link.to}-${index}`}
-                  to={link.to}
-                  className={`group flex items-center w-full p-1 text-left 
-        ${link.color === "text-[#0052CC]"
-                      ? "hover:bg-[#0052CC]"
-                      : link.color === "text-blue-500"
-                        ? "hover:bg-blue-500"
-                        : link.color === "text-gray-500"
-                          ? "hover:bg-gray-500"
-                          : "hover:bg-[#7d4fff]"}  
-        ${link.color || "text-gray-700"} text-sm ${link.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
-                >
-                  <span className={`mr-1 ${link.color} group-hover:text-white`}>
-                    {link.icon}
-                  </span>
-                  <span className={`text-gray-700 group-hover:text-white ${link.hoverClass}`}>
-                    {isExpanded ? link.label : ""}
-                  </span>
-                </Link>
-              )
-            )}
+                  ) : link.hasSubmenu ? (
+                    <div key={`submenu-${link.label}-${index}`}>
+                      <Tooltip
+                        title={isExpanded ? "" : link.label}
+                        placement="right"
+                        overlayClassName="text-sm"
+                      >
+                        <button
+                          ref={menuItemRef}
+                          onClick={(e) => {
+                            if (!isExpanded) {
+                              handleMenuItemClick(e, link.submenuItems);
+                            } else {
+                              setActiveSubMenu(
+                                activeSubMenu === link.label ? null : link.label
+                              );
+                            }
+                          }}
+                          disabled={link.disabled}
+                          className={`group flex items-center w-full px-4 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors duration-200 ${link.disabled ? "opacity-50 cursor-not-allowed" : ""
+                            }`}
+                        >
+                          <span className="mr-2 text-gray-500 group-hover:text-gray-900">
+                            {link.icon}
+                          </span>
+                          {isExpanded && (
+                            <>
+                              <span className="flex-1">{link.label}</span>
+                              <motion.span
+                                initial={{ rotate: 0 }}
+                                animate={{
+                                  rotate: activeSubMenu === link.label ? 180 : 0,
+                                }}
+                                transition={{ duration: 0.2 }}
+                                className="text-gray-400 group-hover:text-gray-900"
+                              >
+                                <DownOutlined className="text-xs" />
+                              </motion.span>
+                            </>
+                          )}
+                        </button>
+                      </Tooltip>
+
+                      <AnimatePresence>
+                        {activeSubMenu === link.label && isExpanded && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.3, ease: "easeInOut" }}
+                            className="ml-6 space-y-1 overflow-hidden"
+                          >
+                            {link.submenuItems.map((subItem, subIndex) => (
+                              <Tooltip
+                                key={`${subItem.to}-${subIndex}`}
+                                title={isExpanded ? "" : subItem.label}
+                                placement="right"
+                                overlayClassName="text-sm"
+                              >
+                                <Link
+                                  to={subItem.to}
+                                  className={`group flex items-center w-full px-4 py-2 text-left text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors duration-200 ${subItem.disabled
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : ""
+                                    }`}
+                                >
+                                  <span className="mr-2 text-gray-400 group-hover:text-gray-900">
+                                    {subItem.icon}
+                                  </span>
+                                  <span>{subItem.label}</span>
+                                </Link>
+                              </Tooltip>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  ) : (
+                    <Tooltip
+                      title={isExpanded ? "" : link.label}
+                      placement="right"
+                      overlayClassName="text-sm"
+                    >
+                      <Link
+                        key={`${link.to}-${index}`}
+                        to={link.to}
+                        className={`group flex items-center w-full px-4 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors duration-200 ${link.disabled ? "opacity-50 cursor-not-allowed" : ""
+                          } ${selectedKeys.includes(link.to)
+                            ? "bg-gray-100 text-gray-900"
+                            : ""
+                          }`}
+                      >
+                        <span className="mr-2 text-gray-500 group-hover:text-gray-900">
+                          {link.icon}
+                        </span>
+                        {isExpanded && <span>{link.label}</span>}
+                      </Link>
+                    </Tooltip>
+                  )
+                )}
+              </div>
+
+              {/* Botón para expandir/contraer el menú */}
+              <button
+                onClick={() => setIsHidden(true)}
+                className="flex items-center justify-center w-full p-2 text-gray-500 hover:bg-gray-100 transition-colors duration-200 absolute bottom-0"
+              >
+                {isExpanded ? (
+                  <LeftOutlined className="text-sm" />
+                ) : (
+                  <RightOutlined className="text-sm" />
+                )}
+              </button>
 
 
-          </div>
-          {/* Botón para expandir/contraer el menú */}
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="z-1000 flex items-center justify-center w-full p-2 text-left hover:bg-gray-700 text-sm absolute bottom-0"
-          >
-            <span className="ml-2">
-              {isExpanded ? <UpOutlined className="text-gray-700" /> : <DownOutlined className="text-gray-700" />}
-            </span>
-          </button>
-        </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Contenido principal */}
         <Layout.Content
-          className={`flex-1 overflow-x-hidden overflow-y-auto mt-8 ${isExpanded ? "ml-[17.1em]" : "ml-[5.3em]"} h-screen`}
+          className={`flex-1 overflow-x-hidden overflow-y-auto mt-6 ${isHidden ? "ml-0" : isExpanded ? "ml-64" : "ml-16"
+            } h-screen transition-all duration-300 ease-in-out`}
         >
+
           <Outlet context={{ setUnreadEmailsCount }} />
         </Layout.Content>
       </Layout>
 
-      {/* Modal flotante para submenú */}
-      {isModalVisible && (
-        <div
-          ref={modalRef} // Agregar la referencia aquí
-          style={{
-            position: "absolute",
-            top: modalPosition.top,
-            left: modalPosition.left,
-            zIndex: 1000,
-            background: "white",
-            border: "2px solid #ddd",
-            boxShadow: "0 0 5px rgba(0, 0, 0, 0.15)",
-            padding: "10px",
-            borderRadius: "4px",
-            width: "200px", // Puedes ajustarlo según tus necesidades
-          }}
-        >
-          <div className="space-y-1">
-            {modalContent.map((subItem) => (
-              <Link
-                key={subItem.to}
-                to={subItem.to}
-                className="block p-2 text-sm text-[#7d4fff] hover:bg-[#7d4fff] hover:text-white"
-              >
-                {subItem.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Modal flotante para submenús */}
+      <AnimatePresence>
+        {isModalVisible && (
+          <motion.div
+            ref={modalRef}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            style={{
+              position: "absolute",
+              top: modalPosition.top,
+              left: modalPosition.left,
+              zIndex: 1000,
+              background: "white",
+              border: "1px solid #e5e7eb",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+              padding: "8px",
+              borderRadius: "8px",
+              width: "200px",
+            }}
+          >
+            <div className="space-y-1">
+              {modalContent.map((subItem) => (
+                <Link
+                  key={subItem.to}
+                  to={subItem.to}
+                  className={`block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors duration-200 ${subItem.disabled ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
+                >
+                  {subItem.label}
+                </Link>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

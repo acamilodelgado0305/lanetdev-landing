@@ -286,13 +286,13 @@ const TransactionsDashboard = () => {
   return (
     <div className="flex flex-col h-screen bg-white">
       {/* Header */}
-      <div className="bg-white sticky  z-10 shadow-sm">
+      <div className="px-4 bg-white sticky  z-10 shadow-sm">
         <div className="max-w-full mx-auto py-2">
           <div className="flex justify-between items-center border-b-3 border-gray-300">
             <div className="flex items-center space-x-4">
               <div className="flex items-center ">
 
-                <div className="pt-10 pl-4 pr-4 flex flex-col">
+                <div className="pt-10  flex flex-col">
                   <span className="text-gray-400 text-sm ">Área de Contabilidad</span>
                   <p level={2} className="text-2xl font-bold">
                     GESTIÓN DE TRANSACCIONES
@@ -333,54 +333,86 @@ const TransactionsDashboard = () => {
               <Button
                 type="primary"
                 icon={<PlusOutlined />}
+                onClick={() =>
+                  navigate("/index/moneymanager/transactions/nuevoingreso", {
+                    state: { returnTab: "incomes" },
+                  })
+                }
                 style={{
-                  backgroundColor: '#36B37E',
-                  borderColor: '#36B37E',
-                  boxShadow: '0 2px 0 rgba(0, 0, 0, 0.045)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px'
+                  backgroundColor: "#36B37E",
+                  borderColor: "#36B37E",
+                  borderRadius: "4px", // Bordes cuadrados con un toque suave
+                  boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "6px 16px",
+                  height: "40px", // Altura uniforme
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  transition: "all 0.3s ease",
                 }}
-                onClick={() => navigate('/index/moneymanager/transactions/nuevoingreso', { state: { returnTab: 'incomes' } })}
+                className="hover:opacity-90 hover:scale-102 transition-transform"
+                aria-label="Crear nuevo ingreso"
               >
                 Nuevo Ingreso
               </Button>
 
-
-
+              {/* Botón Nuevo Egreso */}
               <Button
                 type="primary"
                 icon={<ArrowDownOutlined />}
                 danger
+                onClick={() =>
+                  navigate("/index/moneymanager/transactions/nuevoegreso", {
+                    state: { returnTab: "expenses" },
+                  })
+                }
                 style={{
-                  backgroundColor: '#FF5630',
-                  borderColor: '#FF5630',
-                  boxShadow: '0 2px 0 rgba(0, 0, 0, 0.045)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px'
+                  backgroundColor: "#FF5630",
+                  borderColor: "#FF5630",
+                  borderRadius: "4px",
+                  boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "6px 16px",
+                  height: "40px",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  transition: "all 0.3s ease",
                 }}
-                onClick={() => navigate('/index/moneymanager/transactions/nuevoegreso', { state: { returnTab: 'expenses' } })}
+                className="hover:opacity-90 hover:scale-102 transition-transform"
+                aria-label="Crear nuevo egreso"
               >
                 Nuevo Egreso
               </Button>
+
+              {/* Botón Nueva Transferencia */}
               <Tooltip title="Crear Transferencia">
                 <Button
                   type="primary"
                   icon={<SwapOutlined />}
-                  style={{
-                    backgroundColor: '#0052CC',
-                    borderColor: '#0052CC',
-                    boxShadow: '0 2px 0 rgba(0, 0, 0, 0.045)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px'
-                  }}
                   onClick={openTransferModal}
+                  style={{
+                    backgroundColor: "#0052CC",
+                    borderColor: "#0052CC",
+                    borderRadius: "4px",
+                    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "6px 16px",
+                    height: "40px",
+                    fontSize: "14px",
+                    fontWeight: 500,
+                    transition: "all 0.3s ease",
+                  }}
+                  className="hover:opacity-90 hover:scale-102 transition-transform"
+                  aria-label="Crear nueva transferencia"
                 >
-                  Nueva Trasferencia
+                  Nueva Transferencia
                 </Button>
-
               </Tooltip>
 
             </Space>
