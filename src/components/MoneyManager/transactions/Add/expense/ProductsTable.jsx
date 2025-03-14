@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Table, Select, Input, Button, Divider, Checkbox } from 'antd';
 import { getCategorias } from "../../../../../services/moneymanager/moneyService";
 
@@ -11,27 +11,39 @@ const formatCurrency = (value) => {
   }).format(value);
 };
 
-const ProductsTable = ({ onDataChange, onHiddenDetailsChange }) => {
+const ProductsTable = ({ onDataChange, onHiddenDetailsChange, initialData = [] }) => {
   const [hasPercentageDiscount, setHasPercentageDiscount] = useState(false);
   const [hiddenDetails, setHiddenDetails] = useState(false);
   const [hiddenImpuestos, setHiddenImpuestos] = useState(false);
-
   const [categorias, setCategorias] = useState([]);
-  const [items, setItems] = useState([{
-    key: '1',
-    type: 'Gasto',
-    provider: '',
-    product: '',
-    description: '',
-    quantity: 1.00,
-    unitPrice: 0.00,
-    purchaseValue: 0.00,
-    discount: 0.00,
-    taxCharge: 0.00,
-    taxWithholding: 0.00,
-    total: 0.00,
-    categoria: "",
-  }]);
+
+  // Usar useRef para rastrear si es la primera carga de datos
+  const isInitialMount = useRef(true);
+
+  // Estado inicial de los ítems basado en initialData
+  const [items, setItems] = useState(() => {
+    if (initialData.length > 0) {
+      return initialData.map(item => ({
+        ...item,
+        key: item.id || `${Date.now()}-${Math.random()}`,
+      }));
+    }
+    return [{
+      key: '1',
+      type: 'Gasto',
+      provider: '',
+      product: '',
+      description: '',
+      quantity: 1.00,
+      unitPrice: 0.00,
+      purchaseValue: 0.00,
+      discount: 0.00,
+      taxCharge: 0.00,
+      taxWithholding: 0.00,
+      total: 0.00,
+      categoria: "",
+    }];
+  });
 
   const [totals, setTotals] = useState({
     totalBruto: 0,
@@ -42,16 +54,57 @@ const ProductsTable = ({ onDataChange, onHiddenDetailsChange }) => {
     totalNeto: 0,
     ivaPercentage: "0",
     retencionPercentage: "0",
-    totalImpuestos: 0 // Nueva propiedad para almacenar el total en impuestos
+    totalImpuestos: 0
   });
 
-  // Notify parent when hiddenDetails changes
+  // Cargar categorías al montar el componente
+  useEffect(() => {
+    const ObtenerCategorias = async () => {
+      try {
+        const data = await getCategorias();
+        setCategorias(data);
+      } catch (err) {
+        console.error("Error al cargar las categorías:", err);
+      }
+    };
+    ObtenerCategorias();
+  }, []);
+
+  // Sincronizar ítems solo en la primera carga o si initialData cambia
+  useEffect(() => {
+    if (isInitialMount.current && initialData.length > 0) {
+      setItems(initialData.map(item => ({
+        ...item,
+        key: item.id || `${Date.now()}-${Math.random()}`,
+      })));
+      isInitialMount.current = false;
+    }
+  }, [initialData]);
+
+  // Notificar cambios al componente padre
+  useEffect(() => {
+    if (onDataChange) {
+      const validItems = items.filter(item =>
+        item.product !== '' ||
+        item.description !== '' ||
+        item.unitPrice > 0 ||
+        item.quantity > 0
+      );
+      onDataChange({
+        items: validItems,
+        totals
+      });
+    }
+  }, [items, totals, onDataChange]);
+
+  // Notificar cambios en hiddenDetails
   useEffect(() => {
     if (onHiddenDetailsChange) {
       onHiddenDetailsChange(hiddenDetails);
     }
   }, [hiddenDetails, onHiddenDetailsChange]);
 
+  // Calcular el total de un ítem
   const calculateItemTotal = (item) => {
     const quantity = parseFloat(item.quantity) || 0;
     const unitPrice = parseFloat(item.unitPrice) || 0;
@@ -70,66 +123,34 @@ const ProductsTable = ({ onDataChange, onHiddenDetailsChange }) => {
     return itemSubtotal + taxChargeAmount - taxWithholdingAmount;
   };
 
-  // Función para obtener categorías, se ejecuta solo una vez al montar el componente
-  const ObtenerCategorias = async () => {
-    try {
-      const data = await getCategorias();
-      setCategorias(data);
-    } catch (err) {
-      console.error("Error al cargar las categorías:", err);
-    }
-  };
-
-  // Cargar categorías solo una vez al montar el componente
-  useEffect(() => {
-    ObtenerCategorias();
-  }, []); // Lista de dependencias vacía para ejecutar solo al montar
-
-  // Efecto para notificar cambios al componente padre
-  useEffect(() => {
-    if (onDataChange) {
-      const validItems = items.filter(item =>
-        item.product !== '' ||
-        item.description !== '' ||
-        item.unitPrice > 0 ||
-        item.quantity > 0
-      );
-
-      onDataChange({
-        items: validItems,
-        totals
-      });
-    }
-  }, [items, totals, onDataChange]); // Nota: Aquí ya no llamamos a ObtenerCategorias
-
-  // Efecto para calcular totales
+  // Calcular totales generales
   useEffect(() => {
     const newTotals = items.reduce((acc, item) => {
       const totalItem = calculateItemTotal(item);
       const quantity = parseFloat(item.quantity) || 0;
       const unitPrice = parseFloat(item.unitPrice) || 0;
       const discount = parseFloat(item.discount) || 0;
-  
+
       const itemBruto = quantity * unitPrice;
       const itemDiscount = hasPercentageDiscount
         ? itemBruto * (discount / 100)
         : discount;
-  
-      acc.totalBruto += totalItem;
+
+      acc.totalBruto += itemBruto;
       acc.descuentos += itemDiscount;
-  
+
       return acc;
     }, {
       totalBruto: 0,
       descuentos: 0
     });
-  
-    const subtotal = newTotals.totalBruto;
-    const iva = hiddenImpuestos ? subtotal * (parseFloat(totals.ivaPercentage) / 100) : 0;
-    const retencion = hiddenImpuestos ? subtotal * (parseFloat(totals.retencionPercentage) / 100) : 0;
+
+    const subtotal = newTotals.totalBruto - newTotals.descuentos;
+    const iva = hiddenImpuestos ? subtotal * (parseFloat(totals.ivaPercentage) / 100) : items.reduce((acc, item) => acc + (parseFloat(item.taxCharge) || 0) * (parseFloat(item.quantity) || 0) * (parseFloat(item.unitPrice) || 0) / 100, 0);
+    const retencion = hiddenImpuestos ? subtotal * (parseFloat(totals.retencionPercentage) / 100) : items.reduce((acc, item) => acc + (parseFloat(item.taxWithholding) || 0) * (parseFloat(item.quantity) || 0) * (parseFloat(item.unitPrice) || 0) / 100, 0);
     const totalNeto = subtotal + iva - retencion;
-    const totalImpuestos = iva - retencion; // Cálculo del total en impuestos (IVA - Retención)
-  
+    const totalImpuestos = iva - retencion;
+
     setTotals({
       ...totals,
       totalBruto: newTotals.totalBruto,
@@ -138,12 +159,12 @@ const ProductsTable = ({ onDataChange, onHiddenDetailsChange }) => {
       iva: iva,
       retencion: retencion,
       totalNeto: totalNeto,
-      totalImpuestos: totalImpuestos // Guardamos el total en impuestos
+      totalImpuestos: totalImpuestos
     });
   }, [items, hasPercentageDiscount, totals.ivaPercentage, totals.retencionPercentage, hiddenImpuestos]);
 
   const handleAddRow = () => {
-    const newKey = (items.length + 1).toString();
+    const newKey = `${Date.now()}-${Math.random()}`;
     setItems([...items, {
       key: newKey,
       type: 'Gasto',
@@ -444,7 +465,6 @@ const ProductsTable = ({ onDataChange, onHiddenDetailsChange }) => {
               <div style={{ textAlign: 'right', fontWeight: 'bold', fontSize: '16px' }}>Total Neto:</div>
               <div style={{ textAlign: 'right', fontWeight: 'bold', fontSize: '16px' }}>{formatCurrency(totals.totalNeto)}</div>
             </div>
-            {/* Mostrar el total en impuestos justo después del total neto */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '8px' }}>
               <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Total en Impuestos:</div>
               <div style={{ textAlign: 'right', fontWeight: 500, color: totals.totalImpuestos >= 0 ? '#52c41a' : '#ff4d4f' }}>

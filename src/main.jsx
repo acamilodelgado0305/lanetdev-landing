@@ -121,6 +121,10 @@ const router = createBrowserRouter([
             element: <AddIncome />,
           },
           {
+            path: "egresos/edit/:id",
+            element: <AddExpense />,
+          },
+          {
             path: "categorias",
             element: <Categories />,
           },

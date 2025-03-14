@@ -20,20 +20,20 @@
 
 .impresion-1 {
   height: 48em;
-  background: url("../../images/newback..jpg");
+  background: url("../../imagenes/newback..jpg");
   background-size: cover;
   position: relative;
 }
 
 .image1 {
-  background-image: url("../../images/image1.jpg");
+  background-image: url("../../imagenes/image1.jpg");
   background-size: cover;
   height: 40em;
   color: #000;
 }
 
 .image2 {
-  background-image: url("../../images/image2.jpg");
+  background-image: url("../../imagenes/image2.jpg");
   background-size: cover;
   height: 40em;
   color: #000;
@@ -44,7 +44,7 @@
   justify-content: center;
   align-items: center;
   margin-top: -2em;
-  background: url("../../images/block.jpg");
+  background: url("../../imagenes/block.jpg");
   background-size: cover;
   height: 40em;
   color: #000;

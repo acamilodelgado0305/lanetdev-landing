@@ -8,12 +8,30 @@ const ExpenseVoucherSection = ({ onVoucherChange, initialVouchers = [], entryId 
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
     const [currentImage, setCurrentImage] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
-    const [imageUrls, setImageUrls] = useState(initialVouchers);
+    const [imageUrls, setImageUrls] = useState(Array.isArray(initialVouchers) ? initialVouchers : []);
 
+    // Función auxiliar para normalizar los datos de voucher y asegurar que sea un array
+    const normalizeVouchers = (vouchers) => {
+        if (Array.isArray(vouchers)) return vouchers;
+        if (typeof vouchers === 'string') {
+            try {
+                const parsed = JSON.parse(vouchers);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (error) {
+                console.error('Error al parsear vouchers:', error);
+                return [];
+            }
+        }
+        return [];
+    };
 
     useEffect(() => {
         const fetchVouchers = async () => {
-            if (!entryId) return;
+            if (!entryId) {
+                // Si no hay entryId, usa los initialVouchers normalizados
+                setImageUrls(normalizeVouchers(initialVouchers));
+                return;
+            }
 
             try {
                 const response = await fetch(`${import.meta.env.VITE_API_FINANZAS}/expenses/${entryId}/vouchers`);
@@ -21,8 +39,9 @@ const ExpenseVoucherSection = ({ onVoucherChange, initialVouchers = [], entryId 
                     throw new Error('Error al obtener los comprobantes');
                 }
                 const data = await response.json();
-                // Extraer el array de vouchers de la respuesta
-                setImageUrls(data.vouchers || []);
+                // Normalizar los vouchers recibidos del servidor
+                const normalizedVouchers = normalizeVouchers(data.vouchers);
+                setImageUrls(normalizedVouchers);
             } catch (error) {
                 console.error('Error al obtener los comprobantes:', error);
                 message.error('No se pudieron cargar los comprobantes');
@@ -31,14 +50,14 @@ const ExpenseVoucherSection = ({ onVoucherChange, initialVouchers = [], entryId 
         };
 
         fetchVouchers();
-    }, [entryId]);
+    }, [entryId, initialVouchers]);
 
     // Efecto para notificar al padre cuando cambian las imágenes
     useEffect(() => {
         if (onVoucherChange) {
-            onVoucherChange(JSON.stringify(imageUrls));
+            onVoucherChange(imageUrls); // Enviar el array directamente, no como string
         }
-    }, [imageUrls]);
+    }, [imageUrls, onVoucherChange]);
 
     const handleImageUpload = async (files) => {
         if (files.length === 0 || isUploading) return;  // Evitar que se dispare si ya está en proceso de carga
@@ -74,7 +93,6 @@ const ExpenseVoucherSection = ({ onVoucherChange, initialVouchers = [], entryId 
             setIsUploading(false);  // Marcar como no cargando
         }
     };
-
 
     const handleDeleteVoucher = (indexToDelete) => {
         setImageUrls(prev => prev.filter((_, index) => index !== indexToDelete));
@@ -118,7 +136,9 @@ const ExpenseVoucherSection = ({ onVoucherChange, initialVouchers = [], entryId 
         }
         return null;
     };
+
     const { Dragger } = Upload;
+
     return (
         <Card
             title="Comprobantes"
@@ -156,37 +176,37 @@ const ExpenseVoucherSection = ({ onVoucherChange, initialVouchers = [], entryId 
             ) : null}
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                {imageUrls.map((url, index) => (
-                    <div key={index} className="relative group">
-                        {renderFilePreview(url)}
-                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all rounded-lg flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                            <button
-                                onClick={() => {
-                                    setCurrentImage(url);
-                                    setIsImageModalOpen(true);
-                                }}
-                                className="p-2 bg-white rounded-full hover:bg-gray-100"
-                            >
-                                <EyeOutlined className="text-gray-700" />
-                            </button>
-                            {isEditMode && (
+                {Array.isArray(imageUrls) && imageUrls.length > 0 ? (
+                    imageUrls.map((url, index) => (
+                        <div key={index} className="relative group">
+                            {renderFilePreview(url)}
+                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all rounded-lg flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
                                 <button
-                                    onClick={() => handleDeleteVoucher(index)}
+                                    onClick={() => {
+                                        setCurrentImage(url);
+                                        setIsImageModalOpen(true);
+                                    }}
                                     className="p-2 bg-white rounded-full hover:bg-gray-100"
                                 >
-                                    <DeleteOutlined className="text-red-600" />
+                                    <EyeOutlined className="text-gray-700" />
                                 </button>
-                            )}
+                                {isEditMode && (
+                                    <button
+                                        onClick={() => handleDeleteVoucher(index)}
+                                        className="p-2 bg-white rounded-full hover:bg-gray-100"
+                                    >
+                                        <DeleteOutlined className="text-red-600" />
+                                    </button>
+                                )}
+                            </div>
                         </div>
+                    ))
+                ) : (
+                    <div className="text-center py-8 text-gray-500 col-span-full">
+                        No hay comprobantes adjuntos
                     </div>
-                ))}
+                )}
             </div>
-
-            {imageUrls.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                    No hay comprobantes adjuntos
-                </div>
-            )}
 
             <Modal
                 open={isImageModalOpen}

@@ -27,7 +27,7 @@ import { useAuth } from '../Context/AuthProvider';
 import NotificationModal from '../communication/components/NotificationModal';
 import PlusModal from "../MoneyManager/transactions/PlusModal";
 
-import picture from '../../images/F.png';
+import picture from '../../imagenes/F.png';
 
 const Header = ({ isSidebarExpanded, isSidebarHidden, setIsExpanded }) => {
   const [showNotificationModal, setShowNotificationModal] = useState(false);
