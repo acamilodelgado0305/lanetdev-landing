@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { IoClose } from "react-icons/io5";
-import AccountSelector from "../AccountSelector ";
+import AccountSelector from "../AccountSelector";
 import CategorySelector from "../CategorySelector";
 import { DatePicker, Input, Button, Row, Col, Tabs, Card, Radio, Typography, Space, Checkbox, Divider, Select, Tooltip } from "antd";
 import Swal from "sweetalert2";
@@ -46,7 +46,21 @@ const AddExpense = () => {
 
   // Estado para la tabla de ítems y totales
   const [expenseTableData, setExpenseTableData] = useState({
-    items: [],
+    items: [{
+      key: '1',
+      type: 'Gasto',
+      provider: '',
+      product: '',
+      description: '',
+      quantity: 1.00,
+      unitPrice: 0.00,
+      purchaseValue: 0.00,
+      discount: 0.00,
+      taxCharge: 0.00,
+      taxWithholding: 0.00,
+      total: 0.00,
+      categoria: "",
+    }],
     totals: {
       totalBruto: 0,
       descuentos: 0,
@@ -59,9 +73,6 @@ const AddExpense = () => {
       totalImpuestos: 0,
     },
   });
-
-  // Memoizar expenseTableData.items para evitar cambios innecesarios
-  const memoizedItems = useMemo(() => expenseTableData.items, [expenseTableData.items]);
 
   // Cargar datos iniciales
   useEffect(() => {
@@ -117,9 +128,10 @@ const AddExpense = () => {
       setVoucher(parseVoucher(data.voucher));
   
       // Mapear ítems y totales
-      if (data.items) {
+      if (data.items && data.items.length > 0) {
         const mappedItems = data.items.map(item => ({
           id: item.id,
+          key: item.id || `${Date.now()}-${Math.random()}`,
           type: item.type || 'Gasto',
           provider: item.provider || '',
           product: item.product_name || '',
@@ -147,7 +159,6 @@ const AddExpense = () => {
             totalImpuestos: parseFloat(data.total_impuestos) || 0,
           },
         });
-        console.log("Datos del egreso cargados:", mappedItems); // Depuración
       }
     } catch (error) {
       console.error("Error al obtener los datos del egreso:", error);
@@ -202,27 +213,18 @@ const AddExpense = () => {
     setIsHiddenDetails(value);
   };
 
-  const handleExpenseTableDataChange = (data) => {
-    // Filtrar ítems válidos
-    const validItems = data.items.filter(item =>
-      item.product !== "" ||
-      item.description !== "" ||
-      item.unitPrice > 0 ||
-      item.quantity > 0
-    );
+  const handleItemsChange = (updatedItems) => {
+    setExpenseTableData(prev => ({
+      ...prev,
+      items: updatedItems
+    }));
+  };
 
-    // Evitar actualizaciones innecesarias comparando el estado anterior
-    setExpenseTableData(prev => {
-      const newState = {
-        items: validItems,
-        totals: data.totals,
-      };
-      if (JSON.stringify(prev) !== JSON.stringify(newState)) {
-        console.log("Actualizando expenseTableData:", newState); // Depuración
-        return newState;
-      }
-      return prev;
-    });
+  const handleTotalsChange = (updatedTotals) => {
+    setExpenseTableData(prev => ({
+      ...prev,
+      totals: updatedTotals
+    }));
   };
 
   const formatCurrency = (amount) => {
@@ -517,9 +519,10 @@ const AddExpense = () => {
         {renderInvoiceHeader()}
         <Divider />
         <ProductsTable
+          items={expenseTableData.items}
+          onItemsChange={handleItemsChange}
+          onTotalsChange={handleTotalsChange}
           onHiddenDetailsChange={handleHiddenDetailsChange}
-          onDataChange={handleExpenseTableDataChange}
-          initialData={memoizedItems} // Usar ítems memoizados
         />
       </div>
     );

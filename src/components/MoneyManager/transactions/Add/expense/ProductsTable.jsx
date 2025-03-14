@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Table, Select, Input, Button, Divider, Checkbox } from 'antd';
 import { getCategorias } from "../../../../../services/moneymanager/moneyService";
 
@@ -11,43 +11,11 @@ const formatCurrency = (value) => {
   }).format(value);
 };
 
-const ProductsTable = ({ onDataChange, onHiddenDetailsChange, initialData = [] }) => {
+const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsChange, initialData = [] }) => {
   const [hasPercentageDiscount, setHasPercentageDiscount] = useState(false);
   const [hiddenDetails, setHiddenDetails] = useState(false);
   const [hiddenImpuestos, setHiddenImpuestos] = useState(false);
   const [categorias, setCategorias] = useState([]);
-
-  // Usar useRef para rastrear si los datos iniciales ya fueron cargados
-  const isInitialDataLoaded = useRef(false);
-  // Usar useRef para almacenar la última versión de initialData y evitar actualizaciones innecesarias
-  const prevInitialData = useRef(initialData);
-
-  // Estado inicial de los ítems basado en initialData
-  const [items, setItems] = useState(() => {
-    if (initialData.length > 0) {
-      isInitialDataLoaded.current = true;
-      return initialData.map(item => ({
-        ...item,
-        key: item.id || `${Date.now()}-${Math.random()}`,
-      }));
-    }
-    return [{
-      key: '1',
-      type: 'Gasto',
-      provider: '',
-      product: '',
-      description: '',
-      quantity: 1.00,
-      unitPrice: 0.00,
-      purchaseValue: 0.00,
-      discount: 0.00,
-      taxCharge: 0.00,
-      taxWithholding: 0.00,
-      total: 0.00,
-      categoria: "",
-    }];
-  });
-
   const [totals, setTotals] = useState({
     totalBruto: 0,
     descuentos: 0,
@@ -72,38 +40,6 @@ const ProductsTable = ({ onDataChange, onHiddenDetailsChange, initialData = [] }
     };
     ObtenerCategorias();
   }, []);
-
-  // Sincronizar ítems con initialData cuando cambie, pero solo si no se han hecho cambios locales
-  useEffect(() => {
-    // Comparar profundamente initialData con prevInitialData para evitar actualizaciones innecesarias
-    if (JSON.stringify(initialData) !== JSON.stringify(prevInitialData.current)) {
-      // Actualizar ítems solo si no se han hecho cambios locales (es decir, si es la carga inicial)
-      if (!isInitialDataLoaded.current || initialData.length > 0) {
-        setItems(initialData.map(item => ({
-          ...item,
-          key: item.id || `${Date.now()}-${Math.random()}`,
-        })));
-        isInitialDataLoaded.current = true;
-      }
-      prevInitialData.current = initialData;
-    }
-  }, [initialData]);
-
-  // Notificar cambios al componente padre
-  useEffect(() => {
-    if (onDataChange) {
-      const validItems = items.filter(item =>
-        item.product !== '' ||
-        item.description !== '' ||
-        item.unitPrice > 0 ||
-        item.quantity > 0
-      );
-      onDataChange({
-        items: validItems,
-        totals
-      });
-    }
-  }, [items, totals, onDataChange]);
 
   // Notificar cambios en hiddenDetails
   useEffect(() => {
@@ -131,7 +67,7 @@ const ProductsTable = ({ onDataChange, onHiddenDetailsChange, initialData = [] }
     return itemSubtotal + taxChargeAmount - taxWithholdingAmount;
   };
 
-  // Calcular totales generales
+  // Calcular totales generales y notificar al padre
   useEffect(() => {
     const newTotals = items.reduce((acc, item) => {
       const totalItem = calculateItemTotal(item);
@@ -159,21 +95,27 @@ const ProductsTable = ({ onDataChange, onHiddenDetailsChange, initialData = [] }
     const totalNeto = subtotal + iva - retencion;
     const totalImpuestos = iva - retencion;
 
-    setTotals({
-      ...totals,
+    const updatedTotals = {
       totalBruto: newTotals.totalBruto,
       descuentos: newTotals.descuentos,
       subtotal: subtotal,
       iva: iva,
       retencion: retencion,
       totalNeto: totalNeto,
+      ivaPercentage: totals.ivaPercentage,
+      retencionPercentage: totals.retencionPercentage,
       totalImpuestos: totalImpuestos
-    });
-  }, [items, hasPercentageDiscount, totals.ivaPercentage, totals.retencionPercentage, hiddenImpuestos]);
+    };
+
+    setTotals(updatedTotals);
+    if (onTotalsChange) {
+      onTotalsChange(updatedTotals);
+    }
+  }, [items, hasPercentageDiscount, totals.ivaPercentage, totals.retencionPercentage, hiddenImpuestos, onTotalsChange]);
 
   const handleAddRow = () => {
     const newKey = `${Date.now()}-${Math.random()}`;
-    setItems([...items, {
+    const newItem = {
       key: newKey,
       type: 'Gasto',
       provider: '',
@@ -187,24 +129,26 @@ const ProductsTable = ({ onDataChange, onHiddenDetailsChange, initialData = [] }
       taxWithholding: 0.00,
       total: 0.00,
       categoria: "",
-    }]);
+    };
+    onItemsChange([...items, newItem]);
   };
 
   const handleDeleteRow = (key) => {
     if (items.length > 1) {
-      setItems(items.filter(item => item.key !== key));
+      onItemsChange(items.filter(item => item.key !== key));
     }
   };
 
   const handleValueChange = (key, field, value) => {
-    setItems(items.map(item => {
+    const updatedItems = items.map(item => {
       if (item.key === key) {
         const updatedItem = { ...item, [field]: value };
         updatedItem.total = calculateItemTotal(updatedItem);
         return updatedItem;
       }
       return item;
-    }));
+    });
+    onItemsChange(updatedItems);
   };
 
   const handleRetentionChange = (type, value) => {
