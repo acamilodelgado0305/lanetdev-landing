@@ -118,22 +118,23 @@ const AddExpense = () => {
   
       // Mapear ítems y totales
       if (data.items) {
+        const mappedItems = data.items.map(item => ({
+          id: item.id,
+          type: item.type || 'Gasto',
+          provider: item.provider || '',
+          product: item.product_name || '',
+          description: item.description || '',
+          quantity: parseFloat(item.quantity) || 1.00,
+          unitPrice: parseFloat(item.unit_price) || 0.00,
+          purchaseValue: parseFloat(item.purchase_value) || 0.00,
+          discount: parseFloat(item.discount) || 0.00,
+          taxCharge: parseFloat(item.tax_charge) || 0.00,
+          taxWithholding: parseFloat(item.tax_withholding) || 0.00,
+          total: parseFloat(item.total) || 0.00,
+          categoria: item.category || '',
+        }));
         setExpenseTableData({
-          items: data.items.map(item => ({
-            id: item.id,
-            type: item.type || 'Gasto',
-            provider: item.provider || '',
-            product: item.product_name || '',
-            description: item.description || '',
-            quantity: parseFloat(item.quantity) || 1.00,
-            unitPrice: parseFloat(item.unit_price) || 0.00,
-            purchaseValue: parseFloat(item.purchase_value) || 0.00,
-            discount: parseFloat(item.discount) || 0.00,
-            taxCharge: parseFloat(item.tax_charge) || 0.00,
-            taxWithholding: parseFloat(item.tax_withholding) || 0.00,
-            total: parseFloat(item.total) || 0.00,
-            categoria: item.category || '',
-          })),
+          items: mappedItems,
           totals: {
             totalBruto: parseFloat(data.total_gross) || 0,
             descuentos: parseFloat(data.discounts) || 0,
@@ -146,6 +147,7 @@ const AddExpense = () => {
             totalImpuestos: parseFloat(data.total_impuestos) || 0,
           },
         });
+        console.log("Datos del egreso cargados:", mappedItems); // Depuración
       }
     } catch (error) {
       console.error("Error al obtener los datos del egreso:", error);
@@ -215,8 +217,8 @@ const AddExpense = () => {
         items: validItems,
         totals: data.totals,
       };
-      // Comparar profundamente para evitar actualizaciones innecesarias
       if (JSON.stringify(prev) !== JSON.stringify(newState)) {
+        console.log("Actualizando expenseTableData:", newState); // Depuración
         return newState;
       }
       return prev;

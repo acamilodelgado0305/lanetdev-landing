@@ -17,12 +17,15 @@ const ProductsTable = ({ onDataChange, onHiddenDetailsChange, initialData = [] }
   const [hiddenImpuestos, setHiddenImpuestos] = useState(false);
   const [categorias, setCategorias] = useState([]);
 
-  // Usar useRef para rastrear si es la primera carga de datos
-  const isInitialMount = useRef(true);
+  // Usar useRef para rastrear si los datos iniciales ya fueron cargados
+  const isInitialDataLoaded = useRef(false);
+  // Usar useRef para almacenar la última versión de initialData y evitar actualizaciones innecesarias
+  const prevInitialData = useRef(initialData);
 
   // Estado inicial de los ítems basado en initialData
   const [items, setItems] = useState(() => {
     if (initialData.length > 0) {
+      isInitialDataLoaded.current = true;
       return initialData.map(item => ({
         ...item,
         key: item.id || `${Date.now()}-${Math.random()}`,
@@ -70,14 +73,19 @@ const ProductsTable = ({ onDataChange, onHiddenDetailsChange, initialData = [] }
     ObtenerCategorias();
   }, []);
 
-  // Sincronizar ítems solo en la primera carga o si initialData cambia
+  // Sincronizar ítems con initialData cuando cambie, pero solo si no se han hecho cambios locales
   useEffect(() => {
-    if (isInitialMount.current && initialData.length > 0) {
-      setItems(initialData.map(item => ({
-        ...item,
-        key: item.id || `${Date.now()}-${Math.random()}`,
-      })));
-      isInitialMount.current = false;
+    // Comparar profundamente initialData con prevInitialData para evitar actualizaciones innecesarias
+    if (JSON.stringify(initialData) !== JSON.stringify(prevInitialData.current)) {
+      // Actualizar ítems solo si no se han hecho cambios locales (es decir, si es la carga inicial)
+      if (!isInitialDataLoaded.current || initialData.length > 0) {
+        setItems(initialData.map(item => ({
+          ...item,
+          key: item.id || `${Date.now()}-${Math.random()}`,
+        })));
+        isInitialDataLoaded.current = true;
+      }
+      prevInitialData.current = initialData;
     }
   }, [initialData]);
 
