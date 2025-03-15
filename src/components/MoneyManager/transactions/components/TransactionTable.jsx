@@ -20,6 +20,8 @@ import {
     EditOutlined
 } from "@ant-design/icons";
 import FloatingActionMenu from "../FloatingActionMenu";
+import DateNavigator from "../Add/DateNavigator";
+
 
 const { RangePicker } = DatePicker;
 const { Title, Text } = Typography;
@@ -566,17 +568,25 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
     const columns = [
         {
             title: (
-                <Tooltip title="Número de Egreso">
-                    <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                        De la cuenta
-                        <Input
-                            placeholder="Buscar"
-                            onChange={(e) => handleSearch(e.target.value, "from_account_id")}
-                            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
-                        />
 
-                    </div>
-                </Tooltip>
+                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    De la cuenta
+                    <Input
+
+                        onChange={(e) => handleSearch(e.target.value, "from_account_id")}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: '1px solid #d9d9d9', // Borde gris claro
+                            borderRadius: 4, // Bordes redondeados para un diseño más profesional
+                            outline: 'none', // Elimina el borde de enfoque predeterminado del navegador
+                        }}
+                    />
+
+                </div>
+
             ),
             dataIndex: "from_account_id",
             key: "from_account_id",
@@ -592,17 +602,25 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
         },
         {
             title: (
-                <Tooltip title="Fecha de registro">
-                    <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                        A la cuenta
-                        <Input
-                        placeholder="Buscar"
+
+                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    A la cuenta
+                    <input
+
                         onChange={(e) => handleSearch(e.target.value, "to_account_id")}
-                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: '1px solid #d9d9d9', // Borde gris claro
+                            borderRadius: 4, // Bordes redondeados para un diseño más profesional
+                            outline: 'none', // Elimina el borde de enfoque predeterminado del navegador
+                        }}
                     />
 
-                    </div>
-                </Tooltip>
+                </div>
+
             ),
             dataIndex: "to_account_id",
             key: "to_account_id",
@@ -619,11 +637,19 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
             title: (
                 <div className="flex flex-col" style={{ margin: "2px 0", gap: 1, lineHeight: 1 }}>
                     Titulo
-                    <Input
+                    <input
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
 
                         onChange={(e) => handleSearch(e.target.value, "description")}
-                        style={{ marginTop: 2, padding: 4, height: 25, fontSize: 12 }}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: '1px solid #d9d9d9', // Borde gris claro
+                            borderRadius: 4, // Bordes redondeados para un diseño más profesional
+                            outline: 'none', // Elimina el borde de enfoque predeterminado del navegador
+                        }}
                     />
                 </div>
             ),
@@ -634,16 +660,24 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
             ellipsis: true,
             width: 300,
         },
-        
+
         {
             title: (
                 <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
                     Monto
-                    <Input
+                    <input
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                        placeholder="Buscar"
+
                         onChange={(e) => handleSearch(e.target.value, "amount")}
-                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: '1px solid #d9d9d9', // Borde gris claro
+                            borderRadius: 4, // Bordes redondeados para un diseño más profesional
+                            outline: 'none', // Elimina el borde de enfoque predeterminado del navegador
+                        }}
                     />
                 </div>
             ),
@@ -684,116 +718,97 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
     return (
         <>
             {/* Jira-style Top Bar */}
-           <div className="bg-white py-2 px-5 shadow-sm">
-                           <div className="flex  justify-between items-center">
-                               {/* Left side: Actions */}
-                               <div className="flex items-center space-x-1">      
-                                   <Button
-                                       icon={<FilterOutlined />}
-                                       onClick={() => setShowFilters(!showFilters)}
-                                   >
-                                       {showFilters ? "Filtro" : "Filtro"}
-                                   </Button>
-                               </div>
-                               <div className="flex items-center">
-                                   <div className="mr-3">
-                                       <div className="flex items-center justify-end ">
-                                           <div className="bg-white px-2  text-center flex-none w-26">
-                                               <h3 className="text-gray-500 text-[10px] font-medium uppercase">Ingresos</h3>
-                                               <p className="text-green-600 text-sm font-semibold mt-1 truncate">
-                                                   {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyIncome)}
-                                               </p>
-                                           </div>
-                                           <div className="bg-white px-2  text-center flex-none w-26">
-                                               <h3 className="text-gray-500 text-[10px] font-medium uppercase">Egresos</h3>
-                                               <p className="text-red-600 text-sm font-semibold mt-1 truncate">
-                                                   {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyExpenses)}
-                                               </p>
-                                           </div>
-                                           <div className="px-2 bg-white text-center flex-none w-26">
-                                               <h3 className="text-gray-500 text-[10px] font-medium uppercase">Balance</h3>
-                                               <p className="text-blue-600 text-sm font-semibold mt-1 truncate">
-                                                   {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyBalance)}
-                                               </p>
-                                           </div>
-                                       </div>
-                                   </div>
-                                   <Tooltip title="Mes actual">
-                                       <Button
-                                           icon={<CalendarOutlined />}
-                                           onClick={goToCurrentMonth}
-                                           className="mr-2"
-                                       >
-                                           Hoy
-                                       </Button>
-                                   </Tooltip>
-                                   <Button
-                                       icon={<LeftOutlined />}
-                                       onClick={goToPreviousMonth}
-                                       className="mr-1"
-                                   />
-                                   <span className="font-medium px-3 py-1 bg-gray-100 rounded">
-                                       {formatDate(currentMonth, "MMMM yyyy", { locale: es })}
-                                   </span>
-                                   <Button
-                                       icon={<RightOutlined />}
-                                       onClick={goToNextMonth}
-                                       className="ml-1"
-                                   />
-                               </div>
-                           </div>
-           
-                           {showFilters && (
-                               <div className="mt-4 p-3 bg-white ">
-                                   <div className="flex flex-wrap items-center gap-4">
-                                       {/* Cashier filter dropdown */}
-                                       <Select
-                                           placeholder="Filtrar por cajero"
-                                           style={{ width: 200 }}
-                                           onChange={handleCashierFilterChange}
-                                           value={cashierFilter || undefined}
-                                           loading={cashiers.length === 0}
-                                           allowClear
-                                       >
-                                           {cashiers.map((cashier) => (
-                                               <Select.Option key={cashier.id_cajero} value={cashier.id_cajero}>
-                                                   {cashier.nombre}
-                                               </Select.Option>
-                                           ))}
-                                       </Select>
-                                       <Select
-                                           placeholder="Filtrar por tipo"
-                                           style={{ width: 150 }}
-                                           onChange={handleTypeFilterChange}
-                                           value={typeFilter || undefined}
-                                           allowClear
-                                       >
-                                           {typeOptions.map((type) => (
-                                               <Select.Option key={type} value={type}>
-                                                   {type.charAt(0).toUpperCase() + type.slice(1)}
-                                               </Select.Option>
-                                           ))}
-                                       </Select>
-                                       <Divider type="vertical" style={{ height: '24px' }} />
-                                       <div className="flex items-center">
-                                           <Text strong className="mr-2">Seleccionados:</Text>
-                                           <Tag color="blue">
-                                               {selectedRowKeys.length} de {filteredEntries.length} registros
-                                           </Tag>
-                                           {selectedRowKeys.length > 0 && (
-                                               <Button
-                                                   type="link"
-                                                   size="small"
-                                                   onClick={() => setSelectedRowKeys([])}
-                                               >
-                                                   Limpiar selección
-                                               </Button>
-                                           )}
-                                       </div>
-                                   </div>
-                               </div>
-                           )}
-                       </div>
+            <div className="bg-white py-2 px-5 shadow-sm">
+                <div className="flex  justify-between items-center">
+                    {/* Left side: Actions */}
+                    <div className="flex items-center space-x-1">
+                        <Button
+                            icon={<FilterOutlined />}
+                            onClick={() => setShowFilters(!showFilters)}
+                        >
+                            {showFilters ? "Filtro" : "Filtro"}
+                        </Button>
+                    </div>
+                    <div className="flex items-center">
+                        <div className="mr-3">
+                            <div className="flex items-center justify-end ">
+                                <div className="bg-white px-2  text-center flex-none w-26">
+                                    <h3 className="text-gray-500 text-[10px] font-medium uppercase">Ingresos</h3>
+                                    <p className="text-green-600 text-sm font-semibold mt-1 truncate">
+                                        {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyIncome)}
+                                    </p>
+                                </div>
+                                <div className="bg-white px-2  text-center flex-none w-26">
+                                    <h3 className="text-gray-500 text-[10px] font-medium uppercase">Egresos</h3>
+                                    <p className="text-red-600 text-sm font-semibold mt-1 truncate">
+                                        {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyExpenses)}
+                                    </p>
+                                </div>
+                                <div className="px-2 bg-white text-center flex-none w-26">
+                                    <h3 className="text-gray-500 text-[10px] font-medium uppercase">Balance</h3>
+                                    <p className="text-blue-600 text-sm font-semibold mt-1 truncate">
+                                        {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyBalance)}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <DateNavigator onMonthChange={(dates) => setDateRange(dates)} />
+                        </div>
+                    </div>
+                </div>
+
+                {showFilters && (
+                    <div className="mt-4 p-3 bg-white ">
+                        <div className="flex flex-wrap items-center gap-4">
+                            {/* Cashier filter dropdown */}
+                            <Select
+                                placeholder="Filtrar por cajero"
+                                style={{ width: 200 }}
+                                onChange={handleCashierFilterChange}
+                                value={cashierFilter || undefined}
+                                loading={cashiers.length === 0}
+                                allowClear
+                            >
+                                {cashiers.map((cashier) => (
+                                    <Select.Option key={cashier.id_cajero} value={cashier.id_cajero}>
+                                        {cashier.nombre}
+                                    </Select.Option>
+                                ))}
+                            </Select>
+                            <Select
+                                placeholder="Filtrar por tipo"
+                                style={{ width: 150 }}
+                                onChange={handleTypeFilterChange}
+                                value={typeFilter || undefined}
+                                allowClear
+                            >
+                                {typeOptions.map((type) => (
+                                    <Select.Option key={type} value={type}>
+                                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                                    </Select.Option>
+                                ))}
+                            </Select>
+                            <Divider type="vertical" style={{ height: '24px' }} />
+                            <div className="flex items-center">
+                                <Text strong className="mr-2">Seleccionados:</Text>
+                                <Tag color="blue">
+                                    {selectedRowKeys.length} de {filteredEntries.length} registros
+                                </Tag>
+                                {selectedRowKeys.length > 0 && (
+                                    <Button
+                                        type="link"
+                                        size="small"
+                                        onClick={() => setSelectedRowKeys([])}
+                                    >
+                                        Limpiar selección
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
 
             {/* Error message if data loading fails */}
             {error && (
@@ -812,16 +827,12 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
 
             {/* Enhanced Table with Jira styling */}
             <Table
-              className="px-7 py-5 "
+                className="px-7 py-5 "
                 rowSelection={rowSelection}
                 dataSource={filteredEntries}
                 columns={columns}
                 rowKey={(record) => record.id}
-                pagination={{
-                    pageSize: 10,
-                    showSizeChanger: true,
-                    showTotal: (total, range) => `${range[0]}-${range[1]} de ${total} registros`
-                }}
+
                 bordered
                 size="middle"
                 loading={entriesLoading}

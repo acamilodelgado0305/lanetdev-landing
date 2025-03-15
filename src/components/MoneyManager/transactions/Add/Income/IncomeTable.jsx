@@ -17,6 +17,8 @@ import {
 } from "@ant-design/icons";
 import FloatingActionMenu from "../../FloatingActionMenu";
 import ViewIncome from "./ViewIncome";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable"; // Correct import
 
 const { RangePicker } = DatePicker;
 const { Title, Text } = Typography;
@@ -58,17 +60,13 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
     const [monthlyBalance, setMonthlyBalance] = useState(0);
     const [monthlyIncome, setMonthlyIncome] = useState(0);
     const [monthlyExpenses, setMonthlyExpenses] = useState(0);
-
     const [loadingMonthlyData, setLoadingMonthlyData] = useState(false);
-
-
-    //estados para el modal de vista:
-
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
-
-
-
+    const doc = new jsPDF();
+    autoTable(doc, {
+        // Table configuration
+    });
 
     const handleEditSelected = () => {
         if (selectedRowKeys.length === 1) {
@@ -77,17 +75,26 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
     };
 
     const handleDeleteSelected = () => {
-        // Use the existing batch delete logic
         handleBatchOperation('delete');
     };
 
     const handleDownloadSelected = () => {
-        // Use the existing batch download logic
-        handleBatchOperation('download');
+        if (selectedRowKeys.length === 0) {
+            Swal.fire({
+                title: 'Selección vacía',
+                text: 'Por favor, seleccione al menos un registro',
+                icon: 'warning',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Entendido'
+            });
+            return;
+        }
+
+        const selectedItems = entries.filter(item => selectedRowKeys.includes(item.id));
+        generateInvoicePDF(selectedItems);
     };
 
     const handleExportSelected = () => {
-        // Use the existing batch export logic
         handleBatchOperation('export');
     };
 
@@ -95,27 +102,20 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
         setSelectedRowKeys([]);
     };
 
-
-    // Fetch data when component mounts
     useEffect(() => {
         fetchData();
-        fetchCashiers(); // Add this to fetch cashiers data
+        fetchCashiers();
     }, []);
 
     useEffect(() => {
         fetchMonthlyData();
     }, [currentMonth]);
 
-
     const fetchCashiers = async () => {
         try {
             const API_BASE_URL = import.meta.env.VITE_API_TERCEROS || '/api';
             const response = await axios.get(`${API_BASE_URL}/cajeros`);
-
-            // Acceder al array de cajeros dentro de response.data.data
             const cashiersArray = response.data.data || [];
-
-            // Map only the needed fields
             const mappedCashiers = cashiersArray.map(cashier => ({
                 id_cajero: cashier.id_cajero,
                 nombre: cashier.nombre,
@@ -131,13 +131,11 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
         }
     };
 
-
     const getCashierName = (cashierId) => {
         const cashier = cashiers.find((cash) => cash.id_cajero === cashierId);
         return cashier ? cashier.nombre : "Cajero no encontrado";
     };
 
-    // Simulate loading when changing date or filter
     const simulateLoading = () => {
         setEntriesLoading(true);
         setTimeout(() => {
@@ -148,22 +146,18 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
     useEffect(() => {
         let filtered = [...entries];
 
-        // Filter by type
         if (typeFilter) {
             filtered = filtered.filter(entry => entry.type === typeFilter);
         }
 
-        // Filter by cashier
         if (cashierFilter) {
             filtered = filtered.filter(entry => entry.cashier_id === cashierFilter);
         }
 
-        // Filter by date range
         if (dateRange && dateRange[0] && dateRange[1]) {
             const startDate = new Date(dateRange[0]);
             const endDate = new Date(dateRange[1]);
 
-            // Validate that dates are valid
             if (isValid(startDate) && isValid(endDate)) {
                 filtered = filtered.filter(entry => {
                     const entryDate = new Date(entry.date);
@@ -172,7 +166,6 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
             }
         }
 
-        // Apply search text filters
         filtered = filtered.filter(entry =>
             Object.keys(searchText).every(key => {
                 if (!searchText[key]) return true;
@@ -200,69 +193,20 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
         setFilteredEntries(filtered);
     }, [entries, searchText, dateRange, typeFilter, cashierFilter, cashiers]);
 
-    // Menú desplegable para el filtro de tipo
-    const typeOptions = ["arqueo", "otro"]; // Ajusta según los tipos disponibles
+    const typeOptions = ["arqueo", "otro"];
 
     const handleTypeFilterChange = (value) => {
         setTypeFilter(value);
     };
 
-
     const handleCashierFilterChange = (value) => {
         setCashierFilter(value);
     };
 
-
-    useEffect(() => {
-        let filtered = [...entries];
-
-        if (dateRange && dateRange[0] && dateRange[1]) {
-            const startDate = new Date(dateRange[0]);
-            const endDate = new Date(dateRange[1]);
-
-            // Validate dates are valid
-            if (isValid(startDate) && isValid(endDate)) {
-                filtered = filtered.filter(entry => {
-                    const entryDate = new Date(entry.date);
-                    return isValid(entryDate) && isWithinInterval(entryDate, { start: startDate, end: endDate });
-                });
-            }
-        }
-
-        // Apply search text filters
-        filtered = filtered.filter(entry =>
-            Object.keys(searchText).every(key => {
-                if (!searchText[key]) return true;
-                if (key === 'category_id') {
-                    return getCategoryName(entry[key])
-                        .toLowerCase()
-                        .includes(searchText[key].toLowerCase());
-                }
-                if (key === 'account_id') {
-                    return getAccountName(entry[key])
-                        .toLowerCase()
-                        .includes(searchText[key].toLowerCase());
-                }
-                if (key === 'cashier_id') {
-                    return getCashierName(entry[key])
-                        .toLowerCase()
-                        .includes(searchText[key].toLowerCase());
-                }
-                return entry[key] ?
-                    entry[key].toString().toLowerCase().includes(searchText[key].toLowerCase()) :
-                    true;
-            })
-        );
-
-        setFilteredEntries(filtered);
-    }, [entries, searchText, dateRange, cashiers]);
-
-    // Función para manejar el clic en una fila
     const handleRowClick = (record) => {
-        setSelectedEntry(record); // Almacena la entrada seleccionada
-        setIsViewModalOpen(true); // Abre el modal
+        setSelectedEntry(record);
+        setIsViewModalOpen(true);
     };
-
 
     const closeModal = () => {
         setIsViewModalOpen(false);
@@ -308,14 +252,11 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
         try {
             const API_BASE_URL = import.meta.env.VITE_API_FINANZAS || '/api';
             const response = await axios.get(`${API_BASE_URL}/balance/month/${monthYear}`);
-
-            // Extract and parse the financial data
             const { total_incomes, total_expenses, net_balance } = response.data;
             const balanceValue = parseFloat(net_balance) || 0;
             const incomeValue = parseFloat(total_incomes) || 0;
             const expensesValue = parseFloat(total_expenses) || 0;
 
-            // Update state with the fetched values
             setMonthlyBalance(balanceValue);
             setMonthlyIncome(incomeValue);
             setMonthlyExpenses(expensesValue);
@@ -327,8 +268,6 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
         }
     };
 
-
-    // Month navigation handlers
     const goToPreviousMonth = () => {
         simulateLoading();
         const prevMonth = subMonths(currentMonth, 1);
@@ -350,16 +289,6 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
         setDateRange([startOfMonth(now), endOfMonth(now)]);
     };
 
-    /*const handleDateRangeChange = (dates) => {
-        simulateLoading();
-        if (dates && dates.length === 2) {
-            setDateRange([dates[0].toDate(), dates[1].toDate()]);
-        } else {
-            setDateRange(null);
-        }
-    };*/
-
-    // Row selection handlers
     const onSelectChange = (newSelectedRowKeys) => {
         setSelectedRowKeys(newSelectedRowKeys);
     };
@@ -379,7 +308,6 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
         ],
     };
 
-    // Batch operations with selected rows
     const handleBatchOperation = (operation) => {
         if (selectedRowKeys.length === 0) {
             Swal.fire({
@@ -396,41 +324,9 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
 
         switch (operation) {
             case 'download':
-                // Logic to download all vouchers from selected items
-                const allVouchers = selectedItems.flatMap(item => item.voucher || []);
-                if (allVouchers.length > 0) {
-                    downloadAllImages(allVouchers);
-                } else {
-                    Swal.fire({
-                        title: 'Sin comprobantes',
-                        text: 'No hay comprobantes disponibles para descargar',
-                        icon: 'info',
-                        confirmButtonColor: '#3085d6',
-                        confirmButtonText: 'Entendido'
-                    });
-                }
-                break;
-            case 'export':
-                // Export selected items to CSV or Excel
-                console.log("Exportar seleccionados:", selectedItems);
-                // Add your export logic here
-                break;
-            case 'edit':
-                // Navigate to edit page for the selected item (only works with one selection)
-                if (selectedRowKeys.length > 1) {
-                    Swal.fire({
-                        title: 'Múltiples selecciones',
-                        text: 'Solo puede editar un registro a la vez',
-                        icon: 'warning',
-                        confirmButtonColor: '#3085d6',
-                        confirmButtonText: 'Entendido'
-                    });
-                } else {
-                    navigate(`/index/moneymanager/ingresos/edit/${selectedRowKeys[0]}`);
-                }
+                generateInvoicePDF(selectedItems);
                 break;
             case 'delete':
-                // Delete selected items
                 Swal.fire({
                     title: '¿Está seguro?',
                     text: `¿Desea eliminar ${selectedRowKeys.length} registro(s) seleccionado(s)?`,
@@ -442,7 +338,6 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
                     cancelButtonText: 'Cancelar'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        // Call delete function for each selected ID
                         const deletePromises = selectedRowKeys.map(id => handleDeleteItem(id));
 
                         Promise.all(deletePromises)
@@ -453,9 +348,7 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
                                     'success'
                                 );
                                 setSelectedRowKeys([]);
-                                // Refresh data after deletion
                                 fetchData();
-
                             })
                             .catch(error => {
                                 console.error("Error eliminando registros:", error);
@@ -485,7 +378,7 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
         try {
             const API_BASE_URL = import.meta.env.VITE_API_FINANZAS || '/api';
             await axios.delete(`${API_BASE_URL}/incomes/${id}`);
-            return id; // Return the id for confirmation
+            return id;
         } catch (error) {
             console.error(`Error eliminando el ingreso ${id}:`, error);
             throw error;
@@ -517,7 +410,6 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
             link.click();
             document.body.removeChild(link);
 
-            // Limpia la URL temporal
             URL.revokeObjectURL(link.href);
         } catch (error) {
             console.error("Error al descargar el archivo:", error);
@@ -544,12 +436,8 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
 
     const renderDate = (date) => {
         try {
-            // Convierte la fecha a un objeto DateTime de Luxon
             const parsedDate = DateTime.fromISO(date, { zone: 'utc' });
-
-            // Formatea la fecha tal como se recibió, sin ajustes en la hora
             const formattedDate = parsedDate.toFormat("d MMM yyyy");
-
             return formattedDate;
         } catch (error) {
             console.error("Error al formatear la fecha:", error);
@@ -557,20 +445,92 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
         }
     };
 
+    // New function to generate the PDF invoice
+    const generateInvoicePDF = (items) => {
+        const doc = new jsPDF();
+
+        // Header
+        doc.setFontSize(18);
+        doc.setFont("helvetica", "bold");
+        doc.text("FACTURA", 105, 20, { align: "center" });
+
+        // Company Info (customize as needed)
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "normal");
+        doc.text("Nombre de la Empresa", 14, 30);
+        doc.text("NIT: 123456789-0", 14, 36);
+        doc.text("Dirección: Calle 123 #45-67, Bogotá, Colombia", 14, 42);
+        doc.text("Teléfono: +57 123 456 7890", 14, 48);
+
+        // Invoice Info
+        doc.text(`Fecha: ${formatDate(new Date(), "d MMMM yyyy", { locale: es })}`, 140, 30);
+        doc.text(`Factura N°: ${Math.floor(Math.random() * 1000000)}`, 140, 36); // Random invoice number
+
+        // Table of Items
+        const tableData = items.map(item => [
+            item.arqueo_number || "N/A",
+            item.description,
+            renderDate(item.date),
+            getAccountName(item.account_id),
+            getCashierName(item.cashier_id),
+            formatCurrency(item.amount),
+            renderDate(item.start_period),
+            renderDate(item.end_period)
+        ]);
+
+        // Use autoTable as a function
+        autoTable(doc, {
+            startY: 60,
+            head: [['N° Arqueo', 'Descripción', 'Fecha', 'Cuenta', 'Cajero', 'Monto', 'Desde', 'Hasta']],
+            body: tableData,
+            theme: 'grid',
+            styles: { fontSize: 10, cellPadding: 2 },
+            headStyles: { fillColor: [22, 160, 133], textColor: [255, 255, 255] },
+            columnStyles: {
+                0: { cellWidth: 20 },
+                1: { cellWidth: 40 },
+                2: { cellWidth: 20 },
+                3: { cellWidth: 20 },
+                4: { cellWidth: 20 },
+                5: { cellWidth: 20 },
+                6: { cellWidth: 20 },
+                7: { cellWidth: 20 },
+            },
+        });
+
+        // Total
+        const totalAmount = items.reduce((sum, item) => sum + (item.amount || 0), 0);
+        doc.setFontSize(12);
+        doc.text(`Total: ${formatCurrency(totalAmount)}`, 140, doc.lastAutoTable.finalY + 10);
+
+        // Footer
+        doc.setFontSize(10);
+        doc.text("Gracias por su negocio", 105, 280, { align: "center" });
+        doc.text("Este documento no tiene validez fiscal", 105, 286, { align: "center" });
+
+        // Save the PDF
+        doc.save(`Factura_Ingresos_${formatDate(new Date(), "yyyy-MM-dd")}.pdf`);
+    };
+
     const columns = [
         {
             title: (
-                <Tooltip title="Número de arqueo">
-                    <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                        N° Arqueo
-                        <Input
-                            prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-
-                            onChange={(e) => handleSearch(e.target.value, "arqueo_number")}
-                            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
-                        />
-                    </div>
-                </Tooltip>
+                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    N° Arqueo
+                    <input
+                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                        onChange={(e) => handleSearch(e.target.value, "arqueo_number")}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: '1px solid #d9d9d9',
+                            borderRadius: 4,
+                            outline: 'none',
+                        }}
+                    />
+                </div>
             ),
             dataIndex: "arqueo_number",
             key: "arqueo_number",
@@ -580,16 +540,22 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
         },
         {
             title: (
-                <Tooltip title="Fecha de registro">
-                    <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                        Fecha
-                        <Input
-                            prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                            onChange={(e) => handleSearch(e.target.value, "date")}
-                            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
-                        />
-                    </div>
-                </Tooltip>
+                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Fecha
+                    <input
+                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                        onChange={(e) => handleSearch(e.target.value, "date")}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: '1px solid #d9d9d9',
+                            borderRadius: 4,
+                            outline: 'none',
+                        }}
+                    />
+                </div>
             ),
             dataIndex: "date",
             key: "date",
@@ -602,11 +568,18 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
             title: (
                 <div className="flex flex-col" style={{ margin: "2px 0", gap: 1, lineHeight: 1 }}>
                     Titulo
-                    <Input
-                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-
+                    <input
+                        prefix={<SearchOutlined style={{ color: '#d9d9d9' }} />}
                         onChange={(e) => handleSearch(e.target.value, "description")}
-                        style={{ marginTop: 2, padding: 4, height: 25, fontSize: 12 }}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: '1px solid #d9d9d9',
+                            borderRadius: 4,
+                            outline: 'none',
+                        }}
                     />
                 </div>
             ),
@@ -621,10 +594,18 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
             title: (
                 <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
                     Cuenta
-                    <Input
+                    <input
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
                         onChange={(e) => handleSearch(e.target.value, "account_id")}
-                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: '1px solid #d9d9d9',
+                            borderRadius: 4,
+                            outline: 'none',
+                        }}
                     />
                 </div>
             ),
@@ -635,15 +616,22 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
             sortDirections: ["ascend", "descend"],
             width: 150,
         },
-
         {
             title: (
                 <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
                     Cajero
-                    <Input
+                    <input
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
                         onChange={(e) => handleSearch(e.target.value, "cashier_id")}
-                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: '1px solid #d9d9d9',
+                            borderRadius: 4,
+                            outline: 'none',
+                        }}
                     />
                 </div>
             ),
@@ -657,10 +645,18 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
             title: (
                 <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
                     Monto Total
-                    <Input
+                    <input
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
                         onChange={(e) => handleSearch(e.target.value, "amount")}
-                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: '1px solid #d9d9d9',
+                            borderRadius: 4,
+                            outline: 'none',
+                        }}
                     />
                 </div>
             ),
@@ -673,16 +669,22 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
         },
         {
             title: (
-                <Tooltip title="Fecha de inicio">
-                    <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                        Desde
-                        <Input
-                            prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                            onChange={(e) => handleSearch(e.target.value, "start_period")}
-                            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
-                        />
-                    </div>
-                </Tooltip>
+                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Desde
+                    <input
+                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                        onChange={(e) => handleSearch(e.target.value, "start_period")}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: '1px solid #d9d9d9',
+                            borderRadius: 4,
+                            outline: 'none',
+                        }}
+                    />
+                </div>
             ),
             dataIndex: "start_period",
             key: "start_period",
@@ -693,16 +695,22 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
         },
         {
             title: (
-                <Tooltip title="Fecha de finalizacion">
-                    <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                        Hasta
-                        <Input
-                            prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                            onChange={(e) => handleSearch(e.target.value, "end_period")}
-                            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
-                        />
-                    </div>
-                </Tooltip>
+                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Hasta
+                    <Input
+                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                        onChange={(e) => handleSearch(e.target.value, "end_period")}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: '1px solid #d9d9d9',
+                            borderRadius: 4,
+                            outline: 'none',
+                        }}
+                    />
+                </div>
             ),
             dataIndex: "end_period",
             key: "end_period",
@@ -733,14 +741,11 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
         }
     ];
 
-
-
     return (
         <>
             <div className="bg-white py-2 px-5 shadow-sm">
-                <div className="flex  justify-between items-center">
-                    {/* Left side: Actions */}
-                    <div className="flex items-center ">
+                <div className="flex justify-between items-center">
+                    <div className="flex items-center">
                         <Button
                             icon={<FilterOutlined />}
                             onClick={() => setShowFilters(!showFilters)}
@@ -748,16 +753,16 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
                             {showFilters ? "Filtro" : "Filtro"}
                         </Button>
                     </div>
-                    <div className="flex items-center ">
+                    <div className="flex items-center">
                         <div className="mr-3">
-                            <div className="flex items-center justify-end ">
-                                <div className="bg-white px-2  text-center flex-none w-26">
+                            <div className="flex items-center justify-end">
+                                <div className="bg-white px-2 text-center flex-none w-26">
                                     <h3 className="text-gray-500 text-[10px] font-medium uppercase">Ingresos</h3>
                                     <p className="text-green-600 text-sm font-semibold mt-1 truncate">
                                         {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyIncome)}
                                     </p>
                                 </div>
-                                <div className="bg-white px-2  text-center flex-none w-26">
+                                <div className="bg-white px-2 text-center flex-none w-26">
                                     <h3 className="text-gray-500 text-[10px] font-medium uppercase">Egresos</h3>
                                     <p className="text-red-600 text-sm font-semibold mt-1 truncate">
                                         {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyExpenses)}
@@ -778,9 +783,8 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
                 </div>
 
                 {showFilters && (
-                    <div className="mt-4 p-3 bg-white ">
+                    <div className="mt-4 p-3 bg-white">
                         <div className="flex flex-wrap items-center gap-4">
-                            {/* Cashier filter dropdown */}
                             <Select
                                 placeholder="Filtrar por cajero"
                                 style={{ width: 200 }}
@@ -829,7 +833,6 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
                 )}
             </div>
 
-            {/* Error message if data loading fails */}
             {error && (
                 <div className="mb-4 p-4 bg-red-50 text-red-700 rounded border border-red-200">
                     <p className="font-medium">{error}</p>
@@ -845,36 +848,30 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
             )}
 
             <div className="px-5 py-2 bg-white">
-
-            <Table
-                rowSelection={rowSelection}
-                dataSource={filteredEntries}
-                columns={columns}
-                rowKey={(record) => record.id}
-                pagination={false} // Desactiva la paginación
-                bordered
-                size="middle"
-                loading={entriesLoading}
-                onRow={(record) => ({
-                    onClick: (e) => {
-                        if (e.target.tagName !== "INPUT" && e.target.tagName !== "BUTTON" && e.target.tagName !== "A") {
-                            handleRowClick(record);
-                        }
-                    },
-                })}
-                rowClassName="hover:bg-gray-50 transition-colors"
-                scroll={{ x: 'max-content' }}
-                summary={pageData => {
-                    if (pageData.length === 0) return null;
-                    const totalAmount = pageData.reduce((total, item) => total + (item.amount || 0), 0);
-                }}
-            />
-
+                <Table
+                    rowSelection={rowSelection}
+                    dataSource={filteredEntries}
+                    columns={columns}
+                    rowKey={(record) => record.id}
+                    pagination={false}
+                    bordered
+                    size="middle"
+                    loading={entriesLoading}
+                    onRow={(record) => ({
+                        onClick: (e) => {
+                            if (e.target.tagName !== "INPUT" && e.target.tagName !== "BUTTON" && e.target.tagName !== "A") {
+                                handleRowClick(record);
+                            }
+                        },
+                    })}
+                    rowClassName="hover:bg-gray-50 transition-colors"
+                    scroll={{ x: 'max-content' }}
+                    summary={pageData => {
+                        if (pageData.length === 0) return null;
+                        const totalAmount = pageData.reduce((total, item) => total + (item.amount || 0), 0);
+                    }}
+                />
             </div>
-
-           
-
-
 
             <ViewIncome entry={selectedEntry} visible={isViewModalOpen} onClose={closeModal} />
 
@@ -894,33 +891,27 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
                     cursor: pointer;
                 }
                 
-                /* Prevent checkbox click from navigating */
                 .ant-checkbox-wrapper {
                     cursor: default;
                 }
                 
-                /* Style Tag components */
                 .ant-tag {
                     margin-right: 0;
                 }
                 
-                /* Improved input styling */
                 .ant-input-affix-wrapper {
                     border-radius: 4px;
                 }
                 
-                /* Custom card header */
                 .ant-card-head {
                     min-height: auto;
                     padding: 0;
                 }
                 
-                /* Jira-style hover */
                 .hover\\:bg-gray-50:hover {
                     background-color: #f9f9f9;
                 }
                 
-                /* Transitions */
                 .transition-colors {
                     transition: background-color 0.3s ease;
                 }
@@ -945,11 +936,8 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
                     )
                 }
             >
-
-
-
                 <div className="flex flex-col">
-                    <div className="flex flex-wrap gap-4 justify-center mb-4 ">
+                    <div className="flex flex-wrap gap-4 justify-center mb-4">
                         {selectedImages.map((image, index) => (
                             <div key={index} className="relative w-60 h-80">
                                 <img
@@ -979,8 +967,6 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
                 onExport={handleExportSelected}
                 onClearSelection={clearSelection}
             />
-
-
         </>
     );
 };

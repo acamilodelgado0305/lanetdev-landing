@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Bar, Line, Doughnut, Pie, Radar, PolarArea } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, RadialLinearScale } from 'chart.js';
-import TaskComponent from '../components/task/TaskComponent';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title as ChartTitle, Tooltip, Legend, ArcElement, RadialLinearScale } from 'chart.js';
+import { Layout, Card, Row, Col, Collapse, Space, Typography, List } from 'antd';
+import { UserOutlined, FileTextOutlined, GlobalOutlined, TagOutlined, DollarOutlined, RightOutlined, DownOutlined } from '@ant-design/icons';
 import { BsFillArchiveFill, BsCurrencyDollar, BsPeopleFill, BsFillBellFill } from 'react-icons/bs';
+import { Link } from 'react-router-dom';
+import TaskComponent from '../components/task/TaskComponent';
 
 // Registra los componentes necesarios de Chart.js
 ChartJS.register(
@@ -13,12 +16,18 @@ ChartJS.register(
   LineElement,
   ArcElement,
   RadialLinearScale,
-  Title,
+  ChartTitle,
   Tooltip,
   Legend
 );
 
+const { Content } = Layout;
+const { Panel } = Collapse;
+const { Title: TypographyTitle, Text } = Typography;
+
 export default function Index() {
+  const [collapsed, setCollapsed] = useState(false);
+
   // Datos simulados de clientes por mes (gráfico de líneas)
   const monthlyData = {
     labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto'],
@@ -29,7 +38,7 @@ export default function Index() {
         borderColor: '#4bc0c0',
         backgroundColor: 'rgba(75, 192, 192, 0.2)',
         fill: true,
-        tension: 0.3, // Añade suavidad a la curva
+        tension: 0.3,
         pointBackgroundColor: '#36A2EB',
         pointBorderWidth: 2,
       },
@@ -88,7 +97,7 @@ export default function Index() {
     ],
   };
 
-  // Nuevo gráfico de área polar para mostrar datos adicionales
+  // Datos simulados para un gráfico de área polar
   const polarAreaData = {
     labels: ['Marketing', 'Ventas', 'Desarrollo', 'Soporte', 'Logística'],
     datasets: [
@@ -101,166 +110,95 @@ export default function Index() {
     ],
   };
 
+  // Opciones comunes para los gráficos
+  const chartOptions = (titleText) => ({
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+      title: {
+        display: true,
+        text: titleText,
+        font: { size: 18 },
+      },
+    },
+    maintainAspectRatio: false,
+  });
+
+  // Datos para el componente "Acceso rápido" con íconos temáticos
+  const quickAccessItems = [
+    { key: '1', label: 'Clientes', icon: <UserOutlined />, path: '/index/clientes' },
+    { key: '2', label: 'Facturas', icon: <FileTextOutlined />, path: '/facturas' },
+    { key: '3', label: 'Gestión de Red', icon: <GlobalOutlined />, path: '/gestion-de-red' },
+    { key: '4', label: 'Tickets', icon: <TagOutlined />, path: '/tickets' },
+    { key: '5', label: 'Contabilidad', icon: <DollarOutlined />, path: '/index/moneymanager/transactions' },
+  ];
+
   return (
-    <main className="flex flex-col items-center justify-start bg-gray-50 min-h-screen">
-      <div className="text-center mb-2">
-        <h3 className="text-2xl font-semibold text-gray-800">Dashboard</h3>
-      </div>
+    <Layout className='p-6' style={{ minHeight: '100vh', background: '#f0f2f5' }}>
+      <Content style={{ padding: '24px' }}>
+     
 
+        {/* Componente "Acceso rápido" */}
+        <Card style={{ marginBottom: '24px' }}>
+          <Collapse
+            bordered={false}
+            defaultActiveKey={['1']}
+            expandIcon={({ isActive }) => (isActive ? <DownOutlined /> : <RightOutlined />)}
+            style={{ background: '#fff' }}
+          >
+            <Panel header="Acceso rápido" key="1">
+              <List
+                dataSource={quickAccessItems}
+                renderItem={(item) => (
+                  <List.Item style={{ padding: '8px 0', cursor: 'pointer' }}>
+                    <Link to={item.path} style={{ color: 'inherit', textDecoration: 'none' }}>
+                      <Space>
+                        {item.icon}
+                        <Text>{item.label}</Text>
+                      </Space>
+                    </Link>
+                  </List.Item>
+                )}
+              />
+            </Panel>
+          </Collapse>
+        </Card>
 
+        {/* Sección para las tareas y tarjetas de resumen */}
+        <Row gutter={[16, 16]}>
+          {/* Columna para las tareas de pagos */}
+          <Col xs={24} md={8}>
+            
+              <TaskComponent />
+          
+          </Col>
 
-      {/* Sección para las tareas de pago a un lado y las tarjetas al otro lado */}
-      <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        {/* Columna para las tareas de pagos */}
-        <div className="md:col-span-1 bg-white shadow-md p-6 mb-6">
-          <h3 className="text-xl font-semibold text-gray-800 mb-4">Tareas Pendientes</h3>
-          <TaskComponent />
-        </div>
+          {/* Columna para las tarjetas de resumen */}
+          <Col xs={24} md={16}>
+            <Row gutter={[16, 16]}>
+              {[
+                { label: 'Productos', icon: <BsFillArchiveFill />, value: 300 },
+                { label: 'Ingresos', icon: <BsCurrencyDollar />, value: '$12,000' },
+                { label: 'Clientes Activos', icon: <BsPeopleFill />, value: 33 },
+                { label: 'Alertas', icon: <BsFillBellFill />, value: 42 },
+              ].map((item, index) => (
+                <Col xs={24} sm={12} key={index}>
+                  <Card hoverable>
+                    <Space direction="vertical" align="center" style={{ width: '100%' }}>
+                      <div style={{ fontSize: '24px', color: '#1890ff' }}>{item.icon}</div>
+                      <Text strong>{item.label}</Text>
+                      <TypographyTitle level={4} style={{ margin: 0 }}>{item.value}</TypographyTitle>
+                    </Space>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+          </Col>
+        </Row>
 
-        {/* Columna para las tarjetas de resumen organizadas en filas de dos */}
-        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-          {[
-            { label: 'Productos', icon: <BsFillArchiveFill />, value: 300 },
-            { label: 'Ingresos', icon: <BsCurrencyDollar />, value: "$12,000" },
-            { label: 'Clientes Activos', icon: <BsPeopleFill />, value: 33 },
-            { label: 'Alertas', icon: <BsFillBellFill />, value: 42 },
-          ].map((item, index) => (
-            <div key={index} className="bg-white shadow-sm p-4 flex flex-col items-center hover:bg-blue-100 transition-all">
-              <div className="text-blue-500 text-2xl mb-2">{item.icon}</div>
-              <h3 className="text-sm font-medium text-gray-700">{item.label}</h3>
-              <h1 className="text-xl font-bold text-gray-700">{item.value}</h1>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Gráficos */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-5xl">
-        <div className="mb-6">
-          <Line
-            data={monthlyData}
-            options={{
-              responsive: true,
-              plugins: {
-                legend: {
-                  position: 'top',
-                },
-                title: {
-                  display: true,
-                  text: 'Clientes por Mes',
-                  font: { size: 20 }
-                },
-              },
-              maintainAspectRatio: false,
-            }}
-            height={300}
-          />
-        </div>
-        <div>
-          <Doughnut
-            data={municipalityData}
-            options={{
-              responsive: true,
-              plugins: {
-                legend: {
-                  position: 'right',
-                },
-                title: {
-                  display: true,
-                  text: 'Clientes por Municipio',
-                  font: { size: 20 }
-                },
-              },
-              maintainAspectRatio: false,
-            }}
-            height={300}
-          />
-        </div>
-        <div className="mt-6">
-          <Bar
-            data={barData}
-            options={{
-              responsive: true,
-              plugins: {
-                legend: {
-                  position: 'top',
-                },
-                title: {
-                  display: true,
-                  text: 'Ventas por Producto',
-                  font: { size: 20 }
-                },
-              },
-              maintainAspectRatio: false,
-            }}
-            height={300}
-          />
-        </div>
-        <div className="mt-6">
-          <Pie
-            data={regionData}
-            options={{
-              responsive: true,
-              plugins: {
-                legend: {
-                  position: 'right',
-                },
-                title: {
-                  display: true,
-                  text: 'Distribución de Clientes por Región',
-                  font: { size: 20 }
-                },
-              },
-              maintainAspectRatio: false,
-            }}
-            height={300}
-          />
-        </div>
-
-        {/* Nuevo gráfico de radar */}
-        <div className="mt-6">
-          <Radar
-            data={radarData}
-            options={{
-              responsive: true,
-              plugins: {
-                legend: {
-                  position: 'top',
-                },
-                title: {
-                  display: true,
-                  text: 'Desempeño por Área',
-                  font: { size: 20 }
-                },
-              },
-              maintainAspectRatio: false,
-            }}
-            height={300}
-          />
-        </div>
-
-        {/* Nuevo gráfico de área polar */}
-        <div className="mt-6">
-          <PolarArea
-            data={polarAreaData}
-            options={{
-              responsive: true,
-              plugins: {
-                legend: {
-                  position: 'top',
-                },
-                title: {
-                  display: true,
-                  text: 'Prioridades por Departamento',
-                  font: { size: 20 }
-                },
-              },
-              maintainAspectRatio: false,
-            }}
-            height={300}
-          />
-        </div>
-      </div>
-    </main>
+      </Content>
+    </Layout>
   );
 }

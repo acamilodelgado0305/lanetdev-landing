@@ -1,143 +1,184 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { IoClose } from "react-icons/io5";
-import AccountSelector from "../AccountSelector ";
-import CategorySelector from '../CategorySelector';
+import AccountSelector from "../AccountSelector";
+import CategorySelector from "../CategorySelector";
 import { DatePicker, Input, Button, Row, Col, Tabs, Card, Radio, Typography, Space, Checkbox, Divider, Select, Tooltip } from "antd";
 import Swal from "sweetalert2";
 import { uploadImage } from "../../../../../services/apiService";
 import dayjs from "dayjs";
 import { UploadOutlined, DownloadOutlined, FileTextOutlined } from "@ant-design/icons";
 import axios from "axios";
-import { useNavigate } from 'react-router-dom'; // Importa useNavigate
-const apiUrl = import.meta.env.VITE_API_FINANZAS;
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import ExpenseVoucherSection from "./ExpenseVoucherSection";
-import { useParams, useLocation } from 'react-router-dom'; //
-import NewExpenseTable from "./ProductsTable";
+import ProductsTable from "./ProductsTable";
 import { getCategorias } from "../../../../../services/moneymanager/moneyService";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { format as formatDate } from "date-fns";
+import { es } from "date-fns/locale";
 
+const apiUrl = import.meta.env.VITE_API_FINANZAS;
 const { Title, Text } = Typography;
-
 
 const AddExpense = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const returnTab = location.state?.returnTab || 'egresos';
-  const [amount, setAmount] = useState("");
+  const returnTab = location.state?.returnTab || "egresos";
+
+  // Estados para los campos del formulario
   const [account, setAccount] = useState("");
-  const [voucher, setVoucher] = useState("");
+  const [voucher, setVoucher] = useState([]);
   const [description, setDescription] = useState("");
   const [comentarios, setComentarios] = useState("");
   const [categorias, setCategorias] = useState([]);
   const [tipo, setTipo] = useState("");
   const [accounts, setAccounts] = useState([]);
   const [date, setDate] = useState(dayjs());
-  const [proveedores, setProveedores] = useState("");
+  const [proveedores, setProveedores] = useState([]);
   const [loading, setLoading] = useState(false);
   const [proveedor, setProveedor] = useState("");
-  const [categoria, setcategoria] = useState("");
+  const [categoria, setCategoria] = useState("");
   const [facturaNumber, setFacturaNumber] = useState("");
   const [facturaProvNumber, setFacturaProvNumber] = useState("");
   const [isExpenseSaved, setIsExpenseSaved] = useState(false);
   const [isHiddenDetails, setIsHiddenDetails] = useState(false);
 
-
+  // Estado para la tabla de ítems y totales
   const [expenseTableData, setExpenseTableData] = useState({
-    items: [],
+    items: [{
+      key: '1',
+      type: 'Gasto',
+      provider: '',
+      product: '',
+      description: '',
+      quantity: 1.00,
+      unitPrice: 0.00,
+      purchaseValue: 0.00,
+      discount: 0.00,
+      taxCharge: 0.00,
+      taxWithholding: 0.00,
+      total: 0.00,
+      categoria: "",
+    }],
     totals: {
       totalBruto: 0,
       descuentos: 0,
       subtotal: 0,
-      iva: 0, // Cambiado de reteIVA a iva
-      retencion: 0, // Cambiado de reteICA a retencion
+      iva: 0,
+      retencion: 0,
       totalNeto: 0,
-      ivaPercentage: "0", // Cambiado de reteIVAPercentage a ivaPercentage
-      retencionPercentage: "0", // Cambiado de reteICAPercentage a retencionPercentage
-      totalImpuestos: 0 // Nuevo campo para totalImpuestos
-    }
+      ivaPercentage: "0",
+      retencionPercentage: "0",
+      totalImpuestos: 0,
+    },
   });
 
-  const handleHiddenDetailsChange = (value) => {
-    setIsHiddenDetails(value); // Update state when hiddenDetails changes in ProductsTable
-  };
-
-  // En AddExpense, actualiza o añade esta función:
-  const handleExpenseTableDataChange = (data) => {
-    // Solo actualiza el estado si hay items válidos (con datos)
-    const validItems = data.items.filter(item =>
-      item.product !== '' ||
-      item.description !== '' ||
-      item.unitPrice > 0 ||
-      item.quantity > 0
-    );
-
-    setExpenseTableData({
-      items: validItems,
-      totals: data.totals // Aquí se incluye totalImpuestos
-    });
-  };
-
-
-  const printRef = useRef();
-
-  const handleCancel = () => {
-    navigate('/index/moneymanager/transactions', { state: { activeTab: returnTab } });
-  };
-
+  // Cargar datos iniciales
   useEffect(() => {
     if (id) {
       fetchExpenseData();
     }
-  }, [id]);
-
-
-  //------------USE EFECTS--------------------------
-
-  useEffect(() => {
-
     fetchAccounts();
     fetchProveedores();
     ObtenerCategorias();
+  }, [id]);
 
-  }, []);
-
-  const ObtenerCategorias = async () => {
-    try {
-      const data = await getCategorias();
-      setCategorias(data); // Almacena las categorías en el estado
-    } catch (err) {
-      console.error("Error al cargar las categorías:", err);
-    }
+  // Función para parsear valores numéricos que llegan como cadenas
+  const parseNumber = (value) => {
+    if (value === null || value === undefined || value === "") return 0;
+    return parseFloat(value) || 0;
   };
 
+  // Función para manejar el campo voucher y evitar errores de JSON
+  const parseVoucher = (voucherData) => {
+    if (!voucherData || voucherData === "{}" || voucherData === "[]") return [];
+    if (typeof voucherData === "string") {
+      try {
+        const parsed = JSON.parse(voucherData);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (error) {
+        console.error("Error al parsear voucher:", error);
+        return [];
+      }
+    }
+    return Array.isArray(voucherData) ? voucherData : [];
+  };
 
-  //---------------------------FETCH---------------------------//
-
-
-
-
-  const fetchProveedores = async () => {
+  // Función para cargar los datos del egreso existente
+  const fetchExpenseData = async () => {
     try {
-      const response = await fetch(`${apiUrl}/providers`);
+      const response = await fetch(`${apiUrl}/expenses/${id}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`No se pudo obtener la información del egreso: ${response.status} - ${errorText}`);
+      }
       const data = await response.json();
-      // Filtrar las cuentas, excluyendo los préstamos
-      setProveedores(data);
+
+      // Mapear los datos del backend al estado del formulario
+      setAccount(data.account_id?.toString() || "");
+      setDescription(data.description || "");
+      setComentarios(data.comments || "");
+      setDate(data.date ? dayjs(data.date) : dayjs());
+      setProveedor(data.provider_id || "");
+      setCategoria(data.category || "");
+      setFacturaNumber(data.invoice_number || "");
+      setFacturaProvNumber(data.provider_invoice_number || "");
+      setTipo(data.type || "");
+      setVoucher(parseVoucher(data.voucher));
+
+      // Mapear ítems y totales
+      if (data.items && data.items.length > 0) {
+        const mappedItems = data.items.map(item => ({
+          id: item.id,
+          key: item.id || `${Date.now()}-${Math.random()}`,
+          type: item.type || 'Gasto',
+          provider: item.provider || '',
+          product: item.product_name || '',
+          description: item.description || '',
+          quantity: parseFloat(item.quantity) || 1.00,
+          unitPrice: parseFloat(item.unit_price) || 0.00,
+          purchaseValue: parseFloat(item.purchase_value) || 0.00,
+          discount: parseFloat(item.discount) || 0.00,
+          taxCharge: parseFloat(item.tax_charge) || 0.00,
+          taxWithholding: parseFloat(item.tax_withholding) || 0.00,
+          total: parseFloat(item.total) || 0.00,
+          categoria: item.category || '',
+        }));
+        setExpenseTableData({
+          items: mappedItems,
+          totals: {
+            totalBruto: parseFloat(data.total_gross) || 0,
+            descuentos: parseFloat(data.discounts) || 0,
+            subtotal: parseFloat(data.subtotal) || 0,
+            iva: parseFloat(data.ret_vat) || 0,
+            retencion: parseFloat(data.ret_ica) || 0,
+            totalNeto: parseFloat(data.total_net) || 0,
+            ivaPercentage: parseFloat(data.ret_vat_percentage) || "0",
+            retencionPercentage: parseFloat(data.ret_ica_percentage) || "0",
+            totalImpuestos: parseFloat(data.total_impuestos) || 0,
+          },
+        });
+      }
     } catch (error) {
-      console.error("Error al obtener las cuentas:", error);
+      console.error("Error al obtener los datos del egreso:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo cargar la información del egreso. " + error.message,
+      });
     }
   };
 
-
-
+  // Funciones para cargar datos de cuentas, proveedores y categorías
   const fetchAccounts = async () => {
     try {
       const response = await fetch(`${apiUrl}/accounts`);
       const data = await response.json();
-      // Filtrar las cuentas, excluyendo los préstamos
       const filteredAccounts = data.filter(account =>
-        !account.type?.toLowerCase().includes('loan') &&
-        !account.type?.toLowerCase().includes('prestamo') &&
-        !account.type?.toLowerCase().includes('préstamo')
+        !account.type?.toLowerCase().includes("loan") &&
+        !account.type?.toLowerCase().includes("prestamo") &&
+        !account.type?.toLowerCase().includes("préstamo")
       );
       setAccounts(filteredAccounts);
     } catch (error) {
@@ -145,40 +186,71 @@ const AddExpense = () => {
     }
   };
 
-  const handleProveedorChange = (value) => {
-    setProveedor(value); // Actualiza el estado con el ID del proveedor seleccionado
+  const fetchProveedores = async () => {
+    try {
+      const response = await fetch(`${apiUrl}/providers`);
+      const data = await response.json();
+      setProveedores(data);
+    } catch (error) {
+      console.error("Error al obtener los proveedores:", error);
+    }
   };
 
+  const ObtenerCategorias = async () => {
+    try {
+      const data = await getCategorias();
+      setCategorias(data);
+    } catch (err) {
+      console.error("Error al cargar las categorías:", err);
+    }
+  };
 
-  //-------------MONEDA--------------------
+  const handleProveedorChange = (value) => {
+    setProveedor(value);
+  };
+
+  const handleHiddenDetailsChange = (value) => {
+    setIsHiddenDetails(value);
+  };
+
+  const handleItemsChange = (updatedItems) => {
+    setExpenseTableData(prev => ({
+      ...prev,
+      items: updatedItems
+    }));
+  };
+
+  const handleTotalsChange = (updatedTotals) => {
+    setExpenseTableData(prev => ({
+      ...prev,
+      totals: updatedTotals
+    }));
+  };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
+    return new Intl.NumberFormat("es-CO", {
+      style: "currency",
+      currency: "COP",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
   };
 
-  const renderCompraInputs = () => {
-
-    return (
-      <div className="p-4" ref={printRef}>
-        {renderInvoiceHeader()}
-        <Divider />
-
-        <NewExpenseTable
-          onHiddenDetailsChange={handleHiddenDetailsChange}
-          onDataChange={handleExpenseTableDataChange} // Añade esta línea
-        />
-      </div>
-    );
-
-
+  const getProviderName = (providerId) => {
+    const provider = proveedores.find(p => p.id === providerId);
+    return provider ? provider.nombre_comercial : "Proveedor no encontrado";
   };
 
-  //--------------------------FUNCIONES
+  const getAccountName = (accountId) => {
+    const account = accounts.find(a => a.id === accountId);
+    return account ? account.name : "Cuenta no encontrada";
+  };
+
+  const renderDate = (date) => {
+    return date ? date.format("D MMM YYYY") : "N/A";
+  };
+
+  // Función para guardar o actualizar el egreso
   const handleSave = async () => {
     try {
       if (!account) {
@@ -192,55 +264,53 @@ const AddExpense = () => {
       }
 
       const baseRequestBody = {
-        user_id: parseInt(sessionStorage.getItem('userId')),
+        user_id: parseInt(sessionStorage.getItem("userId")),
         tipo: tipo,
         date: date.format("YYYY-MM-DD[T]HH:mm:ss[Z]"),
         proveedor: proveedor,
         categoria: categoria,
         facturaNumber: facturaNumber,
         facturaProvNumber: facturaProvNumber,
-        account_id: parseInt(account),
-        voucher: voucher,
+        account_id: account,
+        voucher: JSON.stringify(Array.isArray(voucher) ? voucher : []),
         description: description,
         comentarios: comentarios,
         estado: true,
       };
 
-      let requestBody;
-
-      requestBody = {
+      const requestBody = {
         ...baseRequestBody,
-        // Solo incluye items que tengan datos
         expense_items: expenseTableData.items
           .filter(item =>
-            item.product !== '' ||
-            item.description !== '' ||
+            item.product !== "" ||
+            item.description !== "" ||
             item.unitPrice > 0 ||
             item.quantity > 0
           )
           .map(item => ({
+            id: item.id,
             type: item.type,
             categoria: item.categoria,
             product: item.product,
             description: item.description,
             quantity: parseFloat(item.quantity),
             unit_price: parseFloat(item.unitPrice),
-            discount: parseFloat(item.discount),
-            tax_charge: parseFloat(item.taxCharge),
-            tax_withholding: parseFloat(item.taxWithholding),
-            total: parseFloat(item.total)
+            discount: parseFloat(item.discount || 0),
+            tax_charge: parseFloat(item.taxCharge || 0),
+            tax_withholding: parseFloat(item.taxWithholding || 0),
+            total: parseFloat(item.total),
           })),
         expense_totals: {
-          total_bruto: expenseTableData.totals.totalBruto,
-          descuentos: expenseTableData.totals.descuentos,
-          subtotal: expenseTableData.totals.subtotal,
-          iva: expenseTableData.totals.iva, // Mapeado desde reteIVA
-          retencion: expenseTableData.totals.retencion, // Mapeado desde reteICA
-          total_neto: expenseTableData.totals.totalNeto,
-          iva_percentage: expenseTableData.totals.ivaPercentage, // Mapeado desde reteIVAPercentage
-          retencion_percentage: expenseTableData.totals.retencionPercentage, // Mapeado desde reteICAPercentage
-          total_impuestos: expenseTableData.totals.totalImpuestos // Nuevo campo para totalImpuestos
-        }
+          total_bruto: parseFloat(expenseTableData.totals.totalBruto),
+          descuentos: parseFloat(expenseTableData.totals.descuentos),
+          subtotal: parseFloat(expenseTableData.totals.subtotal),
+          iva: parseFloat(expenseTableData.totals.iva),
+          retencion: parseFloat(expenseTableData.totals.retencion),
+          total_neto: parseFloat(expenseTableData.totals.totalNeto),
+          iva_percentage: parseFloat(expenseTableData.totals.ivaPercentage),
+          retencion_percentage: parseFloat(expenseTableData.totals.retencionPercentage),
+          total_impuestos: parseFloat(expenseTableData.totals.totalImpuestos),
+        },
       };
 
       const url = id ? `${apiUrl}/expenses/${id}` : `${apiUrl}/expenses`;
@@ -255,58 +325,208 @@ const AddExpense = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
       }
 
-      await response.json();
+      const responseData = await response.json();
       setIsExpenseSaved(true);
 
       Swal.fire({
         icon: "success",
         title: id ? "Egreso Actualizado" : "Egreso Registrado",
-        text: id ? "El Egreso se ha actualizado correctamente" : "El Egreso se ha registrado correctamente",
+        text: id ? "El egreso se ha actualizado correctamente" : "El egreso se ha registrado correctamente",
+        showCancelButton: true,
+        confirmButtonText: "Aceptar",
+        cancelButtonText: "Descargar PDF",
         confirmButtonColor: "#3085d6",
-      });
-
-      navigate('/index/moneymanager/transactions', {
-        state: { activeTab: 'expenses' }
+        cancelButtonColor: "#5cb85c",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate("/index/moneymanager/transactions", { state: { activeTab: "expenses" } });
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
+          handleDownloadPDF(responseData.data);
+          navigate("/index/moneymanager/transactions", { state: { activeTab: "expenses" } });
+        }
       });
     } catch (error) {
-      console.error("Error al guardar el Egreso:", error);
+      console.error("Error al guardar el egreso:", error);
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "Hubo un error al procesar el Egreso. Por favor, intente de nuevo.",
+        text: `Hubo un error al procesar el egreso: ${error.message}`,
         confirmButtonColor: "#d33",
       });
     }
   };
 
-
-  const handleFileUpload = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    setLoading(true);
-
-    const formData = new FormData();
-    formData.append("file", file);
+  // Función para descargar el PDF
+  const handleDownloadPDF = (expenseData) => {
+    Swal.fire({
+      title: "Generando PDF",
+      text: "Por favor espere...",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
 
     try {
-      const response = await axios.post(`${apiUrl}/expenses/bulk-upload`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      const doc = new jsPDF();
+
+      // Header
+      doc.setFontSize(18);
+      doc.setFont("helvetica", "bold");
+      doc.text("FACTURA DE EGRESO", 105, 20, { align: "center" });
+
+      // Company Info (customize as needed)
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "normal");
+      doc.text("Nombre de la Empresa", 14, 30);
+      doc.text("NIT: 123456789-0", 14, 36);
+      doc.text("Dirección: Calle 123 #45-67, Bogotá, Colombia", 14, 42);
+      doc.text("Teléfono: +57 123 456 7890", 14, 48);
+
+      // Invoice Info
+      doc.text(`Fecha: ${formatDate(new Date(), "d MMMM yyyy", { locale: es })}`, 140, 30);
+      doc.text(`Factura N°: ${facturaNumber || Math.floor(Math.random() * 1000000)}`, 140, 36);
+      doc.text(`Factura Proveedor N°: ${facturaProvNumber || "N/A"}`, 140, 42);
+
+      // Expense Data as a Single Entry
+      const expenseDataForPDF = [
+        {
+          facturaNumber: facturaNumber || "N/A",
+          description: description || "Sin descripción",
+          date: date ? date.format("YYYY-MM-DD") : new Date().toISOString().split("T")[0],
+          account_id: account,
+          proveedor_id: proveedor,
+          total_gross: expenseTableData.totals.totalBruto,
+          discounts: expenseTableData.totals.descuentos,
+          total_net: expenseTableData.totals.totalNeto,
+        },
+      ];
+
+      const tableData = expenseDataForPDF.map(item => [
+        item.facturaNumber,
+        item.description,
+        renderDate(date),
+        getAccountName(item.account_id),
+        getProviderName(item.proveedor_id),
+        formatCurrency(item.total_gross),
+        formatCurrency(item.discounts),
+        formatCurrency(item.total_net),
+      ]);
+
+      autoTable(doc, {
+        startY: 60,
+        head: [["N° Factura", "Descripción", "Fecha", "Cuenta", "Proveedor", "Base", "Descuentos", "Total Neto"]],
+        body: tableData,
+        theme: "grid",
+        styles: { fontSize: 10, cellPadding: 2 },
+        headStyles: { fillColor: [22, 160, 133], textColor: [255, 255, 255] },
+        columnStyles: {
+          0: { cellWidth: 20 },
+          1: { cellWidth: 40 },
+          2: { cellWidth: 20 },
+          3: { cellWidth: 20 },
+          4: { cellWidth: 20 },
+          5: { cellWidth: 20 },
+          6: { cellWidth: 20 },
+          7: { cellWidth: 20 },
+        },
       });
 
-      message.success("Carga masiva completada exitosamente!");
-      if (onTransactionAdded) onTransactionAdded(); // Recargar la lista de Egresos
+      // Detailed Items Table
+      if (expenseTableData.items.length > 0) {
+        doc.setFontSize(12);
+        doc.text("Detalles de los Ítems", 14, doc.lastAutoTable.finalY + 10);
+
+        const itemsTableData = expenseTableData.items.map(item => [
+          item.product || "N/A",
+          item.description || "Sin descripción",
+          item.quantity || 0,
+          formatCurrency(item.unitPrice || 0),
+          formatCurrency(item.discount || 0),
+          formatCurrency(item.taxCharge || 0),
+          formatCurrency(item.taxWithholding || 0),
+          formatCurrency(item.total || 0),
+        ]);
+
+        autoTable(doc, {
+          startY: doc.lastAutoTable.finalY + 20,
+          head: [["Producto", "Descripción", "Cantidad", "Precio Unitario", "Descuento", "IVA", "Retención", "Total"]],
+          body: itemsTableData,
+          theme: "grid",
+          styles: { fontSize: 10, cellPadding: 2 },
+          headStyles: { fillColor: [22, 160, 133], textColor: [255, 255, 255] },
+          columnStyles: {
+            0: { cellWidth: 20 },
+            1: { cellWidth: 40 },
+            2: { cellWidth: 15 },
+            3: { cellWidth: 20 },
+            4: { cellWidth: 20 },
+            5: { cellWidth: 20 },
+            6: { cellWidth: 20 },
+            7: { cellWidth: 20 },
+          },
+        });
+      }
+
+      // Totals Summary
+      doc.setFontSize(12);
+      doc.text("Resumen de Totales", 14, doc.lastAutoTable.finalY + 10);
+      doc.setFontSize(10);
+      doc.text(`Total Bruto: ${formatCurrency(expenseTableData.totals.totalBruto)}`, 14, doc.lastAutoTable.finalY + 20);
+      doc.text(`Descuentos: ${formatCurrency(expenseTableData.totals.descuentos)}`, 14, doc.lastAutoTable.finalY + 26);
+      doc.text(`Subtotal: ${formatCurrency(expenseTableData.totals.subtotal)}`, 14, doc.lastAutoTable.finalY + 32);
+      doc.text(`IVA (${expenseTableData.totals.ivaPercentage}%): ${formatCurrency(expenseTableData.totals.iva)}`, 14, doc.lastAutoTable.finalY + 38);
+      doc.text(`Retención (${expenseTableData.totals.retencionPercentage}%): ${formatCurrency(expenseTableData.totals.retencion)}`, 14, doc.lastAutoTable.finalY + 44);
+      doc.text(`Total Impuestos: ${formatCurrency(expenseTableData.totals.totalImpuestos)}`, 14, doc.lastAutoTable.finalY + 50);
+      doc.text(`Total Neto: ${formatCurrency(expenseTableData.totals.totalNeto)}`, 14, doc.lastAutoTable.finalY + 56);
+
+      // Comments (if any)
+      if (comentarios) {
+        doc.text("Observaciones:", 14, doc.lastAutoTable.finalY + 66);
+        doc.text(comentarios, 14, doc.lastAutoTable.finalY + 72, { maxWidth: 180 });
+      }
+
+      // Footer
+      doc.setFontSize(10);
+      doc.text("Gracias por su negocio", 105, 280, { align: "center" });
+      doc.text("Este documento no tiene validez fiscal", 105, 286, { align: "center" });
+
+      // Save the PDF
+      doc.save(`Factura_Egreso_${facturaNumber || "sin_numero"}_${formatDate(new Date(), "yyyy-MM-dd")}.pdf`);
+
+      Swal.fire({
+        icon: "success",
+        title: "PDF Generado",
+        text: "El comprobante se ha descargado correctamente",
+      });
     } catch (error) {
-      message.error("Error al procesar la carga masiva.");
-      console.error("Error en la carga masiva:", error);
-    } finally {
-      setLoading(false);
+      console.error("Error al generar PDF:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: `No se pudo generar el PDF: ${error.message}`,
+      });
     }
   };
 
+  const renderCompraInputs = () => {
+    return (
+      <div className="p-4">
+        {renderInvoiceHeader()}
+        <Divider />
+        <ProductsTable
+          items={expenseTableData.items}
+          onItemsChange={handleItemsChange}
+          onTotalsChange={handleTotalsChange}
+          onHiddenDetailsChange={handleHiddenDetailsChange}
+        />
+      </div>
+    );
+  };
 
   const renderInvoiceHeader = () => (
     <div className="border-b-2 border-gray-200 pb-6 mb-6">
@@ -392,12 +612,12 @@ const AddExpense = () => {
                 ))}
             </Select>
           </div>
-          {!isHiddenDetails && ( // Conditionally render Categoría field
+          {!isHiddenDetails && (
             <div className="mb-4">
               <Text className="text-gray-600 block mb-1">Categoría</Text>
               <Select
                 value={categoria}
-                onChange={(value) => setcategoria(value)}
+                onChange={(value) => setCategoria(value)}
                 className="w-full"
                 placeholder="Selecciona una categoría"
                 dropdownRender={(menu) => (
@@ -424,9 +644,9 @@ const AddExpense = () => {
                 )}
               >
                 {Array.isArray(categorias) &&
-                  categorias.map((categoria) => (
-                    <Select.Option key={categoria.id} value={categoria.id}>
-                      {categoria.name}
+                  categorias.map((cat) => (
+                    <Select.Option key={cat.id} value={cat.id}>
+                      {cat.name}
                     </Select.Option>
                   ))}
               </Select>
@@ -437,43 +657,38 @@ const AddExpense = () => {
     </div>
   );
 
+  const handleCancel = () => {
+    navigate("/index/moneymanager/transactions", { state: { activeTab: returnTab } });
+  };
 
-  const handleDownloadPDF = async () => {
-    if (!printRef.current) return;
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setLoading(true);
+
+    const formData = new FormData();
+    formData.append("file", file);
 
     try {
-      const element = printRef.current;
-      const { jsPDF } = await import('jspdf');
-      const { default: html2canvas } = await import('html2canvas');
-
-      const canvas = await html2canvas(element);
-      const data = canvas.toDataURL('image/png');
-
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'px',
-        format: 'a4',
+      const response = await axios.post(`${apiUrl}/expenses/bulk-upload`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
-      const imgProperties = pdf.getImageProperties(data);
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProperties.height * pdfWidth) / imgProperties.width;
-
-      pdf.addImage(data, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`egreso_${egresoNumber || 'sin_numero'}.pdf`);
-
       Swal.fire({
-        icon: 'success',
-        title: 'PDF Generado',
-        text: 'El comprobante se ha descargado correctamente',
+        icon: "success",
+        title: "Carga Exitosa",
+        text: "Carga masiva completada exitosamente!",
       });
     } catch (error) {
-      console.error('Error al generar PDF:', error);
       Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'No se pudo generar el PDF. Por favor, intente de nuevo.',
+        icon: "error",
+        title: "Error",
+        text: "Error al procesar la carga masiva.",
       });
+      console.error("Error en la carga masiva:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -486,15 +701,13 @@ const AddExpense = () => {
           </div>
           <div className="flex flex-col">
             <span className="text-[#0052CC] text-sm">Egresos /</span>
-            <Title level={3}>
-              {id ? 'Editar' : 'Nuevo'}
-            </Title>
+            <Title level={3}>{id ? "Editar" : "Nuevo"}</Title>
           </div>
         </div>
         <Space>
           <Button
             disabled={!isExpenseSaved}
-            onClick={handleDownloadPDF}
+            onClick={() => handleDownloadPDF()}
             className="bg-transparent border border-[#0052CC] text-[#0052CC] hover:bg-[#0052CC] hover:text-white"
             style={{ borderRadius: 2 }}
           >
@@ -554,12 +767,11 @@ const AddExpense = () => {
       </div>
       <ExpenseVoucherSection
         onVoucherChange={setVoucher}
-        initialVouchers={voucher ? JSON.parse(voucher) : []}
+        initialVouchers={voucher}
         entryId={id}
       />
     </div>
   );
 };
-
 
 export default AddExpense;

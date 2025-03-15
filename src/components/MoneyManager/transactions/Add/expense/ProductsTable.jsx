@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Table, Select, Input, Button, Divider, Checkbox } from 'antd';
 import { getCategorias } from "../../../../../services/moneymanager/moneyService";
+import {
+  DeleteOutlined
+} from "@ant-design/icons";
 
 const formatCurrency = (value) => {
   return new Intl.NumberFormat('es-CO', {
@@ -11,28 +14,11 @@ const formatCurrency = (value) => {
   }).format(value);
 };
 
-const ProductsTable = ({ onDataChange, onHiddenDetailsChange }) => {
+const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsChange }) => {
   const [hasPercentageDiscount, setHasPercentageDiscount] = useState(false);
   const [hiddenDetails, setHiddenDetails] = useState(false);
   const [hiddenImpuestos, setHiddenImpuestos] = useState(false);
-
   const [categorias, setCategorias] = useState([]);
-  const [items, setItems] = useState([{
-    key: '1',
-    type: 'Gasto',
-    provider: '',
-    product: '',
-    description: '',
-    quantity: 1.00,
-    unitPrice: 0.00,
-    purchaseValue: 0.00,
-    discount: 0.00,
-    taxCharge: 0.00,
-    taxWithholding: 0.00,
-    total: 0.00,
-    categoria: "",
-  }]);
-
   const [totals, setTotals] = useState({
     totalBruto: 0,
     descuentos: 0,
@@ -42,16 +28,48 @@ const ProductsTable = ({ onDataChange, onHiddenDetailsChange }) => {
     totalNeto: 0,
     ivaPercentage: "0",
     retencionPercentage: "0",
-    totalImpuestos: 0 // Nueva propiedad para almacenar el total en impuestos
+    totalImpuestos: 0
   });
 
-  // Notify parent when hiddenDetails changes
+  // Estado para los anchos de las columnas
+  const [columnWidths, setColumnWidths] = useState({
+    type: 120,
+    categoria: 120,
+    product: 150,
+    description: 200, // Ancho inicial más grande para descripción
+    quantity: 100,
+    unitPrice: 120,
+    discount: 120,
+    taxCharge: 120,
+    taxWithholding: 120,
+    total: 120,
+    action: 60
+  });
+
+  const resizingColumn = useRef(null);
+  const startX = useRef(0);
+
+  // Cargar categorías al montar el componente
+  useEffect(() => {
+    const ObtenerCategorias = async () => {
+      try {
+        const data = await getCategorias();
+        setCategorias(data);
+      } catch (err) {
+        console.error("Error al cargar las categorías:", err);
+      }
+    };
+    ObtenerCategorias();
+  }, []);
+
+  // Notificar cambios en hiddenDetails
   useEffect(() => {
     if (onHiddenDetailsChange) {
       onHiddenDetailsChange(hiddenDetails);
     }
   }, [hiddenDetails, onHiddenDetailsChange]);
 
+  // Calcular el total de un ítem
   const calculateItemTotal = (item) => {
     const quantity = parseFloat(item.quantity) || 0;
     const unitPrice = parseFloat(item.unitPrice) || 0;
@@ -70,81 +88,55 @@ const ProductsTable = ({ onDataChange, onHiddenDetailsChange }) => {
     return itemSubtotal + taxChargeAmount - taxWithholdingAmount;
   };
 
-  // Función para obtener categorías, se ejecuta solo una vez al montar el componente
-  const ObtenerCategorias = async () => {
-    try {
-      const data = await getCategorias();
-      setCategorias(data);
-    } catch (err) {
-      console.error("Error al cargar las categorías:", err);
-    }
-  };
-
-  // Cargar categorías solo una vez al montar el componente
-  useEffect(() => {
-    ObtenerCategorias();
-  }, []); // Lista de dependencias vacía para ejecutar solo al montar
-
-  // Efecto para notificar cambios al componente padre
-  useEffect(() => {
-    if (onDataChange) {
-      const validItems = items.filter(item =>
-        item.product !== '' ||
-        item.description !== '' ||
-        item.unitPrice > 0 ||
-        item.quantity > 0
-      );
-
-      onDataChange({
-        items: validItems,
-        totals
-      });
-    }
-  }, [items, totals, onDataChange]); // Nota: Aquí ya no llamamos a ObtenerCategorias
-
-  // Efecto para calcular totales
+  // Calcular totales generales y notificar al padre
   useEffect(() => {
     const newTotals = items.reduce((acc, item) => {
       const totalItem = calculateItemTotal(item);
       const quantity = parseFloat(item.quantity) || 0;
       const unitPrice = parseFloat(item.unitPrice) || 0;
       const discount = parseFloat(item.discount) || 0;
-  
+
       const itemBruto = quantity * unitPrice;
       const itemDiscount = hasPercentageDiscount
         ? itemBruto * (discount / 100)
         : discount;
-  
-      acc.totalBruto += totalItem;
+
+      acc.totalBruto += itemBruto;
       acc.descuentos += itemDiscount;
-  
+
       return acc;
     }, {
       totalBruto: 0,
       descuentos: 0
     });
-  
-    const subtotal = newTotals.totalBruto;
-    const iva = hiddenImpuestos ? subtotal * (parseFloat(totals.ivaPercentage) / 100) : 0;
-    const retencion = hiddenImpuestos ? subtotal * (parseFloat(totals.retencionPercentage) / 100) : 0;
+
+    const subtotal = newTotals.totalBruto - newTotals.descuentos;
+    const iva = hiddenImpuestos ? subtotal * (parseFloat(totals.ivaPercentage) / 100) : items.reduce((acc, item) => acc + (parseFloat(item.taxCharge) || 0) * (parseFloat(item.quantity) || 0) * (parseFloat(item.unitPrice) || 0) / 100, 0);
+    const retencion = hiddenImpuestos ? subtotal * (parseFloat(totals.retencionPercentage) / 100) : items.reduce((acc, item) => acc + (parseFloat(item.taxWithholding) || 0) * (parseFloat(item.quantity) || 0) * (parseFloat(item.unitPrice) || 0) / 100, 0);
     const totalNeto = subtotal + iva - retencion;
-    const totalImpuestos = iva - retencion; // Cálculo del total en impuestos (IVA - Retención)
-  
-    setTotals({
-      ...totals,
+    const totalImpuestos = iva - retencion;
+
+    const updatedTotals = {
       totalBruto: newTotals.totalBruto,
       descuentos: newTotals.descuentos,
       subtotal: subtotal,
       iva: iva,
       retencion: retencion,
       totalNeto: totalNeto,
-      totalImpuestos: totalImpuestos // Guardamos el total en impuestos
-    });
-  }, [items, hasPercentageDiscount, totals.ivaPercentage, totals.retencionPercentage, hiddenImpuestos]);
+      ivaPercentage: totals.ivaPercentage,
+      retencionPercentage: totals.retencionPercentage,
+      totalImpuestos: totalImpuestos
+    };
+
+    setTotals(updatedTotals);
+    if (onTotalsChange) {
+      onTotalsChange(updatedTotals);
+    }
+  }, [items, hasPercentageDiscount, totals.ivaPercentage, totals.retencionPercentage, hiddenImpuestos, onTotalsChange]);
 
   const handleAddRow = () => {
-    const newKey = (items.length + 1).toString();
-    setItems([...items, {
+    const newKey = `${Date.now()}-${Math.random()}`;
+    const newItem = {
       key: newKey,
       type: 'Gasto',
       provider: '',
@@ -158,24 +150,26 @@ const ProductsTable = ({ onDataChange, onHiddenDetailsChange }) => {
       taxWithholding: 0.00,
       total: 0.00,
       categoria: "",
-    }]);
+    };
+    onItemsChange([...items, newItem]);
   };
 
   const handleDeleteRow = (key) => {
     if (items.length > 1) {
-      setItems(items.filter(item => item.key !== key));
+      onItemsChange(items.filter(item => item.key !== key));
     }
   };
 
   const handleValueChange = (key, field, value) => {
-    setItems(items.map(item => {
+    const updatedItems = items.map(item => {
       if (item.key === key) {
         const updatedItem = { ...item, [field]: value };
         updatedItem.total = calculateItemTotal(updatedItem);
         return updatedItem;
       }
       return item;
-    }));
+    });
+    onItemsChange(updatedItems);
   };
 
   const handleRetentionChange = (type, value) => {
@@ -185,11 +179,51 @@ const ProductsTable = ({ onDataChange, onHiddenDetailsChange }) => {
     }));
   };
 
+  // Funciones para manejar el redimensionamiento de columnas
+  const startResizing = (columnKey, e) => {
+    e.preventDefault();
+    resizingColumn.current = columnKey;
+    startX.current = e.clientX;
+    document.addEventListener('mousemove', resizeColumn);
+    document.addEventListener('mouseup', stopResizing);
+  };
+
+  const resizeColumn = (e) => {
+    if (resizingColumn.current) {
+      const delta = e.clientX - startX.current;
+      setColumnWidths(prev => ({
+        ...prev,
+        [resizingColumn.current]: Math.max(50, prev[resizingColumn.current] + delta) // Mínimo 50px
+      }));
+      startX.current = e.clientX;
+    }
+  };
+
+  const stopResizing = () => {
+    resizingColumn.current = null;
+    document.removeEventListener('mousemove', resizeColumn);
+    document.removeEventListener('mouseup', stopResizing);
+  };
+
   const columns = [
     {
-      title: '# Tipo',
+      title: (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span># Tipo</span>
+          <div
+            style={{
+              width: '5px',
+              height: '20px',
+              background: '#d9d9d9',
+              cursor: 'col-resize',
+              marginLeft: '5px'
+            }}
+            onMouseDown={(e) => startResizing('type', e)}
+          />
+        </div>
+      ),
       dataIndex: 'type',
-      width: 120,
+      width: columnWidths.type,
       render: (text, record) => (
         <Select
           value={text}
@@ -205,9 +239,23 @@ const ProductsTable = ({ onDataChange, onHiddenDetailsChange }) => {
     ...(hiddenDetails
       ? [
           {
-            title: 'Categoría',
+            title: (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>Categoría</span>
+                <div
+                  style={{
+                    width: '5px',
+                    height: '20px',
+                    background: '#d9d9d9',
+                    cursor: 'col-resize',
+                    marginLeft: '5px'
+                  }}
+                  onMouseDown={(e) => startResizing('categoria', e)}
+                />
+              </div>
+            ),
             dataIndex: 'categoria',
-            width: 120,
+            width: columnWidths.categoria,
             render: (text, record) => {
               const usedCategories = items
                 .filter(item => item.key !== record.key)
@@ -255,9 +303,23 @@ const ProductsTable = ({ onDataChange, onHiddenDetailsChange }) => {
         ]
       : []),
     {
-      title: 'Producto',
+      title: (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>Producto</span>
+          <div
+            style={{
+              width: '5px',
+              height: '20px',
+              background: '#d9d9d9',
+              cursor: 'col-resize',
+              marginLeft: '5px'
+            }}
+            onMouseDown={(e) => startResizing('product', e)}
+          />
+        </div>
+      ),
       dataIndex: 'product',
-      width: 150,
+      width: columnWidths.product,
       render: (text, record) => (
         <Input
           value={text}
@@ -268,8 +330,23 @@ const ProductsTable = ({ onDataChange, onHiddenDetailsChange }) => {
       )
     },
     {
-      title: 'Descripción',
+      title: (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>Descripción</span>
+          <div
+            style={{
+              width: '5px',
+              height: '20px',
+              background: '#d9d9d9',
+              cursor: 'col-resize',
+              marginLeft: '5px'
+            }}
+            onMouseDown={(e) => startResizing('description', e)}
+          />
+        </div>
+      ),
       dataIndex: 'description',
+      width: columnWidths.description,
       render: (text, record) => (
         <Input
           value={text}
@@ -279,9 +356,23 @@ const ProductsTable = ({ onDataChange, onHiddenDetailsChange }) => {
       )
     },
     {
-      title: 'Cant',
+      title: (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>Cant</span>
+          <div
+            style={{
+              width: '5px',
+              height: '20px',
+              background: '#d9d9d9',
+              cursor: 'col-resize',
+              marginLeft: '5px'
+            }}
+            onMouseDown={(e) => startResizing('quantity', e)}
+          />
+        </div>
+      ),
       dataIndex: 'quantity',
-      width: 100,
+      width: columnWidths.quantity,
       render: (text, record) => (
         <Input
           type="number"
@@ -292,9 +383,23 @@ const ProductsTable = ({ onDataChange, onHiddenDetailsChange }) => {
       )
     },
     {
-      title: 'Valor Unitario',
+      title: (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>Valor Unitario</span>
+          <div
+            style={{
+              width: '5px',
+              height: '20px',
+              background: '#d9d9d9',
+              cursor: 'col-resize',
+              marginLeft: '5px'
+            }}
+            onMouseDown={(e) => startResizing('unitPrice', e)}
+          />
+        </div>
+      ),
       dataIndex: 'unitPrice',
-      width: 120,
+      width: columnWidths.unitPrice,
       render: (text, record) => (
         <Input
           type="number"
@@ -305,9 +410,23 @@ const ProductsTable = ({ onDataChange, onHiddenDetailsChange }) => {
       )
     },
     {
-      title: 'Descuento',
+      title: (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>Descuento</span>
+          <div
+            style={{
+              width: '5px',
+              height: '20px',
+              background: '#d9d9d9',
+              cursor: 'col-resize',
+              marginLeft: '5px'
+            }}
+            onMouseDown={(e) => startResizing('discount', e)}
+          />
+        </div>
+      ),
       dataIndex: 'discount',
-      width: 120,
+      width: columnWidths.discount,
       render: (text, record) => (
         <Input
           type="number"
@@ -321,9 +440,23 @@ const ProductsTable = ({ onDataChange, onHiddenDetailsChange }) => {
     ...(!hiddenImpuestos
       ? [
           {
-            title: 'Impuesto Cargo',
+            title: (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>Impuesto Cargo</span>
+                <div
+                  style={{
+                    width: '5px',
+                    height: '20px',
+                    background: '#d9d9d9',
+                    cursor: 'col-resize',
+                    marginLeft: '5px'
+                  }}
+                  onMouseDown={(e) => startResizing('taxCharge', e)}
+                />
+              </div>
+            ),
             dataIndex: 'taxCharge',
-            width: 120,
+            width: columnWidths.taxCharge,
             render: (text, record) => (
               <Select
                 value={text}
@@ -338,9 +471,23 @@ const ProductsTable = ({ onDataChange, onHiddenDetailsChange }) => {
             )
           },
           {
-            title: 'Impuesto Retención',
+            title: (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>Impuesto Retención</span>
+                <div
+                  style={{
+                    width: '5px',
+                    height: '20px',
+                    background: '#d9d9d9',
+                    cursor: 'col-resize',
+                    marginLeft: '5px'
+                  }}
+                  onMouseDown={(e) => startResizing('taxWithholding', e)}
+                />
+              </div>
+            ),
             dataIndex: 'taxWithholding',
-            width: 120,
+            width: columnWidths.taxWithholding,
             render: (text, record) => (
               <Select
                 value={text}
@@ -363,24 +510,52 @@ const ProductsTable = ({ onDataChange, onHiddenDetailsChange }) => {
         ]
       : []),
     {
-      title: 'Valor Total',
+      title: (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>Valor Total</span>
+          <div
+            style={{
+              width: '5px',
+              height: '20px',
+              background: '#d9d9d9',
+              cursor: 'col-resize',
+              marginLeft: '5px'
+            }}
+            onMouseDown={(e) => startResizing('total', e)}
+          />
+        </div>
+      ),
       dataIndex: 'total',
-      width: 120,
+      width: columnWidths.total,
       render: (text) => formatCurrency(text)
     },
     {
-      title: '',
+      title: (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span></span>
+          <div
+            style={{
+              width: '5px',
+              height: '20px',
+              background: '#d9d9d9',
+              cursor: 'col-resize',
+              marginLeft: '5px'
+            }}
+            onMouseDown={(e) => startResizing('action', e)}
+          />
+        </div>
+      ),
       key: 'action',
-      width: 60,
+      width: columnWidths.action,
       render: (_, record) => (
-        <Button
+        <DeleteOutlined
           type="text"
           danger
           style={{ width: '100%' }}
           onClick={() => handleDeleteRow(record.key)}
         >
           Eliminar
-        </Button>
+        </DeleteOutlined>
       )
     }
   ];
@@ -392,13 +567,10 @@ const ProductsTable = ({ onDataChange, onHiddenDetailsChange }) => {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
             <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Total Bruto:</div>
             <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.totalBruto)}</div>
-  
             <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Descuentos:</div>
             <div style={{ textAlign: 'right', color: '#ff4d4f' }}>-{formatCurrency(totals.descuentos)}</div>
-  
             <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Subtotal:</div>
             <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.subtotal)}</div>
-  
             {hiddenImpuestos && (
               <>
                 <div style={{ textAlign: 'right', fontWeight: 500, color: '#666', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
@@ -415,7 +587,6 @@ const ProductsTable = ({ onDataChange, onHiddenDetailsChange }) => {
                   </Select>
                 </div>
                 <div style={{ textAlign: 'right', color: '#ff4d4f' }}>{formatCurrency(totals.iva)}</div>
-  
                 <div style={{ textAlign: 'right', fontWeight: 500, color: '#666', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
                   <span style={{ marginRight: '8px' }}>Retención:</span>
                   <Select
@@ -444,7 +615,6 @@ const ProductsTable = ({ onDataChange, onHiddenDetailsChange }) => {
               <div style={{ textAlign: 'right', fontWeight: 'bold', fontSize: '16px' }}>Total Neto:</div>
               <div style={{ textAlign: 'right', fontWeight: 'bold', fontSize: '16px' }}>{formatCurrency(totals.totalNeto)}</div>
             </div>
-            {/* Mostrar el total en impuestos justo después del total neto */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '8px' }}>
               <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Total en Impuestos:</div>
               <div style={{ textAlign: 'right', fontWeight: 500, color: totals.totalImpuestos >= 0 ? '#52c41a' : '#ff4d4f' }}>

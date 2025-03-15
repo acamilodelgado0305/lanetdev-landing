@@ -10,10 +10,9 @@ interface DateNavigatorProps {
 }
 
 const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
-    const [isModalVisible, setIsModalVisible] = useState(false); // Estado para abrir/cerrar el modal
-    const [range, setRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null); // Rango seleccionado
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [range, setRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
 
-    // Opciones rápidas para la selección de fechas
     const quickOptions = [
         { label: "Hoy", value: "today" },
         { label: "Ayer", value: "yesterday" },
@@ -27,7 +26,6 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
         { label: "Personalizado", value: "custom" },
     ];
 
-    // Manejar la selección rápida de fechas
     const handleQuickSelect = (value: string) => {
         let start: dayjs.Dayjs;
         let end: dayjs.Dayjs = dayjs();
@@ -67,11 +65,10 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
                 return;
         }
 
-        setRange([start, end]); // Establecemos el rango
-        onMonthChange([start.toDate(), end.toDate()]); // Llamamos a onMonthChange para pasar el rango al componente principal
+        setRange([start, end]);
+        onMonthChange([start.toDate(), end.toDate()]);
     };
 
-    // Cambiar de mes manualmente
     const handleMonthChange = (date: dayjs.Dayjs | null) => {
         if (date) {
             setRange([date.startOf("month"), date.endOf("month")]);
@@ -79,17 +76,14 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
         }
     };
 
-    // Abrir el modal
     const showModal = () => {
         setIsModalVisible(true);
     };
 
-    // Cerrar el modal
     const handleCancel = () => {
         setIsModalVisible(false);
     };
 
-    // Navegar entre meses
     const goToPreviousMonth = () => {
         const newMonth = range ? range[0].subtract(1, "month") : dayjs().subtract(1, "month");
         setRange([newMonth.startOf("month"), newMonth.endOf("month")]);
@@ -104,61 +98,69 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
 
     return (
         <div>
-            <Button
-                type="default" // Cambia a "default" para que no tenga color de fondo
-                icon={<CalendarOutlined />} // Icono de calendario
-                onClick={showModal}
-                style={{
-                    borderColor: 'black', // Borde negro
-                    color: 'black', // Texto negro
-                    backgroundColor: 'transparent', // Fondo transparente
-                    padding: '5px 10px', // Espaciado adecuado
-                    fontWeight: 'bold', // Opcional: hacer el texto en negrita
-                }}
-            >
-                Filtrar por fecha
-            </Button>
+            <Row gutter={16} justify="start" align="middle">
+                <Col>
+                    <Tooltip title="Mes anterior">
+                        <Button
+                            icon={<LeftOutlined />}
+                            onClick={goToPreviousMonth}
+                            style={{ width: 50 }}
+                        />
+                    </Tooltip>
+                </Col>
+                <Col>
+                    <Tooltip title="Mes siguiente">
+                        <Button
+                            icon={<RightOutlined />}
+                            onClick={goToNextMonth}
+                            style={{ width: 50 }}
+                        />
+                    </Tooltip>
+                </Col>
+                <Col>
+                    <Button
+                        type="default"
+                        icon={<CalendarOutlined />}
+                        onClick={showModal}
+                        style={{
+                            borderColor: "black",
+                            color: "black",
+                            backgroundColor: "transparent",
+                            padding: "5px 10px",
+                            fontWeight: "bold",
+                        }}
+                    >
+                        Filtrar por fecha
+                    </Button>
+                </Col>
+            </Row>
 
-            {/* Modal que contiene el DateNavigator */}
             <Modal
                 title="Seleccionar Rango de Fecha"
                 visible={isModalVisible}
                 onCancel={handleCancel}
-                footer={null} // No queremos botones en el modal por ahora
+                footer={null}
                 width={650}
+                style={{
+                    position: "absolute",
+                    right: 40,
+                    marginTop: 120,
+                    transform: "translate(0, 0)", // Ajusta si lo necesitas
+                }}
             >
                 <div className="flex flex-col gap-2 items-start">
                     <Row gutter={16} justify="space-around" align="middle">
-                        <Col>
-                            <Tooltip title="Mes anterior">
-                                <Button
-                                    icon={<LeftOutlined />}
-                                    onClick={goToPreviousMonth}
-                                    style={{ width: 50 }} // Ajusta el tamaño de los botones
-                                />
-                            </Tooltip>
-                        </Col>
-                        <Col>
-                            <Tooltip title="Mes siguiente">
-                                <Button
-                                    icon={<RightOutlined />}
-                                    onClick={goToNextMonth}
-                                    style={{ width: 50 }} // Ajusta el tamaño de los botones
-                                />
-                            </Tooltip>
-                        </Col>
                         <Col>
                             <Tooltip title="Mes actual">
                                 <Button
                                     icon={<CalendarOutlined />}
                                     onClick={() => setRange([dayjs().startOf("month"), dayjs().endOf("month")])}
-                                    style={{ width: 50 }} // Ajusta el tamaño de los botones
+                                    style={{ width: 50 }}
                                 />
                             </Tooltip>
                         </Col>
                     </Row>
 
-                    {/* Botones de selección rápida */}
                     <div style={{ marginTop: '20px' }}>
                         {quickOptions.map((option) => (
                             <Button
@@ -171,7 +173,6 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
                         ))}
                     </div>
 
-                    {/* Calendario */}
                     <RangePicker
                         value={range}
                         onChange={(dates) => {

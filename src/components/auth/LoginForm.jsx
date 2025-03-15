@@ -4,7 +4,8 @@ import Swal from 'sweetalert2';
 import { requestPasswordRecovery } from "../../services/apiService";
 import { useAuth } from '../Context/AuthProvider';
 import { useNavigate } from 'react-router-dom';
-import picture from '../../images/F.png'; // Asegúrate de que la imagen esté correctamente importada
+import picture from '../../imagenes/F.png'; 
+import background from "../../imagenes/loginisp.jpg";
 
 const LoginForm = () => {
     const [isRecoverPassword, setIsRecoverPassword] = useState(false); // Estado para alternar entre login y recuperación
@@ -51,11 +52,14 @@ const LoginForm = () => {
     };
 
     return (
-        <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-blue-100 via-blue-200 to-blue-300">
-            <div className="bg-white p-8  shadow-xl max-w-md w-full">
+        <div 
+            className="w-screen h-screen flex items-center justify-end bg-cover bg-center"
+            style={{ backgroundImage: `url(${background})` }}
+        >
+            <div className="bg-white p-8 shadow-xl max-w-md w-full mr-10 md:mr-60">
                 {/* Imagen pequeña en la parte superior */}
                 <div className="flex justify-center mb-6">
-                    <img src={picture} alt="Logo" className="w-16 h-16 opacity-60" /> {/* Ajustar el tamaño y opacidad de la imagen */}
+                    <img src={picture} alt="Logo" className="w-16 h-16 opacity-60" />
                 </div>
 
                 {isRecoverPassword ? (
@@ -66,7 +70,7 @@ const LoginForm = () => {
                                 <label htmlFor="email" className="block text-sm font-semibold text-gray-700">Correo Electrónico</label>
                                 <input
                                     id="email"
-                                    className="mt-2 block w-full px-4 py-3 border border-gray-300  shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
+                                    className="mt-2 block w-full px-4 py-3 border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
                                     type="email"
                                     {...register('email', { required: 'El correo electrónico es requerido' })}
                                 />
@@ -74,7 +78,7 @@ const LoginForm = () => {
                             </div>
                             <button
                                 type="submit"
-                                className="w-full bg-blue-600 text-white py-3 px-4  shadow-lg hover:bg-blue-700 transition duration-300 focus:outline-none focus:ring-4 focus:ring-blue-300"
+                                className="w-full bg-blue-600 text-white py-3 px-4 shadow-lg hover:bg-blue-700 transition duration-300 focus:outline-none focus:ring-4 focus:ring-blue-300"
                             >
                                 Recuperar Contraseña
                             </button>
@@ -96,7 +100,7 @@ const LoginForm = () => {
                                 <label htmlFor="email" className="block text-sm font-semibold text-gray-700">Correo Electrónico</label>
                                 <input
                                     id="email"
-                                    className="mt-2 block w-full px-4 py-3 border border-gray-300  shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
+                                    className="mt-2 block w-full px-4 py-3 border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
                                     type="email"
                                     {...register('email', { required: 'El correo electrónico es requerido' })}
                                 />
