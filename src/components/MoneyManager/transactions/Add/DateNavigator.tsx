@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Modal, Button, DatePicker, Tooltip, Row, Col } from "antd";
-import { CalendarOutlined, LeftOutlined, RightOutlined } from "@ant-design/icons";
+import { CalendarOutlined, LeftOutlined, RightOutlined, ReloadOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import "dayjs/locale/es"; // Importa el idioma español
 
@@ -117,6 +117,11 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
         setIsRangePickerVisible(false);  // Ocultar el RangePicker después de seleccionar las fechas
     };
 
+    const handleReset = () => {
+        setRange(null);  // Restablecer el filtro
+        onMonthChange([dayjs().startOf("month").toDate(), dayjs().endOf("month").toDate()]);  // Restablecer al mes actual
+    };
+
     return (
         <div>
             <Row gutter={16} justify="start" align="middle">
@@ -125,7 +130,7 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
                         <Button
                             icon={<LeftOutlined />}
                             onClick={goToPreviousMonth}
-                            style={{ width: 50 }}
+                            style={{ width: 40 }}
                         />
                     </Tooltip>
                 </Col>
@@ -138,7 +143,7 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
                         <Button
                             icon={<RightOutlined />}
                             onClick={goToNextMonth}
-                            style={{ width: 50 }}
+                            style={{ width: 40 }}
                         />
                     </Tooltip>
                 </Col>
@@ -156,6 +161,23 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
                         }}
                     >
                         Filtrar por fecha
+                    </Button>
+                </Col>
+                <Col>
+                    {/* Botón para restablecer el filtro */}
+                    <Button
+                        type="default"
+                        icon={<ReloadOutlined />}
+                        onClick={handleReset}
+                        style={{
+                            borderColor: "black",
+                            color: "black",
+                            backgroundColor: "transparent",
+                            padding: "5px 10px",
+                            fontWeight: "bold",
+                        }}
+                    >
+                        Restablecer
                     </Button>
                 </Col>
             </Row>
@@ -227,6 +249,7 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
                                 onChange={(dates) => handleRangeChange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
                                 format="DD/MM/YYYY"
                                 style={{ width: "100%" }}
+                                value={range}  // Abrir en el mes correcto
                             />
                         )}
                     </div>
