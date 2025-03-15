@@ -5,6 +5,7 @@ import { es } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import axios from "axios";
+import { DateTime } from "luxon";
 import {
     LeftOutlined,
     RightOutlined,
@@ -49,6 +50,7 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
     const [monthlyExpenses, setMonthlyExpenses] = useState(0);
     const [loadingMonthlyData, setLoadingMonthlyData] = useState(false);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+
     const [dateRange, setDateRange] = useState(() => {
         const today = new Date();
         return [startOfMonth(today), endOfMonth(today)];
@@ -62,6 +64,20 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
         }
         setDateRange([startOfMonth(newDate), endOfMonth(newDate)]);
     };
+
+    /*  const [dateRange, setDateRange] = useState(() => {
+         const today = new Date();
+         return [startOfMonth(today), endOfMonth(today)];
+     });
+ 
+ 
+     const handleMonthChange = (newDate) => {
+         if (!newDate) {
+             console.warn("Fecha inválida detectada:", newDate);
+             return; // Evitamos asignar `false`
+         }
+         setDateRange([startOfMonth(newDate), endOfMonth(newDate)]);
+     }; */
 
     useEffect(() => {
         fetchData();
@@ -250,9 +266,9 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
 
     const renderDate = (date) => {
         try {
-            const parsedDate = new Date(date);
-            if (isNaN(parsedDate.getTime())) return "Fecha inválida";
-            return formatDate(parsedDate, "d MMM yyyy", { locale: es });
+            const parsedDate = DateTime.fromISO(date, { zone: 'utc' });
+            const formattedDate = parsedDate.toFormat("d MMM yyyy");
+            return formattedDate;
         } catch (error) {
             console.error("Error al formatear la fecha:", error);
             return "Fecha inválida";

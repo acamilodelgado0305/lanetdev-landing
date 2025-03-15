@@ -1,7 +1,11 @@
 import React, { useState } from "react";
 import { Modal, Button, DatePicker, Tooltip, Row, Col } from "antd";
-import { CalendarOutlined, LeftOutlined, RightOutlined } from "@ant-design/icons";
+import { CalendarOutlined, LeftOutlined, RightOutlined, ReloadOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
+import "dayjs/locale/es";
+
+
+dayjs.locale("es");
 
 const { RangePicker } = DatePicker;
 
@@ -12,6 +16,7 @@ interface DateNavigatorProps {
 const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [range, setRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
+    const [isRangePickerVisible, setIsRangePickerVisible] = useState(false);
 
     const quickOptions = [
         { label: "Hoy", value: "today" },
@@ -23,7 +28,6 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
         { label: "Semana pasada", value: "lastWeek" },
         { label: "Este mes", value: "thisMonth" },
         { label: "Mes pasado", value: "lastMonth" },
-        { label: "Personalizado", value: "custom" },
     ];
 
     const handleQuickSelect = (value: string) => {
@@ -32,11 +36,12 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
 
         switch (value) {
             case "today":
-                start = dayjs();
+                start = dayjs().startOf("day");
+                end = dayjs().endOf("day");
                 break;
             case "yesterday":
-                start = dayjs().subtract(1, "day");
-                end = start;
+                start = dayjs().subtract(1, "day").startOf("day");
+                end = dayjs().subtract(1, "day").endOf("day");
                 break;
             case "last7":
                 start = dayjs().subtract(7, "day");
@@ -96,6 +101,27 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
         onMonthChange([newMonth.startOf("month").toDate(), newMonth.endOf("month").toDate()]);
     };
 
+    // Obtener el mes actual para mostrar en el centro en español
+    const currentMonth = range ? range[0].format("MMMM YYYY") : dayjs().format("MMMM YYYY");
+
+    // Mostrar el RangePicker cuando se hace clic en "Personalizado"
+    const handleCustomClick = () => {
+        setIsRangePickerVisible(true);
+    };
+
+    const handleRangeChange = (dates: [dayjs.Dayjs, dayjs.Dayjs] | null) => {
+        if (dates) {
+            setRange(dates);
+            onMonthChange([dates[0].toDate(), dates[1].toDate()]);
+        }
+        setIsRangePickerVisible(false);
+    };
+
+    const handleReset = () => {
+        setRange(null);
+        onMonthChange([dayjs().startOf("month").toDate(), dayjs().endOf("month").toDate()]);
+    };
+
     return (
         <div>
             <Row gutter={16} justify="start" align="middle">
@@ -104,16 +130,20 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
                         <Button
                             icon={<LeftOutlined />}
                             onClick={goToPreviousMonth}
-                            style={{ width: 50 }}
+                            style={{ width: 40 }}
                         />
                     </Tooltip>
+                </Col>
+                <Col>
+                    {/* Mostrar el mes actual en el centro */}
+                    <span style={{ fontWeight: "bold", fontSize: "16px" }}>{currentMonth}</span>
                 </Col>
                 <Col>
                     <Tooltip title="Mes siguiente">
                         <Button
                             icon={<RightOutlined />}
                             onClick={goToNextMonth}
-                            style={{ width: 50 }}
+                            style={{ width: 40 }}
                         />
                     </Tooltip>
                 </Col>
@@ -133,6 +163,23 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
                         Filtrar por fecha
                     </Button>
                 </Col>
+                <Col>
+                    {/* Botón para restablecer el filtro */}
+                    <Button
+                        type="default"
+                        icon={<ReloadOutlined />}
+                        onClick={handleReset}
+                        style={{
+                            borderColor: "black",
+                            color: "black",
+                            backgroundColor: "transparent",
+                            padding: "5px 10px",
+                            fontWeight: "bold",
+                        }}
+                    >
+                        Restablecer
+                    </Button>
+                </Col>
             </Row>
 
             <Modal
@@ -145,16 +192,29 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
                     position: "absolute",
                     right: 40,
                     marginTop: 120,
-                    transform: "translate(0, 0)", // Ajusta si lo necesitas
+                    transform: "translate(0, 0)",
                 }}
             >
                 <div className="flex flex-col gap-2 items-start">
+                    {/* Botones dentro del modal */}
                     <Row gutter={16} justify="space-around" align="middle">
                         <Col>
-                            <Tooltip title="Mes actual">
+                            <Tooltip title="Mes anterior">
                                 <Button
-                                    icon={<CalendarOutlined />}
-                                    onClick={() => setRange([dayjs().startOf("month"), dayjs().endOf("month")])}
+                                    icon={<LeftOutlined />}
+                                    onClick={goToPreviousMonth}
+                                    style={{ width: 50 }}
+                                />
+                            </Tooltip>
+                        </Col>
+                        <Col>
+                            <span style={{ fontWeight: "bold", fontSize: "16px" }}>{currentMonth}</span>
+                        </Col>
+                        <Col>
+                            <Tooltip title="Mes siguiente">
+                                <Button
+                                    icon={<RightOutlined />}
+                                    onClick={goToNextMonth}
                                     style={{ width: 50 }}
                                 />
                             </Tooltip>
@@ -173,23 +233,26 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
                         ))}
                     </div>
 
-                    <RangePicker
-                        value={range}
-                        onChange={(dates) => {
-                            if (dates && dates[0] && dates[1]) {
-                                setRange([dates[0], dates[1]]);
-                            } else {
-                                setRange(null);
-                            }
-                        }}
-                        format="DD/MM/YYYY"
-                        style={{ width: '100%' }}
-                        onCalendarChange={(dates, dateStrings) => {
-                            if (dates && dates[0] && dates[1]) {
-                                onMonthChange([dates[0].toDate(), dates[1].toDate()]);
-                            }
-                        }}
-                    />
+                    <div style={{ marginTop: '20px' }}>
+                        {/* Mostrar el RangePicker cuando se hace clic en "Personalizado" */}
+                        <Button
+                            key="custom"
+                            onClick={handleCustomClick}
+                            style={{ marginBottom: '30px', marginRight: '10px', padding: "10px", marginTop: "10px" }}
+                        >
+                            Personalizado
+                        </Button>
+
+                        {/* Mostrar el calendario si el estado es visible */}
+                        {isRangePickerVisible && (
+                            <RangePicker
+                                onChange={(dates) => handleRangeChange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
+                                format="DD/MM/YYYY"
+                                style={{ width: "100%" }}
+                                value={range}
+                            />
+                        )}
+                    </div>
                 </div>
             </Modal>
         </div>
