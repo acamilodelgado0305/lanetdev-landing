@@ -74,6 +74,20 @@ const TransactionsDashboard = () => {
   const [monthlyBalance, setMonthlyBalance] = useState(0);
   const [monthlyIncome, setMonthlyIncome] = useState(0);
   const [monthlyExpenses, setMonthlyExpenses] = useState(0);
+  const [dateRange, setDateRange] = useState(() => {
+    const today = new Date();
+    return [startOfMonth(today), endOfMonth(today)];
+  });
+
+
+  const handleMonthChange = (newDate) => {
+    if (!newDate) {
+      console.warn("Fecha inválida detectada:", newDate);
+      return; // Evitamos asignar `false`
+    }
+    setDateRange([startOfMonth(newDate), endOfMonth(newDate)]);
+  };
+
 
   // Mapping for tab to endpoint conversion
   const tabToEndpoint = {
@@ -192,7 +206,7 @@ const TransactionsDashboard = () => {
     fetchAccounts();
     fetchGeneralBalance();
     fetchMonthlyData();
-    fetchData(tabToEndpoint[activeTab]);
+    /*  fetchData(tabToEndpoint[activeTab]); */
   }, [activeTab, refreshTrigger, currentMonth]);
 
   const applyFilters = (entriesToFilter = entries) => {
@@ -283,9 +297,9 @@ const TransactionsDashboard = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-white">
+    <div className="flex flex-col h-screen bg-gray-300 ">
       {/* Header */}
-      <div className="px-4 bg-white sticky z-10 shadow-sm">
+      <div className="px-4 bg-white sticky z-10 shadow-sm mt-4">
         <div className="max-w-full mx-auto py-2">
           <div className="flex justify-between items-center border-b-3 border-gray-300">
             <div className="flex items-center space-x-4">
@@ -415,41 +429,37 @@ const TransactionsDashboard = () => {
           <div className="mt-[-1em] border-b-4 border-gray-300">
             <div className="flex overflow-x-auto">
               <div
-                className={`py-2 px-4 cursor-pointer border-b-4 transition-colors duration-200 ${
-                  activeTab === 'resumen'
-                    ? 'border-[#0052CC] text-[#0052CC] font-semibold'
-                    : 'border-transparent text-gray-800 hover:border-[#0052CC]-300 hover:text-[#0052CC]'
-                }`}
+                className={`py-2 px-4 cursor-pointer border-b-4 transition-colors duration-200 ${activeTab === 'resumen'
+                  ? 'border-[#0052CC] text-[#0052CC] font-semibold'
+                  : 'border-transparent text-gray-800 hover:border-[#0052CC]-300 hover:text-[#0052CC]'
+                  }`}
                 onClick={() => handleTabChange('resumen')}
               >
                 Resumen
               </div>
               <div
-                className={`py-2 px-4 cursor-pointer border-b-4 transition-colors duration-200 ${
-                  activeTab === 'incomes'
-                    ? 'border-blue-500 text-blue-500 font-semibold'
-                    : 'border-transparent text-gray-800 hover:border-blue-300 hover:text-blue-400'
-                }`}
+                className={`py-2 px-4 cursor-pointer border-b-4 transition-colors duration-200 ${activeTab === 'incomes'
+                  ? 'border-blue-500 text-blue-500 font-semibold'
+                  : 'border-transparent text-gray-800 hover:border-blue-300 hover:text-blue-400'
+                  }`}
                 onClick={() => handleTabChange('incomes')}
               >
                 Ingresos
               </div>
               <div
-                className={`py-2 px-4 cursor-pointer border-b-4 transition-colors duration-200 ${
-                  activeTab === 'expenses'
-                    ? 'border-blue-500 text-blue-500 font-semibold'
-                    : 'border-transparent text-gray-800 hover:border-blue-300 hover:text-blue-400'
-                }`}
+                className={`py-2 px-4 cursor-pointer border-b-4 transition-colors duration-200 ${activeTab === 'expenses'
+                  ? 'border-blue-500 text-blue-500 font-semibold'
+                  : 'border-transparent text-gray-800 hover:border-blue-300 hover:text-blue-400'
+                  }`}
                 onClick={() => handleTabChange('expenses')}
               >
                 Egresos
               </div>
               <div
-                className={`py-2 px-4 cursor-pointer border-b-4 transition-colors duration-200 ${
-                  activeTab === 'transfers'
-                    ? 'border-blue-500 text-blue-500 font-semibold'
-                    : 'border-transparent text-gray-800 hover:border-blue-300 hover:text-blue-400'
-                }`}
+                className={`py-2 px-4 cursor-pointer border-b-4 transition-colors duration-200 ${activeTab === 'transfers'
+                  ? 'border-blue-500 text-blue-500 font-semibold'
+                  : 'border-transparent text-gray-800 hover:border-blue-300 hover:text-blue-400'
+                  }`}
                 onClick={() => handleTabChange('transfers')}
               >
                 Transferencias

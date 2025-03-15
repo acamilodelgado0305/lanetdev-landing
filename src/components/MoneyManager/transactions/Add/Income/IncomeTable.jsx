@@ -5,23 +5,15 @@ import { es } from "date-fns/locale";
 import { DateTime } from "luxon";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import DateNavigator from "../DateNavigator";
 import axios from "axios";
 import {
     LeftOutlined,
     RightOutlined,
     DownloadOutlined,
     FilterOutlined,
-    EllipsisOutlined,
-    DeleteOutlined,
-    ExportOutlined,
     SearchOutlined,
     CalendarOutlined,
-    CheckCircleOutlined,
-    MenuOutlined,
-    EditOutlined,
-    DollarOutlined,
-    ArrowUpOutlined,
-    ArrowDownOutlined
 } from "@ant-design/icons";
 import FloatingActionMenu from "../../FloatingActionMenu";
 import ViewIncome from "./ViewIncome";
@@ -42,13 +34,27 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
     // State variables for selection and date filtering
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
     const [currentMonth, setCurrentMonth] = useState(new Date());
-    const [dateRange, setDateRange] = useState([startOfMonth(new Date()), endOfMonth(new Date())]);
     const [showFilters, setShowFilters] = useState(false);
     const [filteredEntries, setFilteredEntries] = useState([]);
     const [entriesLoading, setEntriesLoading] = useState(true);
     const [entries, setEntries] = useState([]);
     const [error, setError] = useState(null);
     const [typeFilter, setTypeFilter] = useState(null);
+
+    const [dateRange, setDateRange] = useState(() => {
+        const today = new Date();
+        return [startOfMonth(today), endOfMonth(today)];
+    });
+
+
+    const handleMonthChange = (newDate) => {
+        if (!newDate) {
+            console.warn("Fecha inválida detectada:", newDate);
+            return; // Evitamos asignar `false`
+        }
+        setDateRange([startOfMonth(newDate), endOfMonth(newDate)]);
+    };
+
     const [cashiers, setCashiers] = useState([]);
     const [cashierFilter, setCashierFilter] = useState(null);
     const [monthlyBalance, setMonthlyBalance] = useState(0);
@@ -239,7 +245,8 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
     };
 
     const fetchMonthlyData = async () => {
-        const monthYear = formatDate(currentMonth, "yyyy-MM");
+        // Format the current month as yyyy-MM for the API
+        const monthYear = formatDate(dateRange[0], "yyyy-MM");
         setLoadingMonthlyData(true);
 
         try {
@@ -441,12 +448,12 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
     // New function to generate the PDF invoice
     const generateInvoicePDF = (items) => {
         const doc = new jsPDF();
-    
+
         // Header
         doc.setFontSize(18);
         doc.setFont("helvetica", "bold");
         doc.text("FACTURA", 105, 20, { align: "center" });
-    
+
         // Company Info (customize as needed)
         doc.setFontSize(12);
         doc.setFont("helvetica", "normal");
@@ -454,11 +461,11 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
         doc.text("NIT: 123456789-0", 14, 36);
         doc.text("Dirección: Calle 123 #45-67, Bogotá, Colombia", 14, 42);
         doc.text("Teléfono: +57 123 456 7890", 14, 48);
-    
+
         // Invoice Info
         doc.text(`Fecha: ${formatDate(new Date(), "d MMMM yyyy", { locale: es })}`, 140, 30);
         doc.text(`Factura N°: ${Math.floor(Math.random() * 1000000)}`, 140, 36); // Random invoice number
-    
+
         // Table of Items
         const tableData = items.map(item => [
             item.arqueo_number || "N/A",
@@ -470,7 +477,7 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
             renderDate(item.start_period),
             renderDate(item.end_period)
         ]);
-    
+
         // Use autoTable as a function
         autoTable(doc, {
             startY: 60,
@@ -490,21 +497,21 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
                 7: { cellWidth: 20 },
             },
         });
-    
+
         // Total
         const totalAmount = items.reduce((sum, item) => sum + (item.amount || 0), 0);
         doc.setFontSize(12);
         doc.text(`Total: ${formatCurrency(totalAmount)}`, 140, doc.lastAutoTable.finalY + 10);
-    
+
         // Footer
         doc.setFontSize(10);
         doc.text("Gracias por su negocio", 105, 280, { align: "center" });
         doc.text("Este documento no tiene validez fiscal", 105, 286, { align: "center" });
-    
+
         // Save the PDF
         doc.save(`Factura_Ingresos_${formatDate(new Date(), "yyyy-MM-dd")}.pdf`);
     };
-    
+
     const columns = [
         {
             title: (
@@ -769,28 +776,9 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
                                 </div>
                             </div>
                         </div>
-                        <Tooltip title="Mes actual">
-                            <Button
-                                icon={<CalendarOutlined />}
-                                onClick={goToCurrentMonth}
-                                className="mr-2"
-                            >
-                                Hoy
-                            </Button>
-                        </Tooltip>
-                        <Button
-                            icon={<LeftOutlined />}
-                            onClick={goToPreviousMonth}
-                            className="mr-1"
-                        />
-                        <span className="font-medium px-3 py-1 bg-gray-100 rounded">
-                            {formatDate(currentMonth, "MMMM yyyy", { locale: es })}
-                        </span>
-                        <Button
-                            icon={<RightOutlined />}
-                            onClick={goToNextMonth}
-                            className="ml-1"
-                        />
+                        <div>
+                            <DateNavigator onMonthChange={(dates) => setDateRange(dates)} />
+                        </div>
                     </div>
                 </div>
 

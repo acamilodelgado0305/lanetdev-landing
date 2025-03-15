@@ -23,6 +23,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import FloatingActionMenu from "../../FloatingActionMenu";
 import ViewExpense from "../../Add/expense/ViewExpense";
+import DateNavigator from "../../Add/DateNavigator";
 
 const { RangePicker } = DatePicker;
 const { Title, Text } = Typography;
@@ -35,7 +36,6 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
     const [searchText, setSearchText] = useState({});
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
     const [currentMonth, setCurrentMonth] = useState(new Date());
-    const [dateRange, setDateRange] = useState([startOfMonth(new Date()), endOfMonth(new Date())]);
     const [showFilters, setShowFilters] = useState(false);
     const [filteredEntries, setFilteredEntries] = useState([]);
     const [entriesLoading, setEntriesLoading] = useState(true);
@@ -49,6 +49,19 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
     const [monthlyExpenses, setMonthlyExpenses] = useState(0);
     const [loadingMonthlyData, setLoadingMonthlyData] = useState(false);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [dateRange, setDateRange] = useState(() => {
+        const today = new Date();
+        return [startOfMonth(today), endOfMonth(today)];
+    });
+
+
+    const handleMonthChange = (newDate) => {
+        if (!newDate) {
+            console.warn("Fecha inválida detectada:", newDate);
+            return; // Evitamos asignar `false`
+        }
+        setDateRange([startOfMonth(newDate), endOfMonth(newDate)]);
+    };
 
     useEffect(() => {
         fetchData();
@@ -676,16 +689,9 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
                                 </div>
                             </div>
                         </div>
-                        <Tooltip title="Mes actual">
-                            <Button icon={<CalendarOutlined />} onClick={goToCurrentMonth} className="mr-2">
-                                Hoy
-                            </Button>
-                        </Tooltip>
-                        <Button icon={<LeftOutlined />} onClick={goToPreviousMonth} className="mr-1" />
-                        <span className="font-medium px-3 py-1 bg-gray-100 rounded">
-                            {formatDate(currentMonth, "MMMM yyyy", { locale: es })}
-                        </span>
-                        <Button icon={<RightOutlined />} onClick={goToNextMonth} className="ml-1" />
+                        <div>
+                            <DateNavigator onMonthChange={(dates) => setDateRange(dates)} />
+                        </div>
                     </div>
                 </div>
 

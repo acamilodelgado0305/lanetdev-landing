@@ -25,7 +25,7 @@ const AddExpense = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const returnTab = location.state?.returnTab || "egresos";
-  
+
   // Estados para los campos del formulario
   const [account, setAccount] = useState("");
   const [voucher, setVoucher] = useState([]);
@@ -114,7 +114,7 @@ const AddExpense = () => {
         throw new Error(`No se pudo obtener la información del egreso: ${response.status} - ${errorText}`);
       }
       const data = await response.json();
-  
+
       // Mapear los datos del backend al estado del formulario
       setAccount(data.account_id?.toString() || "");
       setDescription(data.description || "");
@@ -126,7 +126,7 @@ const AddExpense = () => {
       setFacturaProvNumber(data.provider_invoice_number || "");
       setTipo(data.type || "");
       setVoucher(parseVoucher(data.voucher));
-  
+
       // Mapear ítems y totales
       if (data.items && data.items.length > 0) {
         const mappedItems = data.items.map(item => ({
@@ -693,7 +693,7 @@ const AddExpense = () => {
   };
 
   return (
-    <div className="p-6 max-w-[1200px] mx-auto bg-white shadow">
+    <div className="p-6 max-w-[1200px] mx-auto bg-white shadow mt-10">
       <div className="sticky top-0 z-10 bg-white p-4 shadow-md flex justify-between items-center">
         <div className="flex items-center gap-2">
           <div className="bg-[#0052CC] p-2">

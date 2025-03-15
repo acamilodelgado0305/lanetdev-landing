@@ -132,7 +132,7 @@ export default function Root() {
         icon: <DollarCircleOutlined />,
         hasSubmenu: true,
         submenuItems: [
-         
+
           {
             to: "/index/moneymanager/transactions",
             label: "Transacciones",
@@ -560,8 +560,7 @@ export default function Root() {
 
         {/* Contenido principal */}
         <Layout.Content
-          className={`flex-1 overflow-x-hidden overflow-y-auto mt-6 ${isHidden ? "ml-0" : isExpanded ? "ml-64" : "ml-16"
-            } h-screen transition-all duration-300 ease-in-out`}
+          className={`flex-1 overflow-x-hidden overflow-y-auto ${isExpanded ? "ml-[17.5em]" : "ml-[5.3em]"} h-screen`}
         >
           <Outlet context={{ setUnreadEmailsCount }} />
         </Layout.Content>
