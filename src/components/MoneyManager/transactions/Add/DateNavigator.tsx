@@ -16,7 +16,7 @@ interface DateNavigatorProps {
 const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [range, setRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
-    const [isRangePickerVisible, setIsRangePickerVisible] = useState(false);  // Nuevo estado para controlar la visibilidad del calendario
+    const [isRangePickerVisible, setIsRangePickerVisible] = useState(false);
 
     const quickOptions = [
         { label: "Hoy", value: "today" },
