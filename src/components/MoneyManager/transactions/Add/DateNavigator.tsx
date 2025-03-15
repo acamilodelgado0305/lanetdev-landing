@@ -36,11 +36,12 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
 
         switch (value) {
             case "today":
-                start = dayjs();
+                start = dayjs().startOf("day"); // 00:00 del día de hoy
+                end = dayjs().endOf("day"); // 23:59:59 del día de hoy
                 break;
             case "yesterday":
-                start = dayjs().subtract(1, "day");
-                end = start;
+                start = dayjs().subtract(1, "day").startOf("day"); // 00:00 de ayer
+                end = dayjs().subtract(1, "day").endOf("day"); // 23:59:59 de ayer
                 break;
             case "last7":
                 start = dayjs().subtract(7, "day");
@@ -173,12 +174,25 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
                 }}
             >
                 <div className="flex flex-col gap-2 items-start">
+                    {/* Botones dentro del modal */}
                     <Row gutter={16} justify="space-around" align="middle">
                         <Col>
-                            <Tooltip title="Mes actual">
+                            <Tooltip title="Mes anterior">
                                 <Button
-                                    icon={<CalendarOutlined />}
-                                    onClick={() => setRange([dayjs().startOf("month"), dayjs().endOf("month")])}
+                                    icon={<LeftOutlined />}
+                                    onClick={goToPreviousMonth}
+                                    style={{ width: 50 }}
+                                />
+                            </Tooltip>
+                        </Col>
+                        <Col>
+                            <span style={{ fontWeight: "bold", fontSize: "16px" }}>{currentMonth}</span>
+                        </Col>
+                        <Col>
+                            <Tooltip title="Mes siguiente">
+                                <Button
+                                    icon={<RightOutlined />}
+                                    onClick={goToNextMonth}
                                     style={{ width: 50 }}
                                 />
                             </Tooltip>
