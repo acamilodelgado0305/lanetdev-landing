@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { Modal, Button, DatePicker, Tooltip, Row, Col } from "antd";
 import { CalendarOutlined, LeftOutlined, RightOutlined, ReloadOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
-import "dayjs/locale/es"; // Importa el idioma español
+import "dayjs/locale/es";
 
-// Configura dayjs para usar español
+
 dayjs.locale("es");
 
 const { RangePicker } = DatePicker;
@@ -36,12 +36,12 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
 
         switch (value) {
             case "today":
-                start = dayjs().startOf("day"); // 00:00 del día de hoy
-                end = dayjs().endOf("day"); // 23:59:59 del día de hoy
+                start = dayjs().startOf("day");
+                end = dayjs().endOf("day");
                 break;
             case "yesterday":
-                start = dayjs().subtract(1, "day").startOf("day"); // 00:00 de ayer
-                end = dayjs().subtract(1, "day").endOf("day"); // 23:59:59 de ayer
+                start = dayjs().subtract(1, "day").startOf("day");
+                end = dayjs().subtract(1, "day").endOf("day");
                 break;
             case "last7":
                 start = dayjs().subtract(7, "day");
@@ -106,7 +106,7 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
 
     // Mostrar el RangePicker cuando se hace clic en "Personalizado"
     const handleCustomClick = () => {
-        setIsRangePickerVisible(true);  // Hacer visible el RangePicker inmediatamente
+        setIsRangePickerVisible(true);
     };
 
     const handleRangeChange = (dates: [dayjs.Dayjs, dayjs.Dayjs] | null) => {
@@ -114,12 +114,12 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
             setRange(dates);
             onMonthChange([dates[0].toDate(), dates[1].toDate()]);
         }
-        setIsRangePickerVisible(false);  // Ocultar el RangePicker después de seleccionar las fechas
+        setIsRangePickerVisible(false);
     };
 
     const handleReset = () => {
-        setRange(null);  // Restablecer el filtro
-        onMonthChange([dayjs().startOf("month").toDate(), dayjs().endOf("month").toDate()]);  // Restablecer al mes actual
+        setRange(null);
+        onMonthChange([dayjs().startOf("month").toDate(), dayjs().endOf("month").toDate()]);
     };
 
     return (
@@ -192,7 +192,7 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
                     position: "absolute",
                     right: 40,
                     marginTop: 120,
-                    transform: "translate(0, 0)", // Ajusta si lo necesitas
+                    transform: "translate(0, 0)",
                 }}
             >
                 <div className="flex flex-col gap-2 items-start">
@@ -237,7 +237,7 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
                         {/* Mostrar el RangePicker cuando se hace clic en "Personalizado" */}
                         <Button
                             key="custom"
-                            onClick={handleCustomClick}  // Mostrar el RangePicker inmediatamente
+                            onClick={handleCustomClick}
                             style={{ marginBottom: '30px', marginRight: '10px', padding: "10px", marginTop: "10px" }}
                         >
                             Personalizado
@@ -249,7 +249,7 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
                                 onChange={(dates) => handleRangeChange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
                                 format="DD/MM/YYYY"
                                 style={{ width: "100%" }}
-                                value={range}  // Abrir en el mes correcto
+                                value={range}
                             />
                         )}
                     </div>
