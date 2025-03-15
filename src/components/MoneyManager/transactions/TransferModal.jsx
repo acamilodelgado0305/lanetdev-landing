@@ -9,7 +9,9 @@ import {
   Typography,
   message,
   Space,
-  Tag
+  Tag,
+  Descriptions,
+  Tooltip
 } from "antd";
 import {
   DollarCircleOutlined,
@@ -19,13 +21,15 @@ import {
   LeftOutlined,
   CalendarOutlined,
   InfoCircleOutlined,
-  FormOutlined
-} from '@ant-design/icons';
+  FormOutlined,
+  BankOutlined,
+  ShareAltOutlined 
+} from "@ant-design/icons";
 import Swal from "sweetalert2";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
-import AccountSelector from "./Add/AccountSelector ";
+import AccountSelector from "./Add/AccountSelector";
 import ImageUploader from "./Add/ImageUploader";
 
 // Extender dayjs con los plugins
@@ -59,7 +63,9 @@ const TransferModal = ({
     if (transactionToEdit) {
       setIsEditing(!!transactionToEdit.isEditing);
       setVouchers(transactionToEdit.vouchers || null);
-      setImageUrls(Array.isArray(transactionToEdit.vouchers) ? transactionToEdit.vouchers : []);
+      setImageUrls(
+        Array.isArray(transactionToEdit.vouchers) ? transactionToEdit.vouchers : []
+      );
 
       form.setFieldsValue({
         fromAccount: transactionToEdit.fromAccountId || undefined,
@@ -85,11 +91,11 @@ const TransferModal = ({
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
+    return new Intl.NumberFormat("es-CO", {
+      style: "currency",
+      currency: "COP",
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
@@ -114,7 +120,7 @@ const TransferModal = ({
         description: values.description,
       };
 
-      const endpoint = `${apiUrl}/transfers${isEditing ? `/${transactionToEdit.id}` : ''}`;
+      const endpoint = `${apiUrl}/transfers${isEditing ? `/${transactionToEdit.id}` : ""}`;
       const method = isEditing ? "PUT" : "POST";
 
       const response = await fetch(endpoint, {
@@ -129,14 +135,18 @@ const TransferModal = ({
         Swal.fire({
           icon: "success",
           title: isEditing ? "Transferencia actualizada" : "Transferencia realizada",
-          text: isEditing ? "La transferencia se ha actualizado correctamente." : "La transferencia se ha realizado correctamente.",
-          confirmButtonColor: "#0052CC", // Color azul de Jira
+          text: isEditing
+            ? "La transferencia se ha actualizado correctamente."
+            : "La transferencia se ha realizado correctamente.",
+          confirmButtonColor: "#0052CC",
         });
         resetForm();
         onClose();
         onTransactionAdded();
       } else {
-        throw new Error(isEditing ? "Error al actualizar la transferencia" : "Error al realizar la transferencia");
+        throw new Error(
+          isEditing ? "Error al actualizar la transferencia" : "Error al realizar la transferencia"
+        );
       }
     } catch (error) {
       if (error.errorFields) {
@@ -146,7 +156,7 @@ const TransferModal = ({
           icon: "error",
           title: "Error",
           text: error.message,
-          confirmButtonColor: "#DE350B", // Color rojo de Jira
+          confirmButtonColor: "#DE350B",
         });
       }
     } finally {
@@ -161,54 +171,68 @@ const TransferModal = ({
     setIsEditing(false);
   };
 
+  // Obtener valores dinámicos para el resumen
+  const fromAccount = accounts.find((acc) => acc.id === parseInt(form.getFieldValue("fromAccount")));
+  const toAccount = accounts.find((acc) => acc.id === parseInt(form.getFieldValue("toAccount")));
+  const amount = form.getFieldValue("amount");
+
   return (
     <Drawer
       title={
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Button
-            icon={<LeftOutlined />}
-            onClick={onClose}
-            type="text"
-            style={{ marginRight: '8px', padding: '4px 8px' }}
-          />
-          <DollarCircleOutlined style={{ color: '#0052CC', fontSize: '18px' }} />
-          <span style={{ fontWeight: 500 }}>{isEditing ? "Editar Transferencia" : "Nueva Transferencia"}</span>
-          <Tag
-            color={isEditing ? "orange" : "blue"}
-            style={{ marginLeft: '8px', border: 'none', borderRadius: '2px' }}
-          >
-            {isEditing ? "En Edición" : "Nueva"}
-          </Tag>
+        <div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gray-50">
+          <div className="flex items-center">
+            <div className="bg-blue-700 text-white px-4 py-2 rounded-md font-semibold text-sm">  
+                <>NUEVO COMRPOBANTE DE TRANSFERENCIA</>
+            </div>
+          </div>
+          <div className="flex space-x-2">
+            <Tooltip title="Compartir">
+              <Button
+                icon={<ShareAltOutlined />}
+                className="border border-gray-300 text-gray-600 hover:text-blue-700 hover:border-blue-700"
+                type="text"
+                disabled
+              />
+            </Tooltip>
+           
+            <Tooltip title="Cerrar">
+              <Button
+                onClick={onClose}
+                icon={<CloseOutlined />}
+                className="border border-gray-300 text-gray-600 hover:text-blue-700 hover:border-blue-700"
+                type="text"
+              />
+            </Tooltip>
+          </div>
         </div>
       }
       placement="right"
-      width={500}
+      width={600}
       onClose={onClose}
       open={isOpen}
       closable={false}
-      headerStyle={{
-        padding: '12px 24px',
-        borderBottom: '1px solid #DFE1E6',
-        background: '#FAFBFC'
-      }}
+      headerStyle={{ padding: 0, borderBottom: "none" }}
       bodyStyle={{
-        padding: '16px 24px',
-        background: '#FFFFFF',
-        height: 'calc(100% - 120px)',
-        overflow: 'auto'
-      }}
-      style={{
-        borderRadius: '0px',
-        top: '100px'  // Ajusta este valor para que comience más abajo
+        padding: "24px",
+        background: "#F9FAFB",
+        height: "calc(100% - 120px)",
+        overflow: "auto",
       }}
       footerStyle={{
-        padding: '16px 24px',
-        borderTop: '1px solid #DFE1E6',
-        background: '#FAFBFC'
+        padding: "16px 24px",
+        borderTop: "1px solid #DFE1E6",
+        background: "#FFFFFF",
       }}
       footer={
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-          <Button onClick={onClose} style={{ borderRadius: '3px' }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: "8px" }}>
+          <Button
+            onClick={onClose}
+            style={{
+              borderRadius: "4px",
+              borderColor: "#DFE1E6",
+              color: "#172B4D",
+            }}
+          >
             Cancelar
           </Button>
           <Button
@@ -216,202 +240,189 @@ const TransferModal = ({
             onClick={handleSave}
             loading={loading}
             style={{
-              background: '#0052CC',
-              borderRadius: '3px',
-              boxShadow: 'none'
+              background: "#0052CC",
+              borderColor: "#0052CC",
+              borderRadius: "4px",
+              boxShadow: "0 2px 4px rgba(0, 82, 204, 0.2)",
             }}
           >
-            {isEditing ? "Actualizar" : "Guardar"}
+            {isEditing ? "Actualizar Transferencia" : "Confirmar Transferencia"}
           </Button>
         </div>
       }
-      maskStyle={{
-        background: 'rgba(9, 30, 66, 0.54)' // Estilo de oscurecimiento Jira
-      }}
+      maskStyle={{ background: "rgba(9, 30, 66, 0.54)" }}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
         <Form
           form={form}
           layout="vertical"
-          initialValues={{
-            date: dayjs(),
-          }}
-          style={{ width: '100%' }}
+          initialValues={{ date: dayjs() }}
+          style={{ width: "100%" }}
         >
-          <div style={{ marginBottom: '24px' }}>
-            <Text style={{
-              display: 'flex',
-              alignItems: 'center',
-              fontSize: '14px',
-              color: '#6B778C',
-              textTransform: 'uppercase',
-              fontWeight: 600,
-              marginBottom: '16px'
-            }}>
-              <InfoCircleOutlined style={{ marginRight: '8px' }} />
-              Detalles de la Transacción
+          {/* Sección de Detalles */}
+          <div
+            style={{
+              background: "#FFFFFF",
+              padding: "16px",
+              borderRadius: "4px",
+              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+            }}
+          >
+            <Text
+              strong
+              style={{
+                fontSize: "14px",
+                color: "#172B4D",
+                textTransform: "uppercase",
+                marginBottom: "16px",
+                display: "block",
+              }}
+            >
+              <InfoCircleOutlined style={{ marginRight: "8px", color: "#0052CC" }} />
+              Detalles de la Transferencia
             </Text>
-
-            <div style={{ background: '#F4F5F7', padding: '16px', borderRadius: '3px' }}>
-              <Form.Item
-                name="date"
-                label={
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <CalendarOutlined />
-                    <span>Fecha</span>
-                  </div>
-                }
-                rules={[{ required: true, message: 'Por favor seleccione una fecha' }]}
-              >
-                <DatePicker
-                  format="YYYY-MM-DD"
-                  style={{ width: '100%', borderRadius: '3px' }}
-                  placeholder="Seleccione fecha"
-                />
-              </Form.Item>
-
-              <Form.Item
-                name="amount"
-                label={
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <DollarCircleOutlined />
-                    <span>Importe</span>
-                  </div>
-                }
-                rules={[
-                  { required: true, message: 'Por favor ingrese el importe' },
-                  { type: 'number', min: 1, message: 'El importe debe ser mayor a 0' }
-                ]}
-              >
-                <Input
-                  prefix="$"
-                  type="number"
-                  placeholder="0"
-                  style={{ width: '100%', borderRadius: '3px' }}
-                />
-              </Form.Item>
-
-              <Form.Item
-                name="description"
-                label={
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <FormOutlined />
-                    <span>Descripción</span>
-                  </div>
-                }
-              >
-                <TextArea
-                  placeholder="Añade una descripción"
-                  autoSize={{ minRows: 2, maxRows: 4 }}
-                  style={{ borderRadius: '3px' }}
-                />
-              </Form.Item>
-            </div>
+            <Form.Item
+              name="date"
+              label="Fecha"
+              rules={[{ required: true, message: "Seleccione la fecha de la transferencia" }]}
+            >
+              <DatePicker
+                format="YYYY-MM-DD"
+                style={{ width: "100%", borderRadius: "4px" }}
+                prefix={<CalendarOutlined />}
+                placeholder="Seleccione fecha"
+              />
+            </Form.Item>
+            <Form.Item
+              name="amount"
+              label="Importe"
+              rules={[
+                { required: true, message: "Ingrese el importe" },
+                { type: "number", min: 1, message: "El importe debe ser mayor a 0" },
+              ]}
+            >
+              <Input
+                prefix={<DollarCircleOutlined style={{ color: "#0052CC" }} />}
+                type="number"
+                placeholder="0"
+                style={{ width: "100%", borderRadius: "4px" }}
+              />
+            </Form.Item>
+            <Form.Item name="description" label="Descripción">
+              <TextArea
+                placeholder="Ingrese una descripción (ej. Transferencia por pago de factura #123)"
+                autoSize={{ minRows: 3, maxRows: 5 }}
+                style={{ borderRadius: "4px" }}
+              />
+            </Form.Item>
           </div>
 
-          <div style={{ marginBottom: '24px' }}>
-            <Text style={{
-              display: 'flex',
-              alignItems: 'center',
-              fontSize: '14px',
-              color: '#6B778C',
-              textTransform: 'uppercase',
-              fontWeight: 600,
-              marginBottom: '16px'
-            }}>
-              <FileImageOutlined style={{ marginRight: '8px' }} />
+          {/* Sección de Cuentas */}
+          <div
+            style={{
+              background: "#FFFFFF",
+              padding: "16px",
+              borderRadius: "4px",
+              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+            }}
+          >
+            <Text
+              strong
+              style={{
+                fontSize: "14px",
+                color: "#172B4D",
+                textTransform: "uppercase",
+                marginBottom: "16px",
+                display: "block",
+              }}
+            >
+              <SwapOutlined style={{ marginRight: "8px", color: "#0052CC" }} />
+              Movimiento entre Cuentas
+            </Text>
+            <Form.Item
+              name="fromAccount"
+              label="Origen"
+              rules={[{ required: true, message: "Seleccione la cuenta de origen" }]}
+            >
+              <AccountSelector
+                accounts={accounts}
+                selectedAccount={form.getFieldValue("fromAccount")}
+                onAccountSelect={(value) => form.setFieldsValue({ fromAccount: value })}
+                formatCurrency={formatCurrency}
+                prefix={<BankOutlined style={{ color: "#0052CC" }} />}
+              />
+            </Form.Item>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                margin: "16px 0",
+              }}
+            >
+              <Divider style={{ borderColor: "#DFE1E6" }}>
+                <SwapOutlined style={{ color: "#0052CC", fontSize: "18px" }} />
+              </Divider>
+            </div>
+            <Form.Item
+              name="toAccount"
+              label="Destino"
+              rules={[
+                { required: true, message: "Seleccione la cuenta de destino" },
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    if (!value || getFieldValue("fromAccount") !== value) {
+                      return Promise.resolve();
+                    }
+                    return Promise.reject(
+                      new Error("La cuenta de origen y destino no pueden ser iguales")
+                    );
+                  },
+                }),
+              ]}
+            >
+              <AccountSelector
+                accounts={accounts}
+                selectedAccount={form.getFieldValue("toAccount")}
+                onAccountSelect={(value) => form.setFieldsValue({ toAccount: value })}
+                formatCurrency={formatCurrency}
+                prefix={<BankOutlined style={{ color: "#0052CC" }} />}
+              />
+            </Form.Item>
+          </div>
+
+          {/* Sección de Comprobantes */}
+          <div
+            style={{
+              background: "#FFFFFF",
+              padding: "16px",
+              borderRadius: "4px",
+              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+            }}
+          >
+            <Text
+              strong
+              style={{
+                fontSize: "14px",
+                color: "#172B4D",
+                textTransform: "uppercase",
+                marginBottom: "16px",
+                display: "block",
+              }}
+            >
+              <FileImageOutlined style={{ marginRight: "8px", color: "#0052CC" }} />
               Comprobantes
             </Text>
-
-            <div style={{ background: '#F4F5F7', padding: '16px', borderRadius: '3px' }}>
-              <ImageUploader
-                imageUrls={imageUrls}
-                setImageUrls={setImageUrls}
-                voucher={vouchers}
-                setVoucher={setVouchers}
-              />
-            </div>
+            <ImageUploader
+              imageUrls={imageUrls}
+              setImageUrls={setImageUrls}
+              voucher={vouchers}
+              setVoucher={setVouchers}
+            />
           </div>
 
-          <div style={{ marginBottom: '24px' }}>
-            <Text style={{
-              display: 'flex',
-              alignItems: 'center',
-              fontSize: '14px',
-              color: '#6B778C',
-              textTransform: 'uppercase',
-              fontWeight: 600,
-              marginBottom: '16px'
-            }}>
-              <SwapOutlined style={{ marginRight: '8px' }} />
-              Cuentas
-            </Text>
-
-            <div style={{ background: '#F4F5F7', padding: '16px', borderRadius: '3px' }}>
-              <Form.Item
-                name="fromAccount"
-                label={
-                  <div style={{ fontWeight: 500, color: '#172B4D' }}>Cuenta de Origen</div>
-                }
-                rules={[{ required: true, message: 'Por favor seleccione la cuenta de origen' }]}
-              >
-                <AccountSelector
-                  accounts={accounts}
-                  selectedAccount={form.getFieldValue('fromAccount')}
-                  onAccountSelect={(value) => form.setFieldsValue({ fromAccount: value })}
-                  formatCurrency={formatCurrency}
-                />
-              </Form.Item>
-
-              <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                margin: '16px 0',
-                position: 'relative'
-              }}>
-                <div style={{
-                  borderBottom: '1px solid #DFE1E6',
-                  width: '100%',
-                  position: 'absolute',
-                  zIndex: 0
-                }} />
-                <div style={{
-                  background: '#0052CC',
-                  borderRadius: '50%',
-                  width: '28px',
-                  height: '28px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  position: 'relative',
-                  zIndex: 1
-                }}>
-                  <SwapOutlined style={{ color: 'white', fontSize: '14px' }} />
-                </div>
-              </div>
-
-              <Form.Item
-                name="toAccount"
-                label={
-                  <div style={{ fontWeight: 500, color: '#172B4D' }}>Cuenta de Destino</div>
-                }
-                rules={[
-                  { required: true, message: 'Por favor seleccione la cuenta de destino' },
-                  ({ getFieldValue }) => ({
-                    validator(_, value) {
-                      if (!value || getFieldValue('fromAccount') !== value) {
-                        return Promise.resolve();
-                      }
-                      return Promise.reject(new Error('La cuenta de origen y destino no pueden ser iguales'));
-                    },
-                  }),
-                ]}
-              >
-                
-              </Form.Item>
-            </div>
-          </div>
+          {/* Resumen */}
+          
         </Form>
       </div>
     </Drawer>

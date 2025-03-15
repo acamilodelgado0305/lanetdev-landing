@@ -140,10 +140,13 @@ const Header = ({ isSidebarExpanded, isSidebarHidden, setIsExpanded }) => {
           </Link>
         </div>
 
-        {/* Sección central: Barra de búsqueda y botón "Crear" */}
-        <div className="flex items-center justify-center min-w-0 mx-2 space-x-2">
-          {/* Barra de búsqueda (visible en pantallas grandes, colapsada en móviles) */}
-          <div className="hidden lg:flex items-center min-w-0 max-w-[300px]">
+       
+
+        {/* Sección derecha: Acciones del usuario */}
+        <div className="flex items-center min-w-0">
+
+
+          <div className="hidden lg:flex items-center min-w-0 max-w-[300px] mr-3 ">
             <Input.Search
               placeholder="Buscar"
               allowClear
@@ -154,7 +157,7 @@ const Header = ({ isSidebarExpanded, isSidebarHidden, setIsExpanded }) => {
             />
           </div>
           {/* Botón de búsqueda colapsado para pantallas medianas y pequeñas */}
-          <div className="lg:hidden flex items-center">
+          <div className="lg:hidden flex items-center mr-3">
             <Tooltip title="Buscar">
               <SearchOutlined
                 className="text-[#44546f] text-xl cursor-pointer hover:bg-[#091e420f] p-1 rounded"
@@ -162,12 +165,12 @@ const Header = ({ isSidebarExpanded, isSidebarHidden, setIsExpanded }) => {
               />
             </Tooltip>
           </div>
-          {/* Botón "Crear" (compacto en pantallas pequeñas) */}
+
           <Button
             ref={createButtonRef}
             onClick={openPlusModal}
             type="primary"
-            className="flex items-center h-9 px-3 rounded-md min-w-0"
+            className="flex items-center h-9 mr-3 rounded-md min-w-0"
             style={{
               backgroundColor: '#0052CC',
               fontSize: '14px',
@@ -177,10 +180,6 @@ const Header = ({ isSidebarExpanded, isSidebarHidden, setIsExpanded }) => {
             <Plus className="w-4 h-4 mr-1" />
             <span className="hidden md:inline">Crear</span>
           </Button>
-        </div>
-
-        {/* Sección derecha: Acciones del usuario */}
-        <div className="flex items-center min-w-0">
           {/* Acciones visibles en pantallas medianas y grandes */}
           <div className="hidden md:flex items-center space-x-2">
             <Tooltip title="Notificaciones">

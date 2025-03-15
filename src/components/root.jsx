@@ -132,12 +132,7 @@ export default function Root() {
         icon: <DollarCircleOutlined />,
         hasSubmenu: true,
         submenuItems: [
-          {
-            to: "/index/moneymanager/estadisticas",
-            label: "Resumen",
-            icon: <DotIcon />,
-            disabled: true,
-          },
+         
           {
             to: "/index/moneymanager/transactions",
             label: "Transacciones",
@@ -296,6 +291,38 @@ export default function Root() {
       .filter((path) => currentPath.startsWith(path));
   }, [location.pathname, mainMenuLinks]);
 
+  // Nueva lógica para expandir el sidebar y abrir submenús automáticamente
+  useEffect(() => {
+    const currentPath = location.pathname;
+
+    // Expandir el sidebar si la ruta actual pertenece a un elemento del menú
+    const isMenuItemActive = mainMenuLinks.some((link) => {
+      if (link.hasSubmenu) {
+        return link.submenuItems.some((subItem) => currentPath.startsWith(subItem.to));
+      }
+      return currentPath.startsWith(link.to);
+    });
+
+    if (isMenuItemActive) {
+      setIsExpanded(true);
+      setIsHidden(false); // Asegurarse de que el sidebar no esté oculto
+    }
+
+    // Abrir el submenú correspondiente si la ruta activa pertenece a un submenú
+    const activeParent = mainMenuLinks.find((link) => {
+      if (link.hasSubmenu) {
+        return link.submenuItems.some((subItem) => currentPath.startsWith(subItem.to));
+      }
+      return false;
+    });
+
+    if (activeParent) {
+      setActiveSubMenu(activeParent.label);
+    } else {
+      setActiveSubMenu(null); // Cerrar submenús si no hay coincidencia
+    }
+  }, [location.pathname, mainMenuLinks]);
+
   const handleMenuItemClick = (e, submenuItems) => {
     const rect = e.target.getBoundingClientRect();
     setModalPosition({
@@ -322,7 +349,6 @@ export default function Root() {
 
   return (
     <>
-
       <div className="fixed top-0 left-0 w-screen flex bg-gray-100 z-40">
         <Header
           isSidebarExpanded={isExpanded}
@@ -340,7 +366,7 @@ export default function Root() {
           <MenuOutlined />
         </button>
 
-        {/* Botón para mostrar el sidebar cuando está⁠ oculto */}
+        {/* Botón para mostrar el sidebar cuando está oculto */}
         <AnimatePresence>
           {isHidden && (
             <motion.button
@@ -368,7 +394,7 @@ export default function Root() {
             >
               {/* Barra de búsqueda (solo visible cuando el sidebar está expandido) */}
               {isExpanded && (
-                <div className="px-4 py-2 ">
+                <div className="px-4 py-2">
                   <Input
                     placeholder="Buscar..."
                     prefix={<SearchOutlined className="text-gray-400" />}
@@ -417,10 +443,10 @@ export default function Root() {
                             }
                           }}
                           disabled={link.disabled}
-                          className={`group flex items-center w-full px-4 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors duration-200 ${link.disabled ? "opacity-50 cursor-not-allowed" : ""
+                          className={`group flex items-center w-full px-4 py-2 text-left text-sm font-medium text-gray-700 hover:bg-blue-500 hover:text-white rounded-md transition-colors duration-200 ${link.disabled ? "opacity-50 cursor-not-allowed" : ""
                             }`}
                         >
-                          <span className="mr-2 text-gray-500 group-hover:text-gray-900">
+                          <span className="mr-2 text-gray-500 group-hover:text-white">
                             {link.icon}
                           </span>
                           {isExpanded && (
@@ -432,7 +458,7 @@ export default function Root() {
                                   rotate: activeSubMenu === link.label ? 180 : 0,
                                 }}
                                 transition={{ duration: 0.2 }}
-                                className="text-gray-400 group-hover:text-gray-900"
+                                className="text-gray-400 group-hover:text-white"
                               >
                                 <DownOutlined className="text-xs" />
                               </motion.span>
@@ -459,12 +485,22 @@ export default function Root() {
                               >
                                 <Link
                                   to={subItem.to}
-                                  className={`group flex items-center w-full px-4 py-2 text-left text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors duration-200 ${subItem.disabled
+                                  className={`group flex items-center w-full px-4 py-2 text-left text-sm font-medium text-gray-600 hover:bg-blue-500 hover:text-white rounded-md transition-colors duration-200 relative ${subItem.disabled
                                     ? "opacity-50 cursor-not-allowed"
                                     : ""
+                                    } ${selectedKeys.includes(subItem.to)
+                                      ? "bg-gray-100 text-gray-900"
+                                      : ""
                                     }`}
                                 >
-                                  <span className="mr-2 text-gray-400 group-hover:text-gray-900">
+                                  {/* Barra indicadora para submenús activos */}
+                                  {selectedKeys.includes(subItem.to) && (
+                                    <span
+                                      className="absolute left-0 top-0 h-full w-1 bg-blue-500"
+                                      style={{ borderRadius: "0 4px 4px 0" }}
+                                    />
+                                  )}
+                                  <span className="mr-2 text-gray-400 group-hover:text-white">
                                     {subItem.icon}
                                   </span>
                                   <span>{subItem.label}</span>
@@ -484,13 +520,20 @@ export default function Root() {
                       <Link
                         key={`${link.to}-${index}`}
                         to={link.to}
-                        className={`group flex items-center w-full px-4 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors duration-200 ${link.disabled ? "opacity-50 cursor-not-allowed" : ""
+                        className={`group flex items-center w-full px-4 py-2 text-left text-sm font-medium text-gray-700 hover:bg-blue-500 hover:text-white rounded-md transition-colors duration-200 relative ${link.disabled ? "opacity-50 cursor-not-allowed" : ""
                           } ${selectedKeys.includes(link.to)
                             ? "bg-gray-100 text-gray-900"
                             : ""
                           }`}
                       >
-                        <span className="mr-2 text-gray-500 group-hover:text-gray-900">
+                        {/* Barra indicadora para enlaces activos */}
+                        {selectedKeys.includes(link.to) && (
+                          <span
+                            className="absolute left-0 top-0 h-full w-1 bg-blue-500"
+                            style={{ borderRadius: "0 4px 4px 0" }}
+                          />
+                        )}
+                        <span className="mr-2 text-gray-500 group-hover:text-white">
                           {link.icon}
                         </span>
                         {isExpanded && <span>{link.label}</span>}
@@ -511,8 +554,6 @@ export default function Root() {
                   <RightOutlined className="text-sm" />
                 )}
               </button>
-
-
             </motion.div>
           )}
         </AnimatePresence>
@@ -522,7 +563,6 @@ export default function Root() {
           className={`flex-1 overflow-x-hidden overflow-y-auto mt-6 ${isHidden ? "ml-0" : isExpanded ? "ml-64" : "ml-16"
             } h-screen transition-all duration-300 ease-in-out`}
         >
-
           <Outlet context={{ setUnreadEmailsCount }} />
         </Layout.Content>
       </Layout>
@@ -554,7 +594,7 @@ export default function Root() {
                 <Link
                   key={subItem.to}
                   to={subItem.to}
-                  className={`block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors duration-200 ${subItem.disabled ? "opacity-50 cursor-not-allowed" : ""
+                  className={`block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-blue-500 hover:text-white rounded-md transition-colors duration-200 ${subItem.disabled ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                 >
                   {subItem.label}
