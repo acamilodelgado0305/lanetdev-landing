@@ -2,6 +2,10 @@ import React, { useState } from "react";
 import { Modal, Button, DatePicker, Tooltip, Row, Col } from "antd";
 import { CalendarOutlined, LeftOutlined, RightOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
+import "dayjs/locale/es"; // Importa el idioma español
+
+// Configura dayjs para usar español
+dayjs.locale("es");
 
 const { RangePicker } = DatePicker;
 
@@ -12,6 +16,7 @@ interface DateNavigatorProps {
 const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [range, setRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
+    const [isRangePickerVisible, setIsRangePickerVisible] = useState(false);  // Nuevo estado para controlar la visibilidad del calendario
 
     const quickOptions = [
         { label: "Hoy", value: "today" },
@@ -23,7 +28,6 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
         { label: "Semana pasada", value: "lastWeek" },
         { label: "Este mes", value: "thisMonth" },
         { label: "Mes pasado", value: "lastMonth" },
-        { label: "Personalizado", value: "custom" },
     ];
 
     const handleQuickSelect = (value: string) => {
@@ -96,6 +100,22 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
         onMonthChange([newMonth.startOf("month").toDate(), newMonth.endOf("month").toDate()]);
     };
 
+    // Obtener el mes actual para mostrar en el centro en español
+    const currentMonth = range ? range[0].format("MMMM YYYY") : dayjs().format("MMMM YYYY");
+
+    // Mostrar el RangePicker cuando se hace clic en "Personalizado"
+    const handleCustomClick = () => {
+        setIsRangePickerVisible(true);  // Hacer visible el RangePicker inmediatamente
+    };
+
+    const handleRangeChange = (dates: [dayjs.Dayjs, dayjs.Dayjs] | null) => {
+        if (dates) {
+            setRange(dates);
+            onMonthChange([dates[0].toDate(), dates[1].toDate()]);
+        }
+        setIsRangePickerVisible(false);  // Ocultar el RangePicker después de seleccionar las fechas
+    };
+
     return (
         <div>
             <Row gutter={16} justify="start" align="middle">
@@ -107,6 +127,10 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
                             style={{ width: 50 }}
                         />
                     </Tooltip>
+                </Col>
+                <Col>
+                    {/* Mostrar el mes actual en el centro */}
+                    <span style={{ fontWeight: "bold", fontSize: "16px" }}>{currentMonth}</span>
                 </Col>
                 <Col>
                     <Tooltip title="Mes siguiente">
@@ -173,23 +197,25 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange }) => {
                         ))}
                     </div>
 
-                    <RangePicker
-                        value={range}
-                        onChange={(dates) => {
-                            if (dates && dates[0] && dates[1]) {
-                                setRange([dates[0], dates[1]]);
-                            } else {
-                                setRange(null);
-                            }
-                        }}
-                        format="DD/MM/YYYY"
-                        style={{ width: '100%' }}
-                        onCalendarChange={(dates, dateStrings) => {
-                            if (dates && dates[0] && dates[1]) {
-                                onMonthChange([dates[0].toDate(), dates[1].toDate()]);
-                            }
-                        }}
-                    />
+                    <div style={{ marginTop: '20px' }}>
+                        {/* Mostrar el RangePicker cuando se hace clic en "Personalizado" */}
+                        <Button
+                            key="custom"
+                            onClick={handleCustomClick}  // Mostrar el RangePicker inmediatamente
+                            style={{ marginBottom: '30px', marginRight: '10px', padding: "10px", marginTop: "10px" }}
+                        >
+                            Personalizado
+                        </Button>
+
+                        {/* Mostrar el calendario si el estado es visible */}
+                        {isRangePickerVisible && (
+                            <RangePicker
+                                onChange={(dates) => handleRangeChange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
+                                format="DD/MM/YYYY"
+                                style={{ width: "100%" }}
+                            />
+                        )}
+                    </div>
                 </div>
             </Modal>
         </div>
