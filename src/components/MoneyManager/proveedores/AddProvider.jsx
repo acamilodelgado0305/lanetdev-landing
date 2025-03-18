@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Drawer, Form, Input, Button, Divider, Typography, Select, Switch, Space, Tooltip } from 'antd';
-import { FileTextOutlined, UserOutlined, HomeOutlined, EnvironmentOutlined, PhoneOutlined, MailOutlined, BarcodeOutlined, GlobalOutlined, CloseOutlined, ShareAltOutlined } from '@ant-design/icons';
+import { FileTextOutlined, UserOutlined, HomeOutlined, EnvironmentOutlined, PhoneOutlined, MailOutlined, BarcodeOutlined, CloseOutlined, ShareAltOutlined } from '@ant-design/icons';
 import Swal from 'sweetalert2';
 
 const { Title, Text } = Typography;
@@ -13,15 +13,18 @@ const AddProvider = ({ onProviderAdded, providerToEdit }) => {
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
   const [isEditing, setIsEditing] = useState(false);
+  const [tipoIdentificacion, setTipoIdentificacion] = useState('NIT'); // Estado para el tipo de identificación
 
   useEffect(() => {
     if (providerToEdit) {
       setIsEditing(true);
+      setTipoIdentificacion(providerToEdit.tipoIdentificacion || 'NIT');
       form.setFieldsValue(providerToEdit);
       setIsOpen(true);
     } else {
       setIsEditing(false);
       form.resetFields();
+      form.setFieldsValue({ tipoIdentificacion: 'NIT', estado: true }); // Valor por defecto
     }
   }, [providerToEdit, form]);
 
@@ -43,10 +46,24 @@ const AddProvider = ({ onProviderAdded, providerToEdit }) => {
         ? `${apiUrl}/providers/${providerToEdit.id}`
         : `${apiUrl}/providers`;
 
+      // Ajustar el payload para que coincida con el controlador
+      const payload = {
+        tipoIdentificacion: values.tipoIdentificacion,
+        numeroIdentificacion: values.numeroIdentificacion,
+        nombreComercial: values.nombreComercial || '', // Opcional
+        nombresContacto: values.nombresContacto || '', // Opcional
+        apellidosContacto: values.apellidosContacto || '', // Opcional
+        ciudad: values.ciudad,
+        direccion: values.direccion,
+        correoContactoFacturacion: values.correoContactoFacturacion,
+        telefonoFacturacion: values.telefonoFacturacion,
+        estado: values.estado ? 'activo' : 'inactivo',
+      };
+
       const response = await fetch(endpoint, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) throw new Error(`Error: ${response.status}`);
@@ -71,6 +88,12 @@ const AddProvider = ({ onProviderAdded, providerToEdit }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Actualizar el tipo de identificación y ajustar las reglas del formulario
+  const handleTipoIdentificacionChange = (value) => {
+    setTipoIdentificacion(value);
+    form.setFieldsValue({ nombreComercial: '', nombresContacto: '', apellidosContacto: '' }); // Resetear campos
   };
 
   return (
@@ -186,21 +209,35 @@ const AddProvider = ({ onProviderAdded, providerToEdit }) => {
                 <FileTextOutlined style={{ marginRight: '8px', color: '#0052CC' }} />
                 Identificación
               </Text>
-              <Form.Item name="tipo_identificacion" label="Tipo de Identificación" rules={[{ required: true, message: 'Requerido' }]}>
-                <Select placeholder="Seleccione" style={{ borderRadius: '4px' }}>
+              <Form.Item
+                name="tipoIdentificacion"
+                label="Tipo de Identificación"
+                rules={[{ required: true, message: 'Requerido' }]}
+              >
+                <Select
+                  placeholder="Seleccione"
+                  style={{ borderRadius: '4px' }}
+                  onChange={handleTipoIdentificacionChange}
+                  value={tipoIdentificacion}
+                >
                   <Option value="NIT">NIT</Option>
                   <Option value="CC">Cédula de Ciudadanía</Option>
                 </Select>
               </Form.Item>
-              <Form.Item name="numero_identificacion" label="Número de Identificación" rules={[{ required: true, message: 'Requerido' }]}>
-                <Input prefix={<BarcodeOutlined className="text-[#0052CC]" />} placeholder="Ingrese número" style={{ borderRadius: '4px' }} />
-              </Form.Item>
-              <Form.Item name="dv" label="DV">
-                <Input prefix={<FileTextOutlined className="text-[#0052CC]" />} placeholder="Ingrese DV" style={{ borderRadius: '4px' }} />
+              <Form.Item
+                name="numeroIdentificacion"
+                label="Número de Identificación"
+                rules={[{ required: true, message: 'Requerido' }]}
+              >
+                <Input
+                  prefix={<BarcodeOutlined className="text-[#0052CC]" />}
+                  placeholder="Ingrese número"
+                  style={{ borderRadius: '4px' }}
+                />
               </Form.Item>
             </div>
 
-            {/* Sección Información Básica */}
+            {/* Sección Información Básica (dinámica según tipoIdentificacion) */}
             <div
               style={{
                 background: '#FFFFFF',
@@ -222,18 +259,73 @@ const AddProvider = ({ onProviderAdded, providerToEdit }) => {
                 <UserOutlined style={{ marginRight: '8px', color: '#0052CC' }} />
                 Información Básica
               </Text>
-              <Form.Item name="tipo_persona" label="Tipo de Persona" rules={[{ required: true, message: 'Requerido' }]}>
-                <Select placeholder="Seleccione" style={{ borderRadius: '4px' }}>
-                  <Option value="Jurídica">Jurídica</Option>
-                  <Option value="Natural">Natural</Option>
-                </Select>
-              </Form.Item>
-              <Form.Item name="razon_social" label="Razón Social" rules={[{ required: true, message: 'Requerido' }]}>
-                <Input prefix={<UserOutlined className="text-[#0052CC]" />} placeholder="Ingrese razón social" style={{ borderRadius: '4px' }} />
-              </Form.Item>
-              <Form.Item name="nombre_comercial" label="Nombre Comercial">
-                <Input placeholder="Ingrese nombre comercial" style={{ borderRadius: '4px' }} />
-              </Form.Item>
+              {tipoIdentificacion === 'NIT' ? (
+                <>
+                  <Form.Item
+                    name="nombreComercial"
+                    label="Nombre Comercial"
+                    rules={[{ required: true, message: 'Requerido para NIT' }]}
+                  >
+                    <Input
+                      placeholder="Ingrese nombre comercial (Ej. Empresa S.A.)"
+                      style={{ borderRadius: '4px' }}
+                    />
+                  </Form.Item>
+                  <Form.Item
+                    name="nombresContacto"
+                    label="Nombres Contacto"
+                    rules={[{ required: false, message: 'Opcional' }]}
+                  >
+                    <Input
+                      placeholder="Ingrese nombres del contacto"
+                      style={{ borderRadius: '4px' }}
+                    />
+                  </Form.Item>
+                  <Form.Item
+                    name="apellidosContacto"
+                    label="Apellidos Contacto"
+                    rules={[{ required: false, message: 'Opcional' }]}
+                  >
+                    <Input
+                      placeholder="Ingrese apellidos del contacto"
+                      style={{ borderRadius: '4px' }}
+                    />
+                  </Form.Item>
+                </>
+              ) : (
+                <>
+                  <Form.Item
+                    name="nombreComercial"
+                    label="Nombre Comercial (Opcional)"
+                    rules={[{ required: false, message: 'Opcional' }]}
+                  >
+                    <Input
+                      placeholder="Ingrese nombre comercial (puede ser igual a nombres)"
+                      style={{ borderRadius: '4px' }}
+                    />
+                  </Form.Item>
+                  <Form.Item
+                    name="nombresContacto"
+                    label="Nombres"
+                    rules={[{ required: true, message: 'Requerido para Cédula' }]}
+                  >
+                    <Input
+                      placeholder="Ingrese nombres"
+                      style={{ borderRadius: '4px' }}
+                    />
+                  </Form.Item>
+                  <Form.Item
+                    name="apellidosContacto"
+                    label="Apellidos"
+                    rules={[{ required: true, message: 'Requerido para Cédula' }]}
+                  >
+                    <Input
+                      placeholder="Ingrese apellidos"
+                      style={{ borderRadius: '4px' }}
+                    />
+                  </Form.Item>
+                </>
+              )}
             </div>
 
             {/* Sección Ubicación */}
@@ -258,17 +350,27 @@ const AddProvider = ({ onProviderAdded, providerToEdit }) => {
                 <HomeOutlined style={{ marginRight: '8px', color: '#0052CC' }} />
                 Ubicación
               </Text>
-              <Form.Item name="direccion" label="Dirección">
-                <Input prefix={<HomeOutlined className="text-[#0052CC]" />} placeholder="Ingrese dirección" style={{ borderRadius: '4px' }} />
+              <Form.Item
+                name="direccion"
+                label="Dirección"
+                rules={[{ required: true, message: 'Requerido' }]}
+              >
+                <Input
+                  prefix={<HomeOutlined className="text-[#0052CC]" />}
+                  placeholder="Ingrese dirección"
+                  style={{ borderRadius: '4px' }}
+                />
               </Form.Item>
-              <Form.Item name="ciudad" label="Ciudad">
-                <Input prefix={<EnvironmentOutlined className="text-[#0052CC]" />} placeholder="Ingrese ciudad" style={{ borderRadius: '4px' }} />
-              </Form.Item>
-              <Form.Item name="departamento" label="Departamento">
-                <Input placeholder="Ingrese departamento" style={{ borderRadius: '4px' }} />
-              </Form.Item>
-              <Form.Item name="pais" label="País" initialValue="Colombia">
-                <Input prefix={<GlobalOutlined className="text-[#0052CC]" />} placeholder="Ingrese país" style={{ borderRadius: '4px' }} />
+              <Form.Item
+                name="ciudad"
+                label="Ciudad"
+                rules={[{ required: true, message: 'Requerido' }]}
+              >
+                <Input
+                  prefix={<EnvironmentOutlined className="text-[#0052CC]" />}
+                  placeholder="Ingrese ciudad"
+                  style={{ borderRadius: '4px' }}
+                />
               </Form.Item>
             </div>
 
@@ -294,29 +396,27 @@ const AddProvider = ({ onProviderAdded, providerToEdit }) => {
                 <PhoneOutlined style={{ marginRight: '8px', color: '#0052CC' }} />
                 Contacto y Detalles
               </Text>
-              <Form.Item name="telefono" label="Teléfono">
-                <Input prefix={<PhoneOutlined className="text-[#0052CC]" />} placeholder="Ingrese teléfono" style={{ borderRadius: '4px' }} />
+              <Form.Item
+                name="telefonoFacturacion"
+                label="Teléfono de Facturación"
+                rules={[{ required: true, message: 'Requerido' }]}
+              >
+                <Input
+                  prefix={<PhoneOutlined className="text-[#0052CC]" />}
+                  placeholder="Ingrese teléfono"
+                  style={{ borderRadius: '4px' }}
+                />
               </Form.Item>
-              <Form.Item name="email" label="Email" rules={[{ required: true, message: 'Requerido' }, { type: 'email', message: 'Email inválido' }]}>
-                <Input prefix={<MailOutlined className="text-[#0052CC]" />} placeholder="Ingrese email" style={{ borderRadius: '4px' }} />
-              </Form.Item>
-              <Form.Item name="tipo_regimen" label="Tipo de Régimen" rules={[{ required: true, message: 'Requerido' }]}>
-                <Select placeholder="Seleccione" style={{ borderRadius: '4px' }}>
-                  <Option value="Simplificado">Simplificado</Option>
-                  <Option value="Común">Común</Option>
-                </Select>
-              </Form.Item>
-              <Form.Item name="responsabilidad_fiscal" label="Responsabilidad Fiscal" rules={[{ required: true, message: 'Requerido' }]}>
-                <Select placeholder="Seleccione" style={{ borderRadius: '4px' }}>
-                  <Option value="R-99-NG">R-99-NG</Option>
-                  <Option value="R-99-PN">R-99-PN</Option>
-                </Select>
-              </Form.Item>
-              <Form.Item name="codigo_postal" label="Código Postal">
-                <Input placeholder="Ingrese código postal" style={{ borderRadius: '4px' }} />
-              </Form.Item>
-              <Form.Item name="matricula_mercantil" label="Matrícula Mercantil">
-                <Input placeholder="Ingrese matrícula" style={{ borderRadius: '4px' }} />
+              <Form.Item
+                name="correoContactoFacturacion"
+                label="Correo de Facturación"
+                rules={[{ required: true, message: 'Requerido' }, { type: 'email', message: 'Email inválido' }]}
+              >
+                <Input
+                  prefix={<MailOutlined className="text-[#0052CC]" />}
+                  placeholder="Ingrese email"
+                  style={{ borderRadius: '4px' }}
+                />
               </Form.Item>
               <Form.Item name="estado" label="Estado" valuePropName="checked">
                 <Switch checkedChildren="Activo" unCheckedChildren="Inactivo" className="bg-[#B0BEC5]" />
