@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 
-const CAJERO_URL = import.meta.env.VITE_API_TERCEROS;
+const CAJERO_URL = import.meta.env.VITE_API_FINANZAS;
 
 // Instancia de axios personalizada
 const cajeroapi = axios.create({

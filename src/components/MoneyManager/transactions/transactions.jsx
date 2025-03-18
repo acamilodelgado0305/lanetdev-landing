@@ -18,7 +18,7 @@ import {
 import { PlusOutlined, SwapOutlined, ArrowUpOutlined, ArrowDownOutlined, DollarOutlined } from '@ant-design/icons';
 
 import VoucherContentModal from "./ViewImageModal";
-import TransactionTable from "./components/TransactionTable";
+import TransactionTable from "./components/TablaTransferencias";
 import ExpenseTable from "./components/ExpenseTable/ExpenseTable";
 import IncomeTable from "./Add/Income/IncomeTable";
 import Summary from "./Summary";
@@ -297,14 +297,14 @@ const TransactionsDashboard = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-300 ">
+    <div className="flex flex-col  bg-white ">
       {/* Header */}
       <div className="px-4 bg-white sticky z-10 shadow-sm mt-4">
         <div className="max-w-full mx-auto py-2">
           <div className="flex justify-between items-center border-b-3 border-gray-300">
             <div className="flex items-center space-x-4">
               <div className="flex items-center">
-                <div className="pt-10 flex flex-col">
+                <div className=" flex flex-col">
                   <span className="text-gray-400 text-sm">Área de Contabilidad</span>
                   <p level={2} className="text-2xl font-bold">
                     GESTIÓN DE TRANSACCIONES

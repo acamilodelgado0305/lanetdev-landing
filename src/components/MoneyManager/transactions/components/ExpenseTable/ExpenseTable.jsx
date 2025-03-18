@@ -519,23 +519,7 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
     };
 
     const columns = [
-        {
-            title: (
-                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                    N° de egreso
-                    <input
-                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                        onChange={(e) => handleSearch(e.target.value, "invoice_number")}
-                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, border: '1px solid #d9d9d9', borderRadius: 4, outline: 'none' }}
-                    />
-                </div>
-            ),
-            dataIndex: "invoice_number",
-            key: "invoice_number",
-            sorter: (a, b) => a.invoice_number - b.invoice_number,
-            render: (text) => <a>{text || "No disponible"}</a>,
-            width: 110,
-        },
+
         {
             title: (
                 <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
@@ -555,6 +539,24 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
             width: 120,
         },
 
+        {
+            title: (
+                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    N° de egreso
+                    <input
+                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                        onChange={(e) => handleSearch(e.target.value, "invoice_number")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, border: '1px solid #d9d9d9', borderRadius: 4, outline: 'none' }}
+                    />
+                </div>
+            ),
+            dataIndex: "invoice_number",
+            key: "invoice_number",
+            sorter: (a, b) => a.invoice_number - b.invoice_number,
+            render: (text) => <a>{text || "No disponible"}</a>,
+            width: 110,
+        },
+        
         {
             title: (
                 <div className="flex flex-col" style={{ margin: "2px 0", gap: 1, lineHeight: 1 }}>

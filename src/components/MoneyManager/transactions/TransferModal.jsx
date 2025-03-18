@@ -11,7 +11,7 @@ import {
   Space,
   Tag,
   Descriptions,
-  Tooltip
+  Tooltip,
 } from "antd";
 import {
   DollarCircleOutlined,
@@ -23,7 +23,7 @@ import {
   InfoCircleOutlined,
   FormOutlined,
   BankOutlined,
-  ShareAltOutlined 
+  ShareAltOutlined,
 } from "@ant-design/icons";
 import Swal from "sweetalert2";
 import dayjs from "dayjs";
@@ -54,6 +54,9 @@ const TransferModal = ({
   const [vouchers, setVouchers] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [amount, setAmount] = useState(""); 
+  const [fromAccount, setFromAccount] = useState("");
+  const [toAccount, setToAccount] = useState("");
 
   useEffect(() => {
     fetchAccounts();
@@ -67,13 +70,16 @@ const TransferModal = ({
         Array.isArray(transactionToEdit.vouchers) ? transactionToEdit.vouchers : []
       );
 
+      const amount = transactionToEdit.amount ? parseFloat(transactionToEdit.amount) : undefined;
       form.setFieldsValue({
         fromAccount: transactionToEdit.fromAccountId || undefined,
         toAccount: transactionToEdit.toAccountId || undefined,
-        amount: transactionToEdit.amount ? parseFloat(transactionToEdit.amount) : undefined,
+        amount: amount, // Valor numérico
         description: transactionToEdit.description || "",
         date: transactionToEdit.date ? dayjs(transactionToEdit.date) : dayjs(),
       });
+      // Actualizar el valor formateado para la visualización
+    
     } else {
       resetForm();
     }
@@ -91,6 +97,7 @@ const TransferModal = ({
   };
 
   const formatCurrency = (amount) => {
+    if (!amount && amount !== 0) return "";
     return new Intl.NumberFormat("es-CO", {
       style: "currency",
       currency: "COP",
@@ -98,6 +105,25 @@ const TransferModal = ({
       maximumFractionDigits: 0,
     }).format(amount);
   };
+
+  // Función para parsear el valor formateado y devolver el número sin formato
+  const parseCurrency = (value) => {
+    if (!value) return undefined;
+    // Eliminar símbolos de moneda, puntos y otros caracteres no numéricos
+    const cleanedValue = value.replace(/[^\d]/g, "");
+    return cleanedValue ? parseFloat(cleanedValue) : undefined;
+  };
+
+  const handleAmountChange = (e, field) => {
+    const rawValue = e.target.value.replace(/\D/g, "");
+    const numericValue = rawValue ? parseInt(rawValue, 10) : 0;
+
+    if (field === "amount") setAmount(numericValue);
+ 
+  };
+
+
+
 
   const handleSave = async () => {
     try {
@@ -110,14 +136,17 @@ const TransferModal = ({
         .set("second", 0)
         .format("YYYY-MM-DDTHH:mm:ss");
 
+      // Asegurarse de que fromAccount y toAccount sean números enteros
+    
+
       const data = {
-        userId: 1,
-        fromAccountId: parseInt(values.fromAccount, 10),
-        toAccountId: parseInt(values.toAccount, 10),
-        amount: parseFloat(values.amount),
+        userId: 1, // TODO: Obtener dinámicamente el userId (por ejemplo, desde un contexto de autenticación)
+        fromAccount: parseInt(fromAccount),
+        toAccount: parseInt(toAccount),
+        amount: parseFloat(amount) || 0,
         date: localDate,
-        vouchers: imageUrls,
-        description: values.description,
+        vouchers: imageUrls.length > 0 ? imageUrls : [], // Asegurarse de enviar un array vacío si no hay vouchers
+        description: values.description || "", // Asegurarse de enviar una cadena vacía si no hay descripción
       };
 
       const endpoint = `${apiUrl}/transfers${isEditing ? `/${transactionToEdit.id}` : ""}`;
@@ -144,8 +173,9 @@ const TransferModal = ({
         onClose();
         onTransactionAdded();
       } else {
+        const errorData = await response.json();
         throw new Error(
-          isEditing ? "Error al actualizar la transferencia" : "Error al realizar la transferencia"
+          errorData.error || (isEditing ? "Error al actualizar la transferencia" : "Error al realizar la transferencia")
         );
       }
     } catch (error) {
@@ -169,20 +199,19 @@ const TransferModal = ({
     setImageUrls([]);
     setVouchers(null);
     setIsEditing(false);
+ // Limpiar el valor formateado
   };
 
   // Obtener valores dinámicos para el resumen
-  const fromAccount = accounts.find((acc) => acc.id === parseInt(form.getFieldValue("fromAccount")));
-  const toAccount = accounts.find((acc) => acc.id === parseInt(form.getFieldValue("toAccount")));
-  const amount = form.getFieldValue("amount");
+  
 
   return (
     <Drawer
       title={
         <div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gray-50">
           <div className="flex items-center">
-            <div className="bg-blue-700 text-white px-4 py-2 rounded-md font-semibold text-sm">  
-                <>NUEVO COMRPOBANTE DE TRANSFERENCIA</>
+            <div className="bg-blue-700 text-white px-4 py-2 rounded-md font-semibold text-sm">
+              <>NUEVO COMPROBANTE DE TRANSFERENCIA</>
             </div>
           </div>
           <div className="flex space-x-2">
@@ -194,7 +223,7 @@ const TransferModal = ({
                 disabled
               />
             </Tooltip>
-           
+
             <Tooltip title="Cerrar">
               <Button
                 onClick={onClose}
@@ -293,21 +322,14 @@ const TransferModal = ({
                 placeholder="Seleccione fecha"
               />
             </Form.Item>
-            <Form.Item
-              name="amount"
-              label="Importe"
-              rules={[
-                { required: true, message: "Ingrese el importe" },
-                { type: "number", min: 1, message: "El importe debe ser mayor a 0" },
-              ]}
-            >
-              <Input
-                prefix={<DollarCircleOutlined style={{ color: "#0052CC" }} />}
-                type="number"
-                placeholder="0"
-                style={{ width: "100%", borderRadius: "4px" }}
-              />
-            </Form.Item>
+            <div className="flex justify-between">
+                    <span>Importe:</span>
+                    <Input
+                      value={formatCurrency(amount)}
+                      onChange={(e) => handleAmountChange(e, "amount")}
+                      className="w-40"
+                    />
+                  </div>
             <Form.Item name="description" label="Descripción">
               <TextArea
                 placeholder="Ingrese una descripción (ej. Transferencia por pago de factura #123)"
@@ -339,19 +361,17 @@ const TransferModal = ({
               <SwapOutlined style={{ marginRight: "8px", color: "#0052CC" }} />
               Movimiento entre Cuentas
             </Text>
-            <Form.Item
+            <div
               name="fromAccount"
-              label="Origen"
-              rules={[{ required: true, message: "Seleccione la cuenta de origen" }]}
+             
+             
             >
               <AccountSelector
+                selectedAccount={fromAccount}
+                onAccountSelect={(value) => setFromAccount(value)}
                 accounts={accounts}
-                selectedAccount={form.getFieldValue("fromAccount")}
-                onAccountSelect={(value) => form.setFieldsValue({ fromAccount: value })}
-                formatCurrency={formatCurrency}
-                prefix={<BankOutlined style={{ color: "#0052CC" }} />}
               />
-            </Form.Item>
+            </div>
             <div
               style={{
                 display: "flex",
@@ -364,31 +384,17 @@ const TransferModal = ({
                 <SwapOutlined style={{ color: "#0052CC", fontSize: "18px" }} />
               </Divider>
             </div>
-            <Form.Item
-              name="toAccount"
+            <div
+            
               label="Destino"
-              rules={[
-                { required: true, message: "Seleccione la cuenta de destino" },
-                ({ getFieldValue }) => ({
-                  validator(_, value) {
-                    if (!value || getFieldValue("fromAccount") !== value) {
-                      return Promise.resolve();
-                    }
-                    return Promise.reject(
-                      new Error("La cuenta de origen y destino no pueden ser iguales")
-                    );
-                  },
-                }),
-              ]}
+              
             >
               <AccountSelector
-                accounts={accounts}
-                selectedAccount={form.getFieldValue("toAccount")}
-                onAccountSelect={(value) => form.setFieldsValue({ toAccount: value })}
-                formatCurrency={formatCurrency}
-                prefix={<BankOutlined style={{ color: "#0052CC" }} />}
+               selectedAccount={toAccount}
+               onAccountSelect={(value) => setToAccount(value)}
+               accounts={accounts}
               />
-            </Form.Item>
+            </div>
           </div>
 
           {/* Sección de Comprobantes */}
@@ -420,9 +426,6 @@ const TransferModal = ({
               setVoucher={setVouchers}
             />
           </div>
-
-          {/* Resumen */}
-          
         </Form>
       </div>
     </Drawer>

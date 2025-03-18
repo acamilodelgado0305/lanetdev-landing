@@ -120,7 +120,7 @@ const AddIncome = ({ onTransactionAdded }) => {
   const fetchCashiers = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${import.meta.env.VITE_API_TERCEROS}/cajeros`);
+      const response = await fetch(`${import.meta.env.VITE_API_FINANZAS}/cajeros`);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const responseData = await response.json();
       const cashiersArray = responseData.data || [];

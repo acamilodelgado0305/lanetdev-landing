@@ -32,9 +32,11 @@ import Configuracion from "./components/MoneyManager/configuracion/Configuracion
 import Terceros from "./components/MoneyManager/Terceros/Terceros.jsx";
 import AddIncome from "./components/MoneyManager/transactions/Add/Income/AddIncome.jsx";
 import AddExpense from "./components/MoneyManager/transactions/Add/expense/AddExpense.jsx";
-import CashiersPage from "./components/Administracion/Cajeros/Cajeros.jsx";
-import AddCajero from "./components/Administracion/Cajeros/AddCajero.jsx";
+import CashiersPage from "./components/MoneyManager/Cajeros/Cajeros.jsx";
+import PaginaProveedores from "./components/MoneyManager/proveedores/ProvidersPage.jsx";
+import AddCajero from "./components/MoneyManager/Cajeros/AddCajero.jsx";
 import IncomeView from "./components/MoneyManager/transactions/Add/Income/ViewIncome.jsx";
+import Administracion from "./components/Administracion/Administracion.jsx";
 import 'antd/dist/reset.css';
 
 
@@ -78,8 +80,9 @@ const router = createBrowserRouter([
             element: <CashiersPage />,
           },
           {
-            path: "cajeros/nuevo",
-            element: <AddCajero />,
+          
+            path: "proveedores",
+            element: <PaginaProveedores />,
           },
 
         ],
@@ -130,7 +133,7 @@ const router = createBrowserRouter([
           },
           {
             path: "proveedores",
-            element: <ProvidersPage />,
+            element: <PaginaProveedores />,
           },
           {
             path: "calendario",
@@ -192,6 +195,10 @@ const router = createBrowserRouter([
       {
         path: "search",
         element: <SearchResults />,
+      },
+      {
+        path: "administracion",
+        element: <Administracion />,
       },
     ],
   },
