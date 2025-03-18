@@ -115,7 +115,7 @@ const IndexMoneyManager = () => {
 
 
       <main className="flex-1 bg-gray-100 w-full">
-        <div className="w-full h-auto bg-gray-200">
+        <div className="w-full h-auto bg-gray">
           <Outlet />
         </div>
       </main>

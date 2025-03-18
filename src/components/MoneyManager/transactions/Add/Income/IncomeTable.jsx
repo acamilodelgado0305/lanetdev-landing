@@ -19,11 +19,13 @@ import FloatingActionMenu from "../../FloatingActionMenu";
 import ViewIncome from "./ViewIncome";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable"; // Correct import
+import Acciones from "../../Acciones";
+
 
 const { RangePicker } = DatePicker;
 const { Title, Text } = Typography;
 
-const IncomeTable = ({ categories = [], accounts = [] }) => {
+const IncomeTable = ({ categories = [], accounts = [], activeTab}) => {
     const navigate = useNavigate();
 
     const [selectedEntry, setSelectedEntry] = useState(null);
@@ -70,9 +72,12 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
 
     const handleEditSelected = () => {
         if (selectedRowKeys.length === 1) {
-            navigate(`/index/moneymanager/ingresos/edit/${selectedRowKeys[0]}`);
+            navigate(`/index/moneymanager/ingresos/edit/${selectedRowKeys[0]}`, {
+                state: { returnTab: activeTab }, // Pasar activeTab como returnTab
+              });
         }
     };
+
 
     const handleDeleteSelected = () => {
         handleBatchOperation('delete');
@@ -436,14 +441,17 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
 
     const renderDate = (date) => {
         try {
-            const parsedDate = DateTime.fromISO(date, { zone: 'utc' });
-            const formattedDate = parsedDate.toFormat("d MMM yyyy");
-            return formattedDate;
-        } catch (error) {
-            console.error("Error al formatear la fecha:", error);
+          const parsedDate = DateTime.fromISO(date, { zone: "local" });
+          if (!parsedDate.isValid) {
             return "Fecha inválida";
+          }
+          // Formato con hora: "18 mar 2025 14:30"
+          return parsedDate.toFormat("d MMM yyyy HH:mm", { locale: "es" });
+        } catch (error) {
+          console.error("Error al formatear la fecha:", error);
+          return "Fecha inválida";
         }
-    };
+      };
 
     // New function to generate the PDF invoice
     const generateInvoicePDF = (items) => {
@@ -515,30 +523,30 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
     const columns = [
         {
             title: (
-                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                    Fecha
-                    <input
-                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                        onChange={(e) => handleSearch(e.target.value, "date")}
-                        style={{
-                            marginTop: 2,
-                            padding: 4,
-                            height: 28,
-                            fontSize: 12,
-                            border: '1px solid #d9d9d9',
-                            borderRadius: 4,
-                            outline: 'none',
-                        }}
-                    />
-                </div>
+              <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                Fecha y Hora
+                <input
+                  prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
+                  onChange={(e) => handleSearch(e.target.value, "date")}
+                  style={{
+                    marginTop: 2,
+                    padding: 4,
+                    height: 28,
+                    fontSize: 12,
+                    border: "1px solid #d9d9d9",
+                    borderRadius: 4,
+                    outline: "none",
+                  }}
+                />
+              </div>
             ),
             dataIndex: "date",
             key: "date",
             render: (text) => renderDate(text),
             sorter: (a, b) => new Date(a.date) - new Date(b.date),
             sortDirections: ["descend", "ascend"],
-            width: 120,
-        },
+            width: 180, // Aumentamos el ancho para dar espacio a la hora
+          },
         {
             title: (
                 <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
@@ -744,95 +752,32 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
 
     return (
         <>
-            <div className="bg-white py-2 px-5 shadow-sm">
-                <div className="flex justify-between items-center">
-                    <div className="flex items-center">
-                        <Button
-                            icon={<FilterOutlined />}
-                            onClick={() => setShowFilters(!showFilters)}
-                        >
-                            {showFilters ? "Filtro" : "Filtro"}
-                        </Button>
-                    </div>
-                    <div className="flex items-center">
-                        <div className="mr-3">
-                            <div className="flex items-center justify-end">
-                                <div className="bg-white px-2 text-center flex-none w-26">
-                                    <h3 className="text-gray-500 text-[10px] font-medium uppercase">Ingresos</h3>
-                                    <p className="text-green-600 text-sm font-semibold mt-1 truncate">
-                                        {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyIncome)}
-                                    </p>
-                                </div>
-                                <div className="bg-white px-2 text-center flex-none w-26">
-                                    <h3 className="text-gray-500 text-[10px] font-medium uppercase">Egresos</h3>
-                                    <p className="text-red-600 text-sm font-semibold mt-1 truncate">
-                                        {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyExpenses)}
-                                    </p>
-                                </div>
-                                <div className="px-2 bg-white text-center flex-none w-26">
-                                    <h3 className="text-gray-500 text-[10px] font-medium uppercase">Balance</h3>
-                                    <p className="text-blue-600 text-sm font-semibold mt-1 truncate">
-                                        {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyBalance)}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <DateNavigator onMonthChange={(dates) => setDateRange(dates)} />
-                        </div>
-                    </div>
-                </div>
-
-                {showFilters && (
-                    <div className="mt-4 p-3 bg-white">
-                        <div className="flex flex-wrap items-center gap-4">
-                            <Select
-                                placeholder="Filtrar por cajero"
-                                style={{ width: 200 }}
-                                onChange={handleCashierFilterChange}
-                                value={cashierFilter || undefined}
-                                loading={cashiers.length === 0}
-                                allowClear
-                            >
-                                {cashiers.map((cashier) => (
-                                    <Select.Option key={cashier.id_cajero} value={cashier.id_cajero}>
-                                        {cashier.nombre}
-                                    </Select.Option>
-                                ))}
-                            </Select>
-                            <Select
-                                placeholder="Filtrar por tipo"
-                                style={{ width: 150 }}
-                                onChange={handleTypeFilterChange}
-                                value={typeFilter || undefined}
-                                allowClear
-                            >
-                                {typeOptions.map((type) => (
-                                    <Select.Option key={type} value={type}>
-                                        {type.charAt(0).toUpperCase() + type.slice(1)}
-                                    </Select.Option>
-                                ))}
-                            </Select>
-                            <Divider type="vertical" style={{ height: '24px' }} />
-                            <div className="flex items-center">
-                                <Text strong className="mr-2">Seleccionados:</Text>
-                                <Tag color="blue">
-                                    {selectedRowKeys.length} de {filteredEntries.length} registros
-                                </Tag>
-                                {selectedRowKeys.length > 0 && (
-                                    <Button
-                                        type="link"
-                                        size="small"
-                                        onClick={() => setSelectedRowKeys([])}
-                                    >
-                                        Limpiar selección
-                                    </Button>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
+            <Acciones
+        showFilters={showFilters}
+        setShowFilters={setShowFilters}
+        selectedRowKeys={selectedRowKeys}
+        handleEditSelected={handleEditSelected}
+        handleDeleteSelected={handleDeleteSelected}
+        handleDownloadSelected={handleDownloadSelected}
+        handleExportSelected={handleExportSelected}
+        clearSelection={clearSelection}
+        activeTab={activeTab}
+        loadingMonthlyData={loadingMonthlyData}
+        formatCurrency={formatCurrency}
+        monthlyIncome={monthlyIncome}
+        monthlyExpenses={monthlyExpenses}
+        monthlyBalance={monthlyBalance}
+        setDateRange={setDateRange}
+        selectList={cashiers}
+        setFirstFilter={setCashierFilter}
+        firstFilter={cashierFilter}
+        firstFilterPlaceholder="Filtrar por cajero"
+        typeOptions={["arqueo", "otro"]}
+        setTypeFilter={setTypeFilter}
+        typeFilter={typeFilter}
+        filteredEntries={filteredEntries}
+        setSelectedRowKeys={setSelectedRowKeys}
+      />
 
             {error && (
                 <div className="mb-4 p-4 bg-red-50 text-red-700 rounded border border-red-200">
@@ -874,7 +819,7 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
                 />
             </div>
 
-            <ViewIncome entry={selectedEntry} visible={isViewModalOpen} onClose={closeModal} />
+            <ViewIncome entry={selectedEntry} visible={isViewModalOpen} onClose={closeModal} activeTab={activeTab} />
 
             <style>
                 {`
@@ -960,14 +905,7 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
                 </div>
             </Drawer>
 
-            <FloatingActionMenu
-                selectedRowKeys={selectedRowKeys}
-                onEdit={handleEditSelected}
-                onDelete={handleDeleteSelected}
-                onDownload={handleDownloadSelected}
-                onExport={handleExportSelected}
-                onClearSelection={clearSelection}
-            />
+            
         </>
     );
 };

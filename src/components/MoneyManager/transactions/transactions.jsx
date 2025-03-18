@@ -49,7 +49,7 @@ const formatCurrency = (amount) => {
 const TransactionsDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState(location.state?.activeTab || "resumen");
+  const [activeTab, setActiveTab] = useState(location.state?.activeTab || "resumen")
   const [isContentModalOpen, setIsContentModalOpen] = useState(false);
   const [selectedVoucherContent, setSelectedVoucherContent] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -244,6 +244,12 @@ const TransactionsDashboard = () => {
   };
 
   useEffect(() => {
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab);
+    }
+  }, [location.state]);
+
+  useEffect(() => {
     applyFilters();
   }, [searchTerm, filterType, entries, currentMonth, isSearching]);
 
@@ -299,7 +305,7 @@ const TransactionsDashboard = () => {
   return (
     <div className="flex flex-col  bg-white ">
       {/* Header */}
-      <div className="px-4 bg-white sticky z-10 shadow-sm mt-4">
+      <div className="px-4 bg-white sticky z-10 shadow-sm ">
         <div className="max-w-full mx-auto py-2">
           <div className="flex justify-between items-center border-b-3 border-gray-300">
             <div className="flex items-center space-x-4">
@@ -343,7 +349,7 @@ const TransactionsDashboard = () => {
                 icon={<PlusOutlined />}
                 onClick={() =>
                   navigate("/index/moneymanager/transactions/nuevoingreso", {
-                    state: { returnTab: "incomes" },
+                    state: { returnTab: "incomes" }, // Siempre pasar "incomes" como returnTab
                   })
                 }
                 style={{
@@ -488,16 +494,17 @@ const TransactionsDashboard = () => {
               </div>
             )}
 
-            {activeTab === "incomes" && (
-              <IncomeTable
-                entries={paginatedEntries}
-                categories={categories}
-                accounts={accounts}
-                onDelete={handleDelete}
-                onEdit={openEditModal}
-                onOpenContentModal={openContentModal}
-              />
-            )}
+{activeTab === "incomes" && (
+  <IncomeTable
+    entries={paginatedEntries}
+    categories={categories}
+    accounts={accounts}
+    onDelete={handleDelete}
+    onEdit={openEditModal}
+    onOpenContentModal={openContentModal}
+    activeTab={activeTab} // Añadir activeTab como prop
+  />
+)}
 
             {activeTab === "expenses" && (
               <ExpenseTable
@@ -507,6 +514,7 @@ const TransactionsDashboard = () => {
                 onDelete={handleDelete}
                 onEdit={openEditModal}
                 onOpenContentModal={openContentModal}
+                activeTab={activeTab} // 
               />
             )}
 

@@ -1,38 +1,28 @@
 import React, { useState, useEffect } from "react";
-import { format as formatDate } from "date-fns";
-import { es } from "date-fns/locale";
+import { DateTime } from "luxon";
 import axios from "axios";
-import { Button } from 'antd';
-import { CloseOutlined, EditOutlined, ShareAltOutlined } from '@ant-design/icons';
+import { Button, Card, Tooltip } from "antd";
+import { CloseOutlined, EditOutlined, ShareAltOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import { getAccounts } from "../../../../../services/moneymanager/moneyService";
+import { getCajeros } from "../../../../../services/cajeroService";
 
-import {
-  getAccounts,
-} from "../../../../../services/moneymanager/moneyService";
-import {
-  getCajeros,
-} from "../../../../../services/cajeroService";
-
-function ViewIncome({ entry, visible, onClose }) {
+function ViewIncome({ entry, visible, onClose, activeTab}) {
   const [incomeData, setIncomeData] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [accounts, setAccounts] = useState([]);
+  const [cajeros, setCajeros] = useState([]);
 
-  const [accounts, setAccounts] = useState([]); // Estado para almacenar las cuentas
-  const [cajeros, setCajeros] = useState([]);   // Estado para almacenar los cajeros
-
-
-  // Fetch income data when the modal is opened
   useEffect(() => {
     if (visible && entry?.id) {
       fetchIncomeData(entry.id);
     }
-
-
   }, [visible, entry]);
+
   useEffect(() => {
     fetchAccounts();
-    fetchCajeros(); // Add this to fetch cashiers data
+    fetchCajeros();
   }, []);
 
   const fetchIncomeData = async (id) => {
@@ -57,23 +47,11 @@ function ViewIncome({ entry, visible, onClose }) {
     }
   };
 
-
-
   const fetchCajeros = async () => {
     try {
       const response = await getCajeros();
-
-      let data = [];
-      if (Array.isArray(response)) {
-        data = response;
-      } else if (response && Array.isArray(response.data)) {
-        data = response.data;
-      } else {
-        console.warn("La respuesta no contiene datos válidos:", response);
-      }
-
+      let data = Array.isArray(response) ? response : response?.data || [];
       setCajeros(data);
-
       if (data.length === 0) {
         console.warn("No se encontraron cajeros.");
       }
@@ -83,25 +61,22 @@ function ViewIncome({ entry, visible, onClose }) {
     }
   };
 
-
   const getAccountName = (accountId) => {
     const account = accounts.find((acc) => acc.id === accountId);
     return account ? account.name : "No asignada";
   };
 
-
   const getCajeroName = (cashierId) => {
-    // Buscar el cajero por su "id_cajero"
     const cajero = cajeros.find((cjr) => cjr.id_cajero === cashierId);
-
-    // Retornar el nombre si se encuentra el cajero, de lo contrario retornar "No asignado"
     return cajero ? cajero.nombre : "No asignado";
   };
 
-
   const handleEditSelected = () => {
-    navigate(`/index/moneymanager/ingresos/edit/${entry.id}`);
+    navigate(`/index/moneymanager/ingresos/edit/${entry.id}`, {
+      state: { returnTab: activeTab }, // Pasar activeTab como returnTab
+    });
   };
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("es-CO", {
       style: "currency",
@@ -112,11 +87,11 @@ function ViewIncome({ entry, visible, onClose }) {
 
   const renderDate = (date) => {
     try {
-      const parsedDate = new Date(date);
-      if (isNaN(parsedDate.getTime())) {
+      const parsedDate = DateTime.fromISO(date, { zone: "local" });
+      if (!parsedDate.isValid) {
         return "Fecha inválida";
       }
-      return formatDate(parsedDate, "d MMM yyyy", { locale: es });
+      return parsedDate.toFormat("d 'de' MMMM 'de' yyyy HH:mm", { locale: "es" });
     } catch (error) {
       console.error("Error al formatear la fecha:", error);
       return "Fecha inválida";
@@ -126,220 +101,188 @@ function ViewIncome({ entry, visible, onClose }) {
   if (!visible) return null;
 
   return (
-    <>
-      {/* Modal Backdrop */}
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center"
-        onClick={onClose}
+    <div
+      className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <Card
+        className="w-full max-w-[800px] bg-white shadow-lg rounded-lg overflow-hidden"
+        bodyStyle={{ padding: 0 }}
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal Content */}
-        <div
-          className="bg-white w-11/12 max-w-6xl max-h-[80vh] overflow-auto shadow-lg z-50"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Modal Header */}
-          <div className="flex justify-between items-center p-4 border-b border-gray-200">
-            <div className="flex items-center">
-              <div className="bg-blue-700 text-white px-3 py-1 font-semibold text-sm">
-                {incomeData ? (
-                  <>
-                    {incomeData.type.toUpperCase()} - {incomeData?.arqueo_number || "XX"}
-                    
-                  </>
-                ) : (
-                  <p>Cargando detalles del ingreso...</p>
-                )}
-              </div>
-              
-            </div>
-
+        {/* Encabezado */}
+        <div className="p-6 bg-gray-100 border-b border-gray-200">
+          <div className="flex justify-between items-center">
             <div>
-
+              <h1 className="text-xl font-semibold text-gray-900" style={{ fontFamily: "SF Pro Display, sans-serif" }}>
+                Factura de Ingreso
+              </h1>
+              <p className="text-sm text-gray-500">
+                No. {incomeData?.arqueo_number || "Sin número"}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-gray-700" style={{ fontFamily: "SF Pro Text, sans-serif" }}>
+                {renderDate(incomeData?.date)}
+              </p>
+              <p className="text-sm text-gray-500">{getAccountName(incomeData?.account_id)}</p>
+            </div>
+          </div>
+          <div className="flex justify-end space-x-2 mt-4">
+            <Tooltip title="Compartir">
               <Button
-                onClick={onClose}
-                disabled
                 icon={<ShareAltOutlined />}
-                className="border border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400 mr-2"
-                type="text" // Esto hace que el botón sea sin fondo
+                className="text-gray-500 hover:text-gray-700 bg-transparent border-none"
+                disabled
               />
-
+            </Tooltip>
+            <Tooltip title="Editar">
               <Button
                 onClick={handleEditSelected}
                 icon={<EditOutlined />}
-                className="border border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400 mr-2"
-                type="text" // Esto hace que el botón sea sin fondo
+                className="text-gray-500 hover:text-gray-700 bg-transparent border-none"
               />
-
+            </Tooltip>
+            <Tooltip title="Cerrar">
               <Button
                 onClick={onClose}
                 icon={<CloseOutlined />}
-                className="border border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400"
-                type="text" // Esto hace que el botón sea sin fondo
+                className="text-gray-500 hover:text-gray-700 bg-transparent border-none"
               />
-
-            </div>
-
+            </Tooltip>
           </div>
+        </div>
 
-          {/* Modal Body */}
-          {loading ? (
-            <div className="flex justify-center items-center p-16">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700"></div>
+        {/* Cuerpo */}
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-gray-400"></div>
+          </div>
+        ) : incomeData ? (
+          <div className="p-6">
+            {/* Información general */}
+            <div className="mb-6">
+              <div className="grid grid-cols-2 gap-4 text-sm text-gray-600" style={{ fontFamily: "SF Pro Text, sans-serif" }}>
+                <div>
+                  <span className="font-medium text-gray-900">Cajero:</span> {getCajeroName(incomeData.cashier_id)}
+                </div>
+                <div>
+                  <span className="font-medium text-gray-900">Tipo:</span> {incomeData.type || "No especificado"}
+                </div>
+                <div className="col-span-2">
+                  <span className="font-medium text-gray-900">Período:</span>{" "}
+                  {renderDate(incomeData.start_period)} - {renderDate(incomeData.end_period)}
+                </div>
+              </div>
             </div>
-          ) : incomeData ? (
-            <div>
-              {/* Key Information Header */}
 
+            {/* Tabla de ítems */}
+            <div className="mb-6">
+              <table className="w-full text-sm border border-gray-200">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-200">
+                    <th className="py-3 px-4 text-left font-medium text-gray-700" style={{ fontFamily: "SF Pro Text, sans-serif" }}>
+                      Concepto
+                    </th>
+                    <th className="py-3 px-4 text-right font-medium text-gray-700" style={{ fontFamily: "SF Pro Text, sans-serif" }}>
+                      Importe
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b border-gray-200">
+                    <td className="py-3 px-4 text-gray-900">Importe FEV</td>
+                    <td className="py-3 px-4 text-right text-gray-900">{formatCurrency(incomeData.amountfev)}</td>
+                  </tr>
+                  <tr className="border-b border-gray-200">
+                    <td className="py-3 px-4 text-gray-900">Ingresos Diversos</td>
+                    <td className="py-3 px-4 text-right text-gray-900">{formatCurrency(incomeData.amountdiverse)}</td>
+                  </tr>
+                  <tr className="border-b border-gray-200">
+                    <td className="py-3 px-4 text-gray-900">Otros Ingresos</td>
+                    <td className="py-3 px-4 text-right text-gray-900">{formatCurrency(incomeData.other_income)}</td>
+                  </tr>
+                  <tr className="border-b border-gray-200">
+                    <td className="py-3 px-4 text-gray-900">Efectivo Recibido</td>
+                    <td className="py-3 px-4 text-right text-gray-900">{formatCurrency(incomeData.cash_received)}</td>
+                  </tr>
+                  <tr className="border-b border-gray-200">
+                    <td className="py-3 px-4 font-semibold text-gray-900">Total Ingresos</td>
+                    <td className="py-3 px-4 text-right font-semibold text-green-600">{formatCurrency(incomeData.amount)}</td>
+                  </tr>
+                  <tr className="border-b border-gray-200">
+                    <td className="py-3 px-4 text-gray-900">Comisión del Cajero</td>
+                    <td className="py-3 px-4 text-right text-red-500">-{formatCurrency(incomeData.cashier_commission)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
 
-              {/* Main Content */}
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Left Column - General Information */}
-                  <div className="md:col-span-2">
-                    <div className="mb-6">
-                      <h3 className="text-lg font-semibold mb-4">Información General</h3>
-                      <div className="border border-gray-200">
-                        <div className="grid grid-cols-1 sm:grid-cols-2">
-                          <div className="border-b sm:border-r border-gray-200 p-4">
-                            <div className="text-sm text-gray-500">Fecha</div>
-                            <div className="font-medium mt-1">{renderDate(incomeData.date)}</div>
-                          </div>
-                          <div className="border-b border-gray-200 p-4">
-                            <div className="text-sm text-gray-500">Número de Arqueo</div>
-                            <div className="font-medium mt-1">{incomeData.arqueo_number || "No disponible"}</div>
-                          </div>
-                          <div className="border-b sm:border-r border-gray-200 p-4">
-                            <div className="text-sm text-gray-500">Cuenta</div>
-                            <p> {getAccountName(incomeData.account_id)}</p>
-                          </div>
-                          <div className="border-b border-gray-200 p-4">
-                            <div className="text-sm text-gray-500">Cajero</div>
-                            <p> {getCajeroName(incomeData.cashier_id)}</p>
-                          </div>
-                          <div className="border-b border-gray-200 p-4 w-[5">
-                            <div className="text-sm text-gray-500">Tipo</div>
-                            <div className="font-medium mt-1">{incomeData.type || "No especificado"}</div>
-                          </div>
-                          <div className="border-b border-gray-200 p-4">
-                            <div className="text-xl font-bold text-blue-700">
-                              Período: {renderDate(incomeData.start_period)} - {renderDate(incomeData.end_period)}
-                            </div>
-                          </div>
-
-
-
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mb-6">
-                      <h3 className="text-lg font-semibold mb-4">Comentarios</h3>
-                      <div className="bg-gray-50 border border-gray-200 p-4 min-h-16">
-                        {incomeData.comentarios || "Sin comentarios"}
-                      </div>
-                    </div>
+            {/* Resumen y comentarios */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-base font-semibold text-gray-900 mb-2" style={{ fontFamily: "SF Pro Display, sans-serif" }}>
+                  Notas
+                </h3>
+                <p className="text-sm text-gray-600 bg-gray-50 p-4 rounded-md border border-gray-200">
+                  {incomeData.comentarios || "Sin notas"}
+                </p>
+              </div>
+              <div className="bg-gray-50 p-6 rounded-md border border-gray-200">
+                <h3 className="text-base font-semibold text-gray-900 mb-4" style={{ fontFamily: "SF Pro Display, sans-serif" }}>
+                  Resumen
+                </h3>
+                <div className="space-y-3 text-sm" style={{ fontFamily: "SF Pro Text, sans-serif" }}>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Total Ingresos</span>
+                    <span className="text-gray-900">{formatCurrency(incomeData.amount)}</span>
                   </div>
-
-                  {/* Right Column - Financial Details */}
-                  <div className="bg-white shadow-sm">
-                    <div className="bg-gray-50 p-4 border border-gray-200 border-b-0">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-700 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <h3 className="font-semibold text-gray-800">Desglose Financiero</h3>
-                        </div>
-                        {<div className="text-sm text-gray-500">  {incomeData?.arqueo_number || "XX"}</div>}
-                      </div>
-                    </div>
-
-                    {/* Encabezados de columnas */}
-                    <div className="hidden sm:flex border-t border-b border-gray-200 bg-gray-50 text-xs font-medium text-gray-600">
-                      <div className="w-3/5 py-2 px-4">CONCEPTO</div>
-                      <div className="w-2/5 py-2 px-4 text-right">IMPORTE</div>
-                    </div>
-
-                    {/* Ítems de la factura */}
-                    <div className="border-l border-r border-gray-200">
-
-
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center py-3 px-4 border-b border-gray-200 hover:bg-gray-50">
-                        <div className="w-full sm:w-3/5 mb-1 sm:mb-0">
-                          <div className="font-medium">Importe FEV</div>
-                          <div className="text-xs text-gray-500 mt-1 sm:hidden">Importe</div>
-                        </div>
-                        <div className="w-full sm:w-2/5 text-right font-mono">{formatCurrency(incomeData.amountfev)}</div>
-                      </div>
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center py-3 px-4 border-b border-gray-200 hover:bg-gray-50">
-                        <div className="w-full sm:w-3/5 mb-1 sm:mb-0">
-                          <div className="font-medium">Ingresos Diversos</div>
-                          <div className="text-xs text-gray-500 mt-1 sm:hidden">Importe</div>
-                        </div>
-                        <div className="w-full sm:w-2/5 text-right font-mono">{formatCurrency(incomeData.amountdiverse)}</div>
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center py-3 px-4 border-b border-gray-200 hover:bg-gray-50">
-                        <div className="w-full sm:w-3/5 mb-1 sm:mb-0">
-                          <div className="font-medium">Otros Ingresos</div>
-                          <div className="text-xs text-gray-500 mt-1 sm:hidden">Importe</div>
-                        </div>
-                        <div className="w-full sm:w-2/5 text-right font-mono">{formatCurrency(incomeData.other_income)}</div>
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center py-3 px-4 border-b border-gray-200 hover:bg-gray-50">
-                        <div className="w-full sm:w-3/5 mb-1 sm:mb-0">
-                          <div className="font-medium">Efectivo Recibido</div>
-                          <div className="text-xs text-gray-500 mt-1 sm:hidden">Importe</div>
-                        </div>
-                        <div className="w-full sm:w-2/5 text-right font-mono">{formatCurrency(incomeData.cash_received)}</div>
-                      </div>
-
-                      
-                    </div>
-
-                    {/* Total */}
-                    <div className="flex items-center py-4 px-4 bg-gray-50 border border-gray-200 border-t-0">
-                      <div className="w-3/5">
-                        <div className="font-bold text-gray-800">TOTAL</div>
-                      </div>
-                      <div className="w-2/5 text-right">
-                        <div className="font-bold text-lg text-blue-700 font-mono">{formatCurrency(incomeData.amount)}</div>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center py-3 px-4 border-b border-gray-200 hover:bg-gray-50">
-                        <div className="w-full sm:w-3/5 mb-1 sm:mb-0">
-                          <div className="font-medium">Comisión del Cajero</div>
-                          <div className="text-xs text-gray-500 mt-1 sm:hidden">Importe</div>
-                        </div>
-                        <div className="w-full sm:w-2/5 text-right font-mono">{formatCurrency(incomeData.cashier_commission)}</div>
-                      </div>
-
-                    {/* Pie de factura */}
-                    <div className="py-3 px-4 text-xs text-gray-500 border-l border-r border-b border-gray-200 bg-white">
-                      <div className="flex justify-between">
-                        <div>Fecha: {renderDate(incomeData.date)}</div>
-
-                      </div>
-                    </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Comisión</span>
+                    <span className="text-red-500">-{formatCurrency(incomeData.cashier_commission)}</span>
+                  </div>
+                  <div className="flex justify-between border-t border-gray-200 pt-3">
+                    <span className="font-semibold text-gray-900">Total Neto</span>
+                    <span className="font-semibold text-green-600 text-lg">
+                    {formatCurrency(incomeData.amount)}
+                    </span>
                   </div>
                 </div>
               </div>
-
-
             </div>
-          ) : (
-            <div className="text-center py-16">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p className="text-gray-500">No se encontraron detalles para este ingreso.</p>
+
+            {/* Pie de página */}
+            <div className="mt-6 p-4 bg-gray-100 border-t border-gray-200 text-xs text-gray-500" style={{ fontFamily: "SF Pro Text, sans-serif" }}>
+              <div className="flex justify-between">
+                <span>Registrado el: {renderDate(incomeData.date)}</span>
+                <span>{incomeData.type || "No especificado"}</span>
+              </div>
+              <p className="mt-2 text-center">Factura generada automáticamente</p>
             </div>
-          )}
-        </div>
-      </div>
-    </>
+          </div>
+        ) : (
+          <div className="text-center py-16">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-10 w-10 mx-auto text-gray-400 mb-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <p className="text-gray-500" style={{ fontFamily: "SF Pro Text, sans-serif" }}>
+              No se encontraron detalles para este ingreso.
+            </p>
+          </div>
+        )}
+      </Card>
+    </div>
   );
 }
 

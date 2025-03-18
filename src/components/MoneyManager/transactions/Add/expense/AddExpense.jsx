@@ -693,7 +693,7 @@ const AddExpense = () => {
   };
 
   return (
-    <div className="p-6 max-w-[1200px] mx-auto bg-white shadow mt-10">
+    <div className="p-6 max-w-[1200px] mx-auto bg-white shadow ">
       <div className="sticky top-0 z-10 bg-white p-4 shadow-md flex justify-between items-center">
         <div className="flex items-center gap-2">
           <div className="bg-[#0052CC] p-2">
