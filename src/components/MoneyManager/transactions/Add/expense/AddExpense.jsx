@@ -589,10 +589,11 @@ const AddExpense = () => {
           <div className="mb-4">
             <Text className="text-gray-600 block mb-1">Fecha de Elaboración</Text>
             <DatePicker
-              value={date}
-              onChange={(value) => setDate(value)}
-              format="DD/MM/YYYY"
-              placeholder="Selecciona una fecha"
+              value={date} // Valor controlado por el estado
+              onChange={(value) => setDate(value || dayjs())} // Si no se selecciona, vuelve a la fecha actual
+              format="DD/MM/YYYY HH:mm" // Formato con fecha y hora
+              showTime // Habilita la selección de hora
+              placeholder="Selecciona una fecha y hora"
               className="w-full border-gray-300 rounded-md"
             />
           </div>
