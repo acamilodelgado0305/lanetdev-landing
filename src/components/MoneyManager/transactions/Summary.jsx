@@ -76,7 +76,7 @@ const Summary = ({ totalIncome, totalExpenses, balance }) => {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <Row justify="space-between" align="middle">
             <Col>
-              <h1 className="text-2xl font-bold text-gray-900">Dashboard Financiero</h1>
+             
             </Col>
             <Col>
               <div className="flex items-center space-x-4">
@@ -245,38 +245,40 @@ const Summary = ({ totalIncome, totalExpenses, balance }) => {
               )}
               <div className="divide-y divide-gray-200">
                 {cuentas.length > 0 ? (
-                  cuentas.map((cuenta) => (
-                    <div
-                      key={cuenta.id}
-                      className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex items-center">
-                        <div className="rounded-full bg-blue-100 p-2 mr-3">
-                          {cuenta.type === "Banco" ? (
-                            <CreditCard className="h-5 w-5 text-blue-600" />
-                          ) : (
-                            <Briefcase className="h-5 w-5 text-green-600" />
-                          )}
+                  cuentas
+                    .filter((cuenta) => cuenta.type.toLowerCase() !== "prestamos") // Filtrar cuentas de tipo "prestamos"
+                    .map((cuenta) => (
+                      <div
+                        key={cuenta.id}
+                        className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex items-center">
+                          <div className="rounded-full bg-blue-100 p-2 mr-3">
+                            {cuenta.type === "Banco" ? (
+                              <CreditCard className="h-5 w-5 text-blue-600" />
+                            ) : (
+                              <Briefcase className="h-5 w-5 text-green-600" />
+                            )}
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-medium text-gray-800">{cuenta.name}</h4>
+                            <p className="text-xs text-gray-500">{cuenta.type}</p>
+                          </div>
                         </div>
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-800">{cuenta.name}</h4>
-                          <p className="text-xs text-gray-500">{cuenta.type}</p>
+                        <div className="text-right">
+                          <div className="text-sm font-semibold text-gray-800">
+                            {formatCurrency(parseFloat(cuenta.balance))}
+                          </div>
+                          <div
+                            className={`text-xs ${
+                              cuenta.plus ? "text-green-600" : "text-red-600"
+                            }`}
+                          >
+                            {cuenta.plus ? "Activo" : "Pasivo"}
+                          </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-sm font-semibold text-gray-800">
-                          {formatCurrency(parseFloat(cuenta.balance))}
-                        </div>
-                        <div
-                          className={`text-xs ${
-                            cuenta.plus ? "text-green-600" : "text-red-600"
-                          }`}
-                        >
-                          {cuenta.plus ? "Activo" : "Pasivo"}
-                        </div>
-                      </div>
-                    </div>
-                  ))
+                    ))
                 ) : (
                   <div className="p-4 text-gray-500">No hay cuentas disponibles</div>
                 )}
