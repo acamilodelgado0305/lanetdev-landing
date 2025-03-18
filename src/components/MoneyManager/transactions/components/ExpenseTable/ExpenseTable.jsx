@@ -265,10 +265,24 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
     };
 
     const renderDate = (date) => {
+        console.log("Fecha recibida:", date);
+
         try {
-            const parsedDate = DateTime.fromISO(date, { zone: 'utc' });
-            const formattedDate = parsedDate.toFormat("d MMM yyyy");
-            return formattedDate;
+
+            const isoDate = date.replace(' ', 'T') + '.000Z';
+
+            const parsedDate = DateTime.fromISO(isoDate, { zone: 'utc' });
+
+            console.log("Fecha parseada:", parsedDate);
+
+            if (parsedDate.isValid) {
+
+                const formattedDate = parsedDate.toFormat("yyyy-MM-dd HH:mm:ss");
+                return formattedDate;
+            } else {
+                console.error("Fecha inválida:", date);
+                return "Fecha inválida";
+            }
         } catch (error) {
             console.error("Error al formatear la fecha:", error);
             return "Fecha inválida";
@@ -535,11 +549,12 @@ const ExpenseTable = ({ categories = [], accounts = [] }) => {
             ),
             dataIndex: "date",
             key: "date",
-            render: (text) => renderDate(text),
-            sorter: (a, b) => new Date(a.date) - new Date(b.date),
+            render: (text) => renderDate(text), // Llamando a la función renderDate
+            sorter: (a, b) => new Date(a.date) - new Date(b.date), // Ordenando por fecha
             sortDirections: ["descend", "ascend"],
             width: 120,
         },
+
         {
             title: (
                 <div className="flex flex-col" style={{ margin: "2px 0", gap: 1, lineHeight: 1 }}>
