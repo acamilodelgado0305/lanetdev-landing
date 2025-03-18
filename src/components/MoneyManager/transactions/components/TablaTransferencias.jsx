@@ -45,8 +45,7 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
     const [error, setError] = useState(null);
     const [typeFilter, setTypeFilter] = useState(null);
 
-    const [providers, setProviders] = useState([]);
-    const [providerFilter, setProviderFilter] = useState(null);
+   
 
     const [monthlyBalance, setMonthlyBalance] = useState(0);
     const [monthlyIncome, setMonthlyIncome] = useState(0);
@@ -86,63 +85,13 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
     // Fetch data when component mounts
     useEffect(() => {
         fetchData();
-        fetchProviders(); // Add this to fetch providers data
+     
     }, []);
 
     useEffect(() => {
         fetchMonthlyData();
     }, [currentMonth]);
-
-
-
-    const fetchProviders = async () => {
-        try {
-            // Obtener la URL base de la API desde las variables de entorno o usar un valor por defecto
-            const API_BASE_URL = import.meta.env.VITE_API_FINANZAS || '/api';
-
-            // Realizar la solicitud GET a la API para obtener los proveedores
-            const response = await axios.get(`${API_BASE_URL}/providers`);
-
-            // Acceder directamente a los datos de la respuesta
-            const providersArray = response.data;
-
-            // Verificar que tenemos datos y guardarlos en el estado
-            if (Array.isArray(providersArray) && providersArray.length > 0) {
-                console.log("Proveedores cargados:", providersArray);
-                setProviders(providersArray);
-            } else {
-                console.log("La respuesta no tiene el formato esperado:", response.data);
-                setProviders([]);
-            }
-        } catch (error) {
-            // Manejar errores de la solicitud
-            console.error('Error al obtener los proveedores:', error);
-
-            // Mostrar una alerta al usuario en caso de fallo
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'No se pudieron cargar los proveedores. Por favor, intente de nuevo.',
-            });
-
-            // Establecer un array vacío en el estado en caso de error
-            setProviders([]);
-        }
-    };
-
-    // Función para obtener el nombre de un proveedor por su ID
-    const getProviderName = (providerId) => {
-        // Verificar que providerId existe
-        if (!providerId) return "Proveedor no especificado";
-
-        // Buscar el proveedor en el array de proveedores usando el id
-        const provider = providers.find(provider => provider.id === providerId);
-
-        // Retornar el nombre comercial si se encuentra el proveedor, o un mensaje por defecto si no
-        return provider ? provider.nombre_comercial : "Proveedor no encontrado";
-    };
-
-
+  
     // Simulate loading when changing date or filter
     const simulateLoading = () => {
         setEntriesLoading(true);
@@ -157,11 +106,6 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
         // Filtro por tipo
         if (typeFilter) {
             filtered = filtered.filter(entry => entry.type === typeFilter);
-        }
-
-        // Filtro por cajero
-        if (providerFilter) {
-            filtered = filtered.filter(entry => entry.cashier_id === providerFilter);
         }
 
         // Filtro por fecha
@@ -187,13 +131,13 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
                         .toLowerCase()
                         .includes(searchText[key].toLowerCase());
                 }
-                if (key === 'account_id') {
+                if (key === 'from_account_id') {
                     return getAccountName(entry[key])
                         .toLowerCase()
                         .includes(searchText[key].toLowerCase());
                 }
-                if (key === 'cashier_id') {
-                    return getProviderName(entry[key])
+                if (key === 'to_account') {
+                    return getAccountName(entry[key])
                         .toLowerCase()
                         .includes(searchText[key].toLowerCase());
                 }
@@ -204,18 +148,13 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
         );
 
         setFilteredEntries(filtered);
-    }, [entries, searchText, dateRange, typeFilter, providerFilter, providers]);
+    }, [entries, searchText, dateRange, typeFilter]);
 
     // Menú desplegable para el filtro de tipo
     const typeOptions = ["commission", "Legal"]; // Ajusta según los tipos disponibles
 
     const handleTypeFilterChange = (value) => {
         setTypeFilter(value);
-    };
-
-
-    const handleProviderFilterChange = (value) => {
-        setProviderFilter(value);
     };
 
     useEffect(() => {
@@ -240,10 +179,8 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
             filtered = filtered.filter(entry => entry.type === typeFilter);
         }
 
-        // Filtro por proveedor
-        if (providerFilter) {
-            filtered = filtered.filter(entry => entry.provider_id === providerFilter);
-        }
+      
+       
 
         // Aplicar filtros de texto de búsqueda
         filtered = filtered.filter(entry =>
@@ -264,14 +201,7 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
                         .includes(searchText[key].toLowerCase());
                 }
 
-                // Filtro para proveedor
-                if (key === 'provider_id') {
-                    return getProviderName(entry[key])
-                        .toLowerCase()
-                        .includes(searchText[key].toLowerCase());
-                }
-
-                // Filtro genérico para otros campos
+               // Filtro genérico para otros campos
                 return entry[key] ?
                     entry[key].toString().toLowerCase().includes(searchText[key].toLowerCase()) :
                     true;
@@ -279,7 +209,7 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
         );
 
         setFilteredEntries(filtered);
-    }, [entries, searchText, dateRange, typeFilter, providerFilter, providers, categories, accounts]);
+    }, [entries, searchText, dateRange, typeFilter, categories, accounts]);
 
     const handleRowClick = (record) => {
         navigate(`/index/moneymanager/ingresos/view/${record.id}`);
@@ -567,13 +497,40 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
 
     const columns = [
         {
+                    title: (
+                        <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                            Fecha
+                            <input
+                                prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                                onChange={(e) => handleSearch(e.target.value, "date")}
+                                style={{
+                                    marginTop: 2,
+                                    padding: 4,
+                                    height: 28,
+                                    fontSize: 12,
+                                    border: '1px solid #d9d9d9',
+                                    borderRadius: 4,
+                                    outline: 'none',
+                                }}
+                            />
+                        </div>
+                    ),
+                    dataIndex: "date",
+                    key: "date",
+                    render: (text) => renderDate(text),
+                    sorter: (a, b) => new Date(a.date) - new Date(b.date),
+                    sortDirections: ["descend", "ascend"],
+                    width: 50,
+                },
+        {
+            
             title: (
 
                 <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
                     De la cuenta
                     <Input
 
-                        onChange={(e) => handleSearch(e.target.value, "from_account_id")}
+                        onChange={(e) => handleSearch(e.target.value, "from_account")}
                         style={{
                             marginTop: 2,
                             padding: 4,
@@ -588,16 +545,16 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
                 </div>
 
             ),
-            dataIndex: "from_account_id",
-            key: "from_account_id",
+            dataIndex: "from_account",
+            key: "from_account",
 
             filterSearch: true,
             render: (id) => getAccountName(id),
-            sorter: (a, b) => getAccountName(a.from_account_id).localeCompare(getAccountName(b.from_account_id)),
+            sorter: (a, b) => getAccountName(a.from_account_id).localeCompare(getAccountName(b.from_account)),
             render: (id) => <Tag color="blue">{getAccountName(id)}</Tag>,
             sortDirections: ["ascend", "descend"],
             onFilter: (value, record) =>
-                record.from_account_id && record.from_account_id.toLowerCase().includes(searchText["from_account_id"] || ""),
+                record.from_account_id && record.from_account_id.toLowerCase().includes(searchText["from_account"] || ""),
             width: 120,
         },
         {
@@ -607,7 +564,7 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
                     A la cuenta
                     <input
 
-                        onChange={(e) => handleSearch(e.target.value, "to_account_id")}
+                        onChange={(e) => handleSearch(e.target.value, "to_account")}
                         style={{
                             marginTop: 2,
                             padding: 4,
@@ -622,16 +579,43 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
                 </div>
 
             ),
-            dataIndex: "to_account_id",
-            key: "to_account_id",
+            dataIndex: "to_account",
+            key: "to_account",
             render: (id) => getAccountName(id),
             render: (id) => <Tag color="green">{getAccountName(id)}</Tag>,
-            sorter: (a, b) => getAccountName(a.to_account_id).localeCompare(getAccountName(b.to_account_id)),
+            sorter: (a, b) => getAccountName(a.to_account_id).localeCompare(getAccountName(b.to_account)),
             sortDirections: ["ascend", "descend"],
             onFilter: (value, record) =>
-                record.to_account_id && record.to_account_id.toLowerCase().includes(searchText["to_account_id"] || ""),
+                record.to_account && record.to_account.toLowerCase().includes(searchText["to_account"] || ""),
 
             width: 120,
+        },
+        {
+            title: (
+                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Monto
+                    <input
+                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+
+                        onChange={(e) => handleSearch(e.target.value, "amount")}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: '1px solid #d9d9d9', // Borde gris claro
+                            borderRadius: 4, // Bordes redondeados para un diseño más profesional
+                            outline: 'none', // Elimina el borde de enfoque predeterminado del navegador
+                        }}
+                    />
+                </div>
+            ),
+            dataIndex: "amount",
+            key: "amount",
+            render: (total_net) => <span className="font-bold">{formatCurrency(total_net)}</span>,
+            sorter: (a, b) => a.total_net - b.total_net,
+            sortDirections: ["descend", "ascend"],
+            width: 140,
         },
         {
             title: (
@@ -661,33 +645,7 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
             width: 300,
         },
 
-        {
-            title: (
-                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                    Monto
-                    <input
-                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-
-                        onChange={(e) => handleSearch(e.target.value, "amount")}
-                        style={{
-                            marginTop: 2,
-                            padding: 4,
-                            height: 28,
-                            fontSize: 12,
-                            border: '1px solid #d9d9d9', // Borde gris claro
-                            borderRadius: 4, // Bordes redondeados para un diseño más profesional
-                            outline: 'none', // Elimina el borde de enfoque predeterminado del navegador
-                        }}
-                    />
-                </div>
-            ),
-            dataIndex: "amount",
-            key: "amount",
-            render: (total_net) => <span className="font-bold">{formatCurrency(total_net)}</span>,
-            sorter: (a, b) => a.total_net - b.total_net,
-            sortDirections: ["descend", "ascend"],
-            width: 140,
-        },
+        
         {
             title: "Comprobante",
             dataIndex: "vouchers",
@@ -851,11 +809,7 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
 
                     const totalAmount = pageData.reduce((total, item) => total + (item.amount || 0), 0);
 
-                    return (
-                        <Table.Summary fixed>
-
-                        </Table.Summary>
-                    );
+                    
                 }}
             />
 

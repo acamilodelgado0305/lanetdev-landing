@@ -24,7 +24,7 @@ import {
 import { Layout, Menu, Button, Tooltip, Input } from "antd";
 import { DotIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import Header from "../components/header/Header"; // Asegúrate de que la ruta sea correcta
+import Header from "../components/header/Header";
 import { useAuth } from "../components/Context/AuthProvider";
 
 const { Sider } = Layout;
@@ -42,7 +42,7 @@ export default function Root() {
   });
   const [activeSubMenu, setActiveSubMenu] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const { userRole } = useAuth();
+  const { userRole, userApp } = useAuth(); // Obtener userApp desde el contexto
   const location = useLocation();
   const menuItemRef = useRef(null);
   const modalRef = useRef(null);
@@ -59,8 +59,9 @@ export default function Root() {
     };
   }, []);
 
-  const mainMenuLinks = useMemo(
-    () => [
+  // Filtrar las opciones del menú según userApp
+  const mainMenuLinks = useMemo(() => {
+    const fullMenu = [
       { to: "/index", label: "Dashboard", icon: <HomeOutlined /> },
       { label: "CRM", isTitle: true },
       userRole === "superadmin" && {
@@ -132,7 +133,6 @@ export default function Root() {
         icon: <DollarCircleOutlined />,
         hasSubmenu: true,
         submenuItems: [
-
           {
             to: "/index/moneymanager/transactions",
             label: "Transacciones",
@@ -200,7 +200,7 @@ export default function Root() {
             icon: <DotIcon />,
           },
           {
-            to: "/index/moneymanager/terceros",
+            to: "/index/terceros/proveedores",
             label: "Proveedores",
             icon: <DotIcon />,
           },
@@ -273,12 +273,78 @@ export default function Root() {
         icon: <ShoppingCartOutlined />,
         disabled: true,
       },
+      {
+        to: "/index/administracion",
+        label: "Administracion",
+      },
       { to: "", label: "", isSpace: true },
       { to: "", label: "", isSpace: true },
       { to: "", label: "", isSpace: true },
-    ].filter(Boolean),
-    [userRole]
-  );
+    ].filter(Boolean);
+
+    // Si userApp es "lanet", mostrar solo Clientes, Contabilidad y Terceros
+    if (userApp === "lanet") {
+      return [
+        { to: "/index", label: "Dashboard", icon: <HomeOutlined /> },
+        { label: "CRM", isTitle: true },
+        userRole === "superadmin" && {
+          to: "/index/clientes",
+          label: "Clientes",
+          icon: <TeamOutlined />,
+        },
+        { label: "COMPAÑIA", isTitle: true },
+        (userRole === "cajero" || userRole === "superadmin") && {
+          label: "Contabilidad",
+          icon: <DollarCircleOutlined />,
+          hasSubmenu: true,
+          submenuItems: [
+            {
+              to: "/index/moneymanager/transactions",
+              label: "Transacciones",
+              icon: <DotIcon />,
+            },
+            {
+              to: "/index/moneymanager/pagos-pendientes",
+              label: "Pagos Recurrentes",
+              icon: <DotIcon />,
+            },
+            {
+              to: "/index/moneymanager/informes",
+              label: "Informes",
+              icon: <DotIcon />,
+              disabled: true,
+            },
+          ],
+        },
+        {
+          label: "Terceros",
+          icon: <IdcardOutlined />,
+          hasSubmenu: true,
+          submenuItems: [
+            {
+              to: "/index/terceros/cajeros",
+              label: "Cajeros",
+              icon: <DotIcon />,
+            },
+            {
+              to: "/index/terceros/proveedores",
+              label: "Proveedores",
+              icon: <DotIcon />,
+            },
+          ],
+        },
+        { label: "SISTEMA", isTitle: true },
+        {
+          to: "/index/config",
+          label: "Configuración",
+          icon: <SettingOutlined />,
+        },
+      ].filter(Boolean);
+    }
+
+    // Si no es "lanet", mostrar el menú completo
+    return fullMenu;
+  }, [userRole, userApp]); // Añadir userApp como dependencia
 
   const selectedKeys = useMemo(() => {
     const currentPath = location.pathname;
@@ -291,11 +357,8 @@ export default function Root() {
       .filter((path) => currentPath.startsWith(path));
   }, [location.pathname, mainMenuLinks]);
 
-  // Nueva lógica para expandir el sidebar y abrir submenús automáticamente
   useEffect(() => {
     const currentPath = location.pathname;
-
-    // Expandir el sidebar si la ruta actual pertenece a un elemento del menú
     const isMenuItemActive = mainMenuLinks.some((link) => {
       if (link.hasSubmenu) {
         return link.submenuItems.some((subItem) => currentPath.startsWith(subItem.to));
@@ -305,10 +368,9 @@ export default function Root() {
 
     if (isMenuItemActive) {
       setIsExpanded(true);
-      setIsHidden(false); // Asegurarse de que el sidebar no esté oculto
+      setIsHidden(false);
     }
 
-    // Abrir el submenú correspondiente si la ruta activa pertenece a un submenú
     const activeParent = mainMenuLinks.find((link) => {
       if (link.hasSubmenu) {
         return link.submenuItems.some((subItem) => currentPath.startsWith(subItem.to));
@@ -319,7 +381,7 @@ export default function Root() {
     if (activeParent) {
       setActiveSubMenu(activeParent.label);
     } else {
-      setActiveSubMenu(null); // Cerrar submenús si no hay coincidencia
+      setActiveSubMenu(null);
     }
   }, [location.pathname, mainMenuLinks]);
 
@@ -340,8 +402,8 @@ export default function Root() {
       const labelMatch = link.label.toLowerCase().includes(searchQuery.toLowerCase());
       const submenuMatch = link.hasSubmenu
         ? link.submenuItems.some((subItem) =>
-          subItem.label.toLowerCase().includes(searchQuery.toLowerCase())
-        )
+            subItem.label.toLowerCase().includes(searchQuery.toLowerCase())
+          )
         : false;
       return labelMatch || submenuMatch;
     });
@@ -358,7 +420,6 @@ export default function Root() {
       </div>
 
       <Layout className="flex h-screen bg-gray-100">
-        {/* Botón de menú móvil */}
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="lg:hidden fixed top-4 left-4 bg-gray-800 text-white p-2 rounded-md shadow-lg transition-all duration-300 hover:bg-gray-700 z-10"
@@ -366,7 +427,6 @@ export default function Root() {
           <MenuOutlined />
         </button>
 
-        {/* Botón para mostrar el sidebar cuando está oculto */}
         <AnimatePresence>
           {isHidden && (
             <motion.button
@@ -381,7 +441,6 @@ export default function Root() {
           )}
         </AnimatePresence>
 
-        {/* Sidebar */}
         <AnimatePresence>
           {(!isHidden || isOpen) && (
             <motion.div
@@ -389,10 +448,8 @@ export default function Root() {
               animate={{ x: 0 }}
               exit={{ x: -256 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className={`border-r border-gray-200 bg-white text-gray-800 ${isExpanded ? "w-64" : "w-16"
-                } py-5 lg:block fixed top-0 left-0 h-full transition-all duration-300 ease-in-out shadow-md z-50`}
+              className={`border-r border-gray-200 bg-white text-gray-800 ${isExpanded ? "w-64" : "w-16"} py-5 lg:block fixed top-0 left-0 h-full transition-all duration-300 ease-in-out shadow-md z-50`}
             >
-              {/* Barra de búsqueda (solo visible cuando el sidebar está expandido) */}
               {isExpanded && (
                 <div className="px-4 py-2">
                   <Input
@@ -412,15 +469,13 @@ export default function Root() {
                   msOverflowStyle: "none",
                 }}
               >
-                {/* Menu Links */}
                 {filteredMenuLinks.map((link, index) =>
                   link.isSpace ? (
                     <div key={`space-${index}`} className="py-2" />
                   ) : link.isTitle ? (
                     <div
                       key={`title-${index}`}
-                      className={`py-2 px-4 text-xs font-semibold uppercase text-gray-400 ${isExpanded ? "block" : "hidden"
-                        }`}
+                      className={`py-2 px-4 text-xs font-semibold uppercase text-gray-400 ${isExpanded ? "block" : "hidden"}`}
                     >
                       {link.label}
                     </div>
@@ -443,8 +498,7 @@ export default function Root() {
                             }
                           }}
                           disabled={link.disabled}
-                          className={`group flex items-center w-full px-4 py-2 text-left text-sm font-medium text-gray-700 hover:bg-blue-500 hover:text-white rounded-md transition-colors duration-200 ${link.disabled ? "opacity-50 cursor-not-allowed" : ""
-                            }`}
+                          className={`group flex items-center w-full px-4 py-2 text-left text-sm font-medium text-gray-700 hover:bg-blue-500 hover:text-white rounded-md transition-colors duration-200 ${link.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
                           <span className="mr-2 text-gray-500 group-hover:text-white">
                             {link.icon}
@@ -485,15 +539,8 @@ export default function Root() {
                               >
                                 <Link
                                   to={subItem.to}
-                                  className={`group flex items-center w-full px-4 py-2 text-left text-sm font-medium text-gray-600 hover:bg-blue-500 hover:text-white rounded-md transition-colors duration-200 relative ${subItem.disabled
-                                    ? "opacity-50 cursor-not-allowed"
-                                    : ""
-                                    } ${selectedKeys.includes(subItem.to)
-                                      ? "bg-gray-100 text-gray-900"
-                                      : ""
-                                    }`}
+                                  className={`group flex items-center w-full px-4 py-2 text-left text-sm font-medium text-gray-600 hover:bg-blue-500 hover:text-white rounded-md transition-colors duration-200 relative ${subItem.disabled ? "opacity-50 cursor-not-allowed" : ""} ${selectedKeys.includes(subItem.to) ? "bg-gray-100 text-gray-900" : ""}`}
                                 >
-                                  {/* Barra indicadora para submenús activos */}
                                   {selectedKeys.includes(subItem.to) && (
                                     <span
                                       className="absolute left-0 top-0 h-full w-1 bg-blue-500"
@@ -520,13 +567,8 @@ export default function Root() {
                       <Link
                         key={`${link.to}-${index}`}
                         to={link.to}
-                        className={`group flex items-center w-full px-4 py-2 text-left text-sm font-medium text-gray-700 hover:bg-blue-500 hover:text-white rounded-md transition-colors duration-200 relative ${link.disabled ? "opacity-50 cursor-not-allowed" : ""
-                          } ${selectedKeys.includes(link.to)
-                            ? "bg-gray-100 text-gray-900"
-                            : ""
-                          }`}
+                        className={`group flex items-center w-full px-4 py-2 text-left text-sm font-medium text-gray-700 hover:bg-blue-500 hover:text-white rounded-md transition-colors duration-200 relative ${link.disabled ? "opacity-50 cursor-not-allowed" : ""} ${selectedKeys.includes(link.to) ? "bg-gray-100 text-gray-900" : ""}`}
                       >
-                        {/* Barra indicadora para enlaces activos */}
                         {selectedKeys.includes(link.to) && (
                           <span
                             className="absolute left-0 top-0 h-full w-1 bg-blue-500"
@@ -543,7 +585,6 @@ export default function Root() {
                 )}
               </div>
 
-              {/* Botón para expandir/contraer el menú */}
               <button
                 onClick={() => setIsHidden(true)}
                 className="flex items-center justify-center w-full p-2 text-gray-500 hover:bg-gray-100 transition-colors duration-200 absolute bottom-0"
@@ -558,15 +599,13 @@ export default function Root() {
           )}
         </AnimatePresence>
 
-        {/* Contenido principal */}
         <Layout.Content
-          className={`flex-1 overflow-x-hidden overflow-y-auto ${isExpanded ? "ml-[17.5em]" : "ml-[5.3em]"} h-screen`}
+          className={`flex-1 px-[2em] pt-[5em] pr- overflow-x-hidden overflow-y-auto ${isExpanded ? "ml-[17.5em]" : "ml-[5.3em]"} h-screen`}
         >
           <Outlet context={{ setUnreadEmailsCount }} />
         </Layout.Content>
       </Layout>
 
-      {/* Modal flotante para submenús */}
       <AnimatePresence>
         {isModalVisible && (
           <motion.div
@@ -593,8 +632,7 @@ export default function Root() {
                 <Link
                   key={subItem.to}
                   to={subItem.to}
-                  className={`block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-blue-500 hover:text-white rounded-md transition-colors duration-200 ${subItem.disabled ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
+                  className={`block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-blue-500 hover:text-white rounded-md transition-colors duration-200 ${subItem.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   {subItem.label}
                 </Link>

@@ -136,7 +136,7 @@ export default function Index() {
   ];
 
   return (
-    <Layout className='p-6' style={{ minHeight: '100vh', background: '#f0f2f5' }}>
+    <Layout className='pt-6' style={{ minHeight: '100vh', background: '#f0f2f5' }}>
       <Content style={{ padding: '24px' }}>
      
 

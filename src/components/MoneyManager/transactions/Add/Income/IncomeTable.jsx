@@ -113,7 +113,7 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
 
     const fetchCashiers = async () => {
         try {
-            const API_BASE_URL = import.meta.env.VITE_API_TERCEROS || '/api';
+            const API_BASE_URL = import.meta.env.VITE_API_FINANZAS || '/api';
             const response = await axios.get(`${API_BASE_URL}/cajeros`);
             const cashiersArray = response.data.data || [];
             const mappedCashiers = cashiersArray.map(cashier => ({
@@ -516,31 +516,6 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
         {
             title: (
                 <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                    N° Arqueo
-                    <input
-                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                        onChange={(e) => handleSearch(e.target.value, "arqueo_number")}
-                        style={{
-                            marginTop: 2,
-                            padding: 4,
-                            height: 28,
-                            fontSize: 12,
-                            border: '1px solid #d9d9d9',
-                            borderRadius: 4,
-                            outline: 'none',
-                        }}
-                    />
-                </div>
-            ),
-            dataIndex: "arqueo_number",
-            key: "arqueo_number",
-            sorter: (a, b) => a.arqueo_number - b.arqueo_number,
-            render: (text) => <a>{text || "No disponible"}</a>,
-            width: 110,
-        },
-        {
-            title: (
-                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
                     Fecha
                     <input
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
@@ -564,6 +539,32 @@ const IncomeTable = ({ categories = [], accounts = [] }) => {
             sortDirections: ["descend", "ascend"],
             width: 120,
         },
+        {
+            title: (
+                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    N° Arqueo
+                    <input
+                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                        onChange={(e) => handleSearch(e.target.value, "arqueo_number")}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: '1px solid #d9d9d9',
+                            borderRadius: 4,
+                            outline: 'none',
+                        }}
+                    />
+                </div>
+            ),
+            dataIndex: "arqueo_number",
+            key: "arqueo_number",
+            sorter: (a, b) => a.arqueo_number - b.arqueo_number,
+            render: (text) => <a>{text || "No disponible"}</a>,
+            width: 110,
+        },
+        
         {
             title: (
                 <div className="flex flex-col" style={{ margin: "2px 0", gap: 1, lineHeight: 1 }}>
