@@ -4,7 +4,6 @@ import {
   EditOutlined,
   DeleteOutlined,
   DownloadOutlined,
-  ExportOutlined,
   CloseOutlined,
 } from "@ant-design/icons";
 
@@ -13,64 +12,38 @@ const FloatingActionMenu = ({
   onEdit,
   onDelete,
   onDownload,
-  onExport,
   onClearSelection,
 }) => {
-  const [visible, setVisible] = useState(false);
+ 
 
   // Show the menu only when items are selected
-  useEffect(() => {
-    if (selectedRowKeys.length > 0) {
-      setVisible(true);
-    } else {
-      setVisible(false);
-    }
-  }, [selectedRowKeys]);
-
-  if (!visible) return null;
+  
 
   return (
-    <div
-      className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-80 shadow-lg rounded-lg z-50 py-3 px-6"
-      style={{ maxWidth: "calc(100% - 32px)" }}
-    >
+    <div className="bg-white  rounded-lg z-50  px-4">
       <div className="flex justify-between items-center">
-        <div className="flex items-center">
-          <span className="mr-3 font-medium text-white">
-            {selectedRowKeys.length}{" "}
-            {selectedRowKeys.length === 1 ? "elemento" : "elementos"} seleccionado
-            {selectedRowKeys.length !== 1 ? "s" : ""}
-          </span>
-        </div>
-        <div className="flex items-center space-x-4">
+        
+        <div className="flex items-center space-x-2">
           {/* Botón Editar */}
           <Tooltip title="Editar">
             <Button
               type="text"
-              icon={<EditOutlined />}
+              icon={<EditOutlined className="text-gray-500" />}
               onClick={onEdit}
               disabled={selectedRowKeys.length !== 1}
-              className="text-white hover:text-gray-300"
-              style={{ padding: 0, border: "none", background: "transparent" }}
-            >
-              Editar
-            </Button>
+              className="hover:bg-gray-100 text-gray-500"
+              style={{
+                width: 30,
+                height: 30,
+                borderRadius: 0,
+                border: "1px solid #d9d9d9", // Borde gris claro
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            />
           </Tooltip>
 
-          {/* Botón Descargar */}
-          <Tooltip title="Descargar comprobantes">
-            <Button
-              type="text"
-              icon={<DownloadOutlined />}
-              onClick={onDownload}
-              className="text-white hover:text-gray-300"
-              style={{ padding: 0, border: "none", background: "transparent" }}
-            >
-              Descargar
-            </Button>
-          </Tooltip>        
-
-          {/* Botón Eliminar */}
           <Popconfirm
             title="¿Está seguro de eliminar los elementos seleccionados?"
             onConfirm={onDelete}
@@ -81,27 +54,44 @@ const FloatingActionMenu = ({
             <Tooltip title="Eliminar">
               <Button
                 type="text"
-                icon={<DeleteOutlined />}
-                className="text-white hover:text-gray-300"
-                style={{ padding: 0, border: "none", background: "transparent" }}
-              >
-                Eliminar
-              </Button>
+                icon={<DeleteOutlined className="text-gray-500" />}
+                className="hover:bg-gray-100 text-gray-500"
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: 0,
+                  border: "1px solid #d9d9d9", // Borde gris claro
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              />
             </Tooltip>
           </Popconfirm>
 
-          {/* Botón Cancelar */}
-          <Tooltip title="Cancelar selección">
+          {/* Botón Descargar */}
+          <Tooltip title="Descargar comprobantes">
             <Button
               type="text"
-              icon={<CloseOutlined />}
-              onClick={onClearSelection}
-              className="text-white hover:text-gray-300"
-              style={{ padding: 0, border: "none", background: "transparent" }}
-            >
-              Cancelar
-            </Button>
+              icon={<DownloadOutlined className="text-gray-500" />}
+              onClick={onDownload}
+              className="hover:bg-gray-100 text-gray-500"
+              style={{
+                width: 30,
+                height: 30,
+                borderRadius: 0,
+                border: "1px solid #d9d9d9", // Borde gris claro
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            />
           </Tooltip>
+
+          {/* Botón Eliminar */}
+          
+
+          
         </div>
       </div>
     </div>

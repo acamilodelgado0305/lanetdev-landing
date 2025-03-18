@@ -589,10 +589,11 @@ const AddExpense = () => {
           <div className="mb-4">
             <Text className="text-gray-600 block mb-1">Fecha de Elaboración</Text>
             <DatePicker
-              value={date}
-              onChange={(value) => setDate(value)}
-              format="DD/MM/YYYY"
-              placeholder="Selecciona una fecha"
+              value={date} // Valor controlado por el estado
+              onChange={(value) => setDate(value || dayjs())} // Si no se selecciona, vuelve a la fecha actual
+              format="DD/MM/YYYY HH:mm" // Formato con fecha y hora
+              showTime // Habilita la selección de hora
+              placeholder="Selecciona una fecha y hora"
               className="w-full border-gray-300 rounded-md"
             />
           </div>
@@ -693,7 +694,7 @@ const AddExpense = () => {
   };
 
   return (
-    <div className="p-6 max-w-[1200px] mx-auto bg-white shadow mt-10">
+    <div className="p-6 max-w-[1200px] mx-auto bg-white shadow ">
       <div className="sticky top-0 z-10 bg-white p-4 shadow-md flex justify-between items-center">
         <div className="flex items-center gap-2">
           <div className="bg-[#0052CC] p-2">

@@ -21,6 +21,7 @@ import {
 } from "@ant-design/icons";
 import FloatingActionMenu from "../FloatingActionMenu";
 import DateNavigator from "../Add/DateNavigator";
+import Acciones from "../Acciones";
 
 
 const { RangePicker } = DatePicker;
@@ -45,7 +46,7 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
     const [error, setError] = useState(null);
     const [typeFilter, setTypeFilter] = useState(null);
 
-   
+
 
     const [monthlyBalance, setMonthlyBalance] = useState(0);
     const [monthlyIncome, setMonthlyIncome] = useState(0);
@@ -57,7 +58,7 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
 
     const handleEditSelected = () => {
         if (selectedRowKeys.length === 1) {
-            navigate(`/index/moneymanager/ingresos/edit/${selectedRowKeys[0]}`);
+            navigate(`/index/moneymanager/trasfers/edit/${selectedRowKeys[0]}`);
         }
     };
 
@@ -85,13 +86,13 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
     // Fetch data when component mounts
     useEffect(() => {
         fetchData();
-     
+
     }, []);
 
     useEffect(() => {
         fetchMonthlyData();
     }, [currentMonth]);
-  
+
     // Simulate loading when changing date or filter
     const simulateLoading = () => {
         setEntriesLoading(true);
@@ -179,8 +180,8 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
             filtered = filtered.filter(entry => entry.type === typeFilter);
         }
 
-      
-       
+
+
 
         // Aplicar filtros de texto de búsqueda
         filtered = filtered.filter(entry =>
@@ -201,7 +202,7 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
                         .includes(searchText[key].toLowerCase());
                 }
 
-               // Filtro genérico para otros campos
+                // Filtro genérico para otros campos
                 return entry[key] ?
                     entry[key].toString().toLowerCase().includes(searchText[key].toLowerCase()) :
                     true;
@@ -482,48 +483,60 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
         setSelectedImages([]);
     };
 
-    const renderDate = (date) => {
-        try {
-            const parsedDate = new Date(date);
-            if (isNaN(parsedDate.getTime())) {
-                return "Fecha inválida";
-            }
-            return formatDate(parsedDate, "d MMM yyyy", { locale: es });
-        } catch (error) {
-            console.error("Error al formatear la fecha:", error);
-            return "Fecha inválida";
-        }
-    };
+ const renderDate = (date) => {
+         console.log("Fecha recibida:", date);
+ 
+         try {
+ 
+             const isoDate = date.replace(' ', 'T') + '.000Z';
+ 
+             const parsedDate = DateTime.fromISO(isoDate, { zone: 'utc' });
+ 
+             console.log("Fecha parseada:", parsedDate);
+ 
+             if (parsedDate.isValid) {
+ 
+                 const formattedDate = parsedDate.toFormat("yyyy-MM-dd HH:mm:ss");
+                 return formattedDate;
+             } else {
+                 console.error("Fecha inválida:", date);
+                 return "Fecha inválida";
+             }
+         } catch (error) {
+             console.error("Error al formatear la fecha:", error);
+             return "Fecha inválida";
+         }
+     };
 
     const columns = [
         {
-                    title: (
-                        <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                            Fecha
-                            <input
-                                prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                                onChange={(e) => handleSearch(e.target.value, "date")}
-                                style={{
-                                    marginTop: 2,
-                                    padding: 4,
-                                    height: 28,
-                                    fontSize: 12,
-                                    border: '1px solid #d9d9d9',
-                                    borderRadius: 4,
-                                    outline: 'none',
-                                }}
-                            />
-                        </div>
-                    ),
-                    dataIndex: "date",
-                    key: "date",
-                    render: (text) => renderDate(text),
-                    sorter: (a, b) => new Date(a.date) - new Date(b.date),
-                    sortDirections: ["descend", "ascend"],
-                    width: 50,
-                },
+            title: (
+                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Fecha
+                    <input
+                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                        onChange={(e) => handleSearch(e.target.value, "date")}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: '1px solid #d9d9d9',
+                            borderRadius: 4,
+                            outline: 'none',
+                        }}
+                    />
+                </div>
+            ),
+            dataIndex: "date",
+            key: "date",
+            render: (text) => renderDate(text),
+            sorter: (a, b) => new Date(a.date) - new Date(b.date),
+            sortDirections: ["descend", "ascend"],
+            width: 50,
+        },
         {
-            
+
             title: (
 
                 <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
@@ -645,7 +658,7 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
             width: 300,
         },
 
-        
+
         {
             title: "Comprobante",
             dataIndex: "vouchers",
@@ -675,98 +688,26 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
 
     return (
         <>
-            {/* Jira-style Top Bar */}
-            <div className="bg-white py-2 px-5 shadow-sm">
-                <div className="flex  justify-between items-center">
-                    {/* Left side: Actions */}
-                    <div className="flex items-center space-x-1">
-                        <Button
-                            icon={<FilterOutlined />}
-                            onClick={() => setShowFilters(!showFilters)}
-                        >
-                            {showFilters ? "Filtro" : "Filtro"}
-                        </Button>
-                    </div>
-                    <div className="flex items-center">
-                        <div className="mr-3">
-                            <div className="flex items-center justify-end ">
-                                <div className="bg-white px-2  text-center flex-none w-26">
-                                    <h3 className="text-gray-500 text-[10px] font-medium uppercase">Ingresos</h3>
-                                    <p className="text-green-600 text-sm font-semibold mt-1 truncate">
-                                        {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyIncome)}
-                                    </p>
-                                </div>
-                                <div className="bg-white px-2  text-center flex-none w-26">
-                                    <h3 className="text-gray-500 text-[10px] font-medium uppercase">Egresos</h3>
-                                    <p className="text-red-600 text-sm font-semibold mt-1 truncate">
-                                        {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyExpenses)}
-                                    </p>
-                                </div>
-                                <div className="px-2 bg-white text-center flex-none w-26">
-                                    <h3 className="text-gray-500 text-[10px] font-medium uppercase">Balance</h3>
-                                    <p className="text-blue-600 text-sm font-semibold mt-1 truncate">
-                                        {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyBalance)}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <DateNavigator onMonthChange={(dates) => setDateRange(dates)} />
-                        </div>
-                    </div>
-                </div>
-
-                {showFilters && (
-                    <div className="mt-4 p-3 bg-white ">
-                        <div className="flex flex-wrap items-center gap-4">
-                            {/* Cashier filter dropdown */}
-                            <Select
-                                placeholder="Filtrar por cajero"
-                                style={{ width: 200 }}
-                                onChange={handleCashierFilterChange}
-                                value={cashierFilter || undefined}
-                                loading={cashiers.length === 0}
-                                allowClear
-                            >
-                                {cashiers.map((cashier) => (
-                                    <Select.Option key={cashier.id_cajero} value={cashier.id_cajero}>
-                                        {cashier.nombre}
-                                    </Select.Option>
-                                ))}
-                            </Select>
-                            <Select
-                                placeholder="Filtrar por tipo"
-                                style={{ width: 150 }}
-                                onChange={handleTypeFilterChange}
-                                value={typeFilter || undefined}
-                                allowClear
-                            >
-                                {typeOptions.map((type) => (
-                                    <Select.Option key={type} value={type}>
-                                        {type.charAt(0).toUpperCase() + type.slice(1)}
-                                    </Select.Option>
-                                ))}
-                            </Select>
-                            <Divider type="vertical" style={{ height: '24px' }} />
-                            <div className="flex items-center">
-                                <Text strong className="mr-2">Seleccionados:</Text>
-                                <Tag color="blue">
-                                    {selectedRowKeys.length} de {filteredEntries.length} registros
-                                </Tag>
-                                {selectedRowKeys.length > 0 && (
-                                    <Button
-                                        type="link"
-                                        size="small"
-                                        onClick={() => setSelectedRowKeys([])}
-                                    >
-                                        Limpiar selección
-                                    </Button>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
+            <Acciones
+                showFilters={showFilters}
+                setShowFilters={setShowFilters}
+                selectedRowKeys={selectedRowKeys}
+                handleEditSelected={handleEditSelected}
+                handleDeleteSelected={handleDeleteSelected}
+                handleDownloadSelected={handleDownloadSelected}
+                handleExportSelected={handleExportSelected}
+                clearSelection={clearSelection}
+                loadingMonthlyData={loadingMonthlyData}
+                formatCurrency={formatCurrency}
+                monthlyIncome={monthlyIncome}
+                monthlyExpenses={monthlyExpenses}
+                monthlyBalance={monthlyBalance}
+                setDateRange={setDateRange}
+                setTypeFilter={setTypeFilter}
+                typeFilter={typeFilter}
+                filteredEntries={filteredEntries}
+                setSelectedRowKeys={setSelectedRowKeys}
+            />
 
             {/* Error message if data loading fails */}
             {error && (
@@ -809,7 +750,7 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
 
                     const totalAmount = pageData.reduce((total, item) => total + (item.amount || 0), 0);
 
-                    
+
                 }}
             />
 
@@ -904,14 +845,7 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
             </Drawer>
 
 
-            <FloatingActionMenu
-                selectedRowKeys={selectedRowKeys}
-                onEdit={handleEditSelected}
-                onDelete={handleDeleteSelected}
-                onDownload={handleDownloadSelected}
-                onExport={handleExportSelected}
-                onClearSelection={clearSelection}
-            />
+
 
 
         </>
