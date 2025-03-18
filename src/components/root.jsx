@@ -127,7 +127,7 @@ export default function Root() {
         icon: <DotChartOutlined />,
         disabled: true,
       },
-      { label: "COMPAÑIA", isTitle: true },
+      { label: "ADMINISTRACION", isTitle: true },
       (userRole === "cajero" || userRole === "superadmin") && {
         label: "Contabilidad",
         icon: <DollarCircleOutlined />,
@@ -292,7 +292,7 @@ export default function Root() {
           label: "Clientes",
           icon: <TeamOutlined />,
         },
-        { label: "COMPAÑIA", isTitle: true },
+        { label: "ADMINISTRACION", isTitle: true },
         (userRole === "cajero" || userRole === "superadmin") && {
           label: "Contabilidad",
           icon: <DollarCircleOutlined />,

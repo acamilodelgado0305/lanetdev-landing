@@ -95,7 +95,7 @@ const ProvidersPage = () => {
   const handleProviderAdded = () => fetchProviders();
 
   return (
-    <div className="pt-20 px-6 bg-gray-50 min-h-screen">
+    <div className=" px-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="mb-6 bg-white p-4 rounded-lg shadow-sm flex justify-between items-center">
         <div className="flex items-center gap-3">
