@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 import TableData from '../../Tablas/TablaDatos';
 import AddProvider from './AddProvider';
 
+
 const { Title } = Typography;
 
 const ProvidersPage = () => {
