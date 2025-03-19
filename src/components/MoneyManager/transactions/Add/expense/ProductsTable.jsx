@@ -45,8 +45,7 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
     action: 20
   });
 
-  const resizingColumn = useRef(null);
-  const startX = useRef(0);
+  
 
   // Cargar categorías al montar el componente
   useEffect(() => {
@@ -192,16 +191,7 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
           title: (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span>Categoría</span>
-              <div
-                style={{
-                  width: '5px',
-                  height: '20px',
-                  background: '#d9d9d9',
-                  cursor: 'col-resize',
-                  marginLeft: '5px'
-                }}
-                onMouseDown={(e) => startResizing('categoria', e)}
-              />
+             
             </div>
           ),
           dataIndex: 'categoria',
@@ -256,16 +246,7 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
       title: (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>Producto</span>
-          <div
-            style={{
-              width: '5px',
-              height: '20px',
-              background: '#d9d9d9',
-              cursor: 'col-resize',
-              marginLeft: '5px'
-            }}
-            onMouseDown={(e) => startResizing('product', e)}
-          />
+          
         </div>
       ),
       dataIndex: 'product',
@@ -283,16 +264,7 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
       title: (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>Cant</span>
-          <div
-            style={{
-              width: '5px',
-              height: '20px',
-              background: '#d9d9d9',
-              cursor: 'col-resize',
-              marginLeft: '5px'
-            }}
-            onMouseDown={(e) => startResizing('quantity', e)}
-          />
+          
         </div>
       ),
       dataIndex: 'quantity',
@@ -310,16 +282,7 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
       title: (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>Valor Unitario</span>
-          <div
-            style={{
-              width: '5px',
-              height: '20px',
-              background: '#d9d9d9',
-              cursor: 'col-resize',
-              marginLeft: '5px'
-            }}
-            onMouseDown={(e) => startResizing('unitPrice', e)}
-          />
+          
         </div>
       ),
       dataIndex: 'unitPrice',
@@ -338,16 +301,7 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
       title: (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>Descuento</span>
-          <div
-            style={{
-              width: '5px',
-              height: '20px',
-              background: '#d9d9d9',
-              cursor: 'col-resize',
-              marginLeft: '5px'
-            }}
-            onMouseDown={(e) => startResizing('discount', e)}
-          />
+          
         </div>
       ),
       dataIndex: 'discount',
@@ -368,16 +322,7 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
           title: (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span>Impuesto Cargo</span>
-              <div
-                style={{
-                  width: '5px',
-                  height: '20px',
-                  background: '#d9d9d9',
-                  cursor: 'col-resize',
-                  marginLeft: '5px'
-                }}
-                onMouseDown={(e) => startResizing('taxCharge', e)}
-              />
+             
             </div>
           ),
           dataIndex: 'taxCharge',
@@ -399,16 +344,7 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
           title: (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span>Impuesto Retención</span>
-              <div
-                style={{
-                  width: '5px',
-                  height: '20px',
-                  background: '#d9d9d9',
-                  cursor: 'col-resize',
-                  marginLeft: '5px'
-                }}
-                onMouseDown={(e) => startResizing('taxWithholding', e)}
-              />
+             
             </div>
           ),
           dataIndex: 'taxWithholding',
@@ -438,16 +374,7 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
       title: (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>Valor Total</span>
-          <div
-            style={{
-              width: '5px',
-              height: '20px',
-              background: '#d9d9d9',
-              cursor: 'col-resize',
-              marginLeft: '5px'
-            }}
-            onMouseDown={(e) => startResizing('total', e)}
-          />
+          
         </div>
       ),
       dataIndex: 'total',
@@ -458,16 +385,7 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
       title: (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span></span>
-          <div
-            style={{
-              width: '5px',
-              height: '20px',
-              background: '#d9d9d9',
-              cursor: 'col-resize',
-              marginLeft: '5px'
-            }}
-            onMouseDown={(e) => startResizing('action', e)}
-          />
+          
         </div>
       ),
       key: 'action',
