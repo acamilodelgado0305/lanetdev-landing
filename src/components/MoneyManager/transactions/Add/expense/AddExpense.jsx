@@ -16,6 +16,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format as formatDate } from "date-fns";
 import { es } from "date-fns/locale";
+import ComprobanteEgresoHeader from "./ComprobanteHeader";
 
 const apiUrl = import.meta.env.VITE_API_FINANZAS;
 const { Title, Text } = Typography;
@@ -48,10 +49,8 @@ const AddExpense = () => {
   const [expenseTableData, setExpenseTableData] = useState({
     items: [{
       key: '1',
-      type: 'Gasto',
       provider: '',
       product: '',
-      description: '',
       quantity: 1.00,
       unitPrice: 0.00,
       purchaseValue: 0.00,
@@ -289,10 +288,8 @@ const AddExpense = () => {
           )
           .map(item => ({
             id: item.id,
-            type: item.type,
             categoria: item.categoria,
             product: item.product,
-            description: item.description,
             quantity: parseFloat(item.quantity),
             unit_price: parseFloat(item.unitPrice),
             discount: parseFloat(item.discount || 0),
@@ -516,7 +513,25 @@ const AddExpense = () => {
   const renderCompraInputs = () => {
     return (
       <div className="p-4">
-        {renderInvoiceHeader()}
+       <ComprobanteEgresoHeader
+          facturaNumber={facturaNumber}
+          setFacturaNumber={setFacturaNumber}
+          facturaProvNumber={facturaProvNumber}
+          setFacturaProvNumber={setFacturaProvNumber}
+          description={description}
+          setDescription={setDescription}
+          tipo={tipo}
+          setTipo={setTipo}
+          date={date}
+          setDate={setDate}
+          proveedor={proveedor}
+          handleProveedorChange={handleProveedorChange}
+          proveedores={proveedores}
+          categoria={categoria}
+          setCategoria={setCategoria}
+          categorias={categorias}
+          isHiddenDetails={isHiddenDetails}
+        />
         <Divider />
         <ProductsTable
           items={expenseTableData.items}
@@ -527,137 +542,6 @@ const AddExpense = () => {
       </div>
     );
   };
-
-  const renderInvoiceHeader = () => (
-    <div className="border-b-2 border-gray-200 pb-6 mb-6">
-      <Row justify="space-between" align="middle" className="mb-4">
-        <Col>
-          <Title level={2} className="text-gray-800 font-bold">
-            COMPROBANTE DE EGRESO
-          </Title>
-        </Col>
-        <Col>
-          <div className="text-right">
-            <Text className="text-gray-600 block">No.</Text>
-            <Input
-              value={facturaNumber}
-              onChange={(e) => setFacturaNumber(e.target.value)}
-              placeholder="No. de Factura"
-              className="w-32 border-gray-300 rounded-md"
-            />
-          </div>
-          <div className="text-right mt-2">
-            <Text className="text-gray-600 block">No. Factura Proveedor</Text>
-            <Input
-              value={facturaProvNumber}
-              onChange={(e) => setFacturaProvNumber(e.target.value)}
-              placeholder="No. Proveedor"
-              className="w-32 border-gray-300 rounded-md"
-            />
-          </div>
-        </Col>
-      </Row>
-
-      <Divider className="my-4" />
-
-      <Row gutter={[16, 16]}>
-        <Col xs={24} md={12}>
-          <div className="mb-4">
-            <Text className="text-gray-600 block mb-1">Título</Text>
-            <Input
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Añade un título descriptivo"
-              className="w-full border-gray-300 rounded-md"
-            />
-          </div>
-          <div className="mb-4">
-            <Text className="text-gray-600 block mb-1">Tipo</Text>
-            <Select
-              value={tipo}
-              onChange={(value) => setTipo(value)}
-              className="w-full"
-              placeholder="Selecciona un Tipo"
-            >
-              <Select.Option value="Legal">Legal</Select.Option>
-              <Select.Option value="Diverso">Diverso</Select.Option>
-            </Select>
-          </div>
-        </Col>
-
-        <Col xs={24} md={12}>
-          <div className="mb-4">
-            <Text className="text-gray-600 block mb-1">Fecha de Elaboración</Text>
-            <DatePicker
-              value={date} // Valor controlado por el estado
-              onChange={(value) => setDate(value || dayjs())} // Si no se selecciona, vuelve a la fecha actual
-              format="DD/MM/YYYY HH:mm" // Formato con fecha y hora
-              showTime // Habilita la selección de hora
-              placeholder="Selecciona una fecha y hora"
-              className="w-full border-gray-300 rounded-md"
-            />
-          </div>
-          <div className="mb-4">
-            <Text className="text-gray-600 block mb-1">Proveedor</Text>
-            <Select
-              value={proveedor}
-              onChange={handleProveedorChange}
-              className="w-full"
-              placeholder="Selecciona un proveedor"
-            >
-              {Array.isArray(proveedores) &&
-                proveedores.map((provider) => (
-                  <Select.Option key={provider.id} value={provider.id}>
-                    {provider.nombre_comercial}
-                  </Select.Option>
-                ))}
-            </Select>
-          </div>
-          {!isHiddenDetails && (
-            <div className="mb-4">
-              <Text className="text-gray-600 block mb-1">Categoría</Text>
-              <Select
-                value={categoria}
-                onChange={(value) => setCategoria(value)}
-                className="w-full"
-                placeholder="Selecciona una categoría"
-                dropdownRender={(menu) => (
-                  <div>
-                    {menu}
-                    <Divider style={{ margin: "8px 0" }} />
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        padding: "8px",
-                        cursor: "pointer",
-                      }}
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => {
-                        console.log("Redirigiendo a crear categoría...");
-                      }}
-                    >
-                      <Text type="secondary" style={{ fontSize: "12px" }}>
-                        Nueva Categoría
-                      </Text>
-                    </div>
-                  </div>
-                )}
-              >
-                {Array.isArray(categorias) &&
-                  categorias.map((cat) => (
-                    <Select.Option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </Select.Option>
-                  ))}
-              </Select>
-            </div>
-          )}
-        </Col>
-      </Row>
-    </div>
-  );
-
   const handleCancel = () => {
     navigate("/index/moneymanager/transactions", { state: { activeTab: returnTab } });
   };
