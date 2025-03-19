@@ -58,12 +58,14 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange, formatCurr
         }
     };
 
-    // Efecto cuando se selecciona un mes
     useEffect(() => {
-        if (currentMonth) {
-            fetchMonthlyData(currentMonth);
+        if (!currentMonth) {
+            const currentMonthFormatted = dayjs().format("YYYY-MM"); // Formato "YYYY-MM" para el mes actual
+            setCurrentMonth(currentMonthFormatted); // Establecer el mes actual
+        } else {
+            fetchMonthlyData(currentMonth); // Llamar a la API con el mes actual
         }
-    }, [currentMonth]);
+    }, [currentMonth]); // Dependiendo de currentMonth
 
     const handleQuickSelect = (value: string) => {
         let start: dayjs.Dayjs;
