@@ -11,11 +11,11 @@ const formatCurrency = (value) => {
     currency: 'COP',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
-  }).format(value);
+  }).format(value || 0); // Aseguramos que siempre haya un valor válido
 };
 
 const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsChange }) => {
-  const [hasPercentageDiscount, setHasPercentageDiscount] = useState(false);
+  const [hasPercentageDiscount, setHasPercentageDiscount] = useState(true);
   const [hiddenDetails, setHiddenDetails] = useState(false);
   const [hiddenImpuestos, setHiddenImpuestos] = useState(false);
   const [categorias, setCategorias] = useState([]);
@@ -33,21 +33,19 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
 
   // Estado para los anchos de las columnas
   const [columnWidths, setColumnWidths] = useState({
-    type: 120,
+
     categoria: 120,
-    product: 150,
-    description: 200, // Ancho inicial más grande para descripción
+    product: 150, 
     quantity: 100,
     unitPrice: 120,
-    discount: 120,
+    discount: 50,
     taxCharge: 120,
     taxWithholding: 120,
     total: 120,
-    action: 60
+    action: 20
   });
 
-  const resizingColumn = useRef(null);
-  const startX = useRef(0);
+  
 
   // Cargar categorías al montar el componente
   useEffect(() => {
@@ -138,10 +136,8 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
     const newKey = `${Date.now()}-${Math.random()}`;
     const newItem = {
       key: newKey,
-      type: 'Gasto',
       provider: '',
       product: '',
-      description: '',
       quantity: 1.00,
       unitPrice: 0.00,
       purchaseValue: 0.00,
@@ -163,7 +159,15 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
   const handleValueChange = (key, field, value) => {
     const updatedItems = items.map(item => {
       if (item.key === key) {
-        const updatedItem = { ...item, [field]: value };
+        let updatedItem;
+        if (field === 'unitPrice') {
+          // Limpiamos el valor de caracteres no numéricos
+          const cleanValue = value.replace(/[^0-9]/g, '');
+          const numericValue = cleanValue ? parseFloat(cleanValue) : 0;
+          updatedItem = { ...item, [field]: numericValue };
+        } else {
+          updatedItem = { ...item, [field]: value };
+        }
         updatedItem.total = calculateItemTotal(updatedItem);
         return updatedItem;
       }
@@ -178,144 +182,71 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
       [`${type}Percentage`]: value
     }));
   };
-
-  // Funciones para manejar el redimensionamiento de columnas
-  const startResizing = (columnKey, e) => {
-    e.preventDefault();
-    resizingColumn.current = columnKey;
-    startX.current = e.clientX;
-    document.addEventListener('mousemove', resizeColumn);
-    document.addEventListener('mouseup', stopResizing);
-  };
-
-  const resizeColumn = (e) => {
-    if (resizingColumn.current) {
-      const delta = e.clientX - startX.current;
-      setColumnWidths(prev => ({
-        ...prev,
-        [resizingColumn.current]: Math.max(50, prev[resizingColumn.current] + delta) // Mínimo 50px
-      }));
-      startX.current = e.clientX;
-    }
-  };
-
-  const stopResizing = () => {
-    resizingColumn.current = null;
-    document.removeEventListener('mousemove', resizeColumn);
-    document.removeEventListener('mouseup', stopResizing);
-  };
-
   const columns = [
-    {
-      title: (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span># Tipo</span>
-          <div
-            style={{
-              width: '5px',
-              height: '20px',
-              background: '#d9d9d9',
-              cursor: 'col-resize',
-              marginLeft: '5px'
-            }}
-            onMouseDown={(e) => startResizing('type', e)}
-          />
-        </div>
-      ),
-      dataIndex: 'type',
-      width: columnWidths.type,
-      render: (text, record) => (
-        <Select
-          value={text}
-          style={{ width: '100%' }}
-          onChange={(value) => handleValueChange(record.key, 'type', value)}
-        >
-          <Select.Option value="Producto">Producto</Select.Option>
-          <Select.Option value="Activo">Activo</Select.Option>
-          <Select.Option value="Gasto">Gasto</Select.Option>
-        </Select>
-      )
-    },
+   
+   
     ...(hiddenDetails
       ? [
-          {
-            title: (
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>Categoría</span>
-                <div
-                  style={{
-                    width: '5px',
-                    height: '20px',
-                    background: '#d9d9d9',
-                    cursor: 'col-resize',
-                    marginLeft: '5px'
-                  }}
-                  onMouseDown={(e) => startResizing('categoria', e)}
-                />
-              </div>
-            ),
-            dataIndex: 'categoria',
-            width: columnWidths.categoria,
-            render: (text, record) => {
-              const usedCategories = items
-                .filter(item => item.key !== record.key)
-                .map(item => item.categoria);
-              const availableCategorias = categorias.filter(cat =>
-                !usedCategories.includes(cat.id)
-              );
+        {
+          title: (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>Categoría</span>
+             
+            </div>
+          ),
+          dataIndex: 'categoria',
+          width: columnWidths.categoria,
+          render: (text, record) => {
+            const usedCategories = items
+              .filter(item => item.key !== record.key)
+              .map(item => item.categoria);
+            const availableCategorias = categorias.filter(cat =>
+              !usedCategories.includes(cat.id)
+            );
 
-              return (
-                <Select
-                  value={record.categoria}
-                  onChange={(value) => handleValueChange(record.key, 'categoria', value)}
-                  className="w-[8em]"
-                  placeholder="Selecciona una categoría"
-                  dropdownRender={(menu) => (
-                    <div>
-                      {menu}
-                      <Divider style={{ margin: '8px 0' }} />
-                      <div
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'center',
-                          padding: '8px',
-                          cursor: 'pointer',
-                        }}
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => {
-                          console.log("Redirigiendo a crear categoría...");
-                        }}
-                      >
-                        Crear categoría
-                      </div>
+            return (
+              <Select
+                value={record.categoria}
+                onChange={(value) => handleValueChange(record.key, 'categoria', value)}
+                className="w-[8em]"
+                placeholder="Selecciona una categoría"
+                dropdownRender={(menu) => (
+                  <div>
+                    {menu}
+                    <Divider style={{ margin: '8px 0' }} />
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        padding: '8px',
+                        cursor: 'pointer',
+                      }}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => {
+                        console.log("Redirigiendo a crear categoría...");
+                      }}
+                    >
+                      Crear categoría
                     </div>
-                  )}
-                >
-                  {availableCategorias.map((cat) => (
-                    <Select.Option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </Select.Option>
-                  ))}
-                </Select>
-              );
-            },
-          }
-        ]
+                  </div>
+                )}
+              >
+                {availableCategorias.map((cat) => (
+                  <Select.Option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </Select.Option>
+                ))}
+              </Select>
+            );
+          },
+        }
+      ]
       : []),
     {
       title: (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>Producto</span>
-          <div
-            style={{
-              width: '5px',
-              height: '20px',
-              background: '#d9d9d9',
-              cursor: 'col-resize',
-              marginLeft: '5px'
-            }}
-            onMouseDown={(e) => startResizing('product', e)}
-          />
+          
         </div>
       ),
       dataIndex: 'product',
@@ -332,43 +263,8 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
     {
       title: (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>Descripción</span>
-          <div
-            style={{
-              width: '5px',
-              height: '20px',
-              background: '#d9d9d9',
-              cursor: 'col-resize',
-              marginLeft: '5px'
-            }}
-            onMouseDown={(e) => startResizing('description', e)}
-          />
-        </div>
-      ),
-      dataIndex: 'description',
-      width: columnWidths.description,
-      render: (text, record) => (
-        <Input
-          value={text}
-          style={{ width: '100%' }}
-          onChange={(e) => handleValueChange(record.key, 'description', e.target.value)}
-        />
-      )
-    },
-    {
-      title: (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>Cant</span>
-          <div
-            style={{
-              width: '5px',
-              height: '20px',
-              background: '#d9d9d9',
-              cursor: 'col-resize',
-              marginLeft: '5px'
-            }}
-            onMouseDown={(e) => startResizing('quantity', e)}
-          />
+          
         </div>
       ),
       dataIndex: 'quantity',
@@ -386,26 +282,18 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
       title: (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>Valor Unitario</span>
-          <div
-            style={{
-              width: '5px',
-              height: '20px',
-              background: '#d9d9d9',
-              cursor: 'col-resize',
-              marginLeft: '5px'
-            }}
-            onMouseDown={(e) => startResizing('unitPrice', e)}
-          />
+          
         </div>
       ),
       dataIndex: 'unitPrice',
       width: columnWidths.unitPrice,
       render: (text, record) => (
         <Input
-          type="number"
-          value={text}
+          type="text" // Cambiamos de "number" a "text" para permitir el formato
+          value={formatCurrency(text)} // Mostramos el valor formateado
           style={{ width: '100%' }}
           onChange={(e) => handleValueChange(record.key, 'unitPrice', e.target.value)}
+          placeholder="$0"
         />
       )
     },
@@ -413,16 +301,7 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
       title: (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>Descuento</span>
-          <div
-            style={{
-              width: '5px',
-              height: '20px',
-              background: '#d9d9d9',
-              cursor: 'col-resize',
-              marginLeft: '5px'
-            }}
-            onMouseDown={(e) => startResizing('discount', e)}
-          />
+          
         </div>
       ),
       dataIndex: 'discount',
@@ -439,90 +318,63 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
     },
     ...(!hiddenImpuestos
       ? [
-          {
-            title: (
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>Impuesto Cargo</span>
-                <div
-                  style={{
-                    width: '5px',
-                    height: '20px',
-                    background: '#d9d9d9',
-                    cursor: 'col-resize',
-                    marginLeft: '5px'
-                  }}
-                  onMouseDown={(e) => startResizing('taxCharge', e)}
-                />
-              </div>
-            ),
-            dataIndex: 'taxCharge',
-            width: columnWidths.taxCharge,
-            render: (text, record) => (
-              <Select
-                value={text}
-                style={{ width: '100%' }}
-                onChange={(value) => handleValueChange(record.key, 'taxCharge', value)}
-              >
-                <Select.Option value="19">IVA 19%</Select.Option>
-                <Select.Option value="5">IVA 5%</Select.Option>
-                <Select.Option value="0">IVA 0%</Select.Option>
-                <Select.Option value="8">Ipoconsumo 8%</Select.Option>
-              </Select>
-            )
-          },
-          {
-            title: (
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>Impuesto Retención</span>
-                <div
-                  style={{
-                    width: '5px',
-                    height: '20px',
-                    background: '#d9d9d9',
-                    cursor: 'col-resize',
-                    marginLeft: '5px'
-                  }}
-                  onMouseDown={(e) => startResizing('taxWithholding', e)}
-                />
-              </div>
-            ),
-            dataIndex: 'taxWithholding',
-            width: columnWidths.taxWithholding,
-            render: (text, record) => (
-              <Select
-                value={text}
-                style={{ width: '100%' }}
-                onChange={(value) => handleValueChange(record.key, 'taxWithholding', value)}
-              >
-                <Select.Option value="11">Rete 11%</Select.Option>
-                <Select.Option value="10">Rete 10%</Select.Option>
-                <Select.Option value="7">Rete 7%</Select.Option>
-                <Select.Option value="6">Rete 6%</Select.Option>
-                <Select.Option value="4">Rete 4%</Select.Option>
-                <Select.Option value="3.5">Rete 3.5%</Select.Option>
-                <Select.Option value="2.5">Rete 2.5%</Select.Option>
-                <Select.Option value="2">Rete 2%</Select.Option>
-                <Select.Option value="1">Rete 1%</Select.Option>
-                <Select.Option value="0">Rete 0%</Select.Option>
-              </Select>
-            )
-          }
-        ]
+        {
+          title: (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>Impuesto Cargo</span>
+             
+            </div>
+          ),
+          dataIndex: 'taxCharge',
+          width: columnWidths.taxCharge,
+          render: (text, record) => (
+            <Select
+              value={text}
+              style={{ width: '100%' }}
+              onChange={(value) => handleValueChange(record.key, 'taxCharge', value)}
+            >
+              <Select.Option value="19">IVA 19%</Select.Option>
+              <Select.Option value="5">IVA 5%</Select.Option>
+              <Select.Option value="0">IVA 0%</Select.Option>
+              <Select.Option value="8">Ipoconsumo 8%</Select.Option>
+            </Select>
+          )
+        },
+        {
+          title: (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>Impuesto Retención</span>
+             
+            </div>
+          ),
+          dataIndex: 'taxWithholding',
+          width: columnWidths.taxWithholding,
+          render: (text, record) => (
+            <Select
+              value={text}
+              style={{ width: '100%' }}
+              onChange={(value) => handleValueChange(record.key, 'taxWithholding', value)}
+            >
+              <Select.Option value="11">Rete 11%</Select.Option>
+              <Select.Option value="10">Rete 10%</Select.Option>
+              <Select.Option value="7">Rete 7%</Select.Option>
+              <Select.Option value="6">Rete 6%</Select.Option>
+              <Select.Option value="4">Rete 4%</Select.Option>
+              <Select.Option value="3.5">Rete 3.5%</Select.Option>
+              <Select.Option value="2.5">Rete 2.5%</Select.Option>
+              <Select.Option value="2">Rete 2%</Select.Option>
+              <Select.Option value="1">Rete 1%</Select.Option>
+              <Select.Option value="0">Rete 0%</Select.Option>
+            </Select>
+          )
+        }
+      ]
       : []),
     {
       title: (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>Valor Total</span>
-          <div
-            style={{
-              width: '5px',
-              height: '20px',
-              background: '#d9d9d9',
-              cursor: 'col-resize',
-              marginLeft: '5px'
-            }}
-            onMouseDown={(e) => startResizing('total', e)}
-          />
+          
         </div>
       ),
       dataIndex: 'total',
@@ -533,16 +385,7 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
       title: (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span></span>
-          <div
-            style={{
-              width: '5px',
-              height: '20px',
-              background: '#d9d9d9',
-              cursor: 'col-resize',
-              marginLeft: '5px'
-            }}
-            onMouseDown={(e) => startResizing('action', e)}
-          />
+          
         </div>
       ),
       key: 'action',
