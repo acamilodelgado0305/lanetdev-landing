@@ -107,6 +107,8 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange, formatCurr
 
         setRange([start, end]);
         onMonthChange([start.toDate(), end.toDate()]);
+        const monthYear = `${start.year()}-${(start.month() + 1).toString().padStart(2, "0")}`;
+        setCurrentMonth(monthYear); // Actualizar el mes seleccionado
     };
 
     const handleMonthChange = (date: dayjs.Dayjs | null) => {
@@ -129,12 +131,16 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange, formatCurr
     const goToPreviousMonth = () => {
         const newMonth = range ? range[0].subtract(1, "month") : dayjs().subtract(1, "month");
         setRange([newMonth.startOf("month"), newMonth.endOf("month")]);
+        const monthYear = `${newMonth.year()}-${(newMonth.month() + 1).toString().padStart(2, "0")}`;
+        setCurrentMonth(monthYear); // Actualizar el mes seleccionado
         onMonthChange([newMonth.startOf("month").toDate(), newMonth.endOf("month").toDate()]);
     };
 
     const goToNextMonth = () => {
         const newMonth = range ? range[0].add(1, "month") : dayjs().add(1, "month");
         setRange([newMonth.startOf("month"), newMonth.endOf("month")]);
+        const monthYear = `${newMonth.year()}-${(newMonth.month() + 1).toString().padStart(2, "0")}`;
+        setCurrentMonth(monthYear); // Actualizar el mes seleccionado
         onMonthChange([newMonth.startOf("month").toDate(), newMonth.endOf("month").toDate()]);
     };
 
@@ -148,12 +154,16 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange, formatCurr
         if (dates) {
             setRange(dates);
             onMonthChange([dates[0].toDate(), dates[1].toDate()]);
+            const monthYear = `${dates[0].year()}-${(dates[0].month() + 1).toString().padStart(2, "0")}`;
+            setCurrentMonth(monthYear); // Actualizar el mes seleccionado
         }
         setIsRangePickerVisible(false);
     };
 
     const handleReset = () => {
         setRange(null);
+        const monthYear = `${dayjs().year()}-${(dayjs().month() + 1).toString().padStart(2, "0")}`;
+        setCurrentMonth(monthYear); // Actualizar el mes seleccionado
         onMonthChange([dayjs().startOf("month").toDate(), dayjs().endOf("month").toDate()]);
     };
 
@@ -188,7 +198,6 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange, formatCurr
                         </div>
                     </div>
                 </Col>
-
                 <Col>
                     <Tooltip title="Mes anterior">
                         <Button icon={<LeftOutlined />} onClick={goToPreviousMonth} style={{ width: 40 }} />
