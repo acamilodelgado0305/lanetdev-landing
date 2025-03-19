@@ -52,30 +52,12 @@ const Acciones = ({
           />
         </div>
         <div className="flex items-center">
-          <div className="mr-3">
-            <div className="flex items-center justify-end">
-              <div className="bg-white px-2 text-center flex-none w-26">
-                <h3 className="text-gray-500 text-[10px] font-medium uppercase">Ingresos</h3>
-                <p className="text-green-600 text-sm font-semibold mt-1 truncate">
-                  {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyIncome)}
-                </p>
-              </div>
-              <div className="bg-white px-2 text-center flex-none w-26">
-                <h3 className="text-gray-500 text-[10px] font-medium uppercase">Egresos</h3>
-                <p className="text-red-600 text-sm font-semibold mt-1 truncate">
-                  {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyExpenses)}
-                </p>
-              </div>
-              <div className="px-2 bg-white text-center flex-none w-26">
-                <h3 className="text-gray-500 text-[10px] font-medium uppercase">Balance</h3>
-                <p className="text-blue-600 text-sm font-semibold mt-1 truncate">
-                  {loadingMonthlyData ? "Cargando..." : formatCurrency(monthlyBalance)}
-                </p>
-              </div>
-            </div>
-          </div>
+
           <div>
-            <DateNavigator onMonthChange={(dates) => setDateRange(dates)} />
+            <DateNavigator
+              onMonthChange={(dates) => setDateRange(dates)}
+              formatCurrency={formatCurrency}
+            />
           </div>
         </div>
       </div>
