@@ -208,7 +208,7 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
               <Select
                 value={record.categoria}
                 onChange={(value) => handleValueChange(record.key, 'categoria', value)}
-                className="w-[8em]"
+                className="w-full"
                 placeholder="Selecciona una categoría"
                 dropdownRender={(menu) => (
                   <div>

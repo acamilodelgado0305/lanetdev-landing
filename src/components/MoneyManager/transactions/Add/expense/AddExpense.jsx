@@ -578,8 +578,8 @@ const AddExpense = () => {
   };
 
   return (
-    <div className="p-6 max-w-[1200px] mx-auto bg-white shadow ">
-      <div className="sticky top-0 z-10 bg-white p-4 shadow-md flex justify-between items-center">
+    <div className="max-w-[1400px] mx-auto bg-white  ">
+      <div className="sticky top-0 z-10 bg-white p-4  flex justify-between items-center">
         <div className="flex items-center gap-2">
           <div className="bg-[#0052CC] p-2">
             <FileTextOutlined className="text-white" />
@@ -590,14 +590,7 @@ const AddExpense = () => {
           </div>
         </div>
         <Space>
-          <Button
-            disabled={!isExpenseSaved}
-            onClick={() => handleDownloadPDF()}
-            className="bg-transparent border border-[#0052CC] text-[#0052CC] hover:bg-[#0052CC] hover:text-white"
-            style={{ borderRadius: 2 }}
-          >
-            Descargar PDF
-          </Button>
+          
           <div className="px-6 py-4 flex justify-end">
             <input
               type="file"
@@ -632,15 +625,13 @@ const AddExpense = () => {
 
       {renderCompraInputs()}
 
-      <div className="space-y-4 mb-8">
+      <div className="space-y-4 p-6">
         <AccountSelector
           selectedAccount={account}
           onAccountSelect={(value) => setAccount(value)}
           accounts={accounts}
+          
         />
-      </div>
-
-      <div className="space-y-4">
         <Title level={4}>Observaciones</Title>
         <textarea
           value={comentarios}
