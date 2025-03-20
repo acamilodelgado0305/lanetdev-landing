@@ -20,6 +20,7 @@ import ViewIncome from "./ViewIncome";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable"; // Correct import
 import Acciones from "../../Acciones";
+import moment from 'moment';
 
 
 const { RangePicker } = DatePicker;
@@ -453,9 +454,6 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
         }
     };
 
-
-    
-
     // New function to generate the PDF invoice
     const generateInvoicePDF = (items) => {
         const doc = new jsPDF();
@@ -679,6 +677,7 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
             sortDirections: ["descend", "ascend"],
             width: 140,
         },
+       
         {
             title: (
                 <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
@@ -700,7 +699,10 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
             ),
             dataIndex: "start_period",
             key: "start_period",
-            render: (text) => renderDate(text),
+            render: (start_period) => {
+                const formattedDate = moment(start_period).format('DD-MM-YYYY'); // Formato: Día-Mes-Año
+                return <span className="font-bold">{formattedDate}</span>;
+            },
             sorter: (a, b) => new Date(a.start_period || 0) - new Date(b.start_period || 0),
             sortDirections: ["descend", "ascend"],
             width: 120,
@@ -726,11 +728,15 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
             ),
             dataIndex: "end_period",
             key: "end_period",
-            render: (text) => renderDate(text),
+            render: (end_period) => {
+                const formattedDate = moment(end_period).format('DD-MM-YYYY'); // Formato: Día-Mes-Año
+                return <span className="font-bold">{formattedDate}</span>;
+            },
             sorter: (a, b) => new Date(a.end_period || 0) - new Date(b.end_period || 0),
             sortDirections: ["descend", "ascend"],
             width: 120,
         },
+        
         {
             title: "Comprobante",
             dataIndex: "voucher",
