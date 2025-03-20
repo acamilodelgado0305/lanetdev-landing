@@ -267,18 +267,19 @@ const ExpenseTable = ({ categories = [], accounts = [], activeTab }) => {
 
     
     const renderDate = (date) => {
-        try {
-          const parsedDate = DateTime.fromISO(date, { zone: "local" });
-          if (!parsedDate.isValid) {
-            return "Fecha inválida";
-          }
-          // Formato con hora: "18 mar 2025 14:30"
-          return parsedDate.toFormat("d MMM yyyy HH:mm", { locale: "es" });
-        } catch (error) {
-          console.error("Error al formatear la fecha:", error);
-          return "Fecha inválida";
-        }
-      };
+            try {
+                // Tomar la fecha directamente sin ajustar zona horaria
+                const parsedDate = DateTime.fromISO(date);
+                if (!parsedDate.isValid) {
+                    return "Fecha inválida";
+                }
+                // Formato con hora: "18 mar 2025 14:30"
+                return parsedDate.toFormat("d MMM yyyy HH:mm", { locale: "es" });
+            } catch (error) {
+                console.error("Error al formatear la fecha:", error);
+                return "Fecha inválida";
+            }
+        };
 
 
     const getAccountName = (accountId) => {

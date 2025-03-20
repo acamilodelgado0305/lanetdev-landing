@@ -25,7 +25,7 @@ import Acciones from "../../Acciones";
 const { RangePicker } = DatePicker;
 const { Title, Text } = Typography;
 
-const IncomeTable = ({ categories = [], accounts = [], activeTab}) => {
+const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
     const navigate = useNavigate();
 
     const [selectedEntry, setSelectedEntry] = useState(null);
@@ -74,7 +74,7 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab}) => {
         if (selectedRowKeys.length === 1) {
             navigate(`/index/moneymanager/ingresos/edit/${selectedRowKeys[0]}`, {
                 state: { returnTab: activeTab }, // Pasar activeTab como returnTab
-              });
+            });
         }
     };
 
@@ -438,20 +438,23 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab}) => {
         setIsDrawerOpen(false);
         setSelectedImages([]);
     };
-
     const renderDate = (date) => {
         try {
-          const parsedDate = DateTime.fromISO(date, { zone: "local" });
-          if (!parsedDate.isValid) {
-            return "Fecha inválida";
-          }
-          // Formato con hora: "18 mar 2025 14:30"
-          return parsedDate.toFormat("d MMM yyyy HH:mm", { locale: "es" });
+            // Tomar la fecha directamente sin ajustar zona horaria
+            const parsedDate = DateTime.fromISO(date);
+            if (!parsedDate.isValid) {
+                return "Fecha inválida";
+            }
+            // Formato con hora: "18 mar 2025 14:30"
+            return parsedDate.toFormat("d MMM yyyy HH:mm", { locale: "es" });
         } catch (error) {
-          console.error("Error al formatear la fecha:", error);
-          return "Fecha inválida";
+            console.error("Error al formatear la fecha:", error);
+            return "Fecha inválida";
         }
-      };
+    };
+
+
+    
 
     // New function to generate the PDF invoice
     const generateInvoicePDF = (items) => {
@@ -523,22 +526,22 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab}) => {
     const columns = [
         {
             title: (
-              <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                Fecha y Hora
-                <input
-                  prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
-                  onChange={(e) => handleSearch(e.target.value, "date")}
-                  style={{
-                    marginTop: 2,
-                    padding: 4,
-                    height: 28,
-                    fontSize: 12,
-                    border: "1px solid #d9d9d9",
-                    borderRadius: 4,
-                    outline: "none",
-                  }}
-                />
-              </div>
+                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Fecha y Hora
+                    <input
+                        prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
+                        onChange={(e) => handleSearch(e.target.value, "date")}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: "1px solid #d9d9d9",
+                            borderRadius: 4,
+                            outline: "none",
+                        }}
+                    />
+                </div>
             ),
             dataIndex: "date",
             key: "date",
@@ -546,7 +549,7 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab}) => {
             sorter: (a, b) => new Date(a.date) - new Date(b.date),
             sortDirections: ["descend", "ascend"],
             width: 180, // Aumentamos el ancho para dar espacio a la hora
-          },
+        },
         {
             title: (
                 <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
@@ -572,7 +575,7 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab}) => {
             render: (text) => <a>{text || "No disponible"}</a>,
             width: 110,
         },
-        
+
         {
             title: (
                 <div className="flex flex-col" style={{ margin: "2px 0", gap: 1, lineHeight: 1 }}>
@@ -753,31 +756,31 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab}) => {
     return (
         <>
             <Acciones
-        showFilters={showFilters}
-        setShowFilters={setShowFilters}
-        selectedRowKeys={selectedRowKeys}
-        handleEditSelected={handleEditSelected}
-        handleDeleteSelected={handleDeleteSelected}
-        handleDownloadSelected={handleDownloadSelected}
-        handleExportSelected={handleExportSelected}
-        clearSelection={clearSelection}
-        activeTab={activeTab}
-        loadingMonthlyData={loadingMonthlyData}
-        formatCurrency={formatCurrency}
-        monthlyIncome={monthlyIncome}
-        monthlyExpenses={monthlyExpenses}
-        monthlyBalance={monthlyBalance}
-        setDateRange={setDateRange}
-        selectList={cashiers}
-        setFirstFilter={setCashierFilter}
-        firstFilter={cashierFilter}
-        firstFilterPlaceholder="Filtrar por cajero"
-        typeOptions={["arqueo", "otro"]}
-        setTypeFilter={setTypeFilter}
-        typeFilter={typeFilter}
-        filteredEntries={filteredEntries}
-        setSelectedRowKeys={setSelectedRowKeys}
-      />
+                showFilters={showFilters}
+                setShowFilters={setShowFilters}
+                selectedRowKeys={selectedRowKeys}
+                handleEditSelected={handleEditSelected}
+                handleDeleteSelected={handleDeleteSelected}
+                handleDownloadSelected={handleDownloadSelected}
+                handleExportSelected={handleExportSelected}
+                clearSelection={clearSelection}
+                activeTab={activeTab}
+                loadingMonthlyData={loadingMonthlyData}
+                formatCurrency={formatCurrency}
+                monthlyIncome={monthlyIncome}
+                monthlyExpenses={monthlyExpenses}
+                monthlyBalance={monthlyBalance}
+                setDateRange={setDateRange}
+                selectList={cashiers}
+                setFirstFilter={setCashierFilter}
+                firstFilter={cashierFilter}
+                firstFilterPlaceholder="Filtrar por cajero"
+                typeOptions={["arqueo", "otro"]}
+                setTypeFilter={setTypeFilter}
+                typeFilter={typeFilter}
+                filteredEntries={filteredEntries}
+                setSelectedRowKeys={setSelectedRowKeys}
+            />
 
             {error && (
                 <div className="mb-4 p-4 bg-red-50 text-red-700 rounded border border-red-200">
@@ -905,7 +908,7 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab}) => {
                 </div>
             </Drawer>
 
-            
+
         </>
     );
 };
