@@ -700,7 +700,7 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
             dataIndex: "start_period",
             key: "start_period",
             render: (start_period) => {
-                const formattedDate = moment(start_period).format('DD-MM-YYYY'); // Formato: Día-Mes-Año
+                const formattedDate = moment(start_period).format('YYYY-MM-DD'); // Formato: Año-Mes-Día
                 return <span className="font-bold">{formattedDate}</span>;
             },
             sorter: (a, b) => new Date(a.start_period || 0) - new Date(b.start_period || 0),
@@ -729,7 +729,7 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
             dataIndex: "end_period",
             key: "end_period",
             render: (end_period) => {
-                const formattedDate = moment(end_period).format('DD-MM-YYYY'); // Formato: Día-Mes-Año
+                const formattedDate = moment(end_period).format('YYYY-MM-DD'); // Formato: Año-Mes-Día
                 return <span className="font-bold">{formattedDate}</span>;
             },
             sorter: (a, b) => new Date(a.end_period || 0) - new Date(b.end_period || 0),
