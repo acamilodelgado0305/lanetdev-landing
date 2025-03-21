@@ -61,51 +61,21 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
                 "enero", "febrero", "marzo", "abril", "mayo", "junio", 
                 "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
             ];
-            const dias = [
-                "domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"
-            ];
-    
+       
+       
             // Formatear la fecha
             const dia = parsedDate.getDate(); // Día del mes
             const mes = meses[parsedDate.getMonth()]; // Mes (en español)
             const anio = parsedDate.getFullYear(); // Año
-            const diaSemana = dias[parsedDate.getDay()]; // Día de la semana
+         // Día de la semana
     
             // Retornar la fecha formateada en formato "día de mes de año"
-            return `${diaSemana} ${dia} de ${mes} de ${anio}`;
+            return ` ${dia} de ${mes} de ${anio}`;
         } catch (error) {
             console.error("Error al formatear la fecha:", error);
             return "Fecha inválida";
         }
     };
-
-
-    const renderDatePeriodo = (date) => {
-        try {
-            const parsedDate = new Date(date);
-            if (isNaN(parsedDate)) {
-                return "Fecha inválida";
-            }
-    
-            // Crear un array de los nombres de los meses en español
-            const meses = [
-                "enero", "febrero", "marzo", "abril", "mayo", "junio", 
-                "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
-            ];
-    
-            // Obtener los valores del día, mes y año
-            const dia = parsedDate.getDate(); // Día del mes
-            const mes = meses[parsedDate.getMonth()]; // Mes (en español)
-            const anio = parsedDate.getFullYear(); // Año
-    
-            // Retornar la fecha en formato "día de mes de año"
-            return `${dia} de ${mes} de ${anio}`;
-        } catch (error) {
-            console.error("Error al formatear la fecha:", error);
-            return "Fecha inválida";
-        }
-    };
-    
     
 
 
@@ -743,7 +713,7 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
             ),
             dataIndex: "start_period",
             key: "start_period",
-            render: (text) => renderDatePeriodo(text),
+            render: (start_period) => <span className="font-bold">{start_period}</span>,
             sorter: (a, b) => new Date(a.start_period || 0) - new Date(b.start_period || 0),
             sortDirections: ["descend", "ascend"],
             width: 120,
@@ -769,7 +739,7 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
             ),
             dataIndex: "end_period",
             key: "end_period",
-            render: (text) => renderDatePeriodo(text),
+            render: (end_period) => <span className="font-bold">{end_period}</span>,
             sorter: (a, b) => new Date(a.end_period || 0) - new Date(b.end_period || 0),
             sortDirections: ["descend", "ascend"],
             width: 120,
