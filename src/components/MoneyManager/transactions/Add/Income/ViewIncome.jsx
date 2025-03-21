@@ -87,34 +87,16 @@ function ViewIncome({ entry, visible, onClose, activeTab}) {
 
   const renderDate = (date) => {
     try {
-        const parsedDate = new Date(date);
-        if (isNaN(parsedDate)) {
-            return "Fecha inválida";
-        }
-
-        // Crear un array de los nombres de los meses y días en español
-        const meses = [
-            "enero", "febrero", "marzo", "abril", "mayo", "junio", 
-            "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
-        ];
-        const dias = [
-            "domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"
-        ];
-
-        // Formatear la fecha
-        const dia = parsedDate.getDate(); // Día del mes
-        const mes = meses[parsedDate.getMonth()]; // Mes (en español)
-        const anio = parsedDate.getFullYear(); // Año
-        const diaSemana = dias[parsedDate.getDay()]; // Día de la semana
-
-        // Retornar la fecha formateada en formato "día de mes de año"
-        return `${diaSemana} ${dia} de ${mes} de ${anio}`;
-    } catch (error) {
-        console.error("Error al formatear la fecha:", error);
+      const parsedDate = DateTime.fromISO(date, { zone: "local" });
+      if (!parsedDate.isValid) {
         return "Fecha inválida";
+      }
+      return parsedDate.toFormat("dddd 'de' MMMM 'de' yyyy HH:mm", { locale: "es" });
+    } catch (error) {
+      console.error("Error al formatear la fecha:", error);
+      return "Fecha inválida";
     }
-};
-
+  };
 
   if (!visible) return null;
 
