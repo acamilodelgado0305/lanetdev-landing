@@ -713,10 +713,10 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
             ),
             dataIndex: "start_period",
             key: "start_period",
-            render: (text) => renderDate(text),
+            render: (start_period) => <span className="font-bold">{start_period}</span>,
             sorter: (a, b) => new Date(a.start_period || 0) - new Date(b.start_period || 0),
             sortDirections: ["descend", "ascend"],
-            width: 110,
+            width: 120,
         },
         {
             title: (
@@ -739,7 +739,7 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
             ),
             dataIndex: "end_period",
             key: "end_period",
-            render: (text) => renderDate(text),
+            render: (end_period) => <span className="font-bold">{end_period}</span>,
             sorter: (a, b) => new Date(a.end_period || 0) - new Date(b.end_period || 0),
             sortDirections: ["descend", "ascend"],
             width: 120,
@@ -762,7 +762,7 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
                 ) : (
                     "—"
                 ),
-            width: 60,
+            width: 130,
         }
     ];
 
