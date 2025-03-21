@@ -1,29 +1,26 @@
 import React, { useState, useEffect } from "react";
-import { Table, Input, Drawer, Button, Checkbox, DatePicker, Dropdown, Menu, Card, Tag, Tooltip, Typography, Divider, Select, Row, Col, Statistic } from "antd";
+import { Input, Drawer, Button, DatePicker, Select, Row, Col, Statistic } from "antd";
 import { format as formatDate, subMonths, addMonths, startOfMonth, endOfMonth, isWithinInterval, isValid } from "date-fns";
 import { es } from "date-fns/locale";
 import { DateTime } from "luxon";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import DateNavigator from "../DateNavigator";
 import axios from "axios";
 import {
     LeftOutlined,
     RightOutlined,
     DownloadOutlined,
-    FilterOutlined,
     SearchOutlined,
+    FilterOutlined,
     CalendarOutlined,
 } from "@ant-design/icons";
 import FloatingActionMenu from "../../FloatingActionMenu";
 import ViewIncome from "./ViewIncome";
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable"; // Correct import
+import autoTable from "jspdf-autotable";
 import Acciones from "../../Acciones";
 
-
 const { RangePicker } = DatePicker;
-const { Title, Text } = Typography;
 
 const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
     const navigate = useNavigate();
@@ -32,8 +29,6 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedImages, setSelectedImages] = useState([]);
     const [searchText, setSearchText] = useState({});
-
-    // State variables for selection and date filtering
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [showFilters, setShowFilters] = useState(false);
@@ -42,21 +37,10 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
     const [entries, setEntries] = useState([]);
     const [error, setError] = useState(null);
     const [typeFilter, setTypeFilter] = useState(null);
-
     const [dateRange, setDateRange] = useState(() => {
         const today = new Date();
         return [startOfMonth(today), endOfMonth(today)];
     });
-
-
-    const handleMonthChange = (newDate) => {
-        if (!newDate) {
-            console.warn("Fecha inválida detectada:", newDate);
-            return; // Evitamos asignar `false`
-        }
-        setDateRange([startOfMonth(newDate), endOfMonth(newDate)]);
-    };
-
     const [cashiers, setCashiers] = useState([]);
     const [cashierFilter, setCashierFilter] = useState(null);
     const [monthlyBalance, setMonthlyBalance] = useState(0);
@@ -64,47 +48,22 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
     const [monthlyExpenses, setMonthlyExpenses] = useState(0);
     const [loadingMonthlyData, setLoadingMonthlyData] = useState(false);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
 
-    const doc = new jsPDF();
-    autoTable(doc, {
-        // Table configuration
-    });
-
-    const handleEditSelected = () => {
-        if (selectedRowKeys.length === 1) {
-            navigate(`/index/moneymanager/ingresos/edit/${selectedRowKeys[0]}`, {
-                state: { returnTab: activeTab }, // Pasar activeTab como returnTab
-            });
+    const renderDate = (date) => {
+        try {
+            const parsedDate = DateTime.fromISO(date, { zone: "local" });
+            if (!parsedDate.isValid) return "Fecha inválida";
+            return parsedDate.toFormat("d 'de' MMMM 'de' yyyy HH:mm", { locale: "es" });
+        } catch (error) {
+            console.error("Error al formatear la fecha:", error);
+            return "Fecha inválida";
         }
     };
 
-
-    const handleDeleteSelected = () => {
-        handleBatchOperation('delete');
-    };
-
-    const handleDownloadSelected = () => {
-        if (selectedRowKeys.length === 0) {
-            Swal.fire({
-                title: 'Selección vacía',
-                text: 'Por favor, seleccione al menos un registro',
-                icon: 'warning',
-                confirmButtonColor: '#3085d6',
-                confirmButtonText: 'Entendido'
-            });
-            return;
-        }
-
-        const selectedItems = entries.filter(item => selectedRowKeys.includes(item.id));
-        generateInvoicePDF(selectedItems);
-    };
-
-    const handleExportSelected = () => {
-        handleBatchOperation('export');
-    };
-
-    const clearSelection = () => {
-        setSelectedRowKeys([]);
+    const handleMonthChange = (newDate) => {
+        if (!newDate) return;
+        setDateRange([startOfMonth(newDate), endOfMonth(newDate)]);
     };
 
     useEffect(() => {
@@ -131,7 +90,7 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'No se pudieron cargar los cajeros. Por favor, intente de nuevo.',
+                text: 'No se pudieron cargar los cajeros.',
             });
         }
     };
@@ -141,88 +100,14 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
         return cashier ? cashier.nombre : "Cajero no encontrado";
     };
 
-    const simulateLoading = () => {
-        setEntriesLoading(true);
-        setTimeout(() => {
-            setEntriesLoading(false);
-        }, 500);
+    const getAccountName = (accountId) => {
+        const account = accounts.find((acc) => acc.id === accountId);
+        return account ? account.name : "Cuenta no encontrada";
     };
 
-    useEffect(() => {
-        let filtered = [...entries];
-
-        if (typeFilter) {
-            filtered = filtered.filter(entry => entry.type === typeFilter);
-        }
-
-        if (cashierFilter) {
-            filtered = filtered.filter(entry => entry.cashier_id === cashierFilter);
-        }
-
-        if (dateRange && dateRange[0] && dateRange[1]) {
-            const startDate = new Date(dateRange[0]);
-            const endDate = new Date(dateRange[1]);
-
-            if (isValid(startDate) && isValid(endDate)) {
-                filtered = filtered.filter(entry => {
-                    const entryDate = new Date(entry.date);
-                    return isValid(entryDate) && isWithinInterval(entryDate, { start: startDate, end: endDate });
-                });
-            }
-        }
-
-        filtered = filtered.filter(entry =>
-            Object.keys(searchText).every(key => {
-                if (!searchText[key]) return true;
-                if (key === 'category_id') {
-                    return getCategoryName(entry[key])
-                        .toLowerCase()
-                        .includes(searchText[key].toLowerCase());
-                }
-                if (key === 'account_id') {
-                    return getAccountName(entry[key])
-                        .toLowerCase()
-                        .includes(searchText[key].toLowerCase());
-                }
-                if (key === 'cashier_id') {
-                    return getCashierName(entry[key])
-                        .toLowerCase()
-                        .includes(searchText[key].toLowerCase());
-                }
-                return entry[key] ?
-                    entry[key].toString().toLowerCase().includes(searchText[key].toLowerCase()) :
-                    true;
-            })
-        );
-
-        setFilteredEntries(filtered);
-    }, [entries, searchText, dateRange, typeFilter, cashierFilter, cashiers]);
-
-    const typeOptions = ["arqueo", "otro"];
-
-    const handleTypeFilterChange = (value) => {
-        setTypeFilter(value);
-    };
-
-    const handleCashierFilterChange = (value) => {
-        setCashierFilter(value);
-    };
-
-    const handleRowClick = (record) => {
-        setSelectedEntry(record);
-        setIsViewModalOpen(true);
-    };
-
-    const closeModal = () => {
-        setIsViewModalOpen(false);
-        setSelectedEntry(null);
-    };
-
-    const handleSearch = (value, dataIndex) => {
-        setSearchText((prev) => ({
-            ...prev,
-            [dataIndex]: value.toLowerCase(),
-        }));
+    const getCategoryName = (categoryId) => {
+        const category = categories.find((cat) => cat.id === categoryId);
+        return category ? category.name : "Categoría no encontrada";
     };
 
     const fetchData = async () => {
@@ -239,10 +124,8 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
             setError("Error al cargar los datos");
             Swal.fire({
                 title: 'Error',
-                text: 'No se pudieron cargar los datos. Intente nuevamente.',
+                text: 'No se pudieron cargar los datos.',
                 icon: 'error',
-                confirmButtonColor: '#3085d6',
-                confirmButtonText: 'Entendido'
             });
         } finally {
             setEntriesLoading(false);
@@ -250,119 +133,133 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
     };
 
     const fetchMonthlyData = async () => {
-        // Format the current month as yyyy-MM for the API
         const monthYear = formatDate(dateRange[0], "yyyy-MM");
         setLoadingMonthlyData(true);
-
         try {
             const API_BASE_URL = import.meta.env.VITE_API_FINANZAS || '/api';
             const response = await axios.get(`${API_BASE_URL}/balance/month/${monthYear}`);
             const { total_incomes, total_expenses, net_balance } = response.data;
-            const balanceValue = parseFloat(net_balance) || 0;
-            const incomeValue = parseFloat(total_incomes) || 0;
-            const expensesValue = parseFloat(total_expenses) || 0;
-
-            setMonthlyBalance(balanceValue);
-            setMonthlyIncome(incomeValue);
-            setMonthlyExpenses(expensesValue);
+            setMonthlyBalance(parseFloat(net_balance) || 0);
+            setMonthlyIncome(parseFloat(total_incomes) || 0);
+            setMonthlyExpenses(parseFloat(total_expenses) || 0);
         } catch (err) {
             setError("Error al cargar los datos mensuales");
-            console.error("Error fetching monthly data:", err.response ? err.response.data : err.message);
+            console.error("Error fetching monthly data:", err);
         } finally {
             setLoadingMonthlyData(false);
         }
     };
 
-    const goToPreviousMonth = () => {
-        simulateLoading();
-        const prevMonth = subMonths(currentMonth, 1);
-        setCurrentMonth(prevMonth);
-        setDateRange([startOfMonth(prevMonth), endOfMonth(prevMonth)]);
+    useEffect(() => {
+        let filtered = [...entries];
+
+        if (typeFilter) filtered = filtered.filter(entry => entry.type === typeFilter);
+        if (cashierFilter) filtered = filtered.filter(entry => entry.cashier_id === cashierFilter);
+        if (dateRange && dateRange[0] && dateRange[1]) {
+            const startDate = new Date(dateRange[0]);
+            const endDate = new Date(dateRange[1]);
+            if (isValid(startDate) && isValid(endDate)) {
+                filtered = filtered.filter(entry => {
+                    const entryDate = new Date(entry.date);
+                    return isValid(entryDate) && isWithinInterval(entryDate, { start: startDate, end: endDate });
+                });
+            }
+        }
+
+        filtered = filtered.filter(entry =>
+            Object.keys(searchText).every(key => {
+                if (!searchText[key]) return true;
+                if (key === 'category_id') return getCategoryName(entry[key]).toLowerCase().includes(searchText[key].toLowerCase());
+                if (key === 'account_id') return getAccountName(entry[key]).toLowerCase().includes(searchText[key].toLowerCase());
+                if (key === 'cashier_id') return getCashierName(entry[key]).toLowerCase().includes(searchText[key].toLowerCase());
+                return entry[key]?.toString().toLowerCase().includes(searchText[key].toLowerCase()) || true;
+            })
+        );
+
+        if (sortConfig.key) {
+            filtered.sort((a, b) => {
+                const aValue = a[sortConfig.key] || '';
+                const bValue = b[sortConfig.key] || '';
+                if (sortConfig.key === 'date' || sortConfig.key === 'start_period' || sortConfig.key === 'end_period') {
+                    return sortConfig.direction === 'ascend' ? new Date(aValue) - new Date(bValue) : new Date(bValue) - new Date(aValue);
+                }
+                if (sortConfig.key === 'amount') {
+                    return sortConfig.direction === 'ascend' ? aValue - bValue : bValue - aValue;
+                }
+                return sortConfig.direction === 'ascend' ? aValue.toString().localeCompare(bValue.toString()) : bValue.toString().localeCompare(aValue.toString());
+            });
+        }
+
+        setFilteredEntries(filtered);
+    }, [entries, searchText, dateRange, typeFilter, cashierFilter, sortConfig]);
+
+    const handleSearch = (value, dataIndex) => {
+        setSearchText((prev) => ({ ...prev, [dataIndex]: value }));
     };
 
-    const goToNextMonth = () => {
-        simulateLoading();
-        const nextMonth = addMonths(currentMonth, 1);
-        setCurrentMonth(nextMonth);
-        setDateRange([startOfMonth(nextMonth), endOfMonth(nextMonth)]);
+    const handleSort = (key) => {
+        setSortConfig((prev) => ({
+            key,
+            direction: prev.key === key && prev.direction === 'ascend' ? 'descend' : 'ascend',
+        }));
     };
 
-    const goToCurrentMonth = () => {
-        simulateLoading();
-        const now = new Date();
-        setCurrentMonth(now);
-        setDateRange([startOfMonth(now), endOfMonth(now)]);
+    const handleRowClick = (record) => {
+        setSelectedEntry(record);
+        setIsViewModalOpen(true);
     };
 
-    const onSelectChange = (newSelectedRowKeys) => {
-        setSelectedRowKeys(newSelectedRowKeys);
+    const closeModal = () => {
+        setIsViewModalOpen(false);
+        setSelectedEntry(null);
     };
 
-    const rowSelection = {
-        selectedRowKeys,
-        onChange: onSelectChange,
-        columnWidth: 48,
-        selections: [
-            Table.SELECTION_ALL,
-            Table.SELECTION_INVERT,
-            {
-                key: 'none',
-                text: 'Deseleccionar todo',
-                onSelect: () => setSelectedRowKeys([]),
-            },
-        ],
+    const formatCurrency = (amount) => {
+        return new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(amount);
+    };
+
+    const handleEditSelected = () => {
+        if (selectedRowKeys.length === 1) {
+            navigate(`/index/moneymanager/ingresos/edit/${selectedRowKeys[0]}`, { state: { returnTab: activeTab } });
+        }
+    };
+
+    const handleDeleteSelected = () => {
+        handleBatchOperation('delete');
+    };
+
+    const handleDownloadSelected = () => {
+        if (selectedRowKeys.length === 0) {
+            Swal.fire({ title: 'Selección vacía', text: 'Seleccione al menos un registro', icon: 'warning' });
+            return;
+        }
+        const selectedItems = entries.filter(item => selectedRowKeys.includes(item.id));
+        generateInvoicePDF(selectedItems);
     };
 
     const handleBatchOperation = (operation) => {
         if (selectedRowKeys.length === 0) {
-            Swal.fire({
-                title: 'Selección vacía',
-                text: 'Por favor, seleccione al menos un registro',
-                icon: 'warning',
-                confirmButtonColor: '#3085d6',
-                confirmButtonText: 'Entendido'
-            });
+            Swal.fire({ title: 'Selección vacía', text: 'Seleccione al menos un registro', icon: 'warning' });
             return;
         }
-
         const selectedItems = entries.filter(item => selectedRowKeys.includes(item.id));
-
         switch (operation) {
-            case 'download':
-                generateInvoicePDF(selectedItems);
-                break;
             case 'delete':
                 Swal.fire({
                     title: '¿Está seguro?',
-                    text: `¿Desea eliminar ${selectedRowKeys.length} registro(s) seleccionado(s)?`,
+                    text: `¿Desea eliminar ${selectedRowKeys.length} registro(s)?`,
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#3085d6',
                     confirmButtonText: 'Sí, eliminar',
-                    cancelButtonText: 'Cancelar'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        const deletePromises = selectedRowKeys.map(id => handleDeleteItem(id));
-
-                        Promise.all(deletePromises)
+                        Promise.all(selectedRowKeys.map(id => axios.delete(`${import.meta.env.VITE_API_FINANZAS || '/api'}/incomes/${id}`)))
                             .then(() => {
-                                Swal.fire(
-                                    '¡Eliminado!',
-                                    'Los registros han sido eliminados.',
-                                    'success'
-                                );
+                                Swal.fire('¡Eliminado!', 'Los registros han sido eliminados.', 'success');
                                 setSelectedRowKeys([]);
                                 fetchData();
                             })
-                            .catch(error => {
-                                console.error("Error eliminando registros:", error);
-                                Swal.fire(
-                                    'Error',
-                                    'Hubo un problema al eliminar los registros.',
-                                    'error'
-                                );
-                            });
+                            .catch(() => Swal.fire('Error', 'Hubo un problema al eliminar los registros.', 'error'));
                     }
                 });
                 break;
@@ -371,62 +268,33 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
         }
     };
 
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat("es-CO", {
-            style: "currency",
-            currency: "COP",
-            minimumFractionDigits: 0,
-        }).format(amount);
-    };
-
-    const handleDeleteItem = async (id) => {
-        try {
-            const API_BASE_URL = import.meta.env.VITE_API_FINANZAS || '/api';
-            await axios.delete(`${API_BASE_URL}/incomes/${id}`);
-            return id;
-        } catch (error) {
-            console.error(`Error eliminando el ingreso ${id}:`, error);
-            throw error;
-        }
-    };
-
-    const getAccountName = (accountId) => {
-        const account = accounts.find((acc) => acc.id === accountId);
-        return account ? account.name : "Cuenta no encontrada";
-    };
-
-    const getCategoryName = (categoryId) => {
-        const category = categories.find((cat) => cat.id === categoryId);
-        return category ? category.name : "Categoría no encontrada";
-    };
-
-    const downloadImage = async (url) => {
-        try {
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error("No se pudo descargar el archivo.");
-            }
-            const blob = await response.blob();
-
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = url.split("/").pop();
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            URL.revokeObjectURL(link.href);
-        } catch (error) {
-            console.error("Error al descargar el archivo:", error);
-        }
-    };
-
-    const downloadAllImages = async (urls) => {
-        try {
-            await Promise.all(urls.map((url) => downloadImage(url)));
-        } catch (error) {
-            console.error("Error al descargar las imágenes:", error);
-        }
+    const generateInvoicePDF = (items) => {
+        const doc = new jsPDF();
+        doc.setFontSize(18);
+        doc.text("FACTURA", 105, 20, { align: "center" });
+        doc.setFontSize(12);
+        doc.text("Nombre de la Empresa", 14, 30);
+        doc.text("NIT: 123456789-0", 14, 36);
+        doc.text("Dirección: Calle 123 #45-67, Bogotá, Colombia", 14, 42);
+        doc.text(`Fecha: ${formatDate(new Date(), "d MMMM yyyy", { locale: es })}`, 140, 30);
+        autoTable(doc, {
+            startY: 60,
+            head: [['N° Arqueo', 'Descripción', 'Fecha', 'Cuenta', 'Cajero', 'Monto', 'Desde', 'Hasta']],
+            body: items.map(item => [
+                item.arqueo_number || "N/A",
+                item.description,
+                renderDate(item.date),
+                getAccountName(item.account_id),
+                getCashierName(item.cashier_id),
+                formatCurrency(item.amount),
+                renderDate(item.start_period),
+                renderDate(item.end_period),
+            ]),
+            theme: 'grid',
+        });
+        const totalAmount = items.reduce((sum, item) => sum + (item.amount || 0), 0);
+        doc.text(`Total: ${formatCurrency(totalAmount)}`, 140, doc.lastAutoTable.finalY + 10);
+        doc.save(`Factura_Ingresos_${formatDate(new Date(), "yyyy-MM-dd")}.pdf`);
     };
 
     const openDrawer = (images) => {
@@ -438,317 +306,6 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
         setIsDrawerOpen(false);
         setSelectedImages([]);
     };
-    const renderDate = (date) => {
-        try {
-            // Tomar la fecha directamente sin ajustar zona horaria
-            const parsedDate = DateTime.fromISO(date);
-            if (!parsedDate.isValid) {
-                return "Fecha inválida";
-            }
-            // Formato con hora: "18 mar 2025 14:30"
-            return parsedDate.toFormat("d MMM yyyy HH:mm", { locale: "es" });
-        } catch (error) {
-            console.error("Error al formatear la fecha:", error);
-            return "Fecha inválida";
-        }
-    };
-
-    // New function to generate the PDF invoice
-    const generateInvoicePDF = (items) => {
-        const doc = new jsPDF();
-
-        // Header
-        doc.setFontSize(18);
-        doc.setFont("helvetica", "bold");
-        doc.text("FACTURA", 105, 20, { align: "center" });
-
-        // Company Info (customize as needed)
-        doc.setFontSize(12);
-        doc.setFont("helvetica", "normal");
-        doc.text("Nombre de la Empresa", 14, 30);
-        doc.text("NIT: 123456789-0", 14, 36);
-        doc.text("Dirección: Calle 123 #45-67, Bogotá, Colombia", 14, 42);
-        doc.text("Teléfono: +57 123 456 7890", 14, 48);
-
-        // Invoice Info
-        doc.text(`Fecha: ${formatDate(new Date(), "d MMMM yyyy", { locale: es })}`, 140, 30);
-        doc.text(`Factura N°: ${Math.floor(Math.random() * 1000000)}`, 140, 36); // Random invoice number
-
-        // Table of Items
-        const tableData = items.map(item => [
-            item.arqueo_number || "N/A",
-            item.description,
-            renderDate(item.date),
-            getAccountName(item.account_id),
-            getCashierName(item.cashier_id),
-            formatCurrency(item.amount),
-            renderDate(item.start_period),
-            renderDate(item.end_period)
-        ]);
-
-        // Use autoTable as a function
-        autoTable(doc, {
-            startY: 60,
-            head: [['N° Arqueo', 'Descripción', 'Fecha', 'Cuenta', 'Cajero', 'Monto', 'Desde', 'Hasta']],
-            body: tableData,
-            theme: 'grid',
-            styles: { fontSize: 10, cellPadding: 2 },
-            headStyles: { fillColor: [22, 160, 133], textColor: [255, 255, 255] },
-            columnStyles: {
-                0: { cellWidth: 20 },
-                1: { cellWidth: 40 },
-                2: { cellWidth: 20 },
-                3: { cellWidth: 20 },
-                4: { cellWidth: 20 },
-                5: { cellWidth: 20 },
-                6: { cellWidth: 20 },
-                7: { cellWidth: 20 },
-            },
-        });
-
-        // Total
-        const totalAmount = items.reduce((sum, item) => sum + (item.amount || 0), 0);
-        doc.setFontSize(12);
-        doc.text(`Total: ${formatCurrency(totalAmount)}`, 140, doc.lastAutoTable.finalY + 10);
-
-        // Footer
-        doc.setFontSize(10);
-        doc.text("Gracias por su negocio", 105, 280, { align: "center" });
-        doc.text("Este documento no tiene validez fiscal", 105, 286, { align: "center" });
-
-        // Save the PDF
-        doc.save(`Factura_Ingresos_${formatDate(new Date(), "yyyy-MM-dd")}.pdf`);
-    };
-
-    const columns = [
-        {
-            title: (
-                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                    Fecha y Hora
-                    <input
-                        prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
-                        onChange={(e) => handleSearch(e.target.value, "date")}
-                        style={{
-                            marginTop: 2,
-                            padding: 4,
-                            height: 28,
-                            fontSize: 12,
-                            border: "1px solid #d9d9d9",
-                            borderRadius: 4,
-                            outline: "none",
-                        }}
-                    />
-                </div>
-            ),
-            dataIndex: "date",
-            key: "date",
-            render: (text) => renderDate(text),
-            sorter: (a, b) => new Date(a.date) - new Date(b.date),
-            sortDirections: ["descend", "ascend"],
-            width: 180, // Aumentamos el ancho para dar espacio a la hora
-        },
-        {
-            title: (
-                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                    N° Arqueo
-                    <input
-                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                        onChange={(e) => handleSearch(e.target.value, "arqueo_number")}
-                        style={{
-                            marginTop: 2,
-                            padding: 4,
-                            height: 28,
-                            fontSize: 12,
-                            border: '1px solid #d9d9d9',
-                            borderRadius: 4,
-                            outline: 'none',
-                        }}
-                    />
-                </div>
-            ),
-            dataIndex: "arqueo_number",
-            key: "arqueo_number",
-            sorter: (a, b) => a.arqueo_number - b.arqueo_number,
-            render: (text) => <a>{text || "No disponible"}</a>,
-            width: 110,
-        },
-
-        {
-            title: (
-                <div className="flex flex-col" style={{ margin: "2px 0", gap: 1, lineHeight: 1 }}>
-                    Titulo
-                    <input
-                        prefix={<SearchOutlined style={{ color: '#d9d9d9' }} />}
-                        onChange={(e) => handleSearch(e.target.value, "description")}
-                        style={{
-                            marginTop: 2,
-                            padding: 4,
-                            height: 28,
-                            fontSize: 12,
-                            border: '1px solid #d9d9d9',
-                            borderRadius: 4,
-                            outline: 'none',
-                        }}
-                    />
-                </div>
-            ),
-            dataIndex: "description",
-            key: "description",
-            sorter: (a, b) => a.description.localeCompare(b.description),
-            sortDirections: ["ascend", "descend"],
-            ellipsis: true,
-            width: 300,
-        },
-        {
-            title: (
-                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                    Cuenta
-                    <input
-                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                        onChange={(e) => handleSearch(e.target.value, "account_id")}
-                        style={{
-                            marginTop: 2,
-                            padding: 4,
-                            height: 28,
-                            fontSize: 12,
-                            border: '1px solid #d9d9d9',
-                            borderRadius: 4,
-                            outline: 'none',
-                        }}
-                    />
-                </div>
-            ),
-            dataIndex: "account_id",
-            key: "account_id",
-            render: (id) => <Tag color="blue">{getAccountName(id)}</Tag>,
-            sorter: (a, b) => getAccountName(a.account_id).localeCompare(getAccountName(b.account_id)),
-            sortDirections: ["ascend", "descend"],
-            width: 150,
-        },
-        {
-            title: (
-                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                    Cajero
-                    <input
-                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                        onChange={(e) => handleSearch(e.target.value, "cashier_id")}
-                        style={{
-                            marginTop: 2,
-                            padding: 4,
-                            height: 28,
-                            fontSize: 12,
-                            border: '1px solid #d9d9d9',
-                            borderRadius: 4,
-                            outline: 'none',
-                        }}
-                    />
-                </div>
-            ),
-            dataIndex: "cashier_id",
-            key: "cashier_id",
-            sorter: (a, b) => getCashierName(a.cashier_id).localeCompare(getCashierName(b.cashier_id)),
-            render: (cashierId) => <Tag color="purple">{getCashierName(cashierId)}</Tag>,
-            width: 150,
-        },
-        {
-            title: (
-                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                    Monto Total
-                    <input
-                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                        onChange={(e) => handleSearch(e.target.value, "amount")}
-                        style={{
-                            marginTop: 2,
-                            padding: 4,
-                            height: 28,
-                            fontSize: 12,
-                            border: '1px solid #d9d9d9',
-                            borderRadius: 4,
-                            outline: 'none',
-                        }}
-                    />
-                </div>
-            ),
-            dataIndex: "amount",
-            key: "amount",
-            render: (amount) => <span className="font-bold">{formatCurrency(amount)}</span>,
-            sorter: (a, b) => a.amount - b.amount,
-            sortDirections: ["descend", "ascend"],
-            width: 140,
-        },
-        {
-            title: (
-                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                    Desde
-                    <input
-                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                        onChange={(e) => handleSearch(e.target.value, "start_period")}
-                        style={{
-                            marginTop: 2,
-                            padding: 4,
-                            height: 28,
-                            fontSize: 12,
-                            border: '1px solid #d9d9d9',
-                            borderRadius: 4,
-                            outline: 'none',
-                        }}
-                    />
-                </div>
-            ),
-            dataIndex: "start_period",
-            key: "start_period",
-            render: (start_period) => <span className="font-bold">{start_period}</span>,
-            sorter: (a, b) => new Date(a.start_period || 0) - new Date(b.start_period || 0),
-            sortDirections: ["descend", "ascend"],
-            width: 120,
-        },
-        {
-            title: (
-                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                    Hasta
-                    <Input
-                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                        onChange={(e) => handleSearch(e.target.value, "end_period")}
-                        style={{
-                            marginTop: 2,
-                            padding: 4,
-                            height: 28,
-                            fontSize: 12,
-                            border: '1px solid #d9d9d9',
-                            borderRadius: 4,
-                            outline: 'none',
-                        }}
-                    />
-                </div>
-            ),
-            dataIndex: "end_period",
-            key: "end_period",
-            render: (end_period) => <span className="font-bold">{end_period}</span>,
-            sorter: (a, b) => new Date(a.end_period || 0) - new Date(b.end_period || 0),
-            sortDirections: ["descend", "ascend"],
-            width: 120,
-        },
-        {
-            title: "Comprobante",
-            dataIndex: "voucher",
-            key: "voucher",
-            render: (vouchers) =>
-                Array.isArray(vouchers) && vouchers.length > 0 ? (
-                    <Button
-                        type="link"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            openDrawer(vouchers);
-                        }}
-                    >
-                        Ver comprobante
-                    </Button>
-                ) : (
-                    "—"
-                ),
-            width: 130,
-        }
-    ];
 
     return (
         <>
@@ -759,8 +316,7 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
                 handleEditSelected={handleEditSelected}
                 handleDeleteSelected={handleDeleteSelected}
                 handleDownloadSelected={handleDownloadSelected}
-                handleExportSelected={handleExportSelected}
-                clearSelection={clearSelection}
+                clearSelection={() => setSelectedRowKeys([])}
                 activeTab={activeTab}
                 loadingMonthlyData={loadingMonthlyData}
                 formatCurrency={formatCurrency}
@@ -782,87 +338,209 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
             {error && (
                 <div className="mb-4 p-4 bg-red-50 text-red-700 rounded border border-red-200">
                     <p className="font-medium">{error}</p>
-                    <Button
-                        type="primary"
-                        danger
-                        onClick={fetchData}
-                        className="mt-2"
-                    >
-                        Reintentar
-                    </Button>
+                    <Button type="primary" danger onClick={fetchData} className="mt-2">Reintentar</Button>
                 </div>
             )}
 
-            <div className="px-5 py-2 bg-white">
-                <Table
-                    rowSelection={rowSelection}
-                    dataSource={filteredEntries}
-                    columns={columns}
-                    rowKey={(record) => record.id}
-                    pagination={false}
-                    bordered
-                    size="middle"
-                    loading={entriesLoading}
-                    onRow={(record) => ({
-                        onClick: (e) => {
-                            if (e.target.tagName !== "INPUT" && e.target.tagName !== "BUTTON" && e.target.tagName !== "A") {
-                                handleRowClick(record);
-                            }
-                        },
-                    })}
-                    rowClassName="hover:bg-gray-50 transition-colors"
-                    scroll={{ x: 'max-content' }}
-                    summary={pageData => {
-                        if (pageData.length === 0) return null;
-                        const totalAmount = pageData.reduce((total, item) => total + (item.amount || 0), 0);
-                    }}
-                />
+            <div className="bg-white p-4 rounded-lg shadow">
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedRowKeys.length === filteredEntries.length && filteredEntries.length > 0}
+                                        onChange={(e) => setSelectedRowKeys(e.target.checked ? filteredEntries.map(e => e.id) : [])}
+                                    />
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <div className="flex flex-col gap-1">
+                                        Fecha y Hora
+                                        <Input
+                                            prefix={<SearchOutlined />}
+                                            onChange={(e) => handleSearch(e.target.value, "date")}
+                                            className="w-40"
+                                        />
+                                    </div>
+                                    <button onClick={() => handleSort("date")} className="ml-2">
+                                        {sortConfig.key === "date" && sortConfig.direction === "ascend" ? "↑" : "↓"}
+                                    </button>
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <div className="flex flex-col gap-1">
+                                        N° Arqueo
+                                        <Input
+                                            prefix={<SearchOutlined />}
+                                            onChange={(e) => handleSearch(e.target.value, "arqueo_number")}
+                                            className="w-32"
+                                        />
+                                    </div>
+                                    <button onClick={() => handleSort("arqueo_number")} className="ml-2">
+                                        {sortConfig.key === "arqueo_number" && sortConfig.direction === "ascend" ? "↑" : "↓"}
+                                    </button>
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <div className="flex flex-col gap-1">
+                                        Título
+                                        <Input
+                                            prefix={<SearchOutlined />}
+                                            onChange={(e) => handleSearch(e.target.value, "description")}
+                                            className="w-48"
+                                        />
+                                    </div>
+                                    <button onClick={() => handleSort("description")} className="ml-2">
+                                        {sortConfig.key === "description" && sortConfig.direction === "ascend" ? "↑" : "↓"}
+                                    </button>
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <div className="flex flex-col gap-1">
+                                        Cuenta
+                                        <Input
+                                            prefix={<SearchOutlined />}
+                                            onChange={(e) => handleSearch(e.target.value, "account_id")}
+                                            className="w-32"
+                                        />
+                                    </div>
+                                    <button onClick={() => handleSort("account_id")} className="ml-2">
+                                        {sortConfig.key === "account_id" && sortConfig.direction === "ascend" ? "↑" : "↓"}
+                                    </button>
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <div className="flex flex-col gap-1">
+                                        Cajero
+                                        <Input
+                                            prefix={<SearchOutlined />}
+                                            onChange={(e) => handleSearch(e.target.value, "cashier_id")}
+                                            className="w-32"
+                                        />
+                                    </div>
+                                    <button onClick={() => handleSort("cashier_id")} className="ml-2">
+                                        {sortConfig.key === "cashier_id" && sortConfig.direction === "ascend" ? "↑" : "↓"}
+                                    </button>
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <div className="flex flex-col gap-1">
+                                        Monto Total
+                                        <Input
+                                            prefix={<SearchOutlined />}
+                                            onChange={(e) => handleSearch(e.target.value, "amount")}
+                                            className="w-32"
+                                        />
+                                    </div>
+                                    <button onClick={() => handleSort("amount")} className="ml-2">
+                                        {sortConfig.key === "amount" && sortConfig.direction === "ascend" ? "↑" : "↓"}
+                                    </button>
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <div className="flex flex-col gap-1">
+                                        Desde
+                                        <Input
+                                            prefix={<SearchOutlined />}
+                                            onChange={(e) => handleSearch(e.target.value, "start_period")}
+                                            className="w-32"
+                                        />
+                                    </div>
+                                    <button onClick={() => handleSort("start_period")} className="ml-2">
+                                        {sortConfig.key === "start_period" && sortConfig.direction === "ascend" ? "↑" : "↓"}
+                                    </button>
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <div className="flex flex-col gap-1">
+                                        Hasta
+                                        <Input
+                                            prefix={<SearchOutlined />}
+                                            onChange={(e) => handleSearch(e.target.value, "end_period")}
+                                            className="w-32"
+                                        />
+                                    </div>
+                                    <button onClick={() => handleSort("end_period")} className="ml-2">
+                                        {sortConfig.key === "end_period" && sortConfig.direction === "ascend" ? "↑" : "↓"}
+                                    </button>
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Comprobante
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {entriesLoading ? (
+                                <tr>
+                                    <td colSpan="10" className="px-6 py-4 text-center text-gray-500">
+                                        Cargando...
+                                    </td>
+                                </tr>
+                            ) : filteredEntries.length === 0 ? (
+                                <tr>
+                                    <td colSpan="10" className="px-6 py-4 text-center text-gray-500">
+                                        No hay datos disponibles
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredEntries.map((entry) => (
+                                    <tr
+                                        key={entry.id}
+                                        className="hover:bg-gray-50 transition-colors cursor-pointer"
+                                        onClick={(e) => {
+                                            if (e.target.tagName !== "INPUT" && e.target.tagName !== "BUTTON") {
+                                                handleRowClick(entry);
+                                            }
+                                        }}
+                                    >
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedRowKeys.includes(entry.id)}
+                                                onChange={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectedRowKeys((prev) =>
+                                                        e.target.checked
+                                                            ? [...prev, entry.id]
+                                                            : prev.filter((id) => id !== entry.id)
+                                                    );
+                                                }}
+                                            />
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{renderDate(entry.date)}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{entry.arqueo_number || "N/A"}</td>
+                                        <td className="px-6 py-4 text-sm text-gray-900">{entry.description}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                {getAccountName(entry.account_id)}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                                {getCashierName(entry.cashier_id)}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">{formatCurrency(entry.amount)}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{renderDate(entry.start_period)}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{renderDate(entry.end_period)}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {Array.isArray(entry.voucher) && entry.voucher.length > 0 ? (
+                                                <Button
+                                                    type="link"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        openDrawer(entry.voucher);
+                                                    }}
+                                                >
+                                                    Ver comprobante
+                                                </Button>
+                                            ) : (
+                                                "—"
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <ViewIncome entry={selectedEntry} visible={isViewModalOpen} onClose={closeModal} activeTab={activeTab} />
-
-            <style>
-                {`
-                .ant-table-cell {
-                    padding: 12px !important;
-                    font-size: 14px;
-                }
-                
-                .ant-table-thead > tr > th {
-                    background-color: #f5f5f5;
-                    font-weight: 600;
-                }
-                
-                .ant-table-row:hover {
-                    cursor: pointer;
-                }
-                
-                .ant-checkbox-wrapper {
-                    cursor: default;
-                }
-                
-                .ant-tag {
-                    margin-right: 0;
-                }
-                
-                .ant-input-affix-wrapper {
-                    border-radius: 4px;
-                }
-                
-                .ant-card-head {
-                    min-height: auto;
-                    padding: 0;
-                }
-                
-                .hover\\:bg-gray-50:hover {
-                    background-color: #f9f9f9;
-                }
-                
-                .transition-colors {
-                    transition: background-color 0.3s ease;
-                }
-                `}
-            </style>
 
             <Drawer
                 visible={isDrawerOpen}
@@ -904,10 +582,33 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
                     </div>
                 </div>
             </Drawer>
-
-
         </>
     );
+};
+
+const downloadImage = async (url) => {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("No se pudo descargar el archivo.");
+        const blob = await response.blob();
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = url.split("/").pop();
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+    } catch (error) {
+        console.error("Error al descargar el archivo:", error);
+    }
+};
+
+const downloadAllImages = async (urls) => {
+    try {
+        await Promise.all(urls.map((url) => downloadImage(url)));
+    } catch (error) {
+        console.error("Error al descargar las imágenes:", error);
+    }
 };
 
 export default IncomeTable;
