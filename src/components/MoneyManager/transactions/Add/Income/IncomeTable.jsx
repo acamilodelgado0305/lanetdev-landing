@@ -52,14 +52,16 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
 
     const renderDate = (date) => {
         try {
-            const parsedDate = DateTime.fromISO(date, { zone: "local" });
-            if (!parsedDate.isValid) return "Fecha inválida";
-            return parsedDate.toFormat("d 'de' MMMM 'de' yyyy HH:mm", { locale: "es" });
-        } catch (error) {
-            console.error("Error al formatear la fecha:", error);
+          const parsedDate = DateTime.fromISO(date, { zone: "local" });
+          if (!parsedDate.isValid) {
             return "Fecha inválida";
+          }
+          return parsedDate.toFormat("d 'de' MMMM 'de' yyyy HH:mm", { locale: "es" });
+        } catch (error) {
+          console.error("Error al formatear la fecha:", error);
+          return "Fecha inválida";
         }
-    };
+      };
 
     const handleMonthChange = (newDate) => {
         if (!newDate) return;
