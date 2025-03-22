@@ -261,9 +261,22 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
             const API_BASE_URL = import.meta.env.VITE_API_FINANZAS || '/api';
             const response = await axios.get(`${API_BASE_URL}/incomes`);
             
-            // Usar el formato de fecha original para ordenar sin crear objetos Date
-            const sortedEntries = response.data.sort((a, b) => {
-                // Comparación directa de strings (asumiendo formato ISO)
+            // Procesar las fechas para manejarlas correctamente
+            const processedEntries = response.data.map(entry => {
+                // Crear una copia del entry para no mutar el original
+                const processedEntry = { ...entry };
+                
+                // Si la fecha viene con 'Z' al final (UTC), la convertimos a la zona horaria local
+                if (typeof processedEntry.date === 'string' && processedEntry.date.endsWith('Z')) {
+                    // Mantener la fecha en su formato original sin conversión a UTC
+                    processedEntry.date = processedEntry.date.replace('Z', '');
+                }
+                
+                return processedEntry;
+            });
+            
+            // Ordenar las entradas por fecha
+            const sortedEntries = processedEntries.sort((a, b) => {
                 return b.date.localeCompare(a.date);
             });
             
