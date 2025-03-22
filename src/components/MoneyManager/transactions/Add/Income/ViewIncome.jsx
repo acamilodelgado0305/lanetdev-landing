@@ -6,20 +6,14 @@ import { CloseOutlined, EditOutlined, ShareAltOutlined } from "@ant-design/icons
 import { useNavigate } from "react-router-dom";
 import { getAccounts } from "../../../../../services/moneymanager/moneyService";
 import { getCajeros } from "../../../../../services/cajeroService";
-import { format, utcToZonedTime } from 'date-fns-tz';
 
 
-
-
-function ViewIncome({ entry, visible, onClose, activeTab }) {
+function ViewIncome({ entry, visible, onClose, activeTab}) {
   const [incomeData, setIncomeData] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const [accounts, setAccounts] = useState([]);
   const [cajeros, setCajeros] = useState([]);
-  const fechaAPI = new Date('2025-03-22T18:45:25Z'); // Fecha en UTC desde la API
-  const fechaColombia = utcToZonedTime(fechaAPI, 'America/Bogota');
-  console.log(format(fechaColombia, 'dd/MM/yyyy HH:mm:ss')); // Mostrará "22/03/2025 13:45:25"
 
   useEffect(() => {
     if (visible && entry?.id) {
@@ -178,7 +172,7 @@ function ViewIncome({ entry, visible, onClose, activeTab }) {
                 </div>
                 <div className="col-span-2">
                   <span className="font-medium text-gray-900">Período:</span>{" "}
-                  {format(fechaColombia(incomeData.start_period))} - {format(fechaColombia(incomeData.end_period))}
+                  {renderDate(incomeData.start_period)} - {renderDate(incomeData.end_period)}
                 </div>
               </div>
             </div>
@@ -251,7 +245,7 @@ function ViewIncome({ entry, visible, onClose, activeTab }) {
                   <div className="flex justify-between border-t border-gray-200 pt-3">
                     <span className="font-semibold text-gray-900">Total Neto</span>
                     <span className="font-semibold text-green-600 text-lg">
-                      {formatCurrency(incomeData.amount)}
+                    {formatCurrency(incomeData.amount)}
                     </span>
                   </div>
                 </div>
