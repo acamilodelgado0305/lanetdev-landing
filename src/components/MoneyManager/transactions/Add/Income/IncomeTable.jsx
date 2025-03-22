@@ -260,7 +260,13 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
         try {
             const API_BASE_URL = import.meta.env.VITE_API_FINANZAS || '/api';
             const response = await axios.get(`${API_BASE_URL}/incomes`);
-            const sortedEntries = response.data.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            // Usar el formato de fecha original para ordenar sin crear objetos Date
+            const sortedEntries = response.data.sort((a, b) => {
+                // Comparación directa de strings (asumiendo formato ISO)
+                return b.date.localeCompare(a.date);
+            });
+            
             setEntries(sortedEntries);
             setFilteredEntries(sortedEntries);
             setError(null);
