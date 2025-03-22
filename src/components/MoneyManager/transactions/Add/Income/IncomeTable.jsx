@@ -49,32 +49,62 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
     });
 
 
-    const renderDate = (date) => {
-        try {
-            const parsedDate = new Date(date);
-            if (isNaN(parsedDate)) {
-                return "Fecha inválida";
-            }
-    
-            // Crear un array de los nombres de los meses y días en español
-            const meses = [
-                "enero", "febrero", "marzo", "abril", "mayo", "junio", 
-                "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+  const renderDate = (date) => {
+      if (!date) return "Sin fecha";
+      
+      console.log("Fecha original recibida:", date, "Tipo:", typeof date);
+      
+      try {
+        let parsedDate;
+        
+        // Si es un string, intentamos varios métodos de parsing
+        if (typeof date === 'string') {
+          // Eliminar 'Z' si existe para evitar conversión UTC
+          const cleanDate = date.endsWith('Z') ? date.substring(0, date.length - 1) : date;
+          console.log("Fecha limpia:", cleanDate);
+          
+          // Intentar primero con fromISO (formato ISO)
+          parsedDate = DateTime.fromISO(cleanDate, { zone: "America/Bogota" });
+          
+          // Si no es válido, intentar con fromSQL (formato de base de datos)
+          if (!parsedDate.isValid) {
+            console.log("Intento con fromSQL");
+            parsedDate = DateTime.fromSQL(cleanDate, { zone: "America/Bogota" });
+          }
+          
+          // Si sigue sin ser válido, intentar con fromFormat para algunos formatos comunes
+          if (!parsedDate.isValid) {
+            console.log("Intento con formatos específicos");
+            const formats = [
+              "yyyy-MM-dd HH:mm:ss",
+              "yyyy-MM-dd'T'HH:mm:ss",
+              "dd/MM/yyyy HH:mm:ss",
+              "yyyy-MM-dd"
             ];
-       
-       
-            // Formatear la fecha
-            const dia = parsedDate.getDate(); // Día del mes
-            const mes = meses[parsedDate.getMonth()]; // Mes (en español)
-            const anio = parsedDate.getFullYear(); // Año
-         // Día de la semana
-    
-            // Retornar la fecha formateada en formato "día de mes de año"
-            return ` ${dia} de ${mes} de ${anio}`;
-        } catch (error) {
-            console.error("Error al formatear la fecha:", error);
-            return "Fecha inválida";
+            
+            for (const format of formats) {
+              parsedDate = DateTime.fromFormat(cleanDate, format, { zone: "America/Bogota" });
+              if (parsedDate.isValid) break;
+            }
+          }
+        } else if (date instanceof Date) {
+          // Si es un objeto Date, convertirlo directamente
+          parsedDate = DateTime.fromJSDate(date, { zone: "America/Bogota" });
         }
+        
+        // Verificar si se pudo parsear correctamente
+        if (!parsedDate || !parsedDate.isValid) {
+          console.warn("No se pudo parsear la fecha:", date);
+          return "Fecha inválida";
+        }
+        
+        console.log("Fecha parseada correctamente:", parsedDate.toISO());
+        // Formatear con configuración regional española
+        return parsedDate.setLocale('es').toFormat("d 'de' MMMM 'de' yyyy HH:mm");
+      } catch (error) {
+        console.error("Error al formatear la fecha:", error, "Fecha original:", date);
+        return "Fecha inválida";
+      }
     };
     
 
@@ -732,7 +762,7 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
             ),
             dataIndex: "start_period",
             key: "start_period",
-            render: (start_period) => <span className="font-bold">{start_period}</span>,
+            render: (text) => renderDate(text),
             sorter: (a, b) => new Date(a.start_period || 0) - new Date(b.start_period || 0),
             sortDirections: ["descend", "ascend"],
             width: 120,
@@ -758,7 +788,7 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
             ),
             dataIndex: "end_period",
             key: "end_period",
-            render: (end_period) => <span className="font-bold">{end_period}</span>,
+            render: (text) => renderDate(text),
             sorter: (a, b) => new Date(a.end_period || 0) - new Date(b.end_period || 0),
             sortDirections: ["descend", "ascend"],
             width: 120,
