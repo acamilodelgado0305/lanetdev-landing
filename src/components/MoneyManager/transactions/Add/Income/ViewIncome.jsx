@@ -91,7 +91,7 @@ function ViewIncome({ entry, visible, onClose, activeTab}) {
       if (!parsedDate.isValid) {
         return "Fecha inválida";
       }
-      return parsedDate.toFormat("dddd 'de' MMMM 'de' yyyy HH:mm", { locale: "es" });
+      return parsedDate.toFormat("d 'de' MMMM 'de' yyyy HH:mm", { locale: "es" });
     } catch (error) {
       console.error("Error al formatear la fecha:", error);
       return "Fecha inválida";
