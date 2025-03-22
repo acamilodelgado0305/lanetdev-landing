@@ -3,6 +3,9 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    'process.env.TZ': '"America/Bogota"', // Forza la zona horaria a Colombia
+  },
   server: {
     proxy: {
       '/api': {
