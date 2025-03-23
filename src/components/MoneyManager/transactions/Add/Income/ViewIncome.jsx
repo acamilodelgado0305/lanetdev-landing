@@ -8,7 +8,7 @@ import { getAccounts } from "../../../../../services/moneymanager/moneyService";
 import { getCajeros } from "../../../../../services/cajeroService";
 
 
-function ViewIncome({ entry, visible, onClose, activeTab}) {
+function ViewIncome({ entry, visible, onClose, activeTab }) {
   const [incomeData, setIncomeData] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -88,27 +88,27 @@ function ViewIncome({ entry, visible, onClose, activeTab}) {
 
   const renderDate = (date) => {
     if (!date) return "Sin fecha";
-    
+
     console.log("Fecha original recibida:", date, "Tipo:", typeof date);
-    
+
     try {
       let parsedDate;
-      
+
       // Si es un string, intentamos varios métodos de parsing
       if (typeof date === 'string') {
         // Eliminar 'Z' si existe para evitar conversión UTC
         const cleanDate = date.endsWith('Z') ? date.substring(0, date.length - 1) : date;
         console.log("Fecha limpia:", cleanDate);
-        
+
         // Intentar primero con fromISO (formato ISO)
         parsedDate = DateTime.fromISO(cleanDate, { zone: "America/Bogota" });
-        
+
         // Si no es válido, intentar con fromSQL (formato de base de datos)
         if (!parsedDate.isValid) {
           console.log("Intento con fromSQL");
           parsedDate = DateTime.fromSQL(cleanDate, { zone: "America/Bogota" });
         }
-        
+
         // Si sigue sin ser válido, intentar con fromFormat para algunos formatos comunes
         if (!parsedDate.isValid) {
           console.log("Intento con formatos específicos");
@@ -118,7 +118,7 @@ function ViewIncome({ entry, visible, onClose, activeTab}) {
             "dd/MM/yyyy HH:mm:ss",
             "yyyy-MM-dd"
           ];
-          
+
           for (const format of formats) {
             parsedDate = DateTime.fromFormat(cleanDate, format, { zone: "America/Bogota" });
             if (parsedDate.isValid) break;
@@ -128,13 +128,13 @@ function ViewIncome({ entry, visible, onClose, activeTab}) {
         // Si es un objeto Date, convertirlo directamente
         parsedDate = DateTime.fromJSDate(date, { zone: "America/Bogota" });
       }
-      
+
       // Verificar si se pudo parsear correctamente
       if (!parsedDate || !parsedDate.isValid) {
         console.warn("No se pudo parsear la fecha:", date);
         return "Fecha inválida";
       }
-      
+
       console.log("Fecha parseada correctamente:", parsedDate.toISO());
       // Formatear con configuración regional española
       return parsedDate.setLocale('es').toFormat("d 'de' MMMM 'de' yyyy HH:mm");
@@ -209,6 +209,9 @@ function ViewIncome({ entry, visible, onClose, activeTab}) {
             {/* Información general */}
             <div className="mb-6">
               <div className="grid grid-cols-2 gap-4 text-sm text-gray-600" style={{ fontFamily: "SF Pro Text, sans-serif" }}>
+                <div>
+                  <span className="font-medium font-semibold text-gray-900">Titulo: </span> {(incomeData.description)}
+                </div>
                 <div>
                   <span className="font-medium text-gray-900">Cajero:</span> {getCajeroName(incomeData.cashier_id)}
                 </div>
@@ -290,7 +293,7 @@ function ViewIncome({ entry, visible, onClose, activeTab}) {
                   <div className="flex justify-between border-t border-gray-200 pt-3">
                     <span className="font-semibold text-gray-900">Total Neto</span>
                     <span className="font-semibold text-green-600 text-lg">
-                    {formatCurrency(incomeData.amount)}
+                      {formatCurrency(incomeData.amount)}
                     </span>
                   </div>
                 </div>
