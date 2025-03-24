@@ -29,14 +29,15 @@ import Clientes from "./components/clientes/clientes"
 import SearchResults from "./components/search/SearchResults";
 import Network from "./components/Network/Network.jsx";
 import Configuracion from "./components/MoneyManager/configuracion/Configuracion.jsx";
-import Terceros from "./components/MoneyManager/Terceros/Terceros.jsx";
+
 import AddIncome from "./components/MoneyManager/transactions/Add/Income/AddIncome.jsx";
 import AddExpense from "./components/MoneyManager/transactions/Add/expense/AddExpense.jsx";
-import CashiersPage from "./components/MoneyManager/Cajeros/Cajeros.jsx";
+
 import PaginaProveedores from "./components/MoneyManager/proveedores/ProvidersPage.jsx";
-import AddCajero from "./components/MoneyManager/Cajeros/AddCajero.jsx";
+
 import IncomeView from "./components/MoneyManager/transactions/Add/Income/ViewIncome.jsx";
 import Administracion from "./components/Administracion/Administracion.jsx";
+import InicioTerceros from "./components/Terceros/InicioTerceros.jsx";
 import 'antd/dist/reset.css';
 
 
@@ -77,12 +78,13 @@ const router = createBrowserRouter([
         children: [
           {
             path: "cajeros",
-            element: <CashiersPage />,
+            element: <InicioTerceros />,
           },
+          
           {
           
             path: "proveedores",
-            element: <PaginaProveedores />,
+            element: <InicioTerceros />,
           },
 
         ],
@@ -139,10 +141,7 @@ const router = createBrowserRouter([
             path: "calendario",
             element: <Calendario />,
           },
-          {
-            path: "terceros",
-            element: <Terceros />,
-          },
+          
           {
             path: "Pagos-Pendientes",
             element: <RenderPaymentsList />,

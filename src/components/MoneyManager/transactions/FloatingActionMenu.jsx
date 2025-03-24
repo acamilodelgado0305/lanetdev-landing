@@ -87,10 +87,6 @@ const FloatingActionMenu = ({
               }}
             />
           </Tooltip>
-
-          {/* Botón Eliminar */}
-          
-
           
         </div>
       </div>
