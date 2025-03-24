@@ -251,7 +251,7 @@ const AddCajero = ({ onCashierAdded, cashierToEdit, visible, onClose }) => {
                   disabled={!editMode}
                 />
                 <Text className="text-gray-600 text-sm">
-                  Agregar importe personalizado
+                  Agregar importes fijos
                 </Text>
               </div>
               {enableCustomImport && (
