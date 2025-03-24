@@ -16,8 +16,6 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable"; // Import autoTable
 import { format as formatDate } from "date-fns";
 import { es } from "date-fns/locale";
-import ImportePersonalizado from "../../../../Terceros/Cajeros/ImportePersonalizado";
-
 
 const apiUrl = import.meta.env.VITE_API_FINANZAS;
 const { Title, Text } = Typography;
@@ -59,47 +57,9 @@ const AddIncome = ({ onTransactionAdded }) => {
     avgCommission: 0,
   });
 
-  const [hasImportePersonalizado, setHasImportePersonalizado] = useState(false);
-  const [importePersonalizadoAmount, setImportePersonalizadoAmount] = useState("");
-
-  const [expenseTableData, setExpenseTableData] = useState({
-      items: [{
-        key: '1',
-        provider: '',
-        product: '',
-        quantity: 1.00,
-        unitPrice: 0.00,
-        purchaseValue: 0.00,
-        discount: 0.00,
-        taxCharge: 0.00,
-        taxWithholding: 0.00,
-        total: 0.00,
-        categoria: "",
-      }],
-      totals: {
-        totalBruto: 0,
-        descuentos: 0,
-        subtotal: 0,
-        iva: 0,
-        retencion: 0,
-        totalNeto: 0,
-        ivaPercentage: "0",
-        retencionPercentage: "0",
-        totalImpuestos: 0,
-      },
-    });
-  
-
   const handleCancel = () => {
     // Siempre pasar el returnTab correcto al cancelar
     navigate("/index/moneymanager/transactions", { state: { activeTab: returnTab } });
-  };
-
-  const handleItemsChange = (updatedItems) => {
-    setExpenseTableData(prev => ({
-      ...prev,
-      items: updatedItems
-    }));
   };
 
   useEffect(() => {
@@ -169,7 +129,6 @@ const AddIncome = ({ onTransactionAdded }) => {
         id_cajero: cashier.id_cajero,
         nombre: cashier.nombre,
         comision_porcentaje: cashier.comision_porcentaje,
-        importe_personalizado: cashier.importe_personalizado || false, // Nuevo campo
       }));
       setCashiers(mappedCashiers);
     } catch (error) {
@@ -236,8 +195,7 @@ const AddIncome = ({ onTransactionAdded }) => {
     const fev = parseFloat(fevAmount) || 0;
     const diverso = parseFloat(diversoAmount) || 0;
     const otros = parseFloat(otherIncome) || 0;
-    const personalizado = hasImportePersonalizado ? (parseFloat(importePersonalizadoAmount) || 0) : 0;
-    return fev + diverso + otros + personalizado;
+    return fev + diverso + otros;
   };
 
   const handleAmountChange = (e, field) => {
@@ -248,17 +206,7 @@ const AddIncome = ({ onTransactionAdded }) => {
     else if (field === "diverso") setDiversoAmount(numericValue);
     else if (field === "other_incomes") setOtherIncome(numericValue);
     else if (field === "cashReceived") setCashReceived(numericValue);
-    else if (field === "importePersonalizado") setImportePersonalizadoAmount(numericValue); // Nuevo campo
   };
-
-  const handleTotalsChange = (updatedTotals) => {
-    setExpenseTableData(prev => ({
-      ...prev,
-      totals: updatedTotals
-    }));
-  };
-
-  
 
   const handleSave = async () => {
     try {
@@ -558,10 +506,6 @@ const AddIncome = ({ onTransactionAdded }) => {
                       ? parseFloat(selectedCashier.comision_porcentaje)
                       : 0;
                   setCommissionPorcentaje(commissionPercentage);
-                  // Actualizar si tiene importe personalizado
-                  setHasImportePersonalizado(selectedCashier.importe_personalizado || false);
-                  // Reiniciar el importe personalizado al cambiar de cajero
-                  setImportePersonalizadoAmount("");
                 }
               }}
               className="w-64"
@@ -658,21 +602,6 @@ const AddIncome = ({ onTransactionAdded }) => {
                       className="w-40"
                     />
                   </div>
-                  {hasImportePersonalizado && (
-    <>
-      <div className="flex justify-between">
-        <span>Importe Personalizado:</span>
-       
-      </div>
-      <div className="bg-white w-full">
-        <ImportePersonalizado
-          items={expenseTableData.items}
-          onItemsChange={handleItemsChange}
-          onTotalsChange={handleTotalsChange}
-        />
-      </div>
-    </>
-  )}
                 </div>
               </div>
               <div className="bg-gray-50 p-4">
