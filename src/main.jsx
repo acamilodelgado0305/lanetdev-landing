@@ -37,6 +37,8 @@ import PaginaProveedores from "./components/MoneyManager/proveedores/ProvidersPa
 import AddCajero from "./components/MoneyManager/Cajeros/AddCajero.jsx";
 import IncomeView from "./components/MoneyManager/transactions/Add/Income/ViewIncome.jsx";
 import Administracion from "./components/Administracion/Administracion.jsx";
+import InicioTerceros from "./components/MoneyManager/Terceros/InicioTerceros.jsx";
+import NuevoCajero from "./components/MoneyManager/Terceros/Cajeros/NuevoCajero.jsx";
 import 'antd/dist/reset.css';
 
 
@@ -77,12 +79,16 @@ const router = createBrowserRouter([
         children: [
           {
             path: "cajeros",
-            element: <CashiersPage />,
+            element: <InicioTerceros />,
+          },
+          {
+            path: "nuevo-cajero",
+            element: <NuevoCajero />,
           },
           {
           
             path: "proveedores",
-            element: <PaginaProveedores />,
+            element: <InicioTerceros />,
           },
 
         ],
