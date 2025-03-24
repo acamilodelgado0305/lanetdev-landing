@@ -34,11 +34,10 @@ import AddIncome from "./components/MoneyManager/transactions/Add/Income/AddInco
 import AddExpense from "./components/MoneyManager/transactions/Add/expense/AddExpense.jsx";
 import CashiersPage from "./components/MoneyManager/Cajeros/Cajeros.jsx";
 import PaginaProveedores from "./components/MoneyManager/proveedores/ProvidersPage.jsx";
-import AddCajero from "./components/MoneyManager/Cajeros/AddCajero.jsx";
+
 import IncomeView from "./components/MoneyManager/transactions/Add/Income/ViewIncome.jsx";
 import Administracion from "./components/Administracion/Administracion.jsx";
-import InicioTerceros from "./components/MoneyManager/Terceros/InicioTerceros.jsx";
-import NuevoCajero from "./components/MoneyManager/Terceros/Cajeros/NuevoCajero.jsx";
+import InicioTerceros from "./components/Terceros/InicioTerceros.jsx";
 import 'antd/dist/reset.css';
 
 
@@ -81,10 +80,7 @@ const router = createBrowserRouter([
             path: "cajeros",
             element: <InicioTerceros />,
           },
-          {
-            path: "nuevo-cajero",
-            element: <NuevoCajero />,
-          },
+          
           {
           
             path: "proveedores",

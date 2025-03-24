@@ -6,7 +6,7 @@ import ProveedoresTable from "./Proveedores/ProveedoresTable";
 import CajerosTable from "./Cajeros/CajerosTable";
 import axios from "axios";
 import { PlusOutlined, ArrowDownOutlined } from '@ant-design/icons';
-import AddCajero from "../Cajeros/AddCajero";
+import AddCajero from "./Cajeros/NuevoCajero";
 
 const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
 

@@ -1,7 +1,7 @@
 import React from "react";
 import { Button, Select, Divider, Tag, Typography } from "antd";
 import { FilterOutlined } from "@ant-design/icons";
-import FloatingActionMenu from "../transactions/FloatingActionMenu"; 
+import FloatingActionMenu from "../MoneyManager/transactions/FloatingActionMenu";
 
 
 const { Text } = Typography;
