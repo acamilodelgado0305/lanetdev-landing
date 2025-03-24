@@ -77,19 +77,6 @@ const ImportePersonalizado = ({ items, onItemsChange, onTotalsChange }) => {
   // Definición de las columnas de la tabla
   const columns = [
     {
-      title: 'Producto',
-      dataIndex: 'product',
-      width: columnWidths.product,
-      render: (text, record) => (
-        <Input
-          value={text}
-          style={{ width: '100%' }}
-          onChange={(e) => handleValueChange(record.key, 'product', e.target.value)}
-          placeholder="Nombre del producto"
-        />
-      )
-    },
-    {
       title: 'Acción',
       dataIndex: 'action',
       width: columnWidths.action,
@@ -104,6 +91,20 @@ const ImportePersonalizado = ({ items, onItemsChange, onTotalsChange }) => {
         </Select>
       )
     },
+    {
+      title: 'Descripción',
+      dataIndex: 'product',
+      width: columnWidths.product,
+      render: (text, record) => (
+        <Input
+          value={text}
+          style={{ width: '100%' }}
+          onChange={(e) => handleValueChange(record.key, 'product', e.target.value)}
+          placeholder="Ej: Venta de productos"
+        />
+      )
+    },
+    
     {
       title: 'Valor',
       dataIndex: 'value',
