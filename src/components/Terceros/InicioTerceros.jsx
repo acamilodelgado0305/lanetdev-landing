@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Modal, message, Button, Space, Tooltip, Dropdown } from "antd";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
@@ -18,8 +18,8 @@ const InicioTerceros = () => {
   const [selectedVoucherContent, setSelectedVoucherContent] = useState("");
   const [error, setError] = useState(null);
   const [isAddCajeroOpen, setIsAddCajeroOpen] = useState(false);
+  const [cajeros, setCajeros] = useState([]);
 
-  // Mapping for tab to endpoint conversion
   const tabToEndpoint = {
     cajeros: "/cajeros",
     proveedores: "/providers",
@@ -36,27 +36,34 @@ const InicioTerceros = () => {
     }
   };
 
+  const fetchCajeros = async () => {
+    const data = await fetchData(tabToEndpoint.cajeros);
+    setCajeros(data);
+  };
+
+  useEffect(() => {
+    if (activeTab === "cajeros") {
+      fetchCajeros();
+    }
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab);
+    }
+  }, [activeTab, location.state]);
+
   const handleTabChange = (key) => {
     setActiveTab(key);
   };
 
-  useEffect(() => {
-    if (location.state?.activeTab) {
-      setActiveTab(location.state.activeTab);
-    }
-  }, [location.state]);
-
   const handleCashierAdded = () => {
-    setIsAddCajeroOpen(false); // Cerrar el modal después de agregar un cajero
-    // Aquí puedes agregar lógica para refrescar la tabla si es necesario
+    setIsAddCajeroOpen(false);
+    fetchCajeros(); // Refrescar la lista de cajeros
   };
 
-  // Definimos los ítems del menú usando la prop `items`
   const menuItems = [
     {
       key: "cajero",
       label: "Crear Nuevo Cajero",
-      onClick: () => setIsAddCajeroOpen(true), // Abrir el modal de AddCajero
+      onClick: () => setIsAddCajeroOpen(true),
       style: { padding: "8px 16px", fontSize: "14px" },
     },
     {
@@ -80,9 +87,8 @@ const InicioTerceros = () => {
             </div>
             <div className="flex justify-between items-center border-b-3 border-gray-300">
               <Space size="middle">
-                {/* Botón Nuevo Tercero con Dropdown */}
                 <Dropdown
-                  menu={{ items: menuItems }} // Usamos `menu` con `items` en lugar de `overlay`
+                  menu={{ items: menuItems }}
                   trigger={['click']}
                 >
                   <Tooltip title="Crear Tercero">
@@ -153,7 +159,7 @@ const InicioTerceros = () => {
           )}
 
           {activeTab === "cajeros" && (
-            <CajerosTable activeTab={activeTab} />
+            <CajerosTable activeTab={activeTab} cajeros={cajeros} />
           )}
 
           {activeTab === "proveedores" && (
@@ -171,10 +177,9 @@ const InicioTerceros = () => {
         <p>{selectedVoucherContent}</p>
       </Modal>
 
-      {/* Renderizamos AddCajero como un componente controlado */}
       <AddCajero
         onCashierAdded={handleCashierAdded}
-        cashierToEdit={null} // Si no estás editando, pasa null
+        cashierToEdit={null}
         visible={isAddCajeroOpen}
         onClose={() => setIsAddCajeroOpen(false)}
       />

@@ -29,10 +29,10 @@ import Clientes from "./components/clientes/clientes"
 import SearchResults from "./components/search/SearchResults";
 import Network from "./components/Network/Network.jsx";
 import Configuracion from "./components/MoneyManager/configuracion/Configuracion.jsx";
-import Terceros from "./components/MoneyManager/Terceros/Terceros.jsx";
+
 import AddIncome from "./components/MoneyManager/transactions/Add/Income/AddIncome.jsx";
 import AddExpense from "./components/MoneyManager/transactions/Add/expense/AddExpense.jsx";
-import CashiersPage from "./components/MoneyManager/Cajeros/Cajeros.jsx";
+
 import PaginaProveedores from "./components/MoneyManager/proveedores/ProvidersPage.jsx";
 
 import IncomeView from "./components/MoneyManager/transactions/Add/Income/ViewIncome.jsx";
@@ -141,10 +141,7 @@ const router = createBrowserRouter([
             path: "calendario",
             element: <Calendario />,
           },
-          {
-            path: "terceros",
-            element: <Terceros />,
-          },
+          
           {
             path: "Pagos-Pendientes",
             element: <RenderPaymentsList />,

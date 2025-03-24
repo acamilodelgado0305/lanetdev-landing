@@ -16,7 +16,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable"; // Import autoTable
 import { format as formatDate } from "date-fns";
 import { es } from "date-fns/locale";
-import ImportePersonalizado from "./ImportePersonalizado";
+import ImportePersonalizado from "../../../../Terceros/Cajeros/ImportePersonalizado";
 
 
 const apiUrl = import.meta.env.VITE_API_FINANZAS;
@@ -63,32 +63,32 @@ const AddIncome = ({ onTransactionAdded }) => {
   const [importePersonalizadoAmount, setImportePersonalizadoAmount] = useState("");
 
   const [expenseTableData, setExpenseTableData] = useState({
-    items: [{
-      key: '1',
-      provider: '',
-      product: '',
-      quantity: 1.00,
-      unitPrice: 0.00,
-      purchaseValue: 0.00,
-      discount: 0.00,
-      taxCharge: 0.00,
-      taxWithholding: 0.00,
-      total: 0.00,
-      categoria: "",
-    }],
-    totals: {
-      totalBruto: 0,
-      descuentos: 0,
-      subtotal: 0,
-      iva: 0,
-      retencion: 0,
-      totalNeto: 0,
-      ivaPercentage: "0",
-      retencionPercentage: "0",
-      totalImpuestos: 0,
-    },
-  });
-
+      items: [{
+        key: '1',
+        provider: '',
+        product: '',
+        quantity: 1.00,
+        unitPrice: 0.00,
+        purchaseValue: 0.00,
+        discount: 0.00,
+        taxCharge: 0.00,
+        taxWithholding: 0.00,
+        total: 0.00,
+        categoria: "",
+      }],
+      totals: {
+        totalBruto: 0,
+        descuentos: 0,
+        subtotal: 0,
+        iva: 0,
+        retencion: 0,
+        totalNeto: 0,
+        ivaPercentage: "0",
+        retencionPercentage: "0",
+        totalImpuestos: 0,
+      },
+    });
+  
 
   const handleCancel = () => {
     // Siempre pasar el returnTab correcto al cancelar
@@ -258,7 +258,7 @@ const AddIncome = ({ onTransactionAdded }) => {
     }));
   };
 
-
+  
 
   const handleSave = async () => {
     try {
@@ -659,20 +659,20 @@ const AddIncome = ({ onTransactionAdded }) => {
                     />
                   </div>
                   {hasImportePersonalizado && (
-                    <>
-                      <div className="flex justify-between">
-                        <span>Importe Personalizado:</span>
-
-                      </div>
-                      <div className="bg-white w-full">
-                        <ImportePersonalizado
-                          items={expenseTableData.items}
-                          onItemsChange={handleItemsChange}
-                          onTotalsChange={handleTotalsChange}
-                        />
-                      </div>
-                    </>
-                  )}
+    <>
+      <div className="flex justify-between">
+        <span>Importe Personalizado:</span>
+       
+      </div>
+      <div className="bg-white w-full">
+        <ImportePersonalizado
+          items={expenseTableData.items}
+          onItemsChange={handleItemsChange}
+          onTotalsChange={handleTotalsChange}
+        />
+      </div>
+    </>
+  )}
                 </div>
               </div>
               <div className="bg-gray-50 p-4">

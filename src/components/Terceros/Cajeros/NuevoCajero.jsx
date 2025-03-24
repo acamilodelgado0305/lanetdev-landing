@@ -1,26 +1,60 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Button, Typography, InputNumber, Tooltip } from 'antd';
-import { FileTextOutlined, UserOutlined, HomeOutlined, EnvironmentOutlined, CloseOutlined, ShareAltOutlined } from '@ant-design/icons';
+import {
+  Form, Input, Button, Typography, InputNumber, Tooltip, Switch
+} from 'antd';
+import {
+  FileTextOutlined, UserOutlined, HomeOutlined, EnvironmentOutlined, CloseOutlined, ShareAltOutlined, EditOutlined
+} from '@ant-design/icons';
 import Swal from 'sweetalert2';
+import ImportePersonalizado from './ImportePersonalizado';
 
 const { Text } = Typography;
-
 const apiUrl = import.meta.env.VITE_API_FINANZAS;
 
 const AddCajero = ({ onCashierAdded, cashierToEdit, visible, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(false); // Tracks if we're editing an existing cashier
+  const [editMode, setEditMode] = useState(false); // Tracks if the form is editable
+  const [enableCustomImport, setEnableCustomImport] = useState(false);
+  const [items, setItems] = useState([{ key: '1', product: '', action: 'suma', value: 0 }]);
+  const [customTotal, setCustomTotal] = useState(0);
 
   useEffect(() => {
     if (cashierToEdit) {
       setIsEditing(true);
+      setEditMode(false); // Start in view-only mode
       form.setFieldsValue(cashierToEdit);
+      if (cashierToEdit.importes_personalizados && cashierToEdit.importes_personalizados.length > 0) {
+        setEnableCustomImport(true);
+        setItems(
+          cashierToEdit.importes_personalizados.map((item, index) => ({
+            key: item.id_importe || `${index}`,
+            product: item.producto,
+            action: item.accion,
+            value: item.valor,
+          }))
+        );
+      } else {
+        setEnableCustomImport(false);
+        setItems([{ key: '1', product: '', action: 'suma', value: 0 }]);
+      }
     } else {
       setIsEditing(false);
+      setEditMode(true); // New cashier starts in edit mode
       form.resetFields();
+      setEnableCustomImport(false);
+      setItems([{ key: '1', product: '', action: 'suma', value: 0 }]);
+      setCustomTotal(0);
     }
   }, [cashierToEdit, form]);
+
+  const resetForm = () => {
+    form.resetFields();
+    setEnableCustomImport(false);
+    setItems([{ key: '1', product: '', action: 'suma', value: 0 }]);
+    setCustomTotal(0);
+  };
 
   const handleSave = async () => {
     try {
@@ -28,13 +62,24 @@ const AddCajero = ({ onCashierAdded, cashierToEdit, visible, onClose }) => {
       const values = await form.validateFields();
       const method = isEditing ? 'PUT' : 'POST';
       const endpoint = isEditing
-        ? `${apiUrl}/cajeros/${cashierToEdit.id}`
+        ? `${apiUrl}/cajeros/${cashierToEdit.id_cajero}`
         : `${apiUrl}/cajeros`;
+
+      const body = {
+        ...values,
+        ...(enableCustomImport && {
+          importesPersonalizados: items.map(item => ({
+            product: item.product,
+            action: item.action,
+            value: item.value,
+          })),
+        }),
+      };
 
       const response = await fetch(endpoint, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) throw new Error(`Error: ${response.status}`);
@@ -45,10 +90,11 @@ const AddCajero = ({ onCashierAdded, cashierToEdit, visible, onClose }) => {
         title: isEditing ? 'Cajero Actualizado' : 'Cajero Registrado',
         text: 'El cajero se ha guardado correctamente.',
         confirmButtonColor: '#0052CC',
+      }).then(() => {
+        resetForm();
+        onClose();
+        if (onCashierAdded) onCashierAdded();
       });
-
-      if (onCashierAdded) onCashierAdded();
-      if (onClose) onClose(); // Cerrar el modal desde el padre
     } catch (error) {
       Swal.fire({
         icon: 'error',
@@ -61,122 +107,127 @@ const AddCajero = ({ onCashierAdded, cashierToEdit, visible, onClose }) => {
     }
   };
 
-  if (!visible) return null; // No renderizar nada si no está visible
+  const handleItemsChange = (newItems) => {
+    setItems(newItems);
+  };
+
+  const handleTotalsChange = ({ total }) => {
+    setCustomTotal(total);
+  };
+
+  const handleEditClick = () => {
+    setEditMode(true);
+  };
+
+  if (!visible) return null;
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-6"
       onClick={onClose}
     >
       <div
         className="w-full max-w-[800px] bg-white shadow-lg rounded-lg overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Encabezado */}
-        <div className="p-6 bg-gray-100 border-b border-gray-200">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1
-                className="text-xl font-semibold text-gray-900"
-                style={{ fontFamily: 'SF Pro Display, sans-serif' }}
-              >
-                {isEditing ? 'Editar Cajero' : 'Nuevo Cajero'}
-              </h1>
-            </div>
-            <div className="flex space-x-2">
-              <Tooltip title="Compartir">
+        <div className="px-6 py-4 bg-gray-100 border-b border-gray-200 flex justify-between items-center">
+          <Text strong className="text-xl text-gray-900">
+            {isEditing ? (editMode ? 'Editar Cajero' : 'Ver Cajero') : 'Nuevo Cajero'}
+          </Text>
+          <div className="flex space-x-2">
+            <Tooltip title="Compartir">
+              <Button
+                icon={<ShareAltOutlined />}
+                className="text-gray-500 hover:text-gray-700 bg-transparent border-none p-2"
+                disabled
+              />
+            </Tooltip>
+            {isEditing && !editMode && (
+              <Tooltip title="Editar">
                 <Button
-                  icon={<ShareAltOutlined />}
-                  className="text-gray-500 hover:text-gray-700 bg-transparent border-none"
-                  disabled
+                  onClick={handleEditClick}
+                  icon={<EditOutlined />}
+                  className="text-gray-500 hover:text-gray-700 bg-transparent border-none p-2"
                 />
               </Tooltip>
-              <Tooltip title="Cerrar">
-                <Button
-                  onClick={onClose}
-                  icon={<CloseOutlined />}
-                  className="text-gray-500 hover:text-gray-700 bg-transparent border-none"
-                />
-              </Tooltip>
-            </div>
+            )}
+            <Tooltip title="Cerrar">
+              <Button
+                onClick={onClose}
+                icon={<CloseOutlined />}
+                className="text-gray-500 hover:text-gray-700 bg-transparent border-none p-2"
+              />
+            </Tooltip>
           </div>
         </div>
-
-        {/* Cuerpo */}
-        <div className="p-6" style={{ maxHeight: '70vh', overflow: 'auto' }}>
+        <div className="p-6" style={{ maxHeight: '75vh', overflow: 'auto' }}>
           <Form form={form} layout="vertical" style={{ width: '100%' }}>
-            {/* Sección Información Básica */}
-            <div className="mb-6">
-              <Text
-                strong
-                className="text-base font-semibold text-gray-900 mb-2 block"
-                style={{ fontFamily: 'SF Pro Display, sans-serif' }}
-              >
-                <FileTextOutlined className="mr-2 text-gray-700" />
-                Información Básica
-              </Text>
-              <div className="grid grid-cols-1 gap-4 text-sm text-gray-600" style={{ fontFamily: 'SF Pro Text, sans-serif' }}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="col-span-1">
+                <Text strong className="text-base text-gray-700 mb-2 block">
+                  <FileTextOutlined className="mr-2 text-gray-500" />
+                  Información Básica
+                </Text>
                 <Form.Item
                   name="nombre"
-                  label="Nombre del Cajero"
+                  label={<span className="text-gray-600 text-sm">Nombre del Cajero</span>}
                   rules={[{ required: true, message: 'Requerido' }]}
                 >
                   <Input
-                    prefix={<UserOutlined className="text-gray-500" />}
-                    placeholder="Ingrese el nombre"
-                    className="rounded-md"
+                    prefix={<UserOutlined className="text-gray-400" />}
+                    placeholder="Nombre"
+                    className="rounded-md text-base"
+                    size="middle"
+                    disabled={!editMode}
                   />
                 </Form.Item>
                 <Form.Item
                   name="responsable"
-                  label="Responsable"
+                  label={<span className="text-gray-600 text-sm">Responsable</span>}
                   rules={[{ required: true, message: 'Requerido' }]}
                 >
                   <Input
-                    prefix={<UserOutlined className="text-gray-500" />}
-                    placeholder="Ingrese el responsable"
-                    className="rounded-md"
+                    prefix={<UserOutlined className="text-gray-400" />}
+                    placeholder="Responsable"
+                    className="rounded-md text-base"
+                    size="middle"
+                    disabled={!editMode}
                   />
                 </Form.Item>
                 <Form.Item
                   name="municipio"
-                  label="Municipio"
+                  label={<span className="text-gray-600 text-sm">Municipio</span>}
                   rules={[{ required: true, message: 'Requerido' }]}
                 >
                   <Input
-                    prefix={<EnvironmentOutlined className="text-gray-500" />}
-                    placeholder="Ingrese el municipio"
-                    className="rounded-md"
+                    prefix={<EnvironmentOutlined className="text-gray-400" />}
+                    placeholder="Municipio"
+                    className="rounded-md text-base"
+                    size="middle"
+                    disabled={!editMode}
                   />
                 </Form.Item>
               </div>
-            </div>
-
-            {/* Sección Detalles Adicionales */}
-            <div className="mb-6">
-              <Text
-                strong
-                className="text-base font-semibold text-gray-900 mb-2 block"
-                style={{ fontFamily: 'SF Pro Display, sans-serif' }}
-              >
-                <HomeOutlined className="mr-2 text-gray-700" />
-                Detalles Adicionales
-              </Text>
-              <div className="grid grid-cols-1 gap-4 text-sm text-gray-600" style={{ fontFamily: 'SF Pro Text, sans-serif' }}>
+              <div className="col-span-1">
+                <Text strong className="text-base text-gray-700 mb-2 block">
+                  <HomeOutlined className="mr-2 text-gray-500" />
+                  Detalles Adicionales
+                </Text>
                 <Form.Item
                   name="direccion"
-                  label="Dirección"
+                  label={<span className="text-gray-600 text-sm">Dirección</span>}
                   rules={[{ required: true, message: 'Requerido' }]}
                 >
                   <Input.TextArea
-                    placeholder="Ingrese la dirección completa"
+                    placeholder="Dirección completa"
                     autoSize={{ minRows: 3, maxRows: 5 }}
-                    className="rounded-md"
+                    className="rounded-md text-base"
+                    disabled={!editMode}
                   />
                 </Form.Item>
                 <Form.Item
                   name="comision_porcentaje"
-                  label="Porcentaje de Comisión"
+                  label={<span className="text-gray-600 text-sm">Porcentaje de Comisión</span>}
                   rules={[{ required: true, message: 'Requerido' }]}
                   initialValue={0}
                 >
@@ -185,54 +236,71 @@ const AddCajero = ({ onCashierAdded, cashierToEdit, visible, onClose }) => {
                     max={100}
                     formatter={(value) => `${value}%`}
                     parser={(value) => value.replace('%', '')}
-                    style={{ width: '100%' }}
-                    className="rounded-md"
+                    className="w-full rounded-md text-base"
+                    size="middle"
+                    disabled={!editMode}
                   />
                 </Form.Item>
               </div>
             </div>
-
-            {/* Sección Observaciones */}
-            <div>
-              <Text
-                strong
-                className="text-base font-semibold text-gray-900 mb-2 block"
-                style={{ fontFamily: 'SF Pro Display, sans-serif' }}
-              >
-                <FileTextOutlined className="mr-2 text-gray-700" />
+            <div className="mt-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Switch
+                  checked={enableCustomImport}
+                  onChange={(checked) => setEnableCustomImport(checked)}
+                  disabled={!editMode}
+                />
+                <Text className="text-gray-600 text-sm">
+                  Agregar importe personalizado
+                </Text>
+              </div>
+              {enableCustomImport && (
+                <div className="mb-4">
+                  <ImportePersonalizado
+                    items={items}
+                    onItemsChange={handleItemsChange}
+                    onTotalsChange={handleTotalsChange}
+                    disabled={!editMode} // Pass disabled prop to ImportePersonalizado
+                  />
+                </div>
+              )}
+              <Text strong className="text-base text-gray-700 mb-2 block">
+                <FileTextOutlined className="mr-2 text-gray-500" />
                 Observaciones
               </Text>
-              <Form.Item name="observaciones" label="Observaciones">
+              <Form.Item
+                name="observaciones"
+                label={<span className="text-gray-600 text-sm">Notas adicionales</span>}
+              >
                 <Input.TextArea
-                  placeholder="Ingrese observaciones"
-                  autoSize={{ minRows: 4, maxRows: 6 }}
-                  className="rounded-md bg-gray-50 p-4 border border-gray-200"
+                  placeholder="Observaciones"
+                  autoSize={{ minRows: 3, maxRows: 6 }}
+                  className="rounded-md text-base border-gray-300 focus:border-blue-500"
+                  disabled={!editMode}
                 />
               </Form.Item>
             </div>
           </Form>
         </div>
-
-        {/* Pie de página */}
-        <div className="p-4 bg-gray-100 border-t border-gray-200">
-          <div className="flex justify-between gap-2">
-            <Button
-              onClick={onClose}
-              className="rounded-md border-gray-300 text-gray-700 hover:text-gray-900"
-              style={{ height: 40, width: 120, fontFamily: 'SF Pro Text, sans-serif' }}
-            >
-              Cancelar
-            </Button>
+        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
+          <Button
+            onClick={onClose}
+            className="rounded-md border-gray-300 text-gray-700 hover:text-gray-900 hover:border-gray-400 transition-all"
+            style={{ height: 40, fontSize: '16px', padding: '0 20px' }}
+          >
+            Cancelar
+          </Button>
+          {editMode && (
             <Button
               type="primary"
               onClick={handleSave}
               loading={loading}
-              className="rounded-md bg-[#0052CC] hover:bg-[#003BB3] border-none"
-              style={{ height: 40, width: 120, fontFamily: 'SF Pro Text, sans-serif' }}
+              className="rounded-md bg-[#0052CC] hover:bg-[#003BB3] border-none transition-all"
+              style={{ height: 40, fontSize: '16px', padding: '0 20px' }}
             >
               {isEditing ? 'Actualizar' : 'Guardar'}
             </Button>
-          </div>
+          )}
         </div>
       </div>
     </div>
