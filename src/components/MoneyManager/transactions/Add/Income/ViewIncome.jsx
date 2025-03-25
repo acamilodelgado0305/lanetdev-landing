@@ -2,11 +2,10 @@ import React, { useState, useEffect } from "react";
 import { DateTime } from "luxon";
 import axios from "axios";
 import { Button, Card, Tooltip } from "antd";
-import { CloseOutlined, EditOutlined, ShareAltOutlined } from "@ant-design/icons";
+import { CloseOutlined, EditOutlined, ShareAltOutlined, DownOutlined, UpOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { getAccounts } from "../../../../../services/moneymanager/moneyService";
 import { getCajeros } from "../../../../../services/cajeroService";
-
 
 function ViewIncome({ entry, visible, onClose, activeTab }) {
   const [incomeData, setIncomeData] = useState(null);
@@ -14,6 +13,7 @@ function ViewIncome({ entry, visible, onClose, activeTab }) {
   const navigate = useNavigate();
   const [accounts, setAccounts] = useState([]);
   const [cajeros, setCajeros] = useState([]);
+  const [isCustomAmountsExpanded, setIsCustomAmountsExpanded] = useState(false); // Estado para controlar la expansión
 
   useEffect(() => {
     if (visible && entry?.id) {
@@ -74,7 +74,7 @@ function ViewIncome({ entry, visible, onClose, activeTab }) {
 
   const handleEditSelected = () => {
     navigate(`/index/moneymanager/ingresos/edit/${entry.id}`, {
-      state: { returnTab: activeTab }, // Pasar activeTab como returnTab
+      state: { returnTab: activeTab },
     });
   };
 
@@ -83,65 +83,30 @@ function ViewIncome({ entry, visible, onClose, activeTab }) {
       style: "currency",
       currency: "COP",
       minimumFractionDigits: 0,
-    }).format(amount);
+    }).format(amount || 0);
   };
 
   const renderDate = (date) => {
     if (!date) return "Sin fecha";
-
-    console.log("Fecha original recibida:", date, "Tipo:", typeof date);
-
     try {
       let parsedDate;
-
-      // Si es un string, intentamos varios métodos de parsing
       if (typeof date === 'string') {
-        // Eliminar 'Z' si existe para evitar conversión UTC
         const cleanDate = date.endsWith('Z') ? date.substring(0, date.length - 1) : date;
-        console.log("Fecha limpia:", cleanDate);
-
-        // Intentar primero con fromISO (formato ISO)
-        parsedDate = DateTime.fromISO(cleanDate, { zone: "America/Bogota" });
-
-        // Si no es válido, intentar con fromSQL (formato de base de datos)
-        if (!parsedDate.isValid) {
-          console.log("Intento con fromSQL");
-          parsedDate = DateTime.fromSQL(cleanDate, { zone: "America/Bogota" });
-        }
-
-        // Si sigue sin ser válido, intentar con fromFormat para algunos formatos comunes
-        if (!parsedDate.isValid) {
-          console.log("Intento con formatos específicos");
-          const formats = [
-            "yyyy-MM-dd HH:mm:ss",
-            "yyyy-MM-dd'T'HH:mm:ss",
-            "dd/MM/yyyy HH:mm:ss",
-            "yyyy-MM-dd"
-          ];
-
-          for (const format of formats) {
-            parsedDate = DateTime.fromFormat(cleanDate, format, { zone: "America/Bogota" });
-            if (parsedDate.isValid) break;
-          }
-        }
+        parsedDate = DateTime.fromISO(cleanDate, { zone: "America/Bogota" }) || DateTime.fromSQL(cleanDate, { zone: "America/Bogota" });
       } else if (date instanceof Date) {
-        // Si es un objeto Date, convertirlo directamente
         parsedDate = DateTime.fromJSDate(date, { zone: "America/Bogota" });
       }
-
-      // Verificar si se pudo parsear correctamente
-      if (!parsedDate || !parsedDate.isValid) {
-        console.warn("No se pudo parsear la fecha:", date);
-        return "Fecha inválida";
-      }
-
-      console.log("Fecha parseada correctamente:", parsedDate.toISO());
-      // Formatear con configuración regional española
-      return parsedDate.setLocale('es').toFormat("d 'de' MMMM 'de' yyyy HH:mm");
+      return parsedDate && parsedDate.isValid
+        ? parsedDate.setLocale('es').toFormat("d 'de' MMMM 'de' yyyy HH:mm")
+        : "Fecha inválida";
     } catch (error) {
-      console.error("Error al formatear la fecha:", error, "Fecha original:", date);
+      console.error("Error al formatear la fecha:", error);
       return "Fecha inválida";
     }
+  };
+
+  const toggleCustomAmounts = () => {
+    setIsCustomAmountsExpanded(!isCustomAmountsExpanded);
   };
 
   if (!visible) return null;
@@ -210,7 +175,7 @@ function ViewIncome({ entry, visible, onClose, activeTab }) {
             <div className="mb-6">
               <div className="grid grid-cols-2 gap-4 text-sm text-gray-600" style={{ fontFamily: "SF Pro Text, sans-serif" }}>
                 <div>
-                  <span className="font-medium font-semibold text-gray-900">Titulo: </span> {(incomeData.description)}
+                  <span className="font-medium font-semibold text-gray-900">Título: </span> {incomeData.description}
                 </div>
                 <div>
                   <span className="font-medium text-gray-900">Cajero:</span> {getCajeroName(incomeData.cashier_id)}
@@ -251,6 +216,34 @@ function ViewIncome({ entry, visible, onClose, activeTab }) {
                     <td className="py-3 px-4 text-gray-900">Otros Ingresos</td>
                     <td className="py-3 px-4 text-right text-gray-900">{formatCurrency(incomeData.other_income)}</td>
                   </tr>
+                  {incomeData.amountcustom > 0 && (
+                    <>
+                      <tr className="border-b border-gray-200 cursor-pointer" onClick={toggleCustomAmounts}>
+                        <td className="py-3 px-4 text-gray-900 flex items-center">
+                          Importes Fijos
+                          {incomeData.importes_personalizados?.length > 0 && (
+                            <span className="ml-2">
+                              {isCustomAmountsExpanded ? <UpOutlined /> : <DownOutlined />}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-right text-gray-900">{formatCurrency(incomeData.amountcustom)}</td>
+                      </tr>
+                      {isCustomAmountsExpanded && incomeData.importes_personalizados?.length > 0 && (
+                        incomeData.importes_personalizados.map((item, index) => (
+                          <tr key={item.id_importe} className="border-b border-gray-200 bg-gray-50">
+                            <td className="py-2 px-8 text-gray-700">
+                              {item.producto} ({item.accion})
+                            </td>
+                            <td className="py-2 px-4 text-right text-gray-700">
+                              {item.accion === "suma" ? "+" : "-"}
+                              {formatCurrency(item.valor)}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </>
+                  )}
                   <tr className="border-b border-gray-200">
                     <td className="py-3 px-4 text-gray-900">Efectivo Recibido</td>
                     <td className="py-3 px-4 text-right text-gray-900">{formatCurrency(incomeData.cash_received)}</td>
