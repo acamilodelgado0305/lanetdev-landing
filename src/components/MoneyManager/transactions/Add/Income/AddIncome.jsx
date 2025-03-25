@@ -13,9 +13,10 @@ import axios from "axios";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import VoucherSection from "../../components/VoucherSection";
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable"; // Import autoTable
+import autoTable from "jspdf-autotable";
 import { format as formatDate } from "date-fns";
 import { es } from "date-fns/locale";
+import ImportePersonalizado from "../../../../Terceros/Cajeros/ImportePersonalizado";
 
 const apiUrl = import.meta.env.VITE_API_FINANZAS;
 const { Title, Text } = Typography;
@@ -52,13 +53,10 @@ const AddIncome = ({ onTransactionAdded }) => {
   const [CommissionPorcentaje, setCommissionPorcentaje] = useState("");
   const [isIncomeSaved, setIsIncomeSaved] = useState(false);
   const [cashierid, setCashierid] = useState(null);
-  const [stats, setStats] = useState({
-    totalCashiers: 0,
-    avgCommission: 0,
-  });
+  const [customAmounts, setCustomAmounts] = useState([]);
+  const [customAmountsTotal, setCustomAmountsTotal] = useState(0);
 
   const handleCancel = () => {
-    // Siempre pasar el returnTab correcto al cancelar
     navigate("/index/moneymanager/transactions", { state: { activeTab: returnTab } });
   };
 
@@ -79,9 +77,8 @@ const AddIncome = ({ onTransactionAdded }) => {
     const totalAmount = calculateTotalAmount();
     const commission = CommissionPorcentaje > 0 ? totalAmount * (CommissionPorcentaje / 100) : 0;
     setCashierCommission(commission);
-  }, [fevAmount, diversoAmount, otherIncome, CommissionPorcentaje]);
+  }, [fevAmount, diversoAmount, otherIncome, CommissionPorcentaje, customAmountsTotal]);
 
-  // Fetch Functions
   const fetchCategories = async () => {
     try {
       const response = await fetch(`${apiUrl}/categories`);
@@ -116,6 +113,54 @@ const AddIncome = ({ onTransactionAdded }) => {
     } catch (error) {
       console.error("Error al obtener las cuentas:", error);
     }
+  };
+
+  const handleCashierChange = (value) => {
+    setCashierid(value);
+    const selectedCashier = cashiers.find((c) => c.id_cajero === value);
+    if (selectedCashier) {
+      const commissionPercentage = parseFloat(selectedCashier.comision_porcentaje) || 0;
+      setCommissionPorcentaje(commissionPercentage);
+      if (!id) { // Solo cargar del cajero si no estamos editando
+        fetchCashierDetails(value);
+      }
+    } else {
+      setCustomAmounts([]);
+      setCustomAmountsTotal(0);
+    }
+  };
+
+  const fetchCashierDetails = async (cashierId) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_FINANZAS}/cajeros/${cashierId}`);
+      if (!response.ok) throw new Error("Error fetching cashier details");
+      const { data } = await response.json();
+      const mappedCustomAmounts = (data.importes_personalizados || []).map((item) => ({
+        key: item.id_importe || `${Date.now()}-${Math.random()}`,
+        product: item.producto || '',
+        action: item.accion || 'suma',
+        value: parseFloat(item.valor) || 0,
+      }));
+      console.log("mappedCustomAmounts desde fetchCashierDetails:", JSON.stringify(mappedCustomAmounts, null, 2));
+      setCustomAmounts(mappedCustomAmounts);
+      const initialTotal = mappedCustomAmounts.reduce((acc, item) => {
+        const value = parseFloat(item.value) || 0;
+        return item.action === 'suma' ? acc + value : acc - value;
+      }, 0);
+      setCustomAmountsTotal(initialTotal);
+    } catch (error) {
+      console.error("Error fetching cashier details:", error);
+      setCustomAmounts([]);
+      setCustomAmountsTotal(0);
+    }
+  };
+
+  const handleCustomAmountsChange = (updatedItems) => {
+    setCustomAmounts(updatedItems);
+  };
+
+  const handleCustomTotalsChange = (totals) => {
+    setCustomAmountsTotal(totals.total);
   };
 
   const fetchCashiers = async () => {
@@ -168,6 +213,17 @@ const AddIncome = ({ onTransactionAdded }) => {
         setCashierCommission(data.cashier_commission?.toString() || "");
         setStartPeriod(data.start_period ? dayjs(data.start_period) : null);
         setEndPeriod(data.end_period ? dayjs(data.end_period) : null);
+
+        // Cargar importes_personalizados del ingreso
+        const mappedCustomAmounts = (data.importes_personalizados || []).map((item) => ({
+          key: item.id_importe,
+          product: item.producto || '',
+          action: item.accion || 'suma',
+          value: parseFloat(item.valor) || 0,
+        }));
+        console.log("mappedCustomAmounts desde fetchIncomeData:", JSON.stringify(mappedCustomAmounts, null, 2));
+        setCustomAmounts(mappedCustomAmounts);
+        setCustomAmountsTotal(parseFloat(data.amountcustom) || 0);
       } else if (data.category_id === ventaCategoryId) {
         setIsVentaChecked(true);
       }
@@ -181,7 +237,6 @@ const AddIncome = ({ onTransactionAdded }) => {
     }
   };
 
-  // Helper Functions
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("es-CO", {
       style: "currency",
@@ -195,7 +250,7 @@ const AddIncome = ({ onTransactionAdded }) => {
     const fev = parseFloat(fevAmount) || 0;
     const diverso = parseFloat(diversoAmount) || 0;
     const otros = parseFloat(otherIncome) || 0;
-    return fev + diverso + otros;
+    return fev + diverso + otros + customAmountsTotal;
   };
 
   const handleAmountChange = (e, field) => {
@@ -220,14 +275,12 @@ const AddIncome = ({ onTransactionAdded }) => {
         return;
       }
 
-      const totalAmount = isArqueoChecked
-        ? calculateTotalAmount()
-        : parseFloat(amount);
+      const totalAmount = isArqueoChecked ? calculateTotalAmount() : parseFloat(amount);
 
       const baseRequestBody = {
         user_id: parseInt(sessionStorage.getItem("userId")),
         account_id: parseInt(account),
-        category_id: parseInt(category),
+        category_id: parseInt(category) || null,
         type: isArqueoChecked ? "arqueo" : "income",
         date: date.format("YYYY-MM-DD[T]HH:mm:ss[Z]"),
         voucher: voucher,
@@ -239,7 +292,28 @@ const AddIncome = ({ onTransactionAdded }) => {
 
       let requestBody;
       if (isArqueoChecked) {
-        const commission = totalAmount * 0.02;
+        console.log("customAmounts antes de filtrar:", JSON.stringify(customAmounts, null, 2));
+
+        const validCustomAmounts = (customAmounts || [])
+          .filter(item => {
+            const isValid = item && 
+              typeof item === 'object' && 
+              item.key && 
+              typeof item.product === 'string' && 
+              item.action && 
+              typeof item.value === 'number';
+            if (!isValid) console.warn("Elemento inválido en customAmounts:", item);
+            return isValid;
+          })
+          .map(item => ({
+            id_importe: item.key,
+            producto: item.product,
+            accion: item.action,
+            valor: item.value,
+          }));
+
+        console.log("validCustomAmounts después de filtrar:", JSON.stringify(validCustomAmounts, null, 2));
+
         requestBody = {
           ...baseRequestBody,
           amountfev: parseFloat(fevAmount) || 0,
@@ -248,13 +322,18 @@ const AddIncome = ({ onTransactionAdded }) => {
           arqueo_number: arqueoNumber,
           other_income: parseFloat(otherIncome) || 0,
           cash_received: parseFloat(cashReceived) || 0,
-          cashier_commission: cashierCommission,
+          cashier_commission: parseFloat(cashierCommission) || 0,
           start_period: startPeriod?.format("YYYY-MM-DD"),
           end_period: endPeriod?.format("YYYY-MM-DD"),
+          amountcustom: customAmountsTotal,
+          importes_personalizados: validCustomAmounts.length > 0 ? validCustomAmounts : [],
         };
       } else {
         requestBody = baseRequestBody;
       }
+
+      const requestBodyString = JSON.stringify(requestBody);
+      console.log("Request Body enviado (string):", requestBodyString);
 
       const url = id ? `${apiUrl}/incomes/${id}` : `${apiUrl}/incomes`;
       const method = id ? "PUT" : "POST";
@@ -264,10 +343,13 @@ const AddIncome = ({ onTransactionAdded }) => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(requestBody),
+        body: requestBodyString,
       });
 
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
+      }
 
       await response.json();
       setIsIncomeSaved(true);
@@ -294,7 +376,7 @@ const AddIncome = ({ onTransactionAdded }) => {
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "Hubo un error al procesar el ingreso. Por favor, intente de nuevo.",
+        text: "Hubo un error al procesar el ingreso: " + error.message,
         confirmButtonColor: "#d33",
       });
     }
@@ -317,6 +399,8 @@ const AddIncome = ({ onTransactionAdded }) => {
     setCashierCommission("");
     setStartPeriod(null);
     setEndPeriod(null);
+    setCustomAmounts([]);
+    setCustomAmountsTotal(0);
   };
 
   const handleFileUpload = async (event) => {
@@ -370,12 +454,10 @@ const AddIncome = ({ onTransactionAdded }) => {
     try {
       const doc = new jsPDF();
 
-      // Header
       doc.setFontSize(18);
       doc.setFont("helvetica", "bold");
       doc.text("FACTURA", 105, 20, { align: "center" });
 
-      // Company Info (customize as needed)
       doc.setFontSize(12);
       doc.setFont("helvetica", "normal");
       doc.text("Nombre de la Empresa", 14, 30);
@@ -383,11 +465,9 @@ const AddIncome = ({ onTransactionAdded }) => {
       doc.text("Dirección: Calle 123 #45-67, Bogotá, Colombia", 14, 42);
       doc.text("Teléfono: +57 123 456 7890", 14, 48);
 
-      // Invoice Info
       doc.text(`Fecha: ${formatDate(new Date(), "d MMMM yyyy", { locale: es })}`, 140, 30);
       doc.text(`Factura N°: ${Math.floor(Math.random() * 1000000)}`, 140, 36);
 
-      // Income Data as a Single Entry
       const incomeData = [
         {
           arqueo_number: isArqueoChecked ? arqueoNumber || "N/A" : "N/A",
@@ -431,32 +511,28 @@ const AddIncome = ({ onTransactionAdded }) => {
         },
       });
 
-      // Total
       const totalAmount = isArqueoChecked ? calculateTotalAmount() : parseFloat(amount) || 0;
       doc.setFontSize(12);
       doc.text(`Total: ${formatCurrency(totalAmount)}`, 140, doc.lastAutoTable.finalY + 10);
 
-      // Additional Info (e.g., for Arqueo)
       if (isArqueoChecked) {
         doc.setFontSize(10);
         doc.text("Desglose de Ingresos:", 14, doc.lastAutoTable.finalY + 20);
         doc.text(`Importe FEV: ${formatCurrency(fevAmount)}`, 14, doc.lastAutoTable.finalY + 26);
         doc.text(`Importe Diverso: ${formatCurrency(diversoAmount)}`, 14, doc.lastAutoTable.finalY + 32);
         doc.text(`Otros Ingresos: ${formatCurrency(otherIncome)}`, 14, doc.lastAutoTable.finalY + 38);
-        doc.text(`Efectivo Recibido: ${formatCurrency(cashReceived)}`, 14, doc.lastAutoTable.finalY + 44);
-        doc.text(`Comisión (${CommissionPorcentaje}%): ${formatCurrency(cashierCommission)}`, 14, doc.lastAutoTable.finalY + 50);
+        doc.text(`Importes Fijos: ${formatCurrency(customAmountsTotal)}`, 14, doc.lastAutoTable.finalY + 44);
+        doc.text(`Efectivo Recibido: ${formatCurrency(cashReceived)}`, 14, doc.lastAutoTable.finalY + 50);
+        doc.text(`Comisión (${CommissionPorcentaje}%): ${formatCurrency(cashierCommission)}`, 14, doc.lastAutoTable.finalY + 56);
         if (comentarios) {
-          doc.text("Observaciones:", 14, doc.lastAutoTable.finalY + 56);
-          doc.text(comentarios, 14, doc.lastAutoTable.finalY + 62, { maxWidth: 180 });
+          doc.text("Observaciones:", 14, doc.lastAutoTable.finalY + 62);
+          doc.text(comentarios, 14, doc.lastAutoTable.finalY + 68, { maxWidth: 180 });
         }
       }
 
-      // Footer
       doc.setFontSize(10);
-
       doc.text("Este documento no tiene validez fiscal", 105, 286, { align: "center" });
 
-      // Save the PDF
       doc.save(`Factura_Ingreso_${arqueoNumber || "sin_numero"}_${formatDate(new Date(), "yyyy-MM-dd")}.pdf`);
 
       Swal.fire({
@@ -497,17 +573,7 @@ const AddIncome = ({ onTransactionAdded }) => {
             <span className="text-gray-600">Cajero:</span>
             <Select
               value={cashierid}
-              onChange={(value, option) => {
-                setCashierid(value);
-                const selectedCashier = cashiers.find((c) => c.id_cajero === value);
-                if (selectedCashier) {
-                  const commissionPercentage =
-                    parseFloat(selectedCashier.comision_porcentaje) > 0
-                      ? parseFloat(selectedCashier.comision_porcentaje)
-                      : 0;
-                  setCommissionPorcentaje(commissionPercentage);
-                }
-              }}
+              onChange={handleCashierChange}
               className="w-64"
               placeholder="Selecciona un cajero"
             >
@@ -521,7 +587,7 @@ const AddIncome = ({ onTransactionAdded }) => {
         </div>
       </div>
       <div className="flex items-center space-x-4">
-        <span className="text-gray-600">Titulo.</span>
+        <span className="text-gray-600">Título:</span>
         <Input
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -545,7 +611,7 @@ const AddIncome = ({ onTransactionAdded }) => {
           {renderInvoiceHeader()}
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-4">
-              <Title level={4}>Periodo de Arqueo</Title>
+              <Title level={4}>Período de Arqueo</Title>
               <div className="flex space-x-4">
                 <DatePicker
                   value={startPeriod}
@@ -600,6 +666,14 @@ const AddIncome = ({ onTransactionAdded }) => {
                       value={formatCurrency(otherIncome)}
                       onChange={(e) => handleAmountChange(e, "other_incomes")}
                       className="w-40"
+                    />
+                  </div>
+                  <div className="mt-4">
+                    <Title level={5}>Importes Fijos</Title>
+                    <ImportePersonalizado
+                      items={customAmounts}
+                      onItemsChange={handleCustomAmountsChange}
+                      onTotalsChange={handleCustomTotalsChange}
                     />
                   </div>
                 </div>
