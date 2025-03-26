@@ -7,6 +7,7 @@ import CajerosTable from "./Cajeros/CajerosTable";
 import axios from "axios";
 import { PlusOutlined, ArrowDownOutlined } from '@ant-design/icons';
 import AddCajero from "./Cajeros/NuevoCajero";
+import AddProvider from "./Proveedores/AddProvider";
 
 const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
 
@@ -18,6 +19,7 @@ const InicioTerceros = () => {
   const [selectedVoucherContent, setSelectedVoucherContent] = useState("");
   const [error, setError] = useState(null);
   const [isAddCajeroOpen, setIsAddCajeroOpen] = useState(false);
+  const [isAddProviderOpen, setIsAddProviderOpen] = useState(false); // Nuevo estado para el modal de proveedor
   const [cajeros, setCajeros] = useState([]);
 
   const tabToEndpoint = {
@@ -59,6 +61,11 @@ const InicioTerceros = () => {
     fetchCajeros(); // Refrescar la lista de cajeros
   };
 
+  const handleProviderAdded = () => {
+    setIsAddProviderOpen(false);
+    // Aquí podrías agregar una función para refrescar la lista de proveedores si la tienes
+  };
+
   const menuItems = [
     {
       key: "cajero",
@@ -69,7 +76,7 @@ const InicioTerceros = () => {
     {
       key: "proveedor",
       label: "Crear Nuevo Proveedor",
-      onClick: () => navigate("/terceros/nuevo-proveedor"),
+      onClick: () => setIsAddProviderOpen(true), // Cambiado para abrir el modal
       style: { padding: "8px 16px", fontSize: "14px" },
     },
   ];
@@ -182,6 +189,13 @@ const InicioTerceros = () => {
         cashierToEdit={null}
         visible={isAddCajeroOpen}
         onClose={() => setIsAddCajeroOpen(false)}
+      />
+
+      <AddProvider
+        onProviderAdded={handleProviderAdded}
+        providerToEdit={null}
+        visible={isAddProviderOpen}
+        onClose={() => setIsAddProviderOpen(false)}
       />
     </div>
   );
