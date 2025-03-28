@@ -184,9 +184,7 @@ const ExpenseTable = ({ categories = [], accounts = [], activeTab }) => {
         filtered = filtered.filter(entry =>
             Object.keys(searchText).every(key => {
                 if (!searchText[key]) return true;
-                if (key === 'category_id') {
-                    return getCategoryName(entry[key])?.toLowerCase().includes(searchText[key].toLowerCase());
-                }
+             
                 if (key === 'account_id') {
                     return getAccountName(entry[key])?.toLowerCase().includes(searchText[key].toLowerCase());
                 }
@@ -197,7 +195,7 @@ const ExpenseTable = ({ categories = [], accounts = [], activeTab }) => {
             })
         );
         setFilteredEntries(filtered);
-    }, [entries, searchText, dateRange, typeFilter, providerFilter, providers, categories, accounts]);
+    }, [entries, searchText, dateRange, typeFilter, providerFilter, providers, accounts]);
 
     const handleRowClick = (record) => {
         setSelectedEntry(record);
@@ -265,65 +263,65 @@ const ExpenseTable = ({ categories = [], accounts = [], activeTab }) => {
         }).format(amount);
     };
 
-    
-  const renderDate = (date) => {
-       if (!date) return "Sin fecha";
-       
-       console.log("Fecha original recibida:", date, "Tipo:", typeof date);
-       
-       try {
-         let parsedDate;
-         
-         // Si es un string, intentamos varios métodos de parsing
-         if (typeof date === 'string') {
-           // Eliminar 'Z' si existe para evitar conversión UTC
-           const cleanDate = date.endsWith('Z') ? date.substring(0, date.length - 1) : date;
-           console.log("Fecha limpia:", cleanDate);
-           
-           // Intentar primero con fromISO (formato ISO)
-           parsedDate = DateTime.fromISO(cleanDate, { zone: "America/Bogota" });
-           
-           // Si no es válido, intentar con fromSQL (formato de base de datos)
-           if (!parsedDate.isValid) {
-             console.log("Intento con fromSQL");
-             parsedDate = DateTime.fromSQL(cleanDate, { zone: "America/Bogota" });
-           }
-           
-           // Si sigue sin ser válido, intentar con fromFormat para algunos formatos comunes
-           if (!parsedDate.isValid) {
-             console.log("Intento con formatos específicos");
-             const formats = [
-               "yyyy-MM-dd HH:mm:ss",
-               "yyyy-MM-dd'T'HH:mm:ss",
-               "dd/MM/yyyy HH:mm:ss",
-               "yyyy-MM-dd"
-             ];
-             
-             for (const format of formats) {
-               parsedDate = DateTime.fromFormat(cleanDate, format, { zone: "America/Bogota" });
-               if (parsedDate.isValid) break;
-             }
-           }
-         } else if (date instanceof Date) {
-           // Si es un objeto Date, convertirlo directamente
-           parsedDate = DateTime.fromJSDate(date, { zone: "America/Bogota" });
-         }
-         
-         // Verificar si se pudo parsear correctamente
-         if (!parsedDate || !parsedDate.isValid) {
-           console.warn("No se pudo parsear la fecha:", date);
-           return "Fecha inválida";
-         }
-         
-         console.log("Fecha parseada correctamente:", parsedDate.toISO());
-         // Formatear con configuración regional española
-         return parsedDate.setLocale('es').toFormat("d 'de' MMMM 'de' yyyy HH:mm");
-       } catch (error) {
-         console.error("Error al formatear la fecha:", error, "Fecha original:", date);
-         return "Fecha inválida";
-       }
-     };
-     
+
+    const renderDate = (date) => {
+        if (!date) return "Sin fecha";
+
+        console.log("Fecha original recibida:", date, "Tipo:", typeof date);
+
+        try {
+            let parsedDate;
+
+            // Si es un string, intentamos varios métodos de parsing
+            if (typeof date === 'string') {
+                // Eliminar 'Z' si existe para evitar conversión UTC
+                const cleanDate = date.endsWith('Z') ? date.substring(0, date.length - 1) : date;
+                console.log("Fecha limpia:", cleanDate);
+
+                // Intentar primero con fromISO (formato ISO)
+                parsedDate = DateTime.fromISO(cleanDate, { zone: "America/Bogota" });
+
+                // Si no es válido, intentar con fromSQL (formato de base de datos)
+                if (!parsedDate.isValid) {
+                    console.log("Intento con fromSQL");
+                    parsedDate = DateTime.fromSQL(cleanDate, { zone: "America/Bogota" });
+                }
+
+                // Si sigue sin ser válido, intentar con fromFormat para algunos formatos comunes
+                if (!parsedDate.isValid) {
+                    console.log("Intento con formatos específicos");
+                    const formats = [
+                        "yyyy-MM-dd HH:mm:ss",
+                        "yyyy-MM-dd'T'HH:mm:ss",
+                        "dd/MM/yyyy HH:mm:ss",
+                        "yyyy-MM-dd"
+                    ];
+
+                    for (const format of formats) {
+                        parsedDate = DateTime.fromFormat(cleanDate, format, { zone: "America/Bogota" });
+                        if (parsedDate.isValid) break;
+                    }
+                }
+            } else if (date instanceof Date) {
+                // Si es un objeto Date, convertirlo directamente
+                parsedDate = DateTime.fromJSDate(date, { zone: "America/Bogota" });
+            }
+
+            // Verificar si se pudo parsear correctamente
+            if (!parsedDate || !parsedDate.isValid) {
+                console.warn("No se pudo parsear la fecha:", date);
+                return "Fecha inválida";
+            }
+
+            console.log("Fecha parseada correctamente:", parsedDate.toISO());
+            // Formatear con configuración regional española
+            return parsedDate.setLocale('es').toFormat("d 'de' MMMM 'de' yyyy HH:mm");
+        } catch (error) {
+            console.error("Error al formatear la fecha:", error, "Fecha original:", date);
+            return "Fecha inválida";
+        }
+    };
+
 
 
     const getAccountName = (accountId) => {
@@ -331,10 +329,7 @@ const ExpenseTable = ({ categories = [], accounts = [], activeTab }) => {
         return account ? account.name : "Cuenta no encontrada";
     };
 
-    const getCategoryName = (categoryId) => {
-        const category = categories.find((cat) => cat.id === categoryId);
-        return category ? category.name : "Categoría no encontrada";
-    };
+ 
 
     const handleEditSelected = () => {
         if (selectedRowKeys.length === 1) {
@@ -406,6 +401,7 @@ const ExpenseTable = ({ categories = [], accounts = [], activeTab }) => {
             const tableData = items.map(item => [
                 item.invoice_number || "N/A",
                 item.description || "Sin descripción",
+                item.category || "Sin Sin Categoria",
                 renderDate(item.date),
                 getAccountName(item.account_id),
                 getProviderName(item.provider_id),
@@ -560,33 +556,6 @@ const ExpenseTable = ({ categories = [], accounts = [], activeTab }) => {
     const columns = [
 
         {
-                    title: (
-                      <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                        Fecha y Hora
-                        <input
-                          prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
-                          onChange={(e) => handleSearch(e.target.value, "date")}
-                          style={{
-                            marginTop: 2,
-                            padding: 4,
-                            height: 28,
-                            fontSize: 12,
-                            border: "1px solid #d9d9d9",
-                            borderRadius: 4,
-                            outline: "none",
-                          }}
-                        />
-                      </div>
-                    ),
-                    dataIndex: "date",
-                    key: "date",
-                    render: (text) => renderDate(text),
-                    sorter: (a, b) => new Date(a.date) - new Date(b.date),
-                    sortDirections: ["descend", "ascend"],
-                    width: 180, // Aumentamos el ancho para dar espacio a la hora
-                  },
-
-        {
             title: (
                 <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
                     N° de egreso
@@ -601,8 +570,58 @@ const ExpenseTable = ({ categories = [], accounts = [], activeTab }) => {
             key: "invoice_number",
             sorter: (a, b) => a.invoice_number - b.invoice_number,
             render: (text) => <a>{text || "No disponible"}</a>,
-            width: 110,
+            width: 30,
         },
+
+        {
+            title: (
+                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Fecha y Hora
+                    <input
+                        prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
+                        onChange={(e) => handleSearch(e.target.value, "date")}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: "1px solid #d9d9d9",
+                            borderRadius: 4,
+                            outline: "none",
+                        }}
+                    />
+                </div>
+            ),
+            dataIndex: "date",
+            key: "date",
+            render: (text) => renderDate(text),
+            sorter: (a, b) => new Date(a.date) - new Date(b.date),
+            sortDirections: ["descend", "ascend"],
+            width: 150, // Aumentamos el ancho para dar espacio a la hora
+        },
+
+     
+            {
+              title: (
+                <div className="flex flex-col" style={{ margin: "2px 0", gap: 1, lineHeight: 1 }}>
+                  Categoría
+                  <input
+                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                        onChange={(e) => handleSearch(e.target.value, "category")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, border: '1px solid #d9d9d9', borderRadius: 4, outline: 'none' }}
+                    />
+                </div>
+              ),
+              dataIndex: "category",
+              key: "category",
+              render: (category) => <Tag color="purple">{category}</Tag>,
+              
+              sortDirections: ["ascend", "descend"],
+              ellipsis: true,
+              width: 150,
+            },
+
+
 
         {
             title: (
@@ -620,7 +639,7 @@ const ExpenseTable = ({ categories = [], accounts = [], activeTab }) => {
             sorter: (a, b) => a.description.localeCompare(b.description),
             sortDirections: ["ascend", "descend"],
             ellipsis: true,
-            width: 300,
+            width: 200,
         },
         {
             title: (
@@ -638,7 +657,7 @@ const ExpenseTable = ({ categories = [], accounts = [], activeTab }) => {
             render: (id) => <Tag color="blue">{getAccountName(id)}</Tag>,
             sorter: (a, b) => getAccountName(a.account_id).localeCompare(getAccountName(b.account_id)),
             sortDirections: ["ascend", "descend"],
-            width: 150,
+            width: 100,
         },
         {
             title: (
@@ -656,7 +675,7 @@ const ExpenseTable = ({ categories = [], accounts = [], activeTab }) => {
             render: (providerId) => <Tag color="orange">{getProviderName(providerId)}</Tag>,
             sorter: (a, b) => getProviderName(a.provider_id).localeCompare(getProviderName(b.provider_id)),
             sortDirections: ["ascend", "descend"],
-            width: 150,
+            width: 100,
         },
         {
             title: (
@@ -674,7 +693,7 @@ const ExpenseTable = ({ categories = [], accounts = [], activeTab }) => {
             render: (total_gross) => <span className="font-bold">{formatCurrency(total_gross)}</span>,
             sorter: (a, b) => a.total_gross - b.total_gross,
             sortDirections: ["descend", "ascend"],
-            width: 140,
+            width: 100,
         },
         {
             title: (
@@ -692,7 +711,7 @@ const ExpenseTable = ({ categories = [], accounts = [], activeTab }) => {
             render: (discounts) => <span className="font-bold">{formatCurrency(discounts)}</span>,
             sorter: (a, b) => a.discounts - b.discounts,
             sortDirections: ["descend", "ascend"],
-            width: 140,
+            width: 100,
         },
         {
             title: (
@@ -710,28 +729,9 @@ const ExpenseTable = ({ categories = [], accounts = [], activeTab }) => {
             render: (total_net) => <span className="font-bold">{formatCurrency(total_net)}</span>,
             sorter: (a, b) => a.total_net - b.total_net,
             sortDirections: ["descend", "ascend"],
-            width: 140,
+            width: 100,
         },
-        {
-            title: "Comprobante",
-            dataIndex: "voucher",
-            key: "voucher",
-            render: (vouchers) =>
-                Array.isArray(vouchers) && vouchers.length > 0 ? (
-                    <Button
-                        type="link"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            openDrawer(vouchers);
-                        }}
-                    >
-                        Ver comprobante
-                    </Button>
-                ) : (
-                    "—"
-                ),
-            width: 130,
-        }
+        
     ];
 
     return (

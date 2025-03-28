@@ -214,7 +214,6 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
           title: (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span>Categoría</span>
-
             </div>
           ),
           dataIndex: 'categoria',
@@ -222,9 +221,9 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
           render: (text, record) => {
             const usedCategories = items
               .filter(item => item.key !== record.key)
-              .map(item => item.categoria);
+              .map(item => item.categoria); // Comparar con el nombre, no el id
             const availableCategorias = categorias.filter(cat =>
-              !usedCategories.includes(cat.id)
+              !usedCategories.includes(cat.name) // Filtrar por nombre
             );
 
             return (
@@ -255,7 +254,7 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
                 )}
               >
                 {availableCategorias.map((cat) => (
-                  <Select.Option key={cat.id} value={cat.id}>
+                  <Select.Option key={cat.id} value={cat.name}> {/* Enviar el name como valor */}
                     {cat.name}
                   </Select.Option>
                 ))}
