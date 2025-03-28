@@ -168,7 +168,7 @@ const ComprobanteEgresoHeader = ({
               >
                 {Array.isArray(categorias) &&
                   categorias.map((cat) => (
-                    <Select.Option key={cat.id} value={cat.id}>
+                    <Select.Option key={cat.id} value={cat.name}>
                       {cat.name}
                     </Select.Option>
                   ))}

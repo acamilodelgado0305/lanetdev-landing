@@ -4,7 +4,7 @@ import { FileTextOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import TableData from '../../Tablas/TablaDatos';
-import AddProvider from './AddProvider';
+import AddProvider from '../../Terceros/Proveedores/AddProvider';
 
 
 const { Title } = Typography;

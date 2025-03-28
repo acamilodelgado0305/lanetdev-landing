@@ -6,10 +6,23 @@ const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
+// Función para verificar si el token ha expirado
+const isTokenExpired = (token) => {
+    if (!token) return true;
+    try {
+        const decoded = jwtDecode(token);
+        const currentTime = Date.now() / 1000; // Tiempo actual en segundos
+        return decoded.exp < currentTime; // Compara la expiración con el tiempo actual
+    } catch (error) {
+        console.error('Error al decodificar el token:', error);
+        return true; // Si hay error, asumimos que el token no es válido
+    }
+};
+
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [userRole, setUserRole] = useState(null);
-    const [userApp, setUserApp] = useState(sessionStorage.getItem('app') || null); // Inicializar desde sessionStorage
+    const [userApp, setUserApp] = useState(sessionStorage.getItem('app') || null);
     const [authToken, setAuthToken] = useState(null);
     const [loading, setLoading] = useState(false);
     const [restoringSession, setRestoringSession] = useState(false);
@@ -24,7 +37,6 @@ export const AuthProvider = ({ children }) => {
             const decodedToken = jwtDecode(token);
             const id = decodedToken.id;
 
-            // Guardar el id en sessionStorage
             sessionStorage.setItem('userId', id);
 
             const userData = await getUserById(id, token);
@@ -41,25 +53,18 @@ export const AuthProvider = ({ children }) => {
                     console.warn('El campo app no está presente en los datos del usuario');
                 }
             } else {
-                console.error('No se encontraron datos de usuario');
-                setUser(null);
-                setUserRole(null);
-                setUserApp(null);
-                sessionStorage.removeItem('app');
+                throw new Error('No se encontraron datos de usuario');
             }
         } catch (error) {
             console.error('Error al iniciar sesión:', error.message);
-            setUser(null);
-            setUserRole(null);
-            setUserApp(null);
-            sessionStorage.removeItem('app');
+            logout(); // Forzar logout si falla el login
             throw error;
         } finally {
             setLoading(false);
         }
     };
 
-    // Función para restaurar el token y sesión usando la ruta /users/:id/token
+    // Función para restaurar el token y sesión
     const restoreSession = async () => {
         setRestoringSession(true);
         try {
@@ -68,7 +73,7 @@ export const AuthProvider = ({ children }) => {
 
             if (storedUserId) {
                 const { token } = await fetchUserToken(storedUserId);
-                if (token) {
+                if (token && !isTokenExpired(token)) {
                     setAuthToken(token);
 
                     const decodedToken = jwtDecode(token);
@@ -87,19 +92,17 @@ export const AuthProvider = ({ children }) => {
                             console.warn('El campo app no está presente en los datos restaurados');
                         }
                     } else {
-                        setUser(null);
-                        setUserRole(null);
-                        setUserApp(null);
-                        sessionStorage.removeItem('app');
+                        throw new Error('No se encontraron datos de usuario');
                     }
+                } else {
+                    throw new Error('Token inválido o expirado');
                 }
+            } else {
+                throw new Error('No hay ID de usuario almacenado');
             }
         } catch (error) {
             console.error('Error al restaurar la sesión:', error);
-            setUser(null);
-            setUserRole(null);
-            setUserApp(null);
-            sessionStorage.removeItem('app');
+            logout(); // Forzar logout si falla la restauración
         } finally {
             setRestoringSession(false);
         }
@@ -115,11 +118,25 @@ export const AuthProvider = ({ children }) => {
         sessionStorage.removeItem('app');
     };
 
-    // useEffect para restaurar la sesión al recargar la página
+    // Verificación periódica del token y restauración de sesión
     useEffect(() => {
-        if (!authToken && !user && !restoringSession) {
-            restoreSession();
-        }
+        const checkToken = () => {
+            if (authToken && isTokenExpired(authToken)) {
+                console.warn('Token expirado, cerrando sesión...');
+                logout();
+            } else if (!authToken && !user && !restoringSession) {
+                restoreSession();
+            }
+        };
+
+        // Ejecutar inmediatamente al montar el componente
+        checkToken();
+
+        // Verificar cada 5 minutos (o el intervalo que prefieras)
+        const interval = setInterval(checkToken, 5 * 60 * 1000);
+
+        // Limpiar el intervalo al desmontar
+        return () => clearInterval(interval);
     }, [authToken, user, restoringSession]);
 
     return (
