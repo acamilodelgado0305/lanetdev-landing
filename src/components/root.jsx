@@ -190,21 +190,11 @@ export default function Root() {
         disabled: true,
       },
       {
+        to: "/index/terceros/cajeros",
         label: "Terceros",
         icon: <IdcardOutlined />,
         hasSubmenu: true,
-        submenuItems: [
-          {
-            to: "/index/terceros/cajeros",
-            label: "Cajeros",
-            icon: <DotIcon />,
-          },
-          {
-            to: "/index/terceros/proveedores",
-            label: "Proveedores",
-            icon: <DotIcon />,
-          },
-        ],
+        
       },
       {
         to: "/index/tienda",
@@ -317,21 +307,11 @@ export default function Root() {
           ],
         },
         {
+          to: "/index/terceros/cajeros",
           label: "Terceros",
           icon: <IdcardOutlined />,
-          hasSubmenu: true,
-          submenuItems: [
-            {
-              to: "/index/terceros/cajeros",
-              label: "Cajeros",
-              icon: <DotIcon />,
-            },
-            {
-              to: "/index/terceros/proveedores",
-              label: "Proveedores",
-              icon: <DotIcon />,
-            },
-          ],
+     
+          
         },
         { label: "SISTEMA", isTitle: true },
         {
