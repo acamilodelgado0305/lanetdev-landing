@@ -35,7 +35,7 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
   const [columnWidths, setColumnWidths] = useState({
 
     categoria: 120,
-    product: 150, 
+    product: 150,
     quantity: 100,
     unitPrice: 120,
     discount: 50,
@@ -45,7 +45,7 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
     action: 20
   });
 
-  
+
 
   // Cargar categorías al montar el componente
   useEffect(() => {
@@ -109,10 +109,33 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
     });
 
     const subtotal = newTotals.totalBruto - newTotals.descuentos;
-    const iva = hiddenImpuestos ? subtotal * (parseFloat(totals.ivaPercentage) / 100) : items.reduce((acc, item) => acc + (parseFloat(item.taxCharge) || 0) * (parseFloat(item.quantity) || 0) * (parseFloat(item.unitPrice) || 0) / 100, 0);
-    const retencion = hiddenImpuestos ? subtotal * (parseFloat(totals.retencionPercentage) / 100) : items.reduce((acc, item) => acc + (parseFloat(item.taxWithholding) || 0) * (parseFloat(item.quantity) || 0) * (parseFloat(item.unitPrice) || 0) / 100, 0);
-    const totalNeto = subtotal + iva - retencion;
-    const totalImpuestos = iva - retencion;
+    const iva = hiddenImpuestos
+      ? subtotal * (parseFloat(totals.ivaPercentage) / 100)
+      : items.reduce((acc, item) => {
+        const quantity = parseFloat(item.quantity) || 0;
+        const unitPrice = parseFloat(item.unitPrice) || 0;
+        const discount = parseFloat(item.discount) || 0;
+        const taxCharge = parseFloat(item.taxCharge) || 0;
+
+        const bruto = quantity * unitPrice;
+        const discountAmount = hasPercentageDiscount ? bruto * (discount / 100) : discount;
+        const subtotalItem = bruto - discountAmount;
+        return acc + subtotalItem * (taxCharge / 100);
+      }, 0);
+    const retencion = hiddenImpuestos
+      ? subtotal * (parseFloat(totals.retencionPercentage) / 100)
+      : items.reduce((acc, item) => {
+        const quantity = parseFloat(item.quantity) || 0;
+        const unitPrice = parseFloat(item.unitPrice) || 0;
+        const discount = parseFloat(item.discount) || 0;
+        const taxWithholding = parseFloat(item.taxWithholding) || 0;
+
+        const bruto = quantity * unitPrice;
+        const discountAmount = hasPercentageDiscount ? bruto * (discount / 100) : discount;
+        const subtotalItem = bruto - discountAmount;
+        return acc + subtotalItem * (taxWithholding / 100);
+      }, 0); const totalNeto = subtotal + iva - retencion;
+    const totalImpuestos = iva + retencion;
 
     const updatedTotals = {
       totalBruto: newTotals.totalBruto,
@@ -183,69 +206,69 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
     }));
   };
   const columns = [
-   
-   
+
+
     ...(hiddenDetails
       ? [
         {
           title: (
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>Categoría</span>
-              </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>Categoría</span>
+            </div>
           ),
           dataIndex: 'categoria',
           width: columnWidths.categoria,
           render: (text, record) => {
-              const usedCategories = items
-                  .filter(item => item.key !== record.key)
-                  .map(item => item.categoria); // Comparar con el nombre, no el id
-              const availableCategorias = categorias.filter(cat =>
-                  !usedCategories.includes(cat.name) // Filtrar por nombre
-              );
-      
-              return (
-                  <Select
-                      value={record.categoria}
-                      onChange={(value) => handleValueChange(record.key, 'categoria', value)}
-                      className="w-full"
-                      placeholder="Selecciona una categoría"
-                      dropdownRender={(menu) => (
-                          <div>
-                              {menu}
-                              <Divider style={{ margin: '8px 0' }} />
-                              <div
-                                  style={{
-                                      display: 'flex',
-                                      justifyContent: 'center',
-                                      padding: '8px',
-                                      cursor: 'pointer',
-                                  }}
-                                  onMouseDown={(e) => e.preventDefault()}
-                                  onClick={() => {
-                                      console.log("Redirigiendo a crear categoría...");
-                                  }}
-                              >
-                                  Crear categoría
-                              </div>
-                          </div>
-                      )}
-                  >
-                      {availableCategorias.map((cat) => (
-                          <Select.Option key={cat.id} value={cat.name}> {/* Enviar el name como valor */}
-                              {cat.name}
-                          </Select.Option>
-                      ))}
-                  </Select>
-              );
+            const usedCategories = items
+              .filter(item => item.key !== record.key)
+              .map(item => item.categoria); // Comparar con el nombre, no el id
+            const availableCategorias = categorias.filter(cat =>
+              !usedCategories.includes(cat.name) // Filtrar por nombre
+            );
+
+            return (
+              <Select
+                value={record.categoria}
+                onChange={(value) => handleValueChange(record.key, 'categoria', value)}
+                className="w-full"
+                placeholder="Selecciona una categoría"
+                dropdownRender={(menu) => (
+                  <div>
+                    {menu}
+                    <Divider style={{ margin: '8px 0' }} />
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        padding: '8px',
+                        cursor: 'pointer',
+                      }}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => {
+                        console.log("Redirigiendo a crear categoría...");
+                      }}
+                    >
+                      Crear categoría
+                    </div>
+                  </div>
+                )}
+              >
+                {availableCategorias.map((cat) => (
+                  <Select.Option key={cat.id} value={cat.name}> {/* Enviar el name como valor */}
+                    {cat.name}
+                  </Select.Option>
+                ))}
+              </Select>
+            );
           },
-      }
+        }
       ]
       : []),
     {
       title: (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>Producto</span>
-          
+
         </div>
       ),
       dataIndex: 'product',
@@ -263,7 +286,7 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
       title: (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>Cant</span>
-          
+
         </div>
       ),
       dataIndex: 'quantity',
@@ -281,7 +304,7 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
       title: (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>Valor Unitario</span>
-          
+
         </div>
       ),
       dataIndex: 'unitPrice',
@@ -300,7 +323,7 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
       title: (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>Descuento</span>
-          
+
         </div>
       ),
       dataIndex: 'discount',
@@ -321,7 +344,7 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
           title: (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span>Impuesto Cargo</span>
-             
+
             </div>
           ),
           dataIndex: 'taxCharge',
@@ -343,7 +366,7 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
           title: (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span>Impuesto Retención</span>
-             
+
             </div>
           ),
           dataIndex: 'taxWithholding',
@@ -373,7 +396,7 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
       title: (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>Valor Total</span>
-          
+
         </div>
       ),
       dataIndex: 'total',
@@ -384,7 +407,7 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
       title: (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span></span>
-          
+
         </div>
       ),
       key: 'action',
@@ -407,12 +430,15 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
       <div style={{ marginTop: '16px', width: '100%', maxWidth: '400px', marginLeft: 'auto' }}>
         <div style={{ border: '1px solid #f0f0f0', padding: '16px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Total Bruto:</div>
-            <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.totalBruto)}</div>
-            <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Descuentos:</div>
-            <div style={{ textAlign: 'right', color: '#ff4d4f' }}>-{formatCurrency(totals.descuentos)}</div>
             <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Subtotal:</div>
             <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.subtotal)}</div>
+            <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Descuentos:</div>
+            <div style={{ textAlign: 'right', color: '#ff4d4f' }}>-{formatCurrency(totals.descuentos)}</div>
+            <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Retefuente:</div>
+            <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.retencion)}</div>
+            <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Iva:</div>
+            <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.iva)}</div>
+
             {hiddenImpuestos && (
               <>
                 <div style={{ textAlign: 'right', fontWeight: 500, color: '#666', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
@@ -454,7 +480,7 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
           </div>
           <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '8px', marginTop: '8px' }}>
             <div className="bg-[#0052CC] text-white rounded-md py-2 px-4 flex justify-between items-center">
-              <div style={{ textAlign: 'right', fontWeight: 'bold', fontSize: '16px' }}>Total Neto:</div>
+              <div style={{ textAlign: 'right', fontWeight: 'bold', fontSize: '16px' }}>Total:</div>
               <div style={{ textAlign: 'right', fontWeight: 'bold', fontSize: '16px' }}>{formatCurrency(totals.totalNeto)}</div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '8px' }}>
