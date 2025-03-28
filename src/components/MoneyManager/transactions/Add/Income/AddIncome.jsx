@@ -16,7 +16,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format as formatDate } from "date-fns";
 import { es } from "date-fns/locale";
-import ImportePersonalizado from "../../../../Terceros/Cajeros/ImportePersonalizado";
+import ArqueoInputs from "./ArqueoInputs";
 
 const apiUrl = import.meta.env.VITE_API_FINANZAS;
 const { Title, Text } = Typography;
@@ -194,14 +194,14 @@ const AddIncome = ({ onTransactionAdded }) => {
       const response = await fetch(`${apiUrl}/incomes/${id}`);
       if (!response.ok) throw new Error("No se pudo obtener la información del ingreso");
       const data = await response.json();
-
+  
       setAmount(data.amount?.toString() || "");
       setCategory(data.category_id?.toString() || "");
       setAccount(data.account_id?.toString() || "");
       setDescription(data.description || "");
       setComentarios(data.comentarios || "");
       setDate(data.date ? dayjs(data.date) : dayjs());
-
+  
       if (data.type === "arqueo") {
         setIsArqueoChecked(true);
         setFevAmount(data.amountfev?.toString() || "");
@@ -213,10 +213,11 @@ const AddIncome = ({ onTransactionAdded }) => {
         setCashierCommission(data.cashier_commission?.toString() || "");
         setStartPeriod(data.start_period ? dayjs(data.start_period) : null);
         setEndPeriod(data.end_period ? dayjs(data.end_period) : null);
-
-        // Cargar importes_personalizados del ingreso
-        const mappedCustomAmounts = (data.importes_personalizados || []).map((item) => ({
-          key: item.id_importe,
+  
+        // Safeguard for importes_personalizados
+        const importesPersonalizados = Array.isArray(data.importes_personalizados) ? data.importes_personalizados : [];
+        const mappedCustomAmounts = importesPersonalizados.map((item) => ({
+          key: item.id_importe || `${Date.now()}-${Math.random()}`,
           product: item.producto || '',
           action: item.accion || 'suma',
           value: parseFloat(item.valor) || 0,
@@ -274,9 +275,9 @@ const AddIncome = ({ onTransactionAdded }) => {
         });
         return;
       }
-
+  
       const totalAmount = isArqueoChecked ? calculateTotalAmount() : parseFloat(amount);
-
+  
       const baseRequestBody = {
         user_id: parseInt(sessionStorage.getItem("userId")),
         account_id: parseInt(account),
@@ -289,12 +290,14 @@ const AddIncome = ({ onTransactionAdded }) => {
         estado: true,
         amount: totalAmount,
       };
-
+  
       let requestBody;
       if (isArqueoChecked) {
-        console.log("customAmounts antes de filtrar:", JSON.stringify(customAmounts, null, 2));
-
-        const validCustomAmounts = (customAmounts || [])
+        // Ensure customAmounts is an array
+        const safeCustomAmounts = Array.isArray(customAmounts) ? customAmounts : [];
+        console.log("customAmounts antes de filtrar:", JSON.stringify(safeCustomAmounts, null, 2));
+  
+        const validCustomAmounts = safeCustomAmounts
           .filter(item => {
             const isValid = item && 
               typeof item === 'object' && 
@@ -311,9 +314,9 @@ const AddIncome = ({ onTransactionAdded }) => {
             accion: item.action,
             valor: item.value,
           }));
-
+  
         console.log("validCustomAmounts después de filtrar:", JSON.stringify(validCustomAmounts, null, 2));
-
+  
         requestBody = {
           ...baseRequestBody,
           amountfev: parseFloat(fevAmount) || 0,
@@ -326,18 +329,18 @@ const AddIncome = ({ onTransactionAdded }) => {
           start_period: startPeriod?.format("YYYY-MM-DD"),
           end_period: endPeriod?.format("YYYY-MM-DD"),
           amountcustom: customAmountsTotal,
-          importes_personalizados: validCustomAmounts.length > 0 ? validCustomAmounts : [],
+          importes_personalizados: validCustomAmounts, // Always send an array
         };
       } else {
         requestBody = baseRequestBody;
       }
-
+  
       const requestBodyString = JSON.stringify(requestBody);
       console.log("Request Body enviado (string):", requestBodyString);
-
+  
       const url = id ? `${apiUrl}/incomes/${id}` : `${apiUrl}/incomes`;
       const method = id ? "PUT" : "POST";
-
+  
       const response = await fetch(url, {
         method: method,
         headers: {
@@ -345,15 +348,15 @@ const AddIncome = ({ onTransactionAdded }) => {
         },
         body: requestBodyString,
       });
-
+  
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
       }
-
+  
       await response.json();
       setIsIncomeSaved(true);
-
+  
       Swal.fire({
         icon: "success",
         title: id ? "Ingreso Actualizado" : "Ingreso Registrado",
@@ -599,173 +602,6 @@ const AddIncome = ({ onTransactionAdded }) => {
     </div>
   );
 
-  const renderArqueoInputs = () => {
-    if (isArqueoChecked) {
-      const amount = calculateTotalAmount();
-      const cashReceivedValue = parseFloat(cashReceived) || 0;
-      const isCashMatch = cashReceivedValue === amount;
-      const commission = amount * (CommissionPorcentaje / 100);
-
-      return (
-        <div className="p-6 space-y-8">
-          {renderInvoiceHeader()}
-          <div className="grid grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <Title level={4}>Período de Arqueo</Title>
-              <div className="flex space-x-4">
-                <DatePicker
-                  value={startPeriod}
-                  onChange={(date) => setStartPeriod(date)}
-                  placeholder="Fecha Inicio"
-                  className="w-40"
-                />
-                <DatePicker
-                  value={endPeriod}
-                  onChange={(date) => setEndPeriod(date)}
-                  placeholder="Fecha Fin"
-                  className="w-40"
-                />
-              </div>
-            </div>
-          </div>
-          <Divider />
-          <div className="space-y-4">
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <Title level={4} style={{ margin: 0 }}>Donde ingresa el dinero*</Title>
-            </div>
-            <AccountSelector
-              selectedAccount={account}
-              onAccountSelect={(value) => setAccount(value)}
-              accounts={accounts}
-            />
-          </div>
-          <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-gray-50 p-4">
-                <Title level={5}>Desglose de Ingresos</Title>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span>Importe FEV:</span>
-                    <Input
-                      value={formatCurrency(fevAmount)}
-                      onChange={(e) => handleAmountChange(e, "fev")}
-                      className="w-40"
-                    />
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Importe Diverso:</span>
-                    <Input
-                      value={formatCurrency(diversoAmount)}
-                      onChange={(e) => handleAmountChange(e, "diverso")}
-                      className="w-40"
-                    />
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Otros Ingresos:</span>
-                    <Input
-                      value={formatCurrency(otherIncome)}
-                      onChange={(e) => handleAmountChange(e, "other_incomes")}
-                      className="w-40"
-                    />
-                  </div>
-                  <div className="mt-4">
-                    <Title level={5}>Importes Fijos</Title>
-                    <ImportePersonalizado
-                      items={customAmounts}
-                      onItemsChange={handleCustomAmountsChange}
-                      onTotalsChange={handleCustomTotalsChange}
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="bg-gray-50 p-4">
-                <Title level={5}>Resumen</Title>
-                <div className="space-y-3">
-                  <div className="bg-[#0052CC] text-white rounded-md py-2 px-4 flex justify-between items-center">
-                    <span className="text-white text-xl">Total a cobrar</span>
-                    <span className="font-bold text-lg">{formatCurrency(amount)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Efectivo Recibido:</span>
-                    <Input
-                      value={formatCurrency(cashReceived)}
-                      onChange={(e) => handleAmountChange(e, "cashReceived")}
-                      className="w-40"
-                    />
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Comisión ({CommissionPorcentaje}%):</span>
-                    <span className="font-bold">{formatCurrency(cashierCommission)}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            {renderDiscrepancyMessage()}
-          </div>
-          <Divider />
-          <div className="space-y-4">
-            <Title level={4}>Observaciones</Title>
-            <textarea
-              value={comentarios}
-              onChange={(e) => setComentarios(e.target.value)}
-              placeholder="Añade comentarios adicionales"
-              rows={3}
-              className="w-full border p-2"
-            />
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  const renderDiscrepancyMessage = () => {
-    const totalAmount = calculateTotalAmount();
-    const cashReceivedValue = parseFloat(cashReceived) || 0;
-    const difference = cashReceivedValue - totalAmount;
-    const isCashMatch = Math.abs(difference) < 0.01;
-
-    let messageText, messageClass, differenceText, questionText;
-
-    if (isCashMatch) {
-      messageText = "Los valores coinciden correctamente";
-      messageClass = "bg-green-100 text-green-700";
-      differenceText = "";
-    } else if (difference > 0) {
-      messageText = "¡Alerta! Hay un excedente en el arqueo";
-      messageClass = "bg-yellow-100 text-yellow-700";
-      differenceText = `Sobran ${formatCurrency(difference)}`;
-      questionText = "¿Por qué hay dinero extra? Verifique posibles errores en el registro de ventas.";
-    } else {
-      messageText = "¡Error! Hay un déficit en el arqueo";
-      messageClass = "bg-red-100 text-red-700";
-      differenceText = `Faltan ${formatCurrency(Math.abs(difference))}`;
-      questionText = "¿Por qué falta dinero? Revise posibles errores de cobro o si hubo retiros no registrados.";
-    }
-
-    return (
-      <div className={`p-4 rounded-lg mb-4 ${messageClass}`}>
-        <h3 className="font-bold text-lg mb-2">{messageText}</h3>
-        {!isCashMatch && (
-          <div className="flex flex-col space-y-2">
-            <div className="text-2xl font-bold mb-3">Diferencia: {differenceText}</div>
-            <div className="space-y-2 text-sm">
-              <div className="justify-between">
-                <div>Efectivo esperado:</div>
-                <div>{formatCurrency(totalAmount)}</div>
-              </div>
-              <div className="justify-between">
-                <div>Efectivo recibido:</div>
-                <div>{formatCurrency(cashReceivedValue)}</div>
-              </div>
-            </div>
-            <div className="mt-3 border-t pt-3 italic">{questionText}</div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
   const renderVentaInputs = () => {
     if (isVentaChecked) {
       return (
@@ -855,7 +691,39 @@ const AddIncome = ({ onTransactionAdded }) => {
           <Radio value="arqueo">Arqueo</Radio>
           <Radio value="venta">Venta</Radio>
         </Radio.Group>
-        {renderArqueoInputs()}
+        <ArqueoInputs
+          isArqueoChecked={isArqueoChecked}
+          arqueoNumber={arqueoNumber}
+          setArqueoNumber={setArqueoNumber}
+          date={date}
+          cashierid={cashierid}
+          setCashierid={setCashierid}
+          cashiers={cashiers}
+          description={description}
+          setDescription={setDescription}
+          startPeriod={startPeriod}
+          setStartPeriod={setStartPeriod}
+          endPeriod={endPeriod}
+          setEndPeriod={setEndPeriod}
+          account={account}
+          setAccount={setAccount}
+          accounts={accounts}
+          fevAmount={fevAmount}
+          handleAmountChange={handleAmountChange}
+          diversoAmount={diversoAmount}
+          otherIncome={otherIncome}
+          customAmounts={customAmounts}
+          handleCustomAmountsChange={handleCustomAmountsChange}
+          handleCustomTotalsChange={handleCustomTotalsChange}
+          customAmountsTotal={customAmountsTotal}
+          cashReceived={cashReceived}
+          calculateTotalAmount={calculateTotalAmount}
+          CommissionPorcentaje={CommissionPorcentaje}
+          cashierCommission={cashierCommission}
+          comentarios={comentarios}
+          setComentarios={setComentarios}
+          formatCurrency={formatCurrency}
+        />
         {renderVentaInputs()}
       </div>
       <VoucherSection
