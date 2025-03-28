@@ -267,7 +267,7 @@ const ExpenseTable = ({ categories = [], accounts = [], activeTab }) => {
     const renderDate = (date) => {
         if (!date) return "Sin fecha";
 
-        console.log("Fecha original recibida:", date, "Tipo:", typeof date);
+    
 
         try {
             let parsedDate;
@@ -276,7 +276,7 @@ const ExpenseTable = ({ categories = [], accounts = [], activeTab }) => {
             if (typeof date === 'string') {
                 // Eliminar 'Z' si existe para evitar conversión UTC
                 const cleanDate = date.endsWith('Z') ? date.substring(0, date.length - 1) : date;
-                console.log("Fecha limpia:", cleanDate);
+
 
                 // Intentar primero con fromISO (formato ISO)
                 parsedDate = DateTime.fromISO(cleanDate, { zone: "America/Bogota" });
@@ -313,7 +313,7 @@ const ExpenseTable = ({ categories = [], accounts = [], activeTab }) => {
                 return "Fecha inválida";
             }
 
-            console.log("Fecha parseada correctamente:", parsedDate.toISO());
+     
             // Formatear con configuración regional española
             return parsedDate.setLocale('es').toFormat("d 'de' MMMM 'de' yyyy HH:mm");
         } catch (error) {
