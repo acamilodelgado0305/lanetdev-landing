@@ -191,10 +191,20 @@ export default function Root() {
       },
       {
         to: "/index/terceros/cajeros",
-        label: "Terceros",
         icon: <IdcardOutlined />,
         hasSubmenu: true,
-        
+        submenuItems: [
+          /* {
+            to: "/index/terceros/cajeros",
+            label: "Cajeros",
+            icon: <DotIcon />,
+          }, */
+          /* {
+            to: "/index/terceros/proveedores",
+            label: "Proveedores",
+            icon: <DotIcon />,
+          }, */
+        ],
       },
       {
         to: "/index/tienda",
@@ -308,10 +318,20 @@ export default function Root() {
         },
         {
           to: "/index/terceros/cajeros",
-          label: "Terceros",
           icon: <IdcardOutlined />,
-     
-          
+          hasSubmenu: true,
+          submenuItems: [
+            /* {
+              to: "/index/terceros/cajeros",
+              label: "Cajeros",
+              icon: <DotIcon />,
+            },
+            {
+              to: "/index/terceros/proveedores",
+              label: "Proveedores",
+              icon: <DotIcon />,
+            }, */
+          ],
         },
         { label: "SISTEMA", isTitle: true },
         {
@@ -382,8 +402,8 @@ export default function Root() {
       const labelMatch = link.label.toLowerCase().includes(searchQuery.toLowerCase());
       const submenuMatch = link.hasSubmenu
         ? link.submenuItems.some((subItem) =>
-            subItem.label.toLowerCase().includes(searchQuery.toLowerCase())
-          )
+          subItem.label.toLowerCase().includes(searchQuery.toLowerCase())
+        )
         : false;
       return labelMatch || submenuMatch;
     });
