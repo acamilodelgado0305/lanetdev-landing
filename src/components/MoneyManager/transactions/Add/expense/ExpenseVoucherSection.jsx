@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Modal, Spin, message, Upload, Card } from 'antd';
 import { ArrowLeftOutlined, InboxOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
 import { uploadImage } from '../../../../../services/apiService';
@@ -8,9 +8,63 @@ const ExpenseVoucherSection = ({ onVoucherChange, initialVouchers = [], entryId 
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
     const [currentImage, setCurrentImage] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
-    const [imageUrls, setImageUrls] = useState(Array.isArray(initialVouchers) ? initialVouchers : []);
+    const [imageUrls, setImageUrls] = useState([]);
+    const [hasFetched, setHasFetched] = useState(false); // Track if we've fetched for this entryId
 
-    // Función auxiliar para normalizar los datos de voucher y asegurar que sea un array
+    // Normalizar y memoizar initialVouchers
+    const normalizedInitialVouchers = useMemo(() => {
+        console.log('Normalizing initialVouchers:', initialVouchers);
+        return Array.isArray(initialVouchers) ? [...initialVouchers] : normalizeVouchers(initialVouchers);
+    }, [initialVouchers]);
+
+    useEffect(() => {
+        console.log('useEffect triggered with entryId:', entryId, 'normalizedInitialVouchers:', normalizedInitialVouchers);
+
+        const fetchVouchers = async () => {
+            if (!entryId) {
+                console.log('No entryId, using normalizedInitialVouchers:', normalizedInitialVouchers);
+                setImageUrls(normalizedInitialVouchers);
+                setHasFetched(false);
+                return;
+            }
+
+            // Skip fetch if already fetched for this entryId
+            if (hasFetched) {
+                console.log('Skipping fetch, already fetched for entryId:', entryId);
+                return;
+            }
+
+            try {
+                console.log('Fetching vouchers from:', `${import.meta.env.VITE_API_FINANZAS}/expenses/${entryId}/vouchers`);
+                const response = await fetch(`${import.meta.env.VITE_API_FINANZAS}/expenses/${entryId}/vouchers`);
+                console.log('Fetch response status:', response.status);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Error al obtener los comprobantes: ${response.status} - ${errorText}`);
+                }
+
+                const data = await response.json();
+                console.log('Fetched data:', data);
+                const normalizedVouchers = normalizeVouchers(data.vouchers);
+                setImageUrls(normalizedVouchers);
+                setHasFetched(true); // Mark as fetched only on success
+            } catch (error) {
+                console.error('Error al obtener los comprobantes:', error);
+                message.error(`No se pudieron cargar los comprobantes: ${error.message}`);
+                setImageUrls([]);
+            }
+        };
+
+        fetchVouchers();
+    }, [entryId, normalizedInitialVouchers]);
+
+    useEffect(() => {
+        if (onVoucherChange) {
+            onVoucherChange(imageUrls);
+        }
+    }, [imageUrls, onVoucherChange]);
+
     const normalizeVouchers = (vouchers) => {
         if (Array.isArray(vouchers)) return vouchers;
         if (typeof vouchers === 'string') {
@@ -25,72 +79,30 @@ const ExpenseVoucherSection = ({ onVoucherChange, initialVouchers = [], entryId 
         return [];
     };
 
-    useEffect(() => {
-        const fetchVouchers = async () => {
-            if (!entryId) {
-                // Si no hay entryId, usa los initialVouchers normalizados
-                setImageUrls(normalizeVouchers(initialVouchers));
-                return;
-            }
-
-            try {
-                const response = await fetch(`${import.meta.env.VITE_API_FINANZAS}/expenses/${entryId}/vouchers`);
-                if (!response.ok) {
-                    throw new Error('Error al obtener los comprobantes');
-                }
-                const data = await response.json();
-                // Normalizar los vouchers recibidos del servidor
-                const normalizedVouchers = normalizeVouchers(data.vouchers);
-                setImageUrls(normalizedVouchers);
-            } catch (error) {
-                console.error('Error al obtener los comprobantes:', error);
-                message.error('No se pudieron cargar los comprobantes');
-                setImageUrls([]); // En caso de error, establecer un array vacío
-            }
-        };
-
-        fetchVouchers();
-    }, [entryId, initialVouchers]);
-
-    // Efecto para notificar al padre cuando cambian las imágenes
-    useEffect(() => {
-        if (onVoucherChange) {
-            onVoucherChange(imageUrls); // Enviar el array directamente, no como string
-        }
-    }, [imageUrls, onVoucherChange]);
-
     const handleImageUpload = async (files) => {
-        if (files.length === 0 || isUploading) return;  // Evitar que se dispare si ya está en proceso de carga
-        setIsUploading(true);  // Marcar como cargando
+        if (files.length === 0 || isUploading) return;
+        setIsUploading(true);
 
-        // Filtrar archivos que ya están en imageUrls para no subirlos de nuevo
-        const newFiles = files.filter(file => {
-            const fileName = file.name;
-            return !imageUrls.some(url => url.includes(fileName));  // Verifica si ya existe el archivo en imageUrls
-        });
-
+        const newFiles = files.filter(file => !imageUrls.some(url => url.includes(file.name)));
         if (newFiles.length === 0) {
-            message.info('Las imágenes ya han sido subidas');  // Si no hay archivos nuevos, mostrar un mensaje
+            message.info('Las imágenes ya han sido subidas');
             setIsUploading(false);
             return;
         }
 
         try {
-            const uploadPromises = newFiles.map(file => uploadImage(file)); // Subir solo los archivos nuevos
+            const uploadPromises = newFiles.map(file => uploadImage(file));
             const uploadedUrls = await Promise.all(uploadPromises);
-
-            // Filtrar las URLs duplicadas antes de agregar
             const newUrls = uploadedUrls.filter(url => !imageUrls.includes(url));
-
             if (newUrls.length > 0) {
-                setImageUrls(prev => [...prev, ...newUrls]);  // Agregar solo las URLs no duplicadas
+                setImageUrls(prev => [...prev, ...newUrls]);
                 message.success('Comprobantes agregados correctamente');
             }
         } catch (error) {
             console.error('Error al subir imágenes:', error);
             message.error('Error al subir los comprobantes');
         } finally {
-            setIsUploading(false);  // Marcar como no cargando
+            setIsUploading(false);
         }
     };
 
@@ -107,32 +119,26 @@ const ExpenseVoucherSection = ({ onVoucherChange, initialVouchers = [], entryId 
             const isPDF = file.type === 'application/pdf';
             if (!isImage && !isPDF) {
                 message.error('Solo se permiten archivos de imagen o PDF');
-                return false;  // No permitir archivos no válidos
+                return false;
             }
             return true;
         },
         onChange: (info) => {
             const { fileList } = info;
-            const files = fileList.map(file => file.originFileObj);  // Obtener solo los archivos
-            handleImageUpload(files);  // Subir los archivos solo si no hay carga en proceso
+            const files = fileList.map(file => file.originFileObj);
+            handleImageUpload(files);
         },
-        showUploadList: false,  // No mostrar la lista de archivos subidos
+        showUploadList: false,
     };
 
     const renderFilePreview = (url) => {
-        const isImage = url.startsWith('http') && (url.includes('.jpg') || url.includes('.png') || url.includes('.gif'));
+        const isImage = url.match(/\.(jpg|png|gif)$/i);
         const isPDF = url.endsWith('.pdf');
         if (isImage) {
             return <img src={url} alt="Comprobante" className="w-full h-32 object-cover rounded-lg shadow-sm" />;
         }
         if (isPDF) {
-            return (
-                <iframe
-                    src={url}
-                    title="Vista previa PDF"
-                    className="w-full h-32 border rounded-lg"
-                />
-            );
+            return <iframe src={url} title="Vista previa PDF" className="w-full h-32 border rounded-lg" />;
         }
         return null;
     };
@@ -152,20 +158,13 @@ const ExpenseVoucherSection = ({ onVoucherChange, initialVouchers = [], entryId 
                 </button>
             }
         >
-            {isEditMode ? (
+            {isEditMode && (
                 <div className="space-y-4">
                     <Dragger {...uploadProps} className="bg-gray-50 hover:bg-gray-100 transition-colors">
-                        <p className="text-4xl">
-                            <InboxOutlined />
-                        </p>
-                        <p className="text-gray-600">
-                            Haz clic o arrastra archivos aquí para subirlos
-                        </p>
-                        <p className="text-gray-400 text-sm">
-                            Soporta: JPG, PNG, GIF, PDF
-                        </p>
+                        <p className="text-4xl"><InboxOutlined /></p>
+                        <p className="text-gray-600">Haz clic o arrastra archivos aquí para subirlos</p>
+                        <p className="text-gray-400 text-sm">Soporta: JPG, PNG, GIF, PDF</p>
                     </Dragger>
-
                     {isUploading && (
                         <div className="flex items-center justify-center gap-2 py-2">
                             <Spin />
@@ -173,7 +172,7 @@ const ExpenseVoucherSection = ({ onVoucherChange, initialVouchers = [], entryId 
                         </div>
                     )}
                 </div>
-            ) : null}
+            )}
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                 {Array.isArray(imageUrls) && imageUrls.length > 0 ? (
@@ -222,11 +221,7 @@ const ExpenseVoucherSection = ({ onVoucherChange, initialVouchers = [], entryId 
                         className="w-full h-96 border-0 bg-white"
                     />
                 ) : (
-                    <img
-                        src={currentImage}
-                        alt="Comprobante"
-                        className="w-full h-auto rounded-lg"
-                    />
+                    <img src={currentImage} alt="Comprobante" className="w-full h-auto rounded-lg" />
                 )}
             </Modal>
         </Card>

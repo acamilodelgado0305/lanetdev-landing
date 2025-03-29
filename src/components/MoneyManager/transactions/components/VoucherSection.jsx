@@ -191,20 +191,24 @@ const VoucherSection = ({ onVoucherChange, initialVouchers = [], entryId }) => {
                 open={isImageModalOpen}
                 onCancel={() => setIsImageModalOpen(false)}
                 footer={null}
-                width={400}
+                width="80%" // Set width to 80% of the viewport
+                style={{ maxWidth: '1200px' }} // Cap the max width for larger screens
+                bodyStyle={{ padding: 0, height: '80vh' }} // Remove padding and set height to 80vh
                 centered
+                wrapClassName="custom-professional-modal" // Use wrapClassName to apply Tailwind styles to the modal wrapper
+                className="shadow-2xl bg-gray-50" // Apply Tailwind classes for professional styling
             >
                 {currentImage && currentImage.endsWith('.pdf') ? (
                     <iframe
                         src={currentImage}
                         title="Vista previa PDF"
-                        className="w-full h-96 border-0 bg-white"
+                        className="w-full h-full  "
                     />
                 ) : (
                     <img
                         src={currentImage}
                         alt="Comprobante"
-                        className="w-full h-auto rounded-lg"
+                        className="w-full h-full object-contain"
                     />
                 )}
             </Modal>
