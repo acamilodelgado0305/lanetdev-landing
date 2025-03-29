@@ -194,14 +194,14 @@ const AddIncome = ({ onTransactionAdded }) => {
       const response = await fetch(`${apiUrl}/incomes/${id}`);
       if (!response.ok) throw new Error("No se pudo obtener la información del ingreso");
       const data = await response.json();
-  
+
       setAmount(data.amount?.toString() || "");
       setCategory(data.category_id?.toString() || "");
       setAccount(data.account_id?.toString() || "");
       setDescription(data.description || "");
       setComentarios(data.comentarios || "");
       setDate(data.date ? dayjs(data.date) : dayjs());
-  
+
       if (data.type === "arqueo") {
         setIsArqueoChecked(true);
         setFevAmount(data.amountfev?.toString() || "");
@@ -213,7 +213,7 @@ const AddIncome = ({ onTransactionAdded }) => {
         setCashierCommission(data.cashier_commission?.toString() || "");
         setStartPeriod(data.start_period ? dayjs(data.start_period) : null);
         setEndPeriod(data.end_period ? dayjs(data.end_period) : null);
-  
+
         // Safeguard for importes_personalizados
         const importesPersonalizados = Array.isArray(data.importes_personalizados) ? data.importes_personalizados : [];
         const mappedCustomAmounts = importesPersonalizados.map((item) => ({
@@ -275,9 +275,9 @@ const AddIncome = ({ onTransactionAdded }) => {
         });
         return;
       }
-  
+
       const totalAmount = isArqueoChecked ? calculateTotalAmount() : parseFloat(amount);
-  
+
       const baseRequestBody = {
         user_id: parseInt(sessionStorage.getItem("userId")),
         account_id: parseInt(account),
@@ -290,20 +290,20 @@ const AddIncome = ({ onTransactionAdded }) => {
         estado: true,
         amount: totalAmount,
       };
-  
+
       let requestBody;
       if (isArqueoChecked) {
         // Ensure customAmounts is an array
         const safeCustomAmounts = Array.isArray(customAmounts) ? customAmounts : [];
         console.log("customAmounts antes de filtrar:", JSON.stringify(safeCustomAmounts, null, 2));
-  
+
         const validCustomAmounts = safeCustomAmounts
           .filter(item => {
-            const isValid = item && 
-              typeof item === 'object' && 
-              item.key && 
-              typeof item.product === 'string' && 
-              item.action && 
+            const isValid = item &&
+              typeof item === 'object' &&
+              item.key &&
+              typeof item.product === 'string' &&
+              item.action &&
               typeof item.value === 'number';
             if (!isValid) console.warn("Elemento inválido en customAmounts:", item);
             return isValid;
@@ -314,9 +314,9 @@ const AddIncome = ({ onTransactionAdded }) => {
             accion: item.action,
             valor: item.value,
           }));
-  
+
         console.log("validCustomAmounts después de filtrar:", JSON.stringify(validCustomAmounts, null, 2));
-  
+
         requestBody = {
           ...baseRequestBody,
           amountfev: parseFloat(fevAmount) || 0,
@@ -334,13 +334,13 @@ const AddIncome = ({ onTransactionAdded }) => {
       } else {
         requestBody = baseRequestBody;
       }
-  
+
       const requestBodyString = JSON.stringify(requestBody);
       console.log("Request Body enviado (string):", requestBodyString);
-  
+
       const url = id ? `${apiUrl}/incomes/${id}` : `${apiUrl}/incomes`;
       const method = id ? "PUT" : "POST";
-  
+
       const response = await fetch(url, {
         method: method,
         headers: {
@@ -348,15 +348,15 @@ const AddIncome = ({ onTransactionAdded }) => {
         },
         body: requestBodyString,
       });
-  
+
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
       }
-  
+
       await response.json();
       setIsIncomeSaved(true);
-  
+
       Swal.fire({
         icon: "success",
         title: id ? "Ingreso Actualizado" : "Ingreso Registrado",
@@ -385,26 +385,7 @@ const AddIncome = ({ onTransactionAdded }) => {
     }
   };
 
-  const resetForm = () => {
-    setAmount("");
-    setFevAmount("");
-    setDiversoAmount("");
-    setCategory("");
-    setAccount("");
-    setVoucher("");
-    setDescription("");
-    setComentarios("");
-    setDate(dayjs());
-    setCashierid("");
-    setArqueoNumber("");
-    setOtherIncome("");
-    setCashReceived("");
-    setCashierCommission("");
-    setStartPeriod(null);
-    setEndPeriod(null);
-    setCustomAmounts([]);
-    setCustomAmountsTotal(0);
-  };
+ 
 
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
@@ -728,8 +709,9 @@ const AddIncome = ({ onTransactionAdded }) => {
       </div>
       <VoucherSection
         onVoucherChange={setVoucher}
-        initialVouchers={voucher ? JSON.parse(voucher) : []}
+        initialVouchers={voucher}
         entryId={id}
+        type="income"
       />
     </div>
   );
