@@ -319,19 +319,7 @@ export default function Root() {
         {
           to: "/index/terceros/cajeros",
           icon: <IdcardOutlined />,
-          hasSubmenu: true,
-          submenuItems: [
-            /* {
-              to: "/index/terceros/cajeros",
-              label: "Cajeros",
-              icon: <DotIcon />,
-            },
-            {
-              to: "/index/terceros/proveedores",
-              label: "Proveedores",
-              icon: <DotIcon />,
-            }, */
-          ],
+          label: "Terceros",
         },
         { label: "SISTEMA", isTitle: true },
         {

@@ -9,7 +9,7 @@ import dayjs from "dayjs";
 import { UploadOutlined, DownloadOutlined, FileTextOutlined } from "@ant-design/icons";
 import axios from "axios";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import ExpenseVoucherSection from "./ExpenseVoucherSection";
+import VoucherSection from "../../components/VoucherSection";
 import ProductsTable from "./ProductsTable";
 import { getCategorias } from "../../../../../services/moneymanager/moneyService";
 import jsPDF from "jspdf";
@@ -37,6 +37,7 @@ const AddExpense = () => {
   const [accounts, setAccounts] = useState([]);
   const [date, setDate] = useState(dayjs());
   const [proveedores, setProveedores] = useState([]);
+  
   const [loading, setLoading] = useState(false);
   const [proveedor, setProveedor] = useState("");
   const [categoria, setCategoria] = useState("");
@@ -89,21 +90,8 @@ const AddExpense = () => {
     return parseFloat(value) || 0;
   };
 
-  // Función para manejar el campo voucher y evitar errores de JSON
-  const parseVoucher = (voucherData) => {
-    if (!voucherData || voucherData === "{}" || voucherData === "[]") return [];
-    if (typeof voucherData === "string") {
-      try {
-        const parsed = JSON.parse(voucherData);
-        return Array.isArray(parsed) ? parsed : [];
-      } catch (error) {
-        console.error("Error al parsear voucher:", error);
-        return [];
-      }
-    }
-    return Array.isArray(voucherData) ? voucherData : [];
-  };
 
+ 
   // Función para cargar los datos del egreso existente
   const fetchExpenseData = async () => {
     try {
@@ -124,7 +112,7 @@ const AddExpense = () => {
       setFacturaNumber(data.invoice_number || "");
       setFacturaProvNumber(data.provider_invoice_number || "");
       setTipo(data.type || "");
-      setVoucher(parseVoucher(data.voucher));
+    
 
       // Mapear ítems y totales
       if (data.items && data.items.length > 0) {
@@ -271,7 +259,7 @@ const AddExpense = () => {
         facturaNumber: facturaNumber,
         facturaProvNumber: facturaProvNumber,
         account_id: account,
-        voucher: JSON.stringify(Array.isArray(voucher) ? voucher : []),
+        voucher: voucher,
         description: description,
         comentarios: comentarios,
         estado: true,
@@ -513,7 +501,7 @@ const AddExpense = () => {
   const renderCompraInputs = () => {
     return (
       <div className="p-4">
-       <ComprobanteEgresoHeader
+        <ComprobanteEgresoHeader
           facturaNumber={facturaNumber}
           setFacturaNumber={setFacturaNumber}
           facturaProvNumber={facturaProvNumber}
@@ -590,7 +578,7 @@ const AddExpense = () => {
           </div>
         </div>
         <Space>
-          
+
           <div className="px-6 py-4 flex justify-end">
             <input
               type="file"
@@ -630,7 +618,7 @@ const AddExpense = () => {
           selectedAccount={account}
           onAccountSelect={(value) => setAccount(value)}
           accounts={accounts}
-          
+
         />
         <Title level={4}>Observaciones</Title>
         <textarea
@@ -641,10 +629,11 @@ const AddExpense = () => {
           className="w-full border p-2"
         />
       </div>
-      <ExpenseVoucherSection
+      <VoucherSection
         onVoucherChange={setVoucher}
         initialVouchers={voucher}
         entryId={id}
+        type="expense"
       />
     </div>
   );
