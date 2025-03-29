@@ -633,7 +633,7 @@ const AddExpense = () => {
         onVoucherChange={setVoucher}
         initialVouchers={voucher}
         entryId={id}
-        type="expenses"
+        type="expense"
       />
     </div>
   );
