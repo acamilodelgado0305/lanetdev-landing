@@ -436,10 +436,6 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
             <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.subtotal)}</div>
             <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Descuentos:</div>
             <div style={{ textAlign: 'right', color: '#ff4d4f' }}>-{formatCurrency(totals.descuentos)}</div>
-            <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Total en Impuestos:</div>
-            <div style={{ textAlign: 'right', fontWeight: 500, color: totals.totalImpuestos >= 0 ? '#52c41a' : '#ff4d4f' }}>
-              {totals.totalImpuestos >= 0 ? '+' : ''}{formatCurrency(totals.totalImpuestos)}
-            </div>
             {/* Mostrar estos dos campos solo si hiddenImpuestos es false */}
             {!hiddenImpuestos && (
               <>
@@ -498,7 +494,10 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
               <div style={{ textAlign: 'right', fontWeight: 'bold', fontSize: '16px' }}>{formatCurrency(totals.totalNeto)}</div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '8px' }}>
-
+              <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Total en Impuestos:</div>
+              <div style={{ textAlign: 'right', fontWeight: 500, color: totals.totalImpuestos >= 0 ? '#52c41a' : '#ff4d4f' }}>
+                {totals.totalImpuestos >= 0 ? '+' : ''}{formatCurrency(totals.totalImpuestos)}
+              </div>
             </div>
           </div>
         </div>
