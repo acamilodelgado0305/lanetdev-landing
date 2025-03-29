@@ -436,11 +436,21 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
             <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.subtotal)}</div>
             <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Descuentos:</div>
             <div style={{ textAlign: 'right', color: '#ff4d4f' }}>-{formatCurrency(totals.descuentos)}</div>
-            <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Retefuente:</div>
-            <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.retencion)}</div>
-            <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Iva:</div>
-            <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.iva)}</div>
+            <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Total en Impuestos:</div>
+            <div style={{ textAlign: 'right', fontWeight: 500, color: totals.totalImpuestos >= 0 ? '#52c41a' : '#ff4d4f' }}>
+              {totals.totalImpuestos >= 0 ? '+' : ''}{formatCurrency(totals.totalImpuestos)}
+            </div>
+            {/* Mostrar estos dos campos solo si hiddenImpuestos es false */}
+            {!hiddenImpuestos && (
+              <>
+                <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Retefuente:</div>
+                <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.retencion)}</div>
+                <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Iva:</div>
+                <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.iva)}</div>
+              </>
+            )}
 
+            {/* Mostrar los select de IVA y Retención si hiddenImpuestos es true */}
             {hiddenImpuestos && (
               <>
                 <div style={{ textAlign: 'right', fontWeight: 500, color: '#666', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
@@ -457,6 +467,7 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
                   </Select>
                 </div>
                 <div style={{ textAlign: 'right', color: '#ff4d4f' }}>{formatCurrency(totals.iva)}</div>
+
                 <div style={{ textAlign: 'right', fontWeight: 500, color: '#666', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
                   <span style={{ marginRight: '8px' }}>Retención:</span>
                   <Select
@@ -480,22 +491,21 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
               </>
             )}
           </div>
+
           <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '8px', marginTop: '8px' }}>
             <div className="bg-[#0052CC] text-white rounded-md py-2 px-4 flex justify-between items-center">
               <div style={{ textAlign: 'right', fontWeight: 'bold', fontSize: '16px' }}>Total:</div>
               <div style={{ textAlign: 'right', fontWeight: 'bold', fontSize: '16px' }}>{formatCurrency(totals.totalNeto)}</div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '8px' }}>
-              <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Total en Impuestos:</div>
-              <div style={{ textAlign: 'right', fontWeight: 500, color: totals.totalImpuestos >= 0 ? '#52c41a' : '#ff4d4f' }}>
-                {totals.totalImpuestos >= 0 ? '+' : ''}{formatCurrency(totals.totalImpuestos)}
-              </div>
+
             </div>
           </div>
         </div>
       </div>
     );
   };
+
 
   const renderOptions = () => {
     return (
