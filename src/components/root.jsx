@@ -42,7 +42,7 @@ export default function Root() {
   });
   const [activeSubMenu, setActiveSubMenu] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const { userRole, userApp } = useAuth(); // Obtener userApp desde el contexto
+  const { userRole, userApp } = useAuth();
   const location = useLocation();
   const menuItemRef = useRef(null);
   const modalRef = useRef(null);
@@ -588,7 +588,10 @@ export default function Root() {
         </AnimatePresence>
 
         <Layout.Content
-          className={`flex-1 px-[2em] pt-[5em] pr- overflow-x-hidden overflow-y-auto ${isExpanded ? "ml-[17.5em]" : "ml-[5.3em]"} h-screen`}
+          className={`flex-1 px-[2em] pt-[5em] overflow-x-hidden overflow-y-auto ${
+            isHidden ? "ml-0" : isExpanded ? "ml-[17.5em]" : "ml-[5.3em]"
+          }`}
+          style={{ height: "100vh" }} // Aseguramos que ocupe toda la altura de la ventana
         >
           <Outlet context={{ setUnreadEmailsCount }} />
         </Layout.Content>

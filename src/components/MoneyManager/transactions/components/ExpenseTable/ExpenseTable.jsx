@@ -184,7 +184,7 @@ const ExpenseTable = ({ categories = [], accounts = [], activeTab }) => {
         filtered = filtered.filter(entry =>
             Object.keys(searchText).every(key => {
                 if (!searchText[key]) return true;
-             
+
                 if (key === 'account_id') {
                     return getAccountName(entry[key])?.toLowerCase().includes(searchText[key].toLowerCase());
                 }
@@ -267,7 +267,7 @@ const ExpenseTable = ({ categories = [], accounts = [], activeTab }) => {
     const renderDate = (date) => {
         if (!date) return "Sin fecha";
 
-    
+
 
         try {
             let parsedDate;
@@ -313,7 +313,7 @@ const ExpenseTable = ({ categories = [], accounts = [], activeTab }) => {
                 return "Fecha inválida";
             }
 
-     
+
             // Formatear con configuración regional española
             return parsedDate.setLocale('es').toFormat("d 'de' MMMM 'de' yyyy HH:mm");
         } catch (error) {
@@ -329,7 +329,7 @@ const ExpenseTable = ({ categories = [], accounts = [], activeTab }) => {
         return account ? account.name : "Cuenta no encontrada";
     };
 
- 
+
 
     const handleEditSelected = () => {
         if (selectedRowKeys.length === 1) {
@@ -562,7 +562,7 @@ const ExpenseTable = ({ categories = [], accounts = [], activeTab }) => {
                     <input
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
                         onChange={(e) => handleSearch(e.target.value, "invoice_number")}
-                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, border: '1px solid #d9d9d9', borderRadius: 4, outline: 'none' }}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, border: '1px solid #d9d9d9', borderRadius: 4, outline: 'none', width: 80 }}
                     />
                 </div>
             ),
@@ -600,27 +600,26 @@ const ExpenseTable = ({ categories = [], accounts = [], activeTab }) => {
             width: 150, // Aumentamos el ancho para dar espacio a la hora
         },
 
-     
-            {
-              title: (
+
+        {
+            title: (
                 <div className="flex flex-col" style={{ margin: "2px 0", gap: 1, lineHeight: 1 }}>
-                  Categoría
-                  <input
+                    Categoría
+                    <input
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
                         onChange={(e) => handleSearch(e.target.value, "category")}
-                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, border: '1px solid #d9d9d9', borderRadius: 4, outline: 'none' }}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, border: '1px solid #d9d9d9', borderRadius: 4, outline: 'none', width: 180 }}
                     />
                 </div>
-              ),
-              dataIndex: "category",
-              key: "category",
-              render: (category) => <Tag color="purple">{category}</Tag>,
-              
-              sortDirections: ["ascend", "descend"],
-              ellipsis: true,
-              width: 150,
-            },
+            ),
+            dataIndex: "category",
+            key: "category",
+            render: (category) => <Tag color="purple">{category}</Tag>,
 
+            sortDirections: ["ascend", "descend"],
+            ellipsis: true,
+            width: 130,
+        },
 
 
         {
@@ -630,7 +629,16 @@ const ExpenseTable = ({ categories = [], accounts = [], activeTab }) => {
                     <input
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
                         onChange={(e) => handleSearch(e.target.value, "description")}
-                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, border: '1px solid #d9d9d9', borderRadius: 4, outline: 'none' }}
+                        style={{
+                            marginTop: 2,
+                            padding: 4,
+                            height: 28,
+                            fontSize: 12,
+                            border: '1px solid #d9d9d9',
+                            borderRadius: 4,
+                            outline: 'none',
+                            width: 180
+                        }}
                     />
                 </div>
             ),
@@ -638,8 +646,20 @@ const ExpenseTable = ({ categories = [], accounts = [], activeTab }) => {
             key: "description",
             sorter: (a, b) => a.description.localeCompare(b.description),
             sortDirections: ["ascend", "descend"],
-            ellipsis: true,
-            width: 200,
+            width: 90, // Ancho fijo de la columna
+            ellipsis: true, // Activa el truncamiento
+            render: (text) => (
+                <div
+                    style={{
+                        maxWidth: '200px', // Forzamos el ancho máximo
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                    }}
+                >
+                    {text || "No disponible"}
+                </div>
+            ),
         },
         {
             title: (
@@ -648,7 +668,7 @@ const ExpenseTable = ({ categories = [], accounts = [], activeTab }) => {
                     <input
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
                         onChange={(e) => handleSearch(e.target.value, "account_id")}
-                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, border: '1px solid #d9d9d9', borderRadius: 4, outline: 'none' }}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, border: '1px solid #d9d9d9', borderRadius: 4, outline: 'none', width: 180 }}
                     />
                 </div>
             ),
@@ -731,7 +751,7 @@ const ExpenseTable = ({ categories = [], accounts = [], activeTab }) => {
             sortDirections: ["descend", "ascend"],
             width: 100,
         },
-        
+
     ];
 
     return (
