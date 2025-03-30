@@ -32,7 +32,9 @@ const { Sider } = Layout;
 export default function Root() {
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
-  const [isHidden, setIsHidden] = useState(false);
+  const [isHidden, setIsHidden] = useState(() => {
+    return localStorage.getItem("sidebarHidden") === "true" || false;
+  });
   const [unreadEmailsCount, setUnreadEmailsCount] = useState(0);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [modalContent, setModalContent] = useState(null);
