@@ -11,8 +11,8 @@ const VoucherSection = ({ onVoucherChange, initialVouchers = [], entryId, type =
     const [imageUrls, setImageUrls] = useState([]);
     const [hasFetched, setHasFetched] = useState(false);
 
-    // Determinar el endpoint basado en el tipo
     const apiEndpoint = type === 'expense' ? 'expenses' : 'incomes';
+    const apiBaseUrl = import.meta.env.VITE_API_FINANZAS;
 
     const normalizeVouchers = (vouchers) => {
         if (Array.isArray(vouchers)) return vouchers;
@@ -29,7 +29,6 @@ const VoucherSection = ({ onVoucherChange, initialVouchers = [], entryId, type =
     };
 
     const normalizedInitialVouchers = useMemo(() => {
-        console.log(`Normalizando initialVouchers para ${type}:`, initialVouchers);
         return Array.isArray(initialVouchers) ? initialVouchers : normalizeVouchers(initialVouchers);
     }, [initialVouchers]);
 
@@ -42,10 +41,10 @@ const VoucherSection = ({ onVoucherChange, initialVouchers = [], entryId, type =
             if (hasFetched) return;
 
             try {
-                const response = await fetch(`${import.meta.env.VITE_API_FINANZAS}/${apiEndpoint}/${entryId}/vouchers`);
+                const response = await fetch(`${apiBaseUrl}/${apiEndpoint}/${entryId}`);
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
-                const vouchers = normalizeVouchers(data.vouchers || []);
+                const vouchers = normalizeVouchers(data.voucher || []);
                 setImageUrls(vouchers);
                 setHasFetched(true);
             } catch (error) {
@@ -63,6 +62,27 @@ const VoucherSection = ({ onVoucherChange, initialVouchers = [], entryId, type =
         }
     }, [imageUrls, onVoucherChange]);
 
+    const updateVouchersOnServer = async (action, vouchers) => {
+        try {
+            const response = await fetch(`${apiBaseUrl}/${apiEndpoint}/${entryId}/vouchers`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ action, vouchers }),
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            const updatedVouchers = normalizeVouchers(data.data.voucher);
+            setImageUrls(updatedVouchers);
+            return updatedVouchers;
+        } catch (error) {
+            console.error('Error updating vouchers:', error);
+            message.error('Error al actualizar los comprobantes');
+            throw error;
+        }
+    };
+
     const handleImageUpload = async (files) => {
         if (files.length === 0 || isUploading) return;
         setIsUploading(true);
@@ -79,7 +99,7 @@ const VoucherSection = ({ onVoucherChange, initialVouchers = [], entryId, type =
             const uploadedUrls = await Promise.all(uploadPromises);
             const newUrls = uploadedUrls.filter(url => !imageUrls.includes(url));
             if (newUrls.length > 0) {
-                setImageUrls(prev => [...prev, ...newUrls]);
+                await updateVouchersOnServer('add', newUrls);
                 message.success('Comprobantes agregados correctamente');
             }
         } catch (error) {
@@ -90,9 +110,14 @@ const VoucherSection = ({ onVoucherChange, initialVouchers = [], entryId, type =
         }
     };
 
-    const handleDeleteVoucher = (indexToDelete) => {
-        setImageUrls(prev => prev.filter((_, index) => index !== indexToDelete));
-        message.success('Comprobante eliminado');
+    const handleDeleteVoucher = async (indexToDelete) => {
+        const urlToDelete = imageUrls[indexToDelete];
+        try {
+            await updateVouchersOnServer('remove', [urlToDelete]);
+            message.success('Comprobante eliminado');
+        } catch (error) {
+            // Error ya manejado en updateVouchersOnServer
+        }
     };
 
     const uploadProps = {
