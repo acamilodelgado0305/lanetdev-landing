@@ -343,7 +343,7 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
         {
           title: (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>Impuesto Cargo</span>
+              <span>Impuesto IVA</span>
 
             </div>
           ),

@@ -21,6 +21,7 @@ import VoucherContentModal from "./ViewImageModal";
 import TransactionTable from "./components/TablaTransferencias";
 import ExpenseTable from "./components/ExpenseTable/ExpenseTable";
 import IncomeTable from "./Add/Income/IncomeTable";
+import RenderPaymentsList from "./components/RenderPaymentsList";
 import Summary from "./Summary";
 import { useAuth } from '../../Context/AuthProvider';
 import {
@@ -470,6 +471,17 @@ const TransactionsDashboard = () => {
               >
                 Transferencias
               </div>
+              
+
+              <div
+                className={`py-2 px-4 cursor-pointer border-b-4 transition-colors duration-200 ${activeTab === 'pagos-recurrentes'
+                  ? 'border-blue-500 text-blue-500 font-semibold'
+                  : 'border-transparent text-gray-800 hover:border-blue-300 hover:text-blue-400'
+                  }`}
+                onClick={() => handleTabChange('pagos-recurrentes')}
+              >
+                Pagos recurrentes
+              </div>
             </div>
           </div>
         </div>
@@ -494,17 +506,17 @@ const TransactionsDashboard = () => {
               </div>
             )}
 
-{activeTab === "incomes" && (
-  <IncomeTable
-    entries={paginatedEntries}
-    categories={categories}
-    accounts={accounts}
-    onDelete={handleDelete}
-    onEdit={openEditModal}
-    onOpenContentModal={openContentModal}
-    activeTab={activeTab} // Añadir activeTab como prop
-  />
-)}
+            {activeTab === "incomes" && (
+              <IncomeTable
+                entries={paginatedEntries}
+                categories={categories}
+                accounts={accounts}
+                onDelete={handleDelete}
+                onEdit={openEditModal}
+                onOpenContentModal={openContentModal}
+                activeTab={activeTab} // Añadir activeTab como prop
+              />
+            )}
 
             {activeTab === "expenses" && (
               <ExpenseTable
@@ -526,6 +538,13 @@ const TransactionsDashboard = () => {
                 onDelete={handleDelete}
                 onEdit={openEditModal}
                 onOpenContentModal={openContentModal}
+              />
+            )}
+
+
+            {activeTab === "pagos-recurrentes" && (
+              <RenderPaymentsList
+
               />
             )}
           </div>

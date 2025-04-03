@@ -141,8 +141,8 @@ export default function Root() {
             icon: <DotIcon />,
           },
           {
-            to: "/index/moneymanager/pagos-pendientes",
-            label: "Pagos Recurrentes",
+            to: "/index/moneymanager/prestamos",
+            label: "Prestamos",
             icon: <DotIcon />,
           },
           {
@@ -306,8 +306,8 @@ export default function Root() {
               icon: <DotIcon />,
             },
             {
-              to: "/index/moneymanager/pagos-pendientes",
-              label: "Pagos Recurrentes",
+              to: "/index/moneymanager/prestamos",
+              label: "Prestamos",
               icon: <DotIcon />,
             },
             {

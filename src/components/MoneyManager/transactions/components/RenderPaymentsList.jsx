@@ -1,274 +1,409 @@
 import React, { useState, useEffect } from "react";
-import { Button, Table, Tag, Space, Typography, Statistic, Card, Spin } from "antd";
-import { 
-  CheckSquare, 
-  Calendar, 
-  ChevronLeft, 
-  ChevronRight,
-  DollarSign,
-  AlertCircle,
-  Clock
-} from "lucide-react";
-import { getPendingTransactions } from "../../../../services/moneymanager/moneyService";
-import PaymentDetailsModal from './PaymentDetailsModal';
+import { Input, Drawer, Button, DatePicker, Card, Tag, Space, Typography, Divider, Select } from "antd";
+import { format as formatDate, subMonths, addMonths, startOfMonth, endOfMonth, isWithinInterval, isValid } from "date-fns";
+import { es } from "date-fns/locale";
+import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+import axios from "axios";
+import {
+    LeftOutlined,
+    RightOutlined,
+    FilterOutlined,
+    EllipsisOutlined,
+    DeleteOutlined,
+    ExportOutlined,
+    SearchOutlined,
+    CalendarOutlined,
+    MenuOutlined,
+    EditOutlined
+} from "@ant-design/icons";
+import FloatingActionMenu from "../FloatingActionMenu";
+import DateNavigator from "../Add/DateNavigator";
+import Acciones from "../Acciones";
+import TablaReutilizable from "../../../Tablas/TablaReutilzable";
 
+const { RangePicker } = DatePicker;
 const { Title, Text } = Typography;
 
-export default function RenderPaymentsList() {
-    const [recurrentPayments, setRecurrentPayments] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize] = useState(10);
-    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-    const [selectedPayment, setSelectedPayment] = useState(null);
-    const [currentMonth, setCurrentMonth] = useState(new Date());
+const RenderPaymentsList = ({ categories = [], accounts = [] }) => {
+    const navigate = useNavigate();
 
-    const fetchTransactions = async () => {
-        try {
-            const transactions = await getPendingTransactions();
-            const recPayments = transactions.filter(tx => tx.recurrent);
-            setRecurrentPayments(recPayments);
-            setLoading(false);
-        } catch (error) {
-            console.error("Error fetching transactions:", error);
-            setLoading(false);
+    const [selectedEntry, setSelectedEntry] = useState(null);
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [searchText, setSearchText] = useState({});
+
+    const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+    const [currentMonth, setCurrentMonth] = useState(new Date());
+    const [dateRange, setDateRange] = useState([startOfMonth(new Date()), endOfMonth(new Date())]);
+    const [showFilters, setShowFilters] = useState(false);
+    const [filteredEntries, setFilteredEntries] = useState([]);
+    const [entriesLoading, setEntriesLoading] = useState(true);
+    const [entries, setEntries] = useState([]);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    useEffect(() => {
+        let filtered = [...entries];
+
+        if (dateRange && dateRange[0] && dateRange[1]) {
+            const startDate = new Date(dateRange[0]);
+            const endDate = new Date(dateRange[1]);
+
+            if (isValid(startDate) && isValid(endDate)) {
+                filtered = filtered.filter(entry => {
+                    const entryDate = new Date(entry.date);
+                    return isValid(entryDate) && isWithinInterval(entryDate, { start: startDate, end: endDate });
+                });
+            }
+        }
+
+        filtered = filtered.filter(entry =>
+            Object.keys(searchText).every(key => {
+                if (!searchText[key]) return true;
+                if (key === 'categoria') {
+                    return entry[key]
+                        .toLowerCase()
+                        .includes(searchText[key].toLowerCase());
+                }
+                if (key === 'cuenta') {
+                    return entry[key]
+                        .toLowerCase()
+                        .includes(searchText[key].toLowerCase());
+                }
+                return entry[key]
+                    ? entry[key].toString().toLowerCase().includes(searchText[key].toLowerCase())
+                    : true;
+            })
+        );
+
+        setFilteredEntries(filtered);
+    }, [entries, searchText, dateRange]);
+
+    const handleEditSelected = () => {
+        if (selectedRowKeys.length === 1) {
+            navigate(`/index/moneymanager/pagos/edit/${selectedRowKeys[0]}`);
         }
     };
 
-    useEffect(() => {
-        fetchTransactions();
-    }, []);
+    const handleDeleteSelected = () => {
+        handleBatchOperation('delete');
+    };
 
-    const handlePageChange = (page) => {
-        setCurrentPage(page);
+    const handleExportSelected = () => {
+        handleBatchOperation('export');
+    };
+
+    const clearSelection = () => {
+        setSelectedRowKeys([]);
+    };
+
+    const handleSearch = (value, dataIndex) => {
+        setSearchText((prev) => ({
+            ...prev,
+            [dataIndex]: value.toLowerCase(),
+        }));
+    };
+
+    const fetchData = async () => {
+        setEntriesLoading(true);
+        try {
+            const API_BASE_URL = import.meta.env.VITE_API_FINANZAS || '/api';
+            const response = await axios.get(`${API_BASE_URL}/pagospending`);
+            const sortedEntries = response.data.sort((a, b) => new Date(b.date) - new Date(a.date));
+            setEntries(sortedEntries);
+            setFilteredEntries(sortedEntries);
+            setError(null);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+            setError("Error al cargar los datos");
+            Swal.fire({
+                title: 'Error',
+                text: 'No se pudieron cargar los datos. Intente nuevamente.',
+                icon: 'error',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Entendido'
+            });
+        } finally {
+            setEntriesLoading(false);
+        }
+    };
+
+    const goToPreviousMonth = () => {
+        const prevMonth = subMonths(currentMonth, 1);
+        setCurrentMonth(prevMonth);
+        setDateRange([startOfMonth(prevMonth), endOfMonth(prevMonth)]);
+    };
+
+    const goToNextMonth = () => {
+        const nextMonth = addMonths(currentMonth, 1);
+        setCurrentMonth(nextMonth);
+        setDateRange([startOfMonth(nextMonth), endOfMonth(nextMonth)]);
+    };
+
+    const goToCurrentMonth = () => {
+        const now = new Date();
+        setCurrentMonth(now);
+        setDateRange([startOfMonth(now), endOfMonth(now)]);
+    };
+
+    const onSelectChange = (newSelectedRowKeys) => {
+        setSelectedRowKeys(newSelectedRowKeys);
+    };
+
+    const handleBatchOperation = (operation) => {
+        if (selectedRowKeys.length === 0) {
+            Swal.fire({
+                title: 'Selección vacía',
+                text: 'Por favor, seleccione al menos un registro',
+                icon: 'warning',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Entendido'
+            });
+            return;
+        }
+
+        const selectedItems = entries.filter(item => selectedRowKeys.includes(item.id));
+
+        switch (operation) {
+            case 'export':
+                console.log("Exportar seleccionados:", selectedItems);
+                break;
+            case 'edit':
+                if (selectedRowKeys.length > 1) {
+                    Swal.fire({
+                        title: 'Múltiples selecciones',
+                        text: 'Solo puede editar un registro a la vez',
+                        icon: 'warning',
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'Entendido'
+                    });
+                } else {
+                    navigate(`/index/moneymanager/pagos/view/${selectedRowKeys[0]}`);
+                }
+                break;
+            case 'delete':
+                Swal.fire({
+                    title: '¿Está seguro?',
+                    text: `¿Desea eliminar ${selectedRowKeys.length} registro(s) seleccionado(s)?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const deletePromises = selectedRowKeys.map(id => handleDeleteItem(id));
+                        Promise.all(deletePromises)
+                            .then(() => {
+                                Swal.fire(
+                                    '¡Eliminado!',
+                                    'Los registros han sido eliminados.',
+                                    'success'
+                                );
+                                setSelectedRowKeys([]);
+                                fetchData();
+                            })
+                            .catch(error => {
+                                console.error("Error eliminando registros:", error);
+                                Swal.fire(
+                                    'Error',
+                                    'Hubo un problema al eliminar los registros.',
+                                    'error'
+                                );
+                            });
+                    }
+                });
+                break;
+            default:
+                break;
+        }
     };
 
     const formatCurrency = (amount) => {
+        // Agregamos un console.log para depurar
+        console.log("formatCurrency called with amount:", amount);
         return new Intl.NumberFormat("es-CO", {
             style: "currency",
             currency: "COP",
-            minimumFractionDigits: 2,
+            minimumFractionDigits: 0,
         }).format(amount);
     };
 
-    const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString("es-ES", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-        });
-    };
-
-    const handlePaymentClick = (payment) => {
-        setSelectedPayment(payment);
-        setIsPaymentModalOpen(true);
-    };
-
-    const handlePaymentModalClose = (shouldRefresh) => {
-        setIsPaymentModalOpen(false);
-        setSelectedPayment(null);
-        if (shouldRefresh) {
-            fetchTransactions();
+    const handleDeleteItem = async (id) => {
+        try {
+            const API_BASE_URL = import.meta.env.VITE_API_FINANZAS || '/api';
+            await axios.delete(`${API_BASE_URL}/pagospending/${id}`);
+            return id;
+        } catch (error) {
+            console.error(`Error eliminando el pago ${id}:`, error);
+            throw error;
         }
     };
 
-    const filteredPayments = recurrentPayments.filter((payment) => {
-        const paymentDate = new Date(payment.date);
-        return (
-            paymentDate.getMonth() === currentMonth.getMonth() &&
-            paymentDate.getFullYear() === currentMonth.getFullYear()
-        );
-    });
-
-    const handlePrevMonth = () => {
-        setCurrentMonth(new Date(currentMonth.setMonth(currentMonth.getMonth() - 1)));
+    const handleCreate = (newRow) => {
+        console.log('Nueva fila creada:', newRow);
+        const API_BASE_URL = import.meta.env.VITE_API_FINANZAS || '/api';
+        axios.post(`${API_BASE_URL}/pagos`, newRow)
+            .then(response => {
+                fetchData(); // Refrescar los datos después de crear
+            })
+            .catch(error => {
+                console.error('Error creando registro:', error);
+                Swal.fire('Error', 'No se pudo crear el registro', 'error');
+            });
     };
-
-    const handleNextMonth = () => {
-        setCurrentMonth(new Date(currentMonth.setMonth(currentMonth.getMonth() + 1)));
-    };
-
-    const currentMonthLabel = currentMonth.toLocaleString("es-ES", {
-        month: "long",
-        year: "numeric",
-    });
-
-    const pendingTotal = filteredPayments
-        .filter(payment => !payment.estado)
-        .reduce((sum, payment) => sum + parseFloat(payment.amount), 0);
-
-    const paidTotal = filteredPayments
-        .filter(payment => payment.estado)
-        .reduce((sum, payment) => sum + parseFloat(payment.amount), 0);
 
     const columns = [
         {
-            title: "Descripción",
-            dataIndex: "description",
-            key: "description",
-            render: (text, record) => (
-                <div>
-                    <Text strong>{text}</Text>
-                    <br />
-                    <Text type="secondary" className="text-xs">
-                        {record.provider_id}
-                    </Text>
+            title: (
+                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Fecha
+                    <Input
+                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                        onChange={(e) => handleSearch(e.target.value, "date")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, border: '1px solid #d9d9d9', borderRadius: 4, outline: 'none' }}
+                    />
                 </div>
-            )
-        },
-        {
-            title: "Monto",
-            dataIndex: "amount",
-            key: "amount",
-            align: 'right',
-            render: (amount) => (
-                <Text strong className="text-right">
-                    {formatCurrency(amount)}
-                </Text>
             ),
-        },
-        {
-            title: "Fecha",
             dataIndex: "date",
             key: "date",
-            align: 'center',
-            render: (date) => (
-                <div className="flex items-center justify-center gap-2">
-                    <Calendar className="w-4 h-4 text-gray-500" />
-                    <span>{formatDate(date)}</span>
+            render: (text) => formatDate(new Date(text), "yyyy-MM-dd HH:mm:ss", { locale: es }),
+            sorter: (a, b) => new Date(a.date) - new Date(b.date),
+            width: 50,
+        },
+        {
+            title: (
+                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Cuenta
+                    <Input
+                        onChange={(e) => handleSearch(e.target.value, "cuenta")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, border: '1px solid #d9d9d9', borderRadius: 4, outline: 'none' }}
+                    />
                 </div>
             ),
+            dataIndex: "cuenta",
+            key: "cuenta",
+            render: (cuenta) => <Tag color="blue">{cuenta}</Tag>,
+            sorter: (a, b) => a.cuenta.localeCompare(b.cuenta),
+            width: 120,
         },
         {
-            title: "Estado",
-            dataIndex: "estado",
-            key: "estado",
-            align: 'center',
-            render: (estado) => (
-                <Tag 
-                    icon={estado ? <CheckSquare className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
-                    color={estado ? "success" : "warning"}
-                    className="px-3 py-1"
-                >
-                    {estado ? "Pagado" : "Pendiente"}
-                </Tag>
+            title: (
+                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Categoría
+                    <Input
+                        onChange={(e) => handleSearch(e.target.value, "categoria")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, border: '1px solid #d9d9d9', borderRadius: 4, outline: 'none' }}
+                    />
+                </div>
             ),
+            dataIndex: "categoria",
+            key: "categoria",
+            render: (categoria) => <Tag color="green">{categoria}</Tag>,
+            sorter: (a, b) => a.categoria.localeCompare(b.categoria),
+            width: 120,
         },
         {
-            title: "Acciones",
-            key: "actions",
-            align: 'center',
-            render: (_, payment) => (
-                <Space>
-                    {!payment.estado && (
-                        <Button 
-                            type="primary"
-                            onClick={() => handlePaymentClick(payment)}
-                            icon={<DollarSign className="w-4 h-4" />}
-                            className="flex items-center"
-                        >
-                            Pagar
-                        </Button>
-                    )}
-                </Space>
+            title: (
+                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Valor
+                    <Input
+                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                        onChange={(e) => handleSearch(e.target.value, "valor")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, border: '1px solid #d9d9d9', borderRadius: 4, outline: 'none' }}
+                    />
+                </div>
             ),
+            dataIndex: "valor",
+            key: "valor",
+            render: (valor) => {
+                // Agregamos un console.log para depurar
+                console.log("Rendering valor:", valor, "formatCurrency type:", typeof formatCurrency);
+                return <span className="font-bold">{formatCurrency(valor)}</span>;
+            },
+            sorter: (a, b) => a.valor - b.valor,
+            width: 140,
+        },
+        {
+            title: (
+                <div className="flex flex-col" style={{ margin: "2px 0", gap: 1, lineHeight: 1 }}>
+                    Descripción
+                    <Input
+                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                        onChange={(e) => handleSearch(e.target.value, "descripcion")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, border: '1px solid #d9d9d9', borderRadius: 4, outline: 'none' }}
+                    />
+                </div>
+            ),
+            dataIndex: "descripcion",
+            key: "descripcion",
+            sorter: (a, b) => a.descripcion.localeCompare(b.descripcion),
+            ellipsis: true,
+            width: 300,
+        },
+        {
+            title: (
+                <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+                    Recurrencia
+                    <Input
+                        onChange={(e) => handleSearch(e.target.value, "recurrencia")}
+                        style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, border: '1px solid #d9d9d9', borderRadius: 4, outline: 'none' }}
+                    />
+                </div>
+            ),
+            dataIndex: "recurrencia",
+            key: "recurrencia",
+            render: (recurrencia) => <Tag color="purple">{recurrencia}</Tag>,
+            sorter: (a, b) => a.recurrencia.localeCompare(b.recurrencia),
+            width: 120,
         },
     ];
 
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center h-64">
-                <Spin size="large" />
-            </div>
-        );
-    }
-
     return (
-        <div className="bg-white rounded-lg shadow-lg p-6">
-            {/* Header */}
-            <div className="mb-6">
-                <div className="flex justify-between items-center mb-6">
-                    <Title level={4} className="flex items-center gap-2 m-0">
-                        <CheckSquare className="w-6 h-6 text-blue-500" />
-                        Control de Pagos Recurrentes
-                    </Title>
-                    <Space size="middle">
-                        <Button 
-                            icon={<ChevronLeft className="w-4 h-4" />} 
-                            onClick={handlePrevMonth}
-                        />
-                        <Text strong className="text-lg px-4">
-                            {currentMonthLabel}
-                        </Text>
-                        <Button 
-                            icon={<ChevronRight className="w-4 h-4" />} 
-                            onClick={handleNextMonth}
-                        />
-                    </Space>
-                </div>
+        <>
+           <Acciones
+                showFilters={showFilters}
+                setShowFilters={setShowFilters}
+                selectedRowKeys={selectedRowKeys}
+                handleEditSelected={handleEditSelected}
+                handleDeleteSelected={handleDeleteSelected}
+          
+                handleExportSelected={handleExportSelected}
+                clearSelection={clearSelection}
+               
+                formatCurrency={formatCurrency}
+               
+              
+               
+                setDateRange={setDateRange}
+                
+ 
+                filteredEntries={filteredEntries}
+                setSelectedRowKeys={setSelectedRowKeys}
+            />
 
-                {/* Stats Cards */}
-                <div className="grid grid-cols-3 gap-4 mb-6">
-                    <Card className="bg-blue-50">
-                        <Statistic
-                            title={
-                                <span className="flex items-center gap-2">
-                                    <Clock className="w-4 h-4 text-yellow-500" />
-                                    Pagos Pendientes
-                                </span>
-                            }
-                            value={filteredPayments.filter(p => !p.estado).length}
-                            suffix={`/ ${filteredPayments.length}`}
-                        />
-                    </Card>
-                    <Card className="bg-yellow-50">
-                        <Statistic
-                            title={
-                                <span className="flex items-center gap-2">
-                                    <AlertCircle className="w-4 h-4 text-yellow-500" />
-                                    Monto Pendiente
-                                </span>
-                            }
-                            value={pendingTotal}
-                            formatter={value => formatCurrency(value)}
-                        />
-                    </Card>
-                    <Card className="bg-green-50">
-                        <Statistic
-                            title={
-                                <span className="flex items-center gap-2">
-                                    <CheckSquare className="w-4 h-4 text-green-500" />
-                                    Monto Pagado
-                                </span>
-                            }
-                            value={paidTotal}
-                            formatter={value => formatCurrency(value)}
-                        />
-                    </Card>
-                </div>
-            </div>
 
-            {/* Table */}
-            <Table
+            {error && (
+                <div className="mb-4 p-4 bg-red-50 text-red-700 rounded border border-red-200">
+                    <p className="font-medium">{error}</p>
+                    <Button type="primary" danger onClick={fetchData} className="mt-2">
+                        Reintentar
+                    </Button>
+                </div>
+            )}
+
+            <TablaReutilizable
+                className="px-7 py-5"
                 columns={columns}
-                dataSource={filteredPayments}
-                pagination={{
-                    current: currentPage,
-                    pageSize,
-                    total: filteredPayments.length,
-                    onChange: handlePageChange,
-                    showSizeChanger: false,
-                }}
-                rowKey="id"
-                className="border rounded-lg"
-                rowClassName={(record) => !record.estado ? 'bg-yellow-50' : ''}
+                dataSource={filteredEntries}
+                onCreate={handleCreate}
             />
-
-            <PaymentDetailsModal
-                isOpen={isPaymentModalOpen}
-                onClose={handlePaymentModalClose}
-                payment={selectedPayment}
-            />
-        </div>
+        </>
     );
-}
+};
+
+export default RenderPaymentsList;

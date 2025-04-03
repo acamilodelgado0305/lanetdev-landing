@@ -37,7 +37,7 @@ const AddExpense = () => {
   const [accounts, setAccounts] = useState([]);
   const [date, setDate] = useState(dayjs());
   const [proveedores, setProveedores] = useState([]);
-  
+
   const [loading, setLoading] = useState(false);
   const [proveedor, setProveedor] = useState("");
   const [categoria, setCategoria] = useState("");
@@ -91,7 +91,7 @@ const AddExpense = () => {
   };
 
 
- 
+
   // Función para cargar los datos del egreso existente
   const fetchExpenseData = async () => {
     try {
@@ -112,7 +112,7 @@ const AddExpense = () => {
       setFacturaNumber(data.invoice_number || "");
       setFacturaProvNumber(data.provider_invoice_number || "");
       setTipo(data.type || "");
-    
+
 
       // Mapear ítems y totales
       if (data.items && data.items.length > 0) {
@@ -567,24 +567,18 @@ const AddExpense = () => {
 
   return (
     <div className="max-w-[1400px] mx-auto bg-white  ">
-      <div className="sticky top-0 z-10 bg-white p-4  flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <div className="bg-[#0052CC] p-2">
-            <FileTextOutlined className="text-white" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-[#0052CC] text-sm">Egresos /</span>
-            <Title level={3}>{id ? "Editar" : "Nuevo"}</Title>
-          </div>
+      <div className="sticky top-0 z-10 bg-white p-4 shadow-sm flex justify-between items-center border-b">
+        <div className="flex items-center gap-3">
+          
         </div>
-        <Space>
 
-          <div className="px-6 py-4 flex justify-end">
+        <div className="flex items-center gap-3">
+          <div>
             <input
               type="file"
               accept=".xlsx, .xls"
               onChange={handleFileUpload}
-              style={{ display: "none" }}
+              className="hidden"
               id="bulkUploadInput"
             />
             <Button
@@ -592,23 +586,30 @@ const AddExpense = () => {
               icon={<UploadOutlined />}
               loading={loading}
               onClick={() => document.getElementById("bulkUploadInput").click()}
-              className="bg-transparent border border-[#0052CC] text-[#0052CC] hover:bg-[#0052CC] hover:text-white"
-              style={{ borderRadius: 2 }}
+              className="flex items-center gap-1 bg-white border border-blue-700 text-blue-700 hover:bg-blue-700 hover:text-white transition-all duration-200"
+              style={{ borderRadius: 4 }}
             >
               Cargar Egresos Masivos
             </Button>
           </div>
+
           <Button
             onClick={handleCancel}
-            className="bg-transparent border border-gray-500 text-gray-500 hover:bg-gray-500 hover:text-white"
-            style={{ borderRadius: 2 }}
+            className="bg-white border border-gray-400 text-gray-600 hover:bg-gray-100 transition-all duration-200"
+            style={{ borderRadius: 4 }}
           >
             Cancelar
           </Button>
-          <Button onClick={handleSave} type="primary" className="bg-[#0052CC]" style={{ borderRadius: 2 }}>
+
+          <Button
+            onClick={handleSave}
+            type="primary"
+            className="bg-blue-700 hover:bg-blue-800 border-none transition-all duration-200"
+            style={{ borderRadius: 4 }}
+          >
             Aceptar
           </Button>
-        </Space>
+        </div>
       </div>
 
       {renderCompraInputs()}
