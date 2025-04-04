@@ -98,9 +98,17 @@ const VoucherSection = ({ onVoucherChange, initialVouchers = [], entryId, type =
             const uploadPromises = newFiles.map(file => uploadImage(file));
             const uploadedUrls = await Promise.all(uploadPromises);
             const newUrls = uploadedUrls.filter(url => !imageUrls.includes(url));
+
             if (newUrls.length > 0) {
-                await updateVouchersOnServer('add', newUrls);
-                message.success('Comprobantes agregados correctamente');
+                if (entryId) {
+                    // Modo edición: Actualiza en el servidor
+                    await updateVouchersOnServer('add', newUrls);
+                    message.success('Comprobantes agregados correctamente');
+                } else {
+                    // Modo creación: Solo actualiza el estado local
+                    setImageUrls(prev => [...prev, ...newUrls]);
+                    message.success('Comprobantes subidos localmente');
+                }
             }
         } catch (error) {
             console.error('Error uploading images:', error);
@@ -112,11 +120,18 @@ const VoucherSection = ({ onVoucherChange, initialVouchers = [], entryId, type =
 
     const handleDeleteVoucher = async (indexToDelete) => {
         const urlToDelete = imageUrls[indexToDelete];
-        try {
-            await updateVouchersOnServer('remove', [urlToDelete]);
-            message.success('Comprobante eliminado');
-        } catch (error) {
-            // Error ya manejado en updateVouchersOnServer
+        if (entryId) {
+            // Modo edición: Elimina del servidor
+            try {
+                await updateVouchersOnServer('remove', [urlToDelete]);
+                message.success('Comprobante eliminado');
+            } catch (error) {
+                // Error ya manejado en updateVouchersOnServer
+            }
+        } else {
+            // Modo creación: Elimina del estado local
+            setImageUrls(prev => prev.filter((_, index) => index !== indexToDelete));
+            message.success('Comprobante eliminado localmente');
         }
     };
 
