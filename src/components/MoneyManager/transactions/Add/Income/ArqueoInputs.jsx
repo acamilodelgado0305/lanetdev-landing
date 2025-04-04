@@ -41,7 +41,7 @@ const ArqueoInputs = ({
 }) => {
   if (!isArqueoChecked) return null;
 
-  const [showFixedAmounts, setShowFixedAmounts] = useState(true);
+  const [showFixedAmounts, setShowFixedAmounts] = useState(false);
   const [cashiers, setCashiers] = useState([]);
   const [localCashierId, setLocalCashierId] = useState(parentCashierId || null);
   const [localCommissionPorcentaje, setLocalCommissionPorcentaje] = useState(parentCommissionPorcentaje || 0);
