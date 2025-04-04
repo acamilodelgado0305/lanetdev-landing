@@ -50,11 +50,56 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
 
   const formatCurrency = (amount) => new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(amount || 0);
 
-  const renderDate = (date) => {
-    if (!date) return "Sin fecha";
-    const parsedDate = typeof date === "string" ? DateTime.fromISO(date, { zone: "America/Bogota" }) : DateTime.fromJSDate(date, { zone: "America/Bogota" });
-    return parsedDate.isValid ? parsedDate.setLocale("es").toFormat("d 'de' MMMM 'de' yyyy HH:mm") : "Fecha inválida";
-  };
+    const renderDate = (date) => {
+      if (!date) {
+        console.log("Fecha recibida es nula o indefinida:", date);
+        return "Sin fecha";
+      }
+  
+      try {
+        let parsedDate;
+  
+        if (typeof date === "string") {
+          const cleanDate = date.endsWith("Z") ? date.substring(0, date.length - 1) : date;
+  
+          // Intentar con ISO primero
+          parsedDate = DateTime.fromISO(cleanDate, { zone: "America/Bogota" });
+  
+          // Si no funciona, intentar con formato SQL
+          if (!parsedDate.isValid) {
+            console.log("Intento con fromSQL para:", cleanDate);
+            parsedDate = DateTime.fromSQL(cleanDate, { zone: "America/Bogota" });
+          }
+  
+          // Si aún no es válido, intentar formatos comunes
+          if (!parsedDate.isValid) {
+            console.log("Intento con formatos personalizados para:", cleanDate);
+            const formats = [
+              "yyyy-MM-dd HH:mm:ss",
+              "yyyy-MM-dd'T'HH:mm:ss",
+              "dd/MM/yyyy HH:mm:ss",
+              "yyyy-MM-dd",
+            ];
+            for (const format of formats) {
+              parsedDate = DateTime.fromFormat(cleanDate, format, { zone: "America/Bogota" });
+              if (parsedDate.isValid) break;
+            }
+          }
+        } else if (date instanceof Date) {
+          parsedDate = DateTime.fromJSDate(date, { zone: "America/Bogota" });
+        }
+  
+        if (!parsedDate || !parsedDate.isValid) {
+          console.error("No se pudo parsear la fecha:", date, "Valor recibido:", typeof date, date);
+          return "Fecha inválida";
+        }
+  
+        return parsedDate.setLocale("es").toFormat("d 'de' MMMM 'de' yyyy HH:mm");
+      } catch (error) {
+        console.error("Error al formatear la fecha:", error, "Fecha original:", date);
+        return "Fecha inválida";
+      }
+    };
 
   const normalizeVouchers = (vouchers) => {
     if (Array.isArray(vouchers)) return vouchers;
