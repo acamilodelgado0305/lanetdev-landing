@@ -129,6 +129,28 @@ const ComprobanteEgresoHeader = ({
                 ))}
             </Select>
           </div>
+
+          <div className="mb-3">
+            <Text className="text-gray-700 font-medium block mb-1">Proveedor</Text>
+            <Select
+              value={proveedor}
+              onChange={handleProveedorChange}
+              className="w-full h-9"
+              placeholder="Selecciona un proveedor"
+              showSearch
+              optionFilterProp="children"
+              filterOption={(input, option) =>
+                option.children.toLowerCase().includes(input.toLowerCase())
+              }
+            >
+              {Array.isArray(proveedores) &&
+                proveedores.map((provider) => (
+                  <Select.Option key={provider.id} value={provider.id}>
+                    {provider.nombre_comercial}
+                  </Select.Option>
+                ))}
+            </Select>
+          </div>
           <div className="mb-3">
             <Text className="text-gray-700 font-medium block mb-1">No. Identificación Proveedor</Text>
             <Input
