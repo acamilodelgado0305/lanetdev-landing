@@ -721,7 +721,7 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
                     Monto Total
                     <input
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                        onChange={(e) => handleSearch(e.target.value, "amount")}
+                        onChange={(e) => handleSearch(e.target.value, "cash_received")}
                         style={{
                             marginTop: 2,
                             padding: 4,

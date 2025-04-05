@@ -173,15 +173,15 @@ function ViewIncome({ entry, visible, onClose, activeTab }) {
               <div className="mb-6">
                 
                 <div className="grid grid-cols-2 gap-4 text-sm text-gray-700" style={{ fontFamily: "SF Pro Text, sans-serif" }}>
-                  <div><span className="font-medium">Título:</span> {incomeData.description}</div>
-                  <div><span className="font-medium">Cajero:</span> {getCajeroName(incomeData.cashier_id)}</div>
-                  <div><span className="font-medium">Tipo:</span> {incomeData.type || "N/A"}</div>
-                  <div><span className="font-medium">Cuenta:</span> {getAccountName(incomeData.account_id)}</div>
+                  <div><span className="font-semibold">Título:</span> {incomeData.description}</div>
+                  <div><span className="font-semibold">Cajero:</span> {getCajeroName(incomeData.cashier_id)}</div>
+                  <div><span className="font-semibold">Tipo:</span> {incomeData.type || "N/A"}</div>
+                  <div><span className="font-semibold">Cuenta:</span> {getAccountName(incomeData.account_id)}</div>
                   <div className="col-span-2"><span className="font-medium">Período:</span> {renderDate(incomeData.start_period)} - {renderDate(incomeData.end_period)}</div>
                 </div>
               </div>
 
-              <table className="w-full text-sm border border-gray-200 ">
+              <table className="w-[50em] text-sm border border-gray-200 ">
                 <thead>
                   <tr className="bg-gray-100 text-gray-700">
                     <th className="py-3 px-4 text-left font-semibold">Concepto</th>
@@ -206,7 +206,6 @@ function ViewIncome({ entry, visible, onClose, activeTab }) {
                       ))}
                     </>
                   )}
-                  <tr className="border-t"><td className="py-3 px-4">Efectivo Recibido</td><td className="py-3 px-4 text-right">{formatCurrency(incomeData.cash_received)}</td></tr>
                   <tr className="border-t font-semibold"><td className="py-3 px-4">Total Ingresos</td><td className="py-3 px-4 text-right text-green-600">{formatCurrency(incomeData.amount)}</td></tr>
                   <tr className="border-t"><td className="py-3 px-4">Comisión del Cajero</td><td className="py-3 px-4 text-right text-red-600">-{formatCurrency(incomeData.cashier_commission)}</td></tr>
                 </tbody>
@@ -214,13 +213,13 @@ function ViewIncome({ entry, visible, onClose, activeTab }) {
             </div>
 
             {/* Resumen, notas y comprobantes */}
-            <div className="col-span-1">
+            <div className="col-flex-">
               <div className="mb-6">
                 <h2 className="text-lg font-semibold text-gray-800 mb-3" style={{ fontFamily: "SF Pro Display, sans-serif" }}>Resumen</h2>
                 <div className="bg-gray-50 p-4  border border-gray-200 text-sm text-gray-700" style={{ fontFamily: "SF Pro Text, sans-serif" }}>
                   <div className="flex justify-between mb-2"><span>Total Ingresos</span><span>{formatCurrency(incomeData.amount)}</span></div>
                   <div className="flex justify-between mb-2"><span>Comisión</span><span className="text-red-600">-{formatCurrency(incomeData.cashier_commission)}</span></div>
-                  <div className="flex justify-between border-t pt-2 font-semibold"><span>Total Neto</span><span className="text-green-600">{formatCurrency(incomeData.amount)}</span></div>
+                  <div className="flex justify-between border-t pt-2 font-semibold"><span>Dinero Entregado</span><span className="text-green-600">{formatCurrency(incomeData.amount)}</span></div>
                 </div>
               </div>
 
