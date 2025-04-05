@@ -157,7 +157,7 @@ const ArqueoInputs = ({
 
 
   const renderInvoiceHeader = () => (
-    <div className="border-b-2 border-gray-200 pb-4 mb-6">
+    <div className="border-b-2 border-gray-200 ">
       {/* Encabezado superior */}
       <div className="flex bg-gray-100 p-2 rounded-md justify-between items-center mb-4">
         <div>

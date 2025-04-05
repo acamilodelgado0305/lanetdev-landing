@@ -79,12 +79,52 @@ function ViewIncome({ entry, visible, onClose, activeTab }) {
   const formatCurrency = (amount) => new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(amount || 0);
 
   const renderDate = (date) => {
-    if (!date) return "Sin fecha";
+    if (!date) {
+      console.log("Fecha recibida es nula o indefinida:", date);
+      return "Sin fecha";
+    }
+
     try {
-      const parsedDate = typeof date === "string" ? DateTime.fromISO(date, { zone: "America/Bogota" }) : DateTime.fromJSDate(date, { zone: "America/Bogota" });
-      return parsedDate.isValid ? parsedDate.setLocale("es").toFormat("d 'de' MMMM 'de' yyyy HH:mm") : "Fecha inválida";
+      let parsedDate;
+
+      if (typeof date === "string") {
+        const cleanDate = date.endsWith("Z") ? date.substring(0, date.length - 1) : date;
+
+        // Intentar con ISO primero
+        parsedDate = DateTime.fromISO(cleanDate, { zone: "America/Bogota" });
+
+        // Si no funciona, intentar con formato SQL
+        if (!parsedDate.isValid) {
+          console.log("Intento con fromSQL para:", cleanDate);
+          parsedDate = DateTime.fromSQL(cleanDate, { zone: "America/Bogota" });
+        }
+
+        // Si aún no es válido, intentar formatos comunes
+        if (!parsedDate.isValid) {
+          console.log("Intento con formatos personalizados para:", cleanDate);
+          const formats = [
+            "yyyy-MM-dd HH:mm:ss",
+            "yyyy-MM-dd'T'HH:mm:ss",
+            "dd/MM/yyyy HH:mm:ss",
+            "yyyy-MM-dd",
+          ];
+          for (const format of formats) {
+            parsedDate = DateTime.fromFormat(cleanDate, format, { zone: "America/Bogota" });
+            if (parsedDate.isValid) break;
+          }
+        }
+      } else if (date instanceof Date) {
+        parsedDate = DateTime.fromJSDate(date, { zone: "America/Bogota" });
+      }
+
+      if (!parsedDate || !parsedDate.isValid) {
+        console.error("No se pudo parsear la fecha:", date, "Valor recibido:", typeof date, date);
+        return "Fecha inválida";
+      }
+
+      return parsedDate.setLocale("es").toFormat("d 'de' MMMM 'de' yyyy HH:mm");
     } catch (error) {
-      console.error("Error al formatear la fecha:", error);
+      console.error("Error al formatear la fecha:", error, "Fecha original:", date);
       return "Fecha inválida";
     }
   };
@@ -119,7 +159,7 @@ function ViewIncome({ entry, visible, onClose, activeTab }) {
   };
 
   const renderInvoiceHeader = () => (
-    <div className="border-b-2 border-gray-200 pb-4 mb-6">
+    <div className="border-b-2 border-gray-200 ">
       <div className="flex bg-gray-100 p-2 rounded-md justify-between items-center mb-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-800">COMPROBANTE DE ARQUEO</h1>
@@ -134,23 +174,45 @@ function ViewIncome({ entry, visible, onClose, activeTab }) {
       </div>
 
       <div className="p-6">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-          <div className="flex items-center space-x-3 w-full md:w-2/3">
-            <span className="text-gray-600 font-semibold whitespace-nowrap">Título:</span>
-            <Input value={incomeData?.description || "N/A"} disabled className="w-full" />
-          </div>
-          <div className="text-right space-y-2">
-            <p className="text-gray-600">
-              <span className="font-semibold">Fecha:</span> {renderDate(incomeData?.date)}
-            </p>
-          </div>
-        </div>
+        <div className="flex flex-col md:flex-row justify-between items-start mb-6 gap-4">
+          {/* Título y Fecha */}
+          <div className="w-full md:w-2/3">
+            <div className="flex items-center space-x-3 mb-4">
+              <span className="text-gray-600 font-semibold whitespace-nowrap">Título:</span>
+              <Input value={incomeData?.description || "N/A"} disabled className="w-full" />
+            </div>
+            <div className="text-left">
 
-        <div className="space-y-4">
-          <Title level={4}>Período de Arqueo</Title>
-          <div className="flex space-x-4">
-            <Input value={renderDate(incomeData?.start_period)} disabled className="w-40" />
-            <Input value={renderDate(incomeData?.end_period)} disabled className="w-40" />
+              <div className="bg-white  rounded-lg shadow-sm  space-y-6">
+
+                <div className="space-y-2">
+                  <label className="text-gray-700 font-semibold text-sm uppercase tracking-wide">Cajero</label>
+                  <Input value={getCajeroName(incomeData?.cashier_id)} disabled className="w-full" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-gray-700 font-semibold text-sm uppercase tracking-wide">Donde ingresa el dinero</label>
+                  <Input value={getAccountName(incomeData?.account_id)} disabled className="w-full" />
+                </div>
+              </div>
+
+
+
+            </div>
+          </div>
+
+          {/* Período de Arqueo a la derecha */}
+          <div className="w-full md:w-1/3 text-sm mt-[3em]">
+            <Title level={4} className="text-base">Período de Arqueo</Title>
+            <div className="space-y-2">
+              <div>
+                <label className="text-gray-600 font-semibold">Fecha Inicio:</label>
+                <Input value={renderDate(incomeData?.start_period)} disabled className="w-full mt-1" />
+              </div>
+              <div>
+                <label className="text-gray-600 font-semibold">Fecha Fin:</label>
+                <Input value={renderDate(incomeData?.end_period)} disabled className="w-full mt-1" />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -163,31 +225,19 @@ function ViewIncome({ entry, visible, onClose, activeTab }) {
     const cashReceivedValue = parseFloat(incomeData?.cash_received) || 0;
 
     return (
-      <div className="flex flex-col md:flex-row gap-6">
+      <div className="flex flex-col md:flex-row ">
         {/* Columna Izquierda - Información de Cajero y Cuenta */}
         <div className="w-full md:w-96">
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 space-y-6">
-            <div className="space-y-2">
-              <label className="text-gray-700 font-semibold text-sm uppercase tracking-wide">Cajero</label>
-              <Input value={getCajeroName(incomeData?.cashier_id)} disabled className="w-full" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-gray-700 font-semibold text-sm uppercase tracking-wide">Donde ingresa el dinero</label>
-              <Input value={getAccountName(incomeData?.account_id)} disabled className="w-full" />
+          <div>
+            <Title level={4}>Comprobantes</Title>
+            <div className="grid grid-cols-2 gap-4">
+              {incomeData?.voucher && normalizeVouchers(incomeData.voucher).length > 0 ? (
+                normalizeVouchers(incomeData.voucher).map((url, index) => <div key={index}>{renderFilePreview(url)}</div>)
+              ) : (
+                <p className="text-sm text-gray-500 col-span-2 text-center">No hay comprobantes adjuntos</p>
+              )}
             </div>
           </div>
-
-
-          <div>
-              <Title level={4}>Comprobantes</Title>
-              <div className="grid grid-cols-2 gap-4">
-                {incomeData?.voucher && normalizeVouchers(incomeData.voucher).length > 0 ? (
-                  normalizeVouchers(incomeData.voucher).map((url, index) => <div key={index}>{renderFilePreview(url)}</div>)
-                ) : (
-                  <p className="text-sm text-gray-500 col-span-2 text-center">No hay comprobantes adjuntos</p>
-                )}
-              </div>
-            </div>
         </div>
 
         {/* Columna Derecha - Detalles de la Factura */}
@@ -234,7 +284,7 @@ function ViewIncome({ entry, visible, onClose, activeTab }) {
                     <td className="p-3 border-t">Total a Cobrar</td>
                     <td className="p-3 border-t text-right">{formatCurrency(totalAmount)}</td>
                   </tr>
-                 
+
                   <tr className="bg-blue-500 text-white font-bold">
                     <td className="p-3 border-t">Efectivo Recibido</td>
                     <td className="p-3 border-t text-right">{formatCurrency(cashReceivedValue)}</td>
@@ -248,14 +298,15 @@ function ViewIncome({ entry, visible, onClose, activeTab }) {
             </div>
 
             {/* Observaciones */}
-            <div className="space-y-4">
+            
+
+            {/* Comprobantes */}
+
+          </div>
+          <div className="space-y-4">
               <Title level={4}>Observaciones</Title>
               <textarea value={incomeData?.comentarios || "Sin notas"} disabled rows={3} className="w-full border p-2" />
             </div>
-
-            {/* Comprobantes */}
-           
-          </div>
         </div>
       </div>
     );
@@ -284,6 +335,7 @@ function ViewIncome({ entry, visible, onClose, activeTab }) {
           <div className="p-6 space-y-8">
             {renderInvoiceHeader()}
             {renderInvoiceDetails()}
+            
           </div>
         ) : (
           <div className="text-center py-16 text-gray-500">No se encontraron detalles para este ingreso.</div>
