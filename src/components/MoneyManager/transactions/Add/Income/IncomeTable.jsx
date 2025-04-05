@@ -49,64 +49,64 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
     });
 
 
-  const renderDate = (date) => {
-      if (!date) return "Sin fecha";
-      
-   
-      
-      try {
-        let parsedDate;
-        
-        // Si es un string, intentamos varios métodos de parsing
-        if (typeof date === 'string') {
-          // Eliminar 'Z' si existe para evitar conversión UTC
-          const cleanDate = date.endsWith('Z') ? date.substring(0, date.length - 1) : date;
-   
-          
-          // Intentar primero con fromISO (formato ISO)
-          parsedDate = DateTime.fromISO(cleanDate, { zone: "America/Bogota" });
-          
-          // Si no es válido, intentar con fromSQL (formato de base de datos)
-          if (!parsedDate.isValid) {
-            console.log("Intento con fromSQL");
-            parsedDate = DateTime.fromSQL(cleanDate, { zone: "America/Bogota" });
-          }
-          
-          // Si sigue sin ser válido, intentar con fromFormat para algunos formatos comunes
-          if (!parsedDate.isValid) {
-            console.log("Intento con formatos específicos");
-            const formats = [
-              "yyyy-MM-dd HH:mm:ss",
-              "yyyy-MM-dd'T'HH:mm:ss",
-              "dd/MM/yyyy HH:mm:ss",
-              "yyyy-MM-dd"
-            ];
-            
-            for (const format of formats) {
-              parsedDate = DateTime.fromFormat(cleanDate, format, { zone: "America/Bogota" });
-              if (parsedDate.isValid) break;
-            }
-          }
-        } else if (date instanceof Date) {
-          // Si es un objeto Date, convertirlo directamente
-          parsedDate = DateTime.fromJSDate(date, { zone: "America/Bogota" });
-        }
-        
-        // Verificar si se pudo parsear correctamente
-        if (!parsedDate || !parsedDate.isValid) {
-          console.warn("No se pudo parsear la fecha:", date);
-          return "Fecha inválida";
-        }
-        
+    const renderDate = (date) => {
+        if (!date) return "Sin fecha";
 
-        // Formatear con configuración regional española
-        return parsedDate.setLocale('es').toFormat("d 'de' MMMM 'de' yyyy HH:mm");
-      } catch (error) {
-        console.error("Error al formatear la fecha:", error, "Fecha original:", date);
-        return "Fecha inválida";
-      }
+
+
+        try {
+            let parsedDate;
+
+            // Si es un string, intentamos varios métodos de parsing
+            if (typeof date === 'string') {
+                // Eliminar 'Z' si existe para evitar conversión UTC
+                const cleanDate = date.endsWith('Z') ? date.substring(0, date.length - 1) : date;
+
+
+                // Intentar primero con fromISO (formato ISO)
+                parsedDate = DateTime.fromISO(cleanDate, { zone: "America/Bogota" });
+
+                // Si no es válido, intentar con fromSQL (formato de base de datos)
+                if (!parsedDate.isValid) {
+                    console.log("Intento con fromSQL");
+                    parsedDate = DateTime.fromSQL(cleanDate, { zone: "America/Bogota" });
+                }
+
+                // Si sigue sin ser válido, intentar con fromFormat para algunos formatos comunes
+                if (!parsedDate.isValid) {
+                    console.log("Intento con formatos específicos");
+                    const formats = [
+                        "yyyy-MM-dd HH:mm:ss",
+                        "yyyy-MM-dd'T'HH:mm:ss",
+                        "dd/MM/yyyy HH:mm:ss",
+                        "yyyy-MM-dd"
+                    ];
+
+                    for (const format of formats) {
+                        parsedDate = DateTime.fromFormat(cleanDate, format, { zone: "America/Bogota" });
+                        if (parsedDate.isValid) break;
+                    }
+                }
+            } else if (date instanceof Date) {
+                // Si es un objeto Date, convertirlo directamente
+                parsedDate = DateTime.fromJSDate(date, { zone: "America/Bogota" });
+            }
+
+            // Verificar si se pudo parsear correctamente
+            if (!parsedDate || !parsedDate.isValid) {
+                console.warn("No se pudo parsear la fecha:", date);
+                return "Fecha inválida";
+            }
+
+
+            // Formatear con configuración regional española
+            return parsedDate.setLocale('es').toFormat("d 'de' MMMM 'de' yyyy HH:mm");
+        } catch (error) {
+            console.error("Error al formatear la fecha:", error, "Fecha original:", date);
+            return "Fecha inválida";
+        }
     };
-    
+
 
 
     const handleMonthChange = (newDate) => {
@@ -290,26 +290,26 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
         try {
             const API_BASE_URL = import.meta.env.VITE_API_FINANZAS || '/api';
             const response = await axios.get(`${API_BASE_URL}/incomes`);
-            
+
             // Procesar las fechas para manejarlas correctamente
             const processedEntries = response.data.map(entry => {
                 // Crear una copia del entry para no mutar el original
                 const processedEntry = { ...entry };
-                
+
                 // Si la fecha viene con 'Z' al final (UTC), la convertimos a la zona horaria local
                 if (typeof processedEntry.date === 'string' && processedEntry.date.endsWith('Z')) {
                     // Mantener la fecha en su formato original sin conversión a UTC
                     processedEntry.date = processedEntry.date.replace('Z', '');
                 }
-                
+
                 return processedEntry;
             });
-            
+
             // Ordenar las entradas por fecha
             const sortedEntries = processedEntries.sort((a, b) => {
                 return b.date.localeCompare(a.date);
             });
-            
+
             setEntries(sortedEntries);
             setFilteredEntries(sortedEntries);
             setError(null);
@@ -517,7 +517,7 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
         setIsDrawerOpen(false);
         setSelectedImages([]);
     };
-    
+
     // New function to generate the PDF invoice
     const generateInvoicePDF = (items) => {
         const doc = new jsPDF();
@@ -721,7 +721,7 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
                     Monto Total
                     <input
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                        onChange={(e) => handleSearch(e.target.value, "cash_received")}
+                        onChange={(e) => handleSearch(e.target.value, "amount")}
                         style={{
                             marginTop: 2,
                             padding: 4,
@@ -734,10 +734,10 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
                     />
                 </div>
             ),
-            dataIndex: "amount",
-            key: "amount",
-            render: (amount) => <span className="font-bold">{formatCurrency(amount)}</span>,
-            sorter: (a, b) => a.amount - b.amount,
+            dataIndex: "cash_received",
+            key: "cash_received",
+            render: (amount) => <span className="font-bold">{formatCurrency(amount)}</span>, // Usamos amount aquí
+            sorter: (a, b) => a.cash_received - b.cash_received, // Corregimos el campo de ordenación
             sortDirections: ["descend", "ascend"],
             width: 140,
         },

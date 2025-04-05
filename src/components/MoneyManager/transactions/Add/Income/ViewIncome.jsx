@@ -76,25 +76,12 @@ function ViewIncome({ entry, visible, onClose, activeTab }) {
 
       if (typeof date === "string") {
         const cleanDate = date.endsWith("Z") ? date.substring(0, date.length - 1) : date;
-
-        // Intentar con ISO primero
         parsedDate = DateTime.fromISO(cleanDate, { zone: "America/Bogota" });
-
-        // Si no funciona, intentar con formato SQL
         if (!parsedDate.isValid) {
-          console.log("Intento con fromSQL para:", cleanDate);
           parsedDate = DateTime.fromSQL(cleanDate, { zone: "America/Bogota" });
         }
-
-        // Si aún no es válido, intentar formatos comunes
         if (!parsedDate.isValid) {
-          console.log("Intento con formatos personalizados para:", cleanDate);
-          const formats = [
-            "yyyy-MM-dd HH:mm:ss",
-            "yyyy-MM-dd'T'HH:mm:ss",
-            "dd/MM/yyyy HH:mm:ss",
-            "yyyy-MM-dd",
-          ];
+          const formats = ["yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd'T'HH:mm:ss", "dd/MM/yyyy HH:mm:ss", "yyyy-MM-dd"];
           for (const format of formats) {
             parsedDate = DateTime.fromFormat(cleanDate, format, { zone: "America/Bogota" });
             if (parsedDate.isValid) break;
@@ -105,13 +92,13 @@ function ViewIncome({ entry, visible, onClose, activeTab }) {
       }
 
       if (!parsedDate || !parsedDate.isValid) {
-        console.error("No se pudo parsear la fecha:", date, "Valor recibido:", typeof date, date);
+        console.error("No se pudo parsear la fecha:", date);
         return "Fecha inválida";
       }
 
       return parsedDate.setLocale("es").toFormat("d 'de' MMMM 'de' yyyy HH:mm");
     } catch (error) {
-      console.error("Error al formatear la fecha:", error, "Fecha original:", date);
+      console.error("Error al formatear la fecha:", error);
       return "Fecha inválida";
     }
   };
@@ -136,7 +123,7 @@ function ViewIncome({ entry, visible, onClose, activeTab }) {
     const isImage = /\.(jpg|png|gif)$/i.test(url);
     const isPDF = url.endsWith(".pdf");
     return (
-      <div className="relative w-full h-40 bg-gray-50  border border-gray-200 overflow-hidden shadow-sm">
+      <div className="relative w-full h-40 bg-gray-50 border border-gray-200 overflow-hidden shadow-sm">
         {isImage ? <img src={url} alt="Comprobante" className="w-full h-full object-cover" /> : isPDF ? <iframe src={url} title="PDF" className="w-full h-full border-0" /> : null}
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 hover:bg-opacity-30 transition-all">
           <Button type="link" icon={<EyeOutlined />} onClick={() => { setCurrentImage(url); setIsImageModalOpen(true); }} className="text-white opacity-0 hover:opacity-100" />
@@ -145,11 +132,60 @@ function ViewIncome({ entry, visible, onClose, activeTab }) {
     );
   };
 
+  const renderDiscrepancyMessage = () => {
+    if (!incomeData || incomeData.type !== "arqueo") return null;
+
+    const totalAmount = parseFloat(incomeData.amount) || 0;
+    const cashReceivedValue = parseFloat(incomeData.cash_received) || 0;
+    const difference = cashReceivedValue - totalAmount;
+    const isCashMatch = Math.abs(difference) < 0.01;
+
+    let messageText, messageClass, differenceText, questionText;
+
+    if (isCashMatch) {
+      messageText = "Los valores coinciden correctamente";
+      messageClass = "bg-green-100 text-green-700";
+      differenceText = "";
+    } else if (difference > 0) {
+      messageText = "¡Alerta! Hay un excedente en el arqueo";
+      messageClass = "bg-yellow-100 text-yellow-700";
+      differenceText = `Sobran ${formatCurrency(difference)}`;
+      questionText = "¿Por qué hay dinero extra? Verifique posibles errores en el registro de ventas.";
+    } else {
+      messageText = "¡Error! Hay un déficit en el arqueo";
+      messageClass = "bg-red-100 text-red-700";
+      differenceText = `Faltan ${formatCurrency(Math.abs(difference))}`;
+      questionText = "¿Por qué falta dinero? Revise posibles errores de cobro o si hubo retiros no registrados.";
+    }
+
+    return (
+      <div className={`p-4 rounded-lg mb-4 ${messageClass}`}>
+        <h3 className="font-bold text-lg mb-2">{messageText}</h3>
+        {!isCashMatch && (
+          <div className="flex flex-col space-y-2">
+            <div className="text-2xl font-bold mb-3">Diferencia: {differenceText}</div>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <div>Efectivo esperado:</div>
+                <div>{formatCurrency(totalAmount)}</div>
+              </div>
+              <div className="flex justify-between">
+                <div>Efectivo recibido:</div>
+                <div>{formatCurrency(cashReceivedValue)}</div>
+              </div>
+            </div>
+            <div className="mt-3 border-t pt-3 italic">{questionText}</div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   if (!visible) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-6" onClick={onClose}>
-      <Card className="w-[95%] max-w-[1600px] max-h-[85vh] bg-white shadow-xl  overflow-auto" bodyStyle={{ padding: 0 }} onClick={(e) => e.stopPropagation()}>
+      <Card className="w-[95%] max-w-[1200px] max-h-[85vh] bg-white shadow-xl overflow-auto" bodyStyle={{ padding: 0 }} onClick={(e) => e.stopPropagation()}>
         {/* Encabezado */}
         <div className="p-6 bg-blue-50 border-b border-gray-200 flex justify-between items-center">
           <div>
@@ -165,13 +201,12 @@ function ViewIncome({ entry, visible, onClose, activeTab }) {
 
         {/* Cuerpo */}
         {loading ? (
-          <div className="flex justify-center items-center h-64"><div className="animate-spin  h-12 w-12 border-t-2 border-blue-500"></div></div>
+          <div className="flex justify-center items-center h-64"><div className="animate-spin h-12 w-12 border-t-2 border-blue-500"></div></div>
         ) : incomeData ? (
           <div className="p-6 grid grid-cols-3 gap-6">
             {/* Detalles y tabla */}
             <div className="col-span-2">
               <div className="mb-6">
-                
                 <div className="grid grid-cols-2 gap-4 text-sm text-gray-700" style={{ fontFamily: "SF Pro Text, sans-serif" }}>
                   <div><span className="font-semibold">Título:</span> {incomeData.description}</div>
                   <div><span className="font-semibold">Cajero:</span> {getCajeroName(incomeData.cashier_id)}</div>
@@ -181,7 +216,7 @@ function ViewIncome({ entry, visible, onClose, activeTab }) {
                 </div>
               </div>
 
-              <table className="w-[50em] text-sm border border-gray-200 ">
+              <table className="w-[50em] text-sm border border-gray-200">
                 <thead>
                   <tr className="bg-gray-100 text-gray-700">
                     <th className="py-3 px-4 text-left font-semibold">Concepto</th>
@@ -212,20 +247,22 @@ function ViewIncome({ entry, visible, onClose, activeTab }) {
               </table>
             </div>
 
-            {/* Resumen, notas y comprobantes */}
-            <div className="col-flex-">
+            {/* Resumen, discrepancia, notas y comprobantes */}
+            <div className="col-span-1">
               <div className="mb-6">
                 <h2 className="text-lg font-semibold text-gray-800 mb-3" style={{ fontFamily: "SF Pro Display, sans-serif" }}>Resumen</h2>
-                <div className="bg-gray-50 p-4  border border-gray-200 text-sm text-gray-700" style={{ fontFamily: "SF Pro Text, sans-serif" }}>
+                <div className="bg-gray-50 p-4 border border-gray-200 text-sm text-gray-700" style={{ fontFamily: "SF Pro Text, sans-serif" }}>
                   <div className="flex justify-between mb-2"><span>Total Ingresos</span><span>{formatCurrency(incomeData.amount)}</span></div>
                   <div className="flex justify-between mb-2"><span>Comisión</span><span className="text-red-600">-{formatCurrency(incomeData.cashier_commission)}</span></div>
-                  <div className="flex justify-between border-t pt-2 font-semibold"><span>Dinero Entregado</span><span className="text-green-600">{formatCurrency(incomeData.amount)}</span></div>
+                  <div className="flex justify-between border-t pt-2 font-semibold"><span>Efectivo Recibido</span><span className="text-green-600">{formatCurrency(incomeData.cash_received)}</span></div>
                 </div>
               </div>
 
+              {renderDiscrepancyMessage()}
+
               <div className="mb-6">
                 <h2 className="text-lg font-semibold text-gray-800 mb-3" style={{ fontFamily: "SF Pro Display, sans-serif" }}>Notas</h2>
-                <p className="text-sm text-gray-600 bg-gray-50 p-4  border border-gray-200">{incomeData.comentarios || "Sin notas"}</p>
+                <p className="text-sm text-gray-600 bg-gray-50 p-4 border border-gray-200">{incomeData.comentarios || "Sin notas"}</p>
               </div>
 
               <div>
