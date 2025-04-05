@@ -154,10 +154,13 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
             {/* Detalles y tabla */}
             <div className="col-span-2">
               <div className="mb-6">
-                <h2 className="text-lg font-semibold text-gray-800 mb-3" style={{ fontFamily: "SF Pro Display, sans-serif" }}>Detalles</h2>
+                
                 <div className="grid grid-cols-2 gap-4 text-sm text-gray-700" style={{ fontFamily: "SF Pro Text, sans-serif" }}>
-                  <div><span className="font-medium">Cuenta:</span> {getAccountName(expenseData.account_id)}</div>
-                  <div><span className="font-medium">Tipo:</span> {expenseData.type || "N/A"}</div>
+                <div><span className="font-bold">Titulo:</span> {(expenseData.category)}</div>
+                <div><span className="font-bold">Categoria:</span> {(expenseData.description)}</div>
+                  <div><span className="font-bold">Cuenta:</span> {getAccountName(expenseData.account_id)}</div>
+                  <div><span className="font-bold">Provedor:</span> {(expenseData.pro)}</div>
+                  
                 </div>
               </div>
 
