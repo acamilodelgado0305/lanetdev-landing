@@ -18,9 +18,8 @@ import {
 import FloatingActionMenu from "../../FloatingActionMenu";
 import ViewIncome from "./ViewIncome";
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable"; // Correct import
+import autoTable from "jspdf-autotable";
 import Acciones from "../../Acciones";
-
 
 const { RangePicker } = DatePicker;
 const { Title, Text } = Typography;
@@ -33,7 +32,6 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
     const [selectedImages, setSelectedImages] = useState([]);
     const [searchText, setSearchText] = useState({});
 
-    // State variables for selection and date filtering
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [showFilters, setShowFilters] = useState(false);
@@ -48,58 +46,41 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
         return [startOfMonth(today), endOfMonth(today)];
     });
 
-
     const renderDate = (date) => {
         if (!date) return "Sin fecha";
-
-
 
         try {
             let parsedDate;
 
-            // Si es un string, intentamos varios métodos de parsing
             if (typeof date === 'string') {
-                // Eliminar 'Z' si existe para evitar conversión UTC
                 const cleanDate = date.endsWith('Z') ? date.substring(0, date.length - 1) : date;
-
-
-                // Intentar primero con fromISO (formato ISO)
                 parsedDate = DateTime.fromISO(cleanDate, { zone: "America/Bogota" });
 
-                // Si no es válido, intentar con fromSQL (formato de base de datos)
                 if (!parsedDate.isValid) {
-                    console.log("Intento con fromSQL");
                     parsedDate = DateTime.fromSQL(cleanDate, { zone: "America/Bogota" });
                 }
 
-                // Si sigue sin ser válido, intentar con fromFormat para algunos formatos comunes
                 if (!parsedDate.isValid) {
-                    console.log("Intento con formatos específicos");
                     const formats = [
                         "yyyy-MM-dd HH:mm:ss",
                         "yyyy-MM-dd'T'HH:mm:ss",
                         "dd/MM/yyyy HH:mm:ss",
                         "yyyy-MM-dd"
                     ];
-
                     for (const format of formats) {
                         parsedDate = DateTime.fromFormat(cleanDate, format, { zone: "America/Bogota" });
                         if (parsedDate.isValid) break;
                     }
                 }
             } else if (date instanceof Date) {
-                // Si es un objeto Date, convertirlo directamente
                 parsedDate = DateTime.fromJSDate(date, { zone: "America/Bogota" });
             }
 
-            // Verificar si se pudo parsear correctamente
             if (!parsedDate || !parsedDate.isValid) {
                 console.warn("No se pudo parsear la fecha:", date);
                 return "Fecha inválida";
             }
 
-
-            // Formatear con configuración regional española
             return parsedDate.setLocale('es').toFormat("d 'de' MMMM 'de' yyyy HH:mm");
         } catch (error) {
             console.error("Error al formatear la fecha:", error, "Fecha original:", date);
@@ -107,12 +88,10 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
         }
     };
 
-
-
     const handleMonthChange = (newDate) => {
         if (!newDate) {
             console.warn("Fecha inválida detectada:", newDate);
-            return; // Evitamos asignar `false`
+            return;
         }
         setDateRange([startOfMonth(newDate), endOfMonth(newDate)]);
     };
@@ -126,18 +105,15 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
     const doc = new jsPDF();
-    autoTable(doc, {
-        // Table configuration
-    });
+    autoTable(doc, {});
 
     const handleEditSelected = () => {
         if (selectedRowKeys.length === 1) {
             navigate(`/index/moneymanager/ingresos/edit/${selectedRowKeys[0]}`, {
-                state: { returnTab: activeTab }, // Pasar activeTab como returnTab
+                state: { returnTab: activeTab },
             });
         }
     };
-
 
     const handleDeleteSelected = () => {
         handleBatchOperation('delete');
@@ -290,26 +266,14 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
         try {
             const API_BASE_URL = import.meta.env.VITE_API_FINANZAS || '/api';
             const response = await axios.get(`${API_BASE_URL}/incomes`);
-
-            // Procesar las fechas para manejarlas correctamente
             const processedEntries = response.data.map(entry => {
-                // Crear una copia del entry para no mutar el original
                 const processedEntry = { ...entry };
-
-                // Si la fecha viene con 'Z' al final (UTC), la convertimos a la zona horaria local
                 if (typeof processedEntry.date === 'string' && processedEntry.date.endsWith('Z')) {
-                    // Mantener la fecha en su formato original sin conversión a UTC
                     processedEntry.date = processedEntry.date.replace('Z', '');
                 }
-
                 return processedEntry;
             });
-
-            // Ordenar las entradas por fecha
-            const sortedEntries = processedEntries.sort((a, b) => {
-                return b.date.localeCompare(a.date);
-            });
-
+            const sortedEntries = processedEntries.sort((a, b) => b.date.localeCompare(a.date));
             setEntries(sortedEntries);
             setFilteredEntries(sortedEntries);
             setError(null);
@@ -329,7 +293,6 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
     };
 
     const fetchMonthlyData = async () => {
-        // Format the current month as yyyy-MM for the API
         const monthYear = formatDate(dateRange[0], "yyyy-MM");
         setLoadingMonthlyData(true);
 
@@ -423,7 +386,6 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
                 }).then((result) => {
                     if (result.isConfirmed) {
                         const deletePromises = selectedRowKeys.map(id => handleDeleteItem(id));
-
                         Promise.all(deletePromises)
                             .then(() => {
                                 Swal.fire(
@@ -455,7 +417,7 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
             style: "currency",
             currency: "COP",
             minimumFractionDigits: 0,
-        }).format(amount);
+        }).format(amount || 0);
     };
 
     const handleDeleteItem = async (id) => {
@@ -486,14 +448,12 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
                 throw new Error("No se pudo descargar el archivo.");
             }
             const blob = await response.blob();
-
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
             link.download = url.split("/").pop();
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-
             URL.revokeObjectURL(link.href);
         } catch (error) {
             console.error("Error al descargar el archivo:", error);
@@ -518,28 +478,20 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
         setSelectedImages([]);
     };
 
-    // New function to generate the PDF invoice
     const generateInvoicePDF = (items) => {
         const doc = new jsPDF();
-
-        // Header
         doc.setFontSize(18);
         doc.setFont("helvetica", "bold");
         doc.text("FACTURA", 105, 20, { align: "center" });
-
-        // Company Info (customize as needed)
         doc.setFontSize(12);
         doc.setFont("helvetica", "normal");
         doc.text("Nombre de la Empresa", 14, 30);
         doc.text("NIT: 123456789-0", 14, 36);
         doc.text("Dirección: Calle 123 #45-67, Bogotá, Colombia", 14, 42);
         doc.text("Teléfono: +57 123 456 7890", 14, 48);
-
-        // Invoice Info
         doc.text(`Fecha: ${formatDate(new Date(), "d MMMM yyyy", { locale: es })}`, 140, 30);
-        doc.text(`Factura N°: ${Math.floor(Math.random() * 1000000)}`, 140, 36); // Random invoice number
+        doc.text(`Factura N°: ${Math.floor(Math.random() * 1000000)}`, 140, 36);
 
-        // Table of Items
         const tableData = items.map(item => [
             item.arqueo_number || "N/A",
             item.description,
@@ -551,7 +503,6 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
             renderDate(item.end_period)
         ]);
 
-        // Use autoTable as a function
         autoTable(doc, {
             startY: 60,
             head: [['N° Arqueo', 'Descripción', 'Fecha', 'Cuenta', 'Cajero', 'Monto', 'Desde', 'Hasta']],
@@ -571,17 +522,12 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
             },
         });
 
-        // Total
         const totalAmount = items.reduce((sum, item) => sum + (item.amount || 0), 0);
         doc.setFontSize(12);
         doc.text(`Total: ${formatCurrency(totalAmount)}`, 140, doc.lastAutoTable.finalY + 10);
-
-        // Footer
         doc.setFontSize(10);
         doc.text("Gracias por su negocio", 105, 280, { align: "center" });
         doc.text("Este documento no tiene validez fiscal", 105, 286, { align: "center" });
-
-        // Save the PDF
         doc.save(`Factura_Ingresos_${formatDate(new Date(), "yyyy-MM-dd")}.pdf`);
     };
 
@@ -610,7 +556,7 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
             render: (text) => renderDate(text),
             sorter: (a, b) => new Date(a.date) - new Date(b.date),
             sortDirections: ["descend", "ascend"],
-            width: 180, // Aumentamos el ancho para dar espacio a la hora
+            width: 180,
         },
         {
             title: (
@@ -637,7 +583,6 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
             render: (text) => <a>{text || "No disponible"}</a>,
             width: 110,
         },
-
         {
             title: (
                 <div className="flex flex-col" style={{ margin: "2px 0", gap: 1, lineHeight: 1 }}>
@@ -721,7 +666,7 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
                     Monto Total
                     <input
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                        onChange={(e) => handleSearch(e.target.value, "amount")}
+                        onChange={(e) => handleSearch(e.target.value, "cash_received")}
                         style={{
                             marginTop: 2,
                             padding: 4,
@@ -736,8 +681,29 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
             ),
             dataIndex: "cash_received",
             key: "cash_received",
-            render: (amount) => <span className="font-bold">{formatCurrency(amount)}</span>, // Usamos amount aquí
-            sorter: (a, b) => a.cash_received - b.cash_received, // Corregimos el campo de ordenación
+            render: (cashReceived, record) => {
+                const totalAmount = parseFloat(record.amount) || 0;
+                const cashReceivedValue = parseFloat(cashReceived) || 0;
+                const difference = cashReceivedValue - totalAmount;
+                const isCashMatch = Math.abs(difference) < 0.01;
+
+                let indicator = null;
+                if (record.type === "arqueo" && !isCashMatch) {
+                    if (difference > 0) {
+                        indicator = <span className="text-green-600 font-bold ml-2">$</span>;
+                    } else if (difference < 0) {
+                        indicator = <span className="text-red-600 font-bold ml-2">-$</span>;
+                    }
+                }
+
+                return (
+                    <span className="flex items-center justify-end">
+                        <span className="font-bold">{formatCurrency(cashReceivedValue)}</span>
+                        {indicator}
+                    </span>
+                );
+            },
+            sorter: (a, b) => (parseFloat(a.cash_received) || 0) - (parseFloat(b.cash_received) || 0),
             sortDirections: ["descend", "ascend"],
             width: 140,
         },
@@ -969,8 +935,6 @@ const IncomeTable = ({ categories = [], accounts = [], activeTab }) => {
                     </div>
                 </div>
             </Drawer>
-
-
         </>
     );
 };

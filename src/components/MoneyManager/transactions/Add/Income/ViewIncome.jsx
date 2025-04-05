@@ -140,41 +140,36 @@ function ViewIncome({ entry, visible, onClose, activeTab }) {
     const difference = cashReceivedValue - totalAmount;
     const isCashMatch = Math.abs(difference) < 0.01;
 
-    let messageText, messageClass, differenceText, questionText;
+    let messageText, messageClass, differenceText;
 
     if (isCashMatch) {
-      messageText = "Los valores coinciden correctamente";
+      messageText = "Valores coinciden";
       messageClass = "bg-green-100 text-green-700";
       differenceText = "";
     } else if (difference > 0) {
-      messageText = "¡Alerta! Hay un excedente en el arqueo";
+      messageText = "Excedente";
       messageClass = "bg-yellow-100 text-yellow-700";
-      differenceText = `Sobran ${formatCurrency(difference)}`;
-      questionText = "¿Por qué hay dinero extra? Verifique posibles errores en el registro de ventas.";
+      differenceText = `+${formatCurrency(difference)}`;
     } else {
-      messageText = "¡Error! Hay un déficit en el arqueo";
+      messageText = "Déficit";
       messageClass = "bg-red-100 text-red-700";
-      differenceText = `Faltan ${formatCurrency(Math.abs(difference))}`;
-      questionText = "¿Por qué falta dinero? Revise posibles errores de cobro o si hubo retiros no registrados.";
+      differenceText = `-${formatCurrency(Math.abs(difference))}`;
     }
 
     return (
-      <div className={`p-4 rounded-lg mb-4 ${messageClass}`}>
-        <h3 className="font-bold text-lg mb-2">{messageText}</h3>
+      <div className={`p-2 rounded-md mb-2 ${messageClass} text-sm`}>
+        <div className="flex justify-between items-center">
+          <span className="font-semibold">{messageText}</span>
+          {!isCashMatch && (
+            <span className="text-right">
+              {differenceText}
+            </span>
+          )}
+        </div>
         {!isCashMatch && (
-          <div className="flex flex-col space-y-2">
-            <div className="text-2xl font-bold mb-3">Diferencia: {differenceText}</div>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <div>Efectivo esperado:</div>
-                <div>{formatCurrency(totalAmount)}</div>
-              </div>
-              <div className="flex justify-between">
-                <div>Efectivo recibido:</div>
-                <div>{formatCurrency(cashReceivedValue)}</div>
-              </div>
-            </div>
-            <div className="mt-3 border-t pt-3 italic">{questionText}</div>
+          <div className="mt-1 text-xs">
+            <div>Esperado: {formatCurrency(totalAmount)}</div>
+            <div>Recibido: {formatCurrency(cashReceivedValue)}</div>
           </div>
         )}
       </div>
@@ -212,7 +207,7 @@ function ViewIncome({ entry, visible, onClose, activeTab }) {
                   <div><span className="font-semibold">Cajero:</span> {getCajeroName(incomeData.cashier_id)}</div>
                   <div><span className="font-semibold">Tipo:</span> {incomeData.type || "N/A"}</div>
                   <div><span className="font-semibold">Cuenta:</span> {getAccountName(incomeData.account_id)}</div>
-                  <div className="col-span-2"><span className="font-medium">Período:</span> {renderDate(incomeData.start_period)} - {renderDate(incomeData.end_period)}</div>
+                  <div className="col-span-2"><span className="font-semibold">Período:</span> {renderDate(incomeData.start_period)} - {renderDate(incomeData.end_period)}</div>
                 </div>
               </div>
 
