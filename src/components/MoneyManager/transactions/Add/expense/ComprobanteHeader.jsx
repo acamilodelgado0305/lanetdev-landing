@@ -106,59 +106,7 @@ const ComprobanteEgresoHeader = ({
               <Select.Option value="Inversión">Inversión</Select.Option>
             </Select>
           </div>
-        </Col>
-        <Col xs={24} md={12}>
-          <div className="mb-3">
-            <Text className="text-gray-700 font-medium block mb-1">Proveedor</Text>
-            <Select
-              value={proveedor}
-              onChange={handleProveedorChange}
-              className="w-full h-9"
-              placeholder="Selecciona un proveedor"
-              showSearch
-              optionFilterProp="children"
-              filterOption={(input, option) =>
-                option.children.toLowerCase().includes(input.toLowerCase())
-              }
-            >
-              {Array.isArray(proveedores) &&
-                proveedores.map((provider) => (
-                  <Select.Option key={provider.id} value={provider.id}>
-                    {provider.nombre_comercial}
-                  </Select.Option>
-                ))}
-            </Select>
-          </div>
 
-          <div className="mb-3">
-            <Text className="text-gray-700 font-medium block mb-1">Proveedor</Text>
-            <Select
-              value={proveedor}
-              onChange={handleProveedorChange}
-              className="w-full h-9"
-              placeholder="Selecciona un proveedor"
-              showSearch
-              optionFilterProp="children"
-              filterOption={(input, option) =>
-                option.children.toLowerCase().includes(input.toLowerCase())
-              }
-            >
-              {Array.isArray(proveedores) &&
-                proveedores.map((provider) => (
-                  <Select.Option key={provider.id} value={provider.id}>
-                    {provider.nombre_comercial}
-                  </Select.Option>
-                ))}
-            </Select>
-          </div>
-          <div className="mb-3">
-            <Text className="text-gray-700 font-medium block mb-1">No. Identificación Proveedor</Text>
-            <Input
-              value={getProveedorIdentificacion(proveedor)}
-              disabled
-              className="w-full h-9 border-gray-300 rounded-md bg-gray-100 text-gray-600"
-            />
-          </div>
           {!isHiddenDetails ? (
             <div className="mb-3">
               <Text className="text-gray-700 font-medium block mb-1">Categoría Contable</Text>
@@ -200,6 +148,40 @@ const ComprobanteEgresoHeader = ({
             // Placeholder invisible para mantener el tamaño
             <div className="mb-3" style={{ height: '72px' }}></div>
           )}
+        </Col>
+        <Col xs={24} md={12}>
+          <div className="mb-3">
+            <Text className="text-gray-700 font-medium block mb-1">Proveedor</Text>
+            <Select
+              value={proveedor}
+              onChange={handleProveedorChange}
+              className="w-full h-9"
+              placeholder="Selecciona un proveedor"
+              showSearch
+              optionFilterProp="children"
+              filterOption={(input, option) =>
+                option.children.toLowerCase().includes(input.toLowerCase())
+              }
+            >
+              {Array.isArray(proveedores) &&
+                proveedores.map((provider) => (
+                  <Select.Option key={provider.id} value={provider.id}>
+                    {provider.nombre_comercial}
+                  </Select.Option>
+                ))}
+            </Select>
+          </div>
+
+         
+          <div className="pt-3">
+            <Text className="text-gray-700 font-medium block mb-1">No. Identificación Proveedor</Text>
+            <Input
+              value={getProveedorIdentificacion(proveedor)}
+              disabled
+              className="w-full h-9 border-gray-300 rounded-md bg-gray-100 text-gray-600"
+            />
+          </div>
+         
         </Col>
       </Row>
     </div>
