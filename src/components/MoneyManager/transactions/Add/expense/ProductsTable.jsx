@@ -433,10 +433,11 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
             <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Total Bruto:</div>
             <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.totalBruto)}</div>
-            <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Subtotal:</div>
-            <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.subtotal)}</div>
             <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Descuentos:</div>
             <div style={{ textAlign: 'right', color: '#ff4d4f' }}>-{formatCurrency(totals.descuentos)}</div>
+            <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Subtotal:</div>
+            <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.subtotal)}</div>
+           
             {/* Mostrar estos dos campos solo si hiddenImpuestos es false */}
             {!hiddenImpuestos && (
               <>
