@@ -110,7 +110,7 @@ const ArqueoInputs = ({
   const renderContent = () => (
     <div className="flex flex-col md:flex-row gap-6">
       {/* Columna Izquierda - Información de Cajero y Cuenta */}
-      <div className="w-full md:w-96">
+      <div className="w-170">
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 space-y-6">
           {/* Sección Cajero */}
           <div className="space-y-2">
