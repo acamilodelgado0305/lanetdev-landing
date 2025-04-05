@@ -350,20 +350,10 @@ const ArqueoInputs = ({
             )}
 
             {/* Subtotal */}
-            <tr className="bg-gray-100 font-semibold">
-              <td className="p-3 border-t">Subtotal</td>
-              <td className="p-3 border-t text-right">
-                {formatCurrency(amount)}
-              </td>
-            </tr>
+           
 
             {/* Comisión */}
-            <tr className="hover:bg-gray-50">
-              <td className="p-3 border-b">Comisión ({localCommissionPorcentaje}%)</td>
-              <td className="p-3 border-b text-right">
-                {formatCurrency(calculatedCommission)}
-              </td>
-            </tr>
+           
 
             {/* Total */}
             <tr className="bg-gray-100 font-bold">
@@ -372,6 +362,8 @@ const ArqueoInputs = ({
                 {formatCurrency(amount)}
               </td>
             </tr>
+
+          
 
             {/* Efectivo Recibido */}
             <tr className="hover:bg-gray-50">
@@ -383,6 +375,14 @@ const ArqueoInputs = ({
                   placeholder="$0"
                   className="w-40 text-right"
                 />
+              </td>
+            </tr>
+
+
+            <tr className="hover:bg-gray-50">
+              <td className="p-3 border-b">Comisión ({localCommissionPorcentaje}%)</td>
+              <td className="p-3 border-b text-right">
+                {formatCurrency(calculatedCommission)}
               </td>
             </tr>
           </tbody>
