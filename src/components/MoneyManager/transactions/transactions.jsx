@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { format as formatDate, startOfMonth, endOfMonth, subMonths, addMonths } from "date-fns";
 import axios from "axios";
 import { Modal, message, Button, Card, Row, Col, Statistic, Typography, Tabs, Space, Tooltip } from "antd";
@@ -13,12 +13,13 @@ import {
   FileText,
   Share2,
   Zap,
-  TrendingDown, BarChart2
+  TrendingDown,
+  BarChart2
 } from 'lucide-react';
 import { PlusOutlined, SwapOutlined, ArrowUpOutlined, ArrowDownOutlined, DollarOutlined } from '@ant-design/icons';
 
 import VoucherContentModal from "./ViewImageModal";
-import TransactionTable from "./components/TablaTransferencias";
+import TrasferTable from "./components/TablaTransferencias";
 import ExpenseTable from "./components/ExpenseTable/ExpenseTable";
 import IncomeTable from "./Add/Income/IncomeTable";
 import Summary from "./Summary";
@@ -50,7 +51,7 @@ const formatCurrency = (amount) => {
 const TransactionsDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState(location.state?.activeTab || "resumen")
+  const [activeTab, setActiveTab] = useState(location.state?.activeTab || "resumen");
   const [isContentModalOpen, setIsContentModalOpen] = useState(false);
   const [selectedVoucherContent, setSelectedVoucherContent] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -65,8 +66,6 @@ const TransactionsDashboard = () => {
   const [accounts, setAccounts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [entriesPerPage] = useState(10);
   const [categories, setCategories] = useState([]);
   const [editTransaction, setEditTransaction] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
@@ -85,23 +84,9 @@ const TransactionsDashboard = () => {
       console.warn("Rango de fechas inválido:", dates);
       return;
     }
-    setDateRange(dates); // Actualiza el rango de fechas
-  };
-  const formatCurrency = (amount) => {
-    if (isNaN(amount)) return "$0.00";
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount);
+    setDateRange(dates);
   };
 
-
-
-
-
-  // Mapping for tab to endpoint conversion
   const tabToEndpoint = {
     incomes: "/incomes",
     expenses: "/expenses",
@@ -138,7 +123,6 @@ const TransactionsDashboard = () => {
     setTransactionType(null);
   };
 
-  // Fetch data based on the current tab's endpoint
   const fetchData = async (endpoint) => {
     try {
       const response = await axios.get(`${API_BASE_URL}${endpoint}`);
@@ -149,6 +133,7 @@ const TransactionsDashboard = () => {
       });
       const sortedEntries = filteredEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
       setEntries(sortedEntries);
+      setFilteredEntries(sortedEntries); // Mostrar todas las entradas filtradas
       setError(null);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -179,17 +164,12 @@ const TransactionsDashboard = () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/balance/month/${monthYear}`);
       const { total_incomes, total_expenses, net_balance } = response.data;
-
-      const balanceValue = parseFloat(net_balance) || 0;
-      const incomeValue = parseFloat(total_incomes) || 0;
-      const expensesValue = parseFloat(total_expenses) || 0;
-
-      setMonthlyBalance(balanceValue);
-      setMonthlyIncome(incomeValue);
-      setMonthlyExpenses(expensesValue);
+      setMonthlyBalance(parseFloat(net_balance) || 0);
+      setMonthlyIncome(parseFloat(total_incomes) || 0);
+      setMonthlyExpenses(parseFloat(total_expenses) || 0);
     } catch (err) {
       setError("Error al cargar los datos mensuales");
-      console.error("Error fetching monthly data:", err.response ? err.response.data : err.message);
+      console.error("Error fetching monthly data:", err);
     }
   };
 
@@ -197,14 +177,9 @@ const TransactionsDashboard = () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/balance/general`);
       const { total_incomes, total_expenses, net_balance } = response.data;
-
-      const balanceValue = parseFloat(net_balance) || 0;
-      const incomeValue = parseFloat(total_incomes) || 0;
-      const expensesValue = parseFloat(total_expenses) || 0;
-
-      setBalance(balanceValue);
-      setTotalIncome(incomeValue);
-      setTotalExpenses(expensesValue);
+      setBalance(parseFloat(net_balance) || 0);
+      setTotalIncome(parseFloat(total_incomes) || 0);
+      setTotalExpenses(parseFloat(total_expenses) || 0);
     } catch (err) {
       setError("Error al cargar los datos generales");
       console.error("Error fetching general balance data:", err);
@@ -217,14 +192,13 @@ const TransactionsDashboard = () => {
     fetchMonthlyData();
   };
 
-  // Initial data loading
   useEffect(() => {
     fetchCategories();
     fetchAccounts();
     fetchGeneralBalance();
     fetchMonthlyData();
-    fetchData(tabToEndpoint[activeTab]); // Llamar a fetchData con el endpoint actual
-  }, [activeTab, dateRange, refreshTrigger]); // Agregar dateRange como dependencia
+    fetchData(tabToEndpoint[activeTab]);
+  }, [activeTab, dateRange, refreshTrigger]);
 
   const applyFilters = (entriesToFilter = entries) => {
     let filtered = entriesToFilter;
@@ -252,9 +226,7 @@ const TransactionsDashboard = () => {
     }
 
     setFilteredEntries(filtered);
-    setCurrentPage(1);
   };
-
 
   useEffect(() => {
     if (location.state?.activeTab) {
@@ -282,25 +254,11 @@ const TransactionsDashboard = () => {
           fetchGeneralBalance();
           fetchMonthlyData();
         } catch (error) {
-          console.error(`Error al eliminar la ${entry.entryType === "transfer" ? "transferencia" : "transacción"}:`, error);
+          console.error(`Error al eliminar:`, error);
           message.error(`Error al eliminar la ${entry.entryType === "transfer" ? "transferencia" : "transacción"}`);
         }
       },
     });
-  };
-
-  // Pagination
-  const indexOfLastEntry = currentPage * entriesPerPage;
-  const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
-  const paginatedEntries = filteredEntries.slice(indexOfFirstEntry, indexOfLastEntry);
-
-  const getMonthsArray = () => {
-    const months = [];
-    for (let i = -2; i <= 2; i++) {
-      const date = addMonths(currentMonth, i);
-      months.push(date);
-    }
-    return months;
   };
 
   const handleTabChange = (key) => {
@@ -316,251 +274,161 @@ const TransactionsDashboard = () => {
   };
 
   return (
-    <div className="flex flex-col  bg-white ">
+    <div className="flex flex-col bg-white">
       {/* Header */}
-      <div className="px-4 bg-white sticky z-10 shadow-sm ">
-
-
-        <div className="px-4 bg-white sticky z-10 shadow-sm">
-          <div className="flex justify-between items-center border-b-3 border-gray-300">
-            <div className="px-4 bg-white sticky z-10 shadow-sm">
-              <div className="flex flex-col">
-                <span className="text-gray-400 text-sm">Área de Contabilidad</span>
-                <p level={2} className="text-2xl font-bold">
-                  GESTIÓN DE TRANSACCIONES
-                </p>
-              </div>
-
-            </div>
-
-
-
-
-
-            {/* Resto del código de TransactionsDashboard */}
-
-
-
-            <Space size="middle">
-              <div>
-                <div className="mt-10">
-                  <div className="flex items-center justify-end space-x-2">
-                    <div className="px-2 rounded text-center flex-none w-26">
-                      <h3 className="text-gray-500 text-[10px] font-medium uppercase">Ingresos totales</h3>
-                      <p className="text-green-600 text-sm font-semibold mt-1 truncate">
-                        {formatCurrency(totalIncome)}
-                      </p>
-                    </div>
-                    <div className="px-2 rounded text-center flex-none w-26">
-                      <h3 className="text-gray-500 text-[10px] font-medium uppercase">Egresos totales</h3>
-                      <p className="text-red-600 text-sm font-semibold mt-1 truncate">
-                        {formatCurrency(totalExpenses)}
-                      </p>
-                    </div>
-                    <div className="px-2 rounded text-center flex-none w-26">
-                      <h3 className="text-gray-500 text-[10px] font-medium uppercase">Balance</h3>
-                      <p className="text-blue-600 text-sm font-semibold mt-1 truncate">
-                        {formatCurrency(balance)}
-                      </p>
-                    </div>
-                  </div>
+      <div className="px-4 bg-white sticky z-10 shadow-sm">
+        <div className="flex justify-between items-center border-b-3 border-gray-300">
+          <div>
+            <span className="text-gray-400 text-sm">Área de Contabilidad</span>
+            <p className="text-2xl font-bold">GESTIÓN DE TRANSACCIONES</p>
+          </div>
+          <Space size="middle">
+            <div className="mt-10">
+              <div className="flex items-center justify-end space-x-2">
+                <div className="px-2 rounded text-center flex-none w-26">
+                  <h3 className="text-gray-500 text-[10px] font-medium uppercase">Ingresos totales</h3>
+                  <p className="text-green-600 text-sm font-semibold mt-1 truncate">
+                    {formatCurrency(totalIncome)}
+                  </p>
+                </div>
+                <div className="px-2 rounded text-center flex-none w-26">
+                  <h3 className="text-gray-500 text-[10px] font-medium uppercase">Egresos totales</h3>
+                  <p className="text-red-600 text-sm font-semibold mt-1 truncate">
+                    {formatCurrency(totalExpenses)}
+                  </p>
+                </div>
+                <div className="px-2 rounded text-center flex-none w-26">
+                  <h3 className="text-gray-500 text-[10px] font-medium uppercase">Balance</h3>
+                  <p className="text-blue-600 text-sm font-semibold mt-1 truncate">
+                    {formatCurrency(balance)}
+                  </p>
                 </div>
               </div>
+            </div>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() =>
+                navigate("/index/moneymanager/transactions/nuevoingreso", { state: { returnTab: "incomes" } })
+              }
+              style={{ backgroundColor: "#36B37E", borderColor: "#36B37E" }}
+            >
+              Nuevo Ingreso
+            </Button>
+            <Button
+              type="primary"
+              icon={<ArrowDownOutlined />}
+              danger
+              onClick={() =>
+                navigate("/index/moneymanager/transactions/nuevoegreso", { state: { returnTab: "expenses" } })
+              }
+              style={{ backgroundColor: "#FF5630", borderColor: "#FF5630" }}
+            >
+              Nuevo Egreso
+            </Button>
+            <Tooltip title="Crear Transferencia">
               <Button
                 type="primary"
-                icon={<PlusOutlined />}
-                onClick={() =>
-                  navigate("/index/moneymanager/transactions/nuevoingreso", {
-                    state: { returnTab: "incomes" }, // Siempre pasar "incomes" como returnTab
-                  })
-                }
-                style={{
-                  backgroundColor: "#36B37E",
-                  borderColor: "#36B37E",
-                  borderRadius: "4px",
-                  boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  padding: "6px 16px",
-                  height: "40px",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  transition: "all 0.3s ease",
-                }}
-                className="hover:opacity-90 hover:scale-102 transition-transform"
-                aria-label="Crear nuevo ingreso"
+                icon={<SwapOutlined />}
+                onClick={openTransferModal}
+                style={{ backgroundColor: "#0052CC", borderColor: "#0052CC" }}
               >
-                Nuevo Ingreso
+                Nueva Transferencia
               </Button>
+            </Tooltip>
+          </Space>
+        </div>
 
-              {/* Botón Nuevo Egreso */}
-              <Button
-                type="primary"
-                icon={<ArrowDownOutlined />}
-                danger
-                onClick={() =>
-                  navigate("/index/moneymanager/transactions/nuevoegreso", {
-                    state: { returnTab: "expenses" },
-                  })
-                }
-                style={{
-                  backgroundColor: "#FF5630",
-                  borderColor: "#FF5630",
-                  borderRadius: "4px",
-                  boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  padding: "6px 16px",
-                  height: "40px",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  transition: "all 0.3s ease",
-                }}
-                className="hover:opacity-90 hover:scale-102 transition-transform"
-                aria-label="Crear nuevo egreso"
-              >
-                Nuevo Egreso
-              </Button>
+        <div className="flex justify-end mt-2">
+          <DateNavigator onMonthChange={handleMonthChange} formatCurrency={formatCurrency} />
+        </div>
 
-              {/* Botón Nueva Transferencia */}
-              <Tooltip title="Crear Transferencia">
-                <Button
-                  type="primary"
-                  icon={<SwapOutlined />}
-                  onClick={openTransferModal}
-                  style={{
-                    backgroundColor: "#0052CC",
-                    borderColor: "#0052CC",
-                    borderRadius: "4px",
-                    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    padding: "6px 16px",
-                    height: "40px",
-                    fontSize: "14px",
-                    fontWeight: 500,
-                    transition: "all 0.3s ease",
-                  }}
-                  className="hover:opacity-90 hover:scale-102 transition-transform"
-                  aria-label="Crear nueva transferencia"
-                >
-                  Nueva Transferencia
-                </Button>
-              </Tooltip>
-            </Space>
-          </div>
-
-          <div className="flex justify-end mt-2">
-            <DateNavigator onMonthChange={handleMonthChange} formatCurrency={formatCurrency} />
-          </div>
-
-          {/* Tabs - Mejoradas con indicador azul */}
-          <div className="mt-[-1em] border-b-4 border-gray-300">
-            <div className="flex overflow-x-auto">
-              <div
-                className={`py-2 px-4 cursor-pointer border-b-4 transition-colors duration-200 ${activeTab === 'resumen'
-                  ? 'border-[#0052CC] text-[#0052CC] font-semibold'
-                  : 'border-transparent text-gray-800 hover:border-[#0052CC]-300 hover:text-[#0052CC]'
-                  }`}
-                onClick={() => handleTabChange('resumen')}
-              >
-                Resumen
-              </div>
-              <div
-                className={`py-2 px-4 cursor-pointer border-b-4 transition-colors duration-200 ${activeTab === 'incomes'
-                  ? 'border-blue-500 text-blue-500 font-semibold'
-                  : 'border-transparent text-gray-800 hover:border-blue-300 hover:text-blue-400'
-                  }`}
-                onClick={() => handleTabChange('incomes')}
-              >
-                Ingresos
-              </div>
-              <div
-                className={`py-2 px-4 cursor-pointer border-b-4 transition-colors duration-200 ${activeTab === 'expenses'
-                  ? 'border-blue-500 text-blue-500 font-semibold'
-                  : 'border-transparent text-gray-800 hover:border-blue-300 hover:text-blue-400'
-                  }`}
-                onClick={() => handleTabChange('expenses')}
-              >
-                Egresos
-              </div>
-              <div
-                className={`py-2 px-4 cursor-pointer border-b-4 transition-colors duration-200 ${activeTab === 'transfers'
-                  ? 'border-blue-500 text-blue-500 font-semibold'
-                  : 'border-transparent text-gray-800 hover:border-blue-300 hover:text-blue-400'
-                  }`}
-                onClick={() => handleTabChange('transfers')}
-              >
-                Transferencias
-              </div>
+        {/* Tabs */}
+        <div className="mt-[-1em] border-b-4 border-gray-300">
+          <div className="flex overflow-x-auto">
+            <div
+              className={`py-2 px-4 cursor-pointer border-b-4 ${activeTab === 'resumen' ? 'border-[#0052CC] text-[#0052CC]' : 'border-transparent text-gray-800'}`}
+              onClick={() => handleTabChange('resumen')}
+            >
+              Resumen
+            </div>
+            <div
+              className={`py-2 px-4 cursor-pointer border-b-4 ${activeTab === 'incomes' ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-800'}`}
+              onClick={() => handleTabChange('incomes')}
+            >
+              Ingresos
+            </div>
+            <div
+              className={`py-2 px-4 cursor-pointer border-b-4 ${activeTab === 'expenses' ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-800'}`}
+              onClick={() => handleTabChange('expenses')}
+            >
+              Egresos
+            </div>
+            <div
+              className={`py-2 px-4 cursor-pointer border-b-4 ${activeTab === 'transfers' ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-800'}`}
+              onClick={() => handleTabChange('transfers')}
+            >
+              Transferencias
             </div>
           </div>
         </div>
       </div>
 
-      {
-        activeTab === "resumen" ? (
-          // Usar el componente Summary importado
-          <Summary
-            totalIncome={totalIncome}
-            totalExpenses={totalExpenses}
-            balance={balance}
-          />
-        ) : (
-          <div className="shadow-lg overflow-auto">
-            <div className="max-w-full mx-auto">
-              {error && (
-                <div className="p-4 bg-red-50 border-l-4 border-red-500 text-red-700">
-                  <div className="flex items-center">
-                    <AlertCircle className="w-5 h-5 mr-2" />
-                    {error}
-                  </div>
+      {activeTab === "resumen" ? (
+        <Summary totalIncome={totalIncome} totalExpenses={totalExpenses} balance={balance} />
+      ) : (
+        <div className="shadow-lg overflow-auto">
+          <div className="max-w-full mx-auto">
+            {error && (
+              <div className="p-4 bg-red-50 border-l-4 border-red-500 text-red-700">
+                <div className="flex items-center">
+                  <AlertCircle className="w-5 h-5 mr-2" />
+                  {error}
                 </div>
-              )}
+              </div>
+            )}
 
-              {activeTab === "incomes" && (
-                <IncomeTable
-                  entries={paginatedEntries} // Entradas ya filtradas por dateRange
-                  categories={categories}
-                  accounts={accounts}
-                  onDelete={handleDelete}
-                  onEdit={openEditModal}
-                  onOpenContentModal={openContentModal}
-                  activeTab={activeTab}
-                  dateRange={dateRange} // Pasar dateRange para sincronización
-                />
-              )}
-
-              {activeTab === "expenses" && (
-                <ExpenseTable
-                entries={paginatedEntries} // Entradas ya filtradas por dateRange
+            {activeTab === "incomes" && (
+              <IncomeTable
+                entries={filteredEntries} // Mostrar todas las entradas filtradas
                 categories={categories}
                 accounts={accounts}
                 onDelete={handleDelete}
                 onEdit={openEditModal}
                 onOpenContentModal={openContentModal}
                 activeTab={activeTab}
-                dateRange={dateRange} // Pasar da
-                />
-              )}
+                dateRange={dateRange}
+              />
+            )}
 
-              {activeTab === "transfers" && (
-                <TransactionTable
-                  entries={paginatedEntries}
-                  categories={categories}
-                  accounts={accounts}
-                  onDelete={handleDelete}
-                  onEdit={openEditModal}
-                  onOpenContentModal={openContentModal}
-                />
-              )}
-            </div>
+            {activeTab === "expenses" && (
+              <ExpenseTable
+                entries={filteredEntries} // Mostrar todas las entradas filtradas
+                categories={categories}
+                accounts={accounts}
+                onDelete={handleDelete}
+                onEdit={openEditModal}
+                onOpenContentModal={openContentModal}
+                activeTab={activeTab}
+                dateRange={dateRange}
+              />
+            )}
+
+            {activeTab === "transfers" && (
+              <TrasferTable
+                entries={filteredEntries} // Mostrar todas las entradas filtradas
+                categories={categories}
+                accounts={accounts}
+                onDelete={handleDelete}
+                onEdit={openEditModal}
+                onOpenContentModal={openContentModal}
+                activeTab={activeTab}
+                dateRange={dateRange}
+              />
+            )}
           </div>
-        )
-      }
+        </div>
+      )}
 
       {/* Modals */}
       <TransferModal
@@ -575,10 +443,7 @@ const TransactionsDashboard = () => {
         onClose={closeContentModal}
         voucherContent={selectedVoucherContent}
       />
-
-
-
-    </div >
+    </div>
   );
 };
 
