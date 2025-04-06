@@ -36,7 +36,6 @@ const AddIncome = ({ onTransactionAdded }) => {
   const [description, setDescription] = useState("");
   const [comentarios, setComentarios] = useState("");
   const [categories, setCategories] = useState([]);
-  const [cashiers, setCashiers] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [date, setDate] = useState(dayjs());
   const [ventaCategoryId, setVentaCategoryId] = useState(null);
@@ -63,21 +62,13 @@ const AddIncome = ({ onTransactionAdded }) => {
   useEffect(() => {
     if (id) {
       fetchIncomeData();
-      fetchCashiers();
     }
   }, [id]);
 
   useEffect(() => {
     fetchCategories();
     fetchAccounts();
-    fetchCashiers();
   }, []);
-
-  useEffect(() => {
-    const totalAmount = calculateTotalAmount();
-    const commission = CommissionPorcentaje > 0 ? totalAmount * (CommissionPorcentaje / 100) : 0;
-    setCashierCommission(commission);
-  }, [fevAmount, diversoAmount, otherIncome, CommissionPorcentaje, customAmountsTotal]);
 
   const fetchCategories = async () => {
     try {
@@ -115,21 +106,6 @@ const AddIncome = ({ onTransactionAdded }) => {
     }
   };
 
-  const handleCashierChange = (value) => {
-    setCashierid(value);
-    const selectedCashier = cashiers.find((c) => c.id_cajero === value);
-    if (selectedCashier) {
-      const commissionPercentage = parseFloat(selectedCashier.comision_porcentaje) || 0;
-      setCommissionPorcentaje(commissionPercentage);
-      if (!id) { // Solo cargar del cajero si no estamos editando
-        fetchCashierDetails(value);
-      }
-    } else {
-      setCustomAmounts([]);
-      setCustomAmountsTotal(0);
-    }
-  };
-
   const fetchCashierDetails = async (cashierId) => {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_FINANZAS}/cajeros/${cashierId}`);
@@ -141,7 +117,6 @@ const AddIncome = ({ onTransactionAdded }) => {
         action: item.accion || 'suma',
         value: parseFloat(item.valor) || 0,
       }));
-      console.log("mappedCustomAmounts desde fetchCashierDetails:", JSON.stringify(mappedCustomAmounts, null, 2));
       setCustomAmounts(mappedCustomAmounts);
       const initialTotal = mappedCustomAmounts.reduce((acc, item) => {
         const value = parseFloat(item.value) || 0;
@@ -161,32 +136,6 @@ const AddIncome = ({ onTransactionAdded }) => {
 
   const handleCustomTotalsChange = (totals) => {
     setCustomAmountsTotal(totals.total);
-  };
-
-  const fetchCashiers = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`${import.meta.env.VITE_API_FINANZAS}/cajeros`);
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const responseData = await response.json();
-      const cashiersArray = responseData.data || [];
-      const mappedCashiers = cashiersArray.map((cashier) => ({
-        id_cajero: cashier.id_cajero,
-        nombre: cashier.nombre,
-        comision_porcentaje: cashier.comision_porcentaje,
-      }));
-      setCashiers(mappedCashiers);
-    } catch (error) {
-      console.error("Error al obtener los cajeros:", error);
-      setCashiers([]);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "No se pudieron cargar los cajeros. Por favor, intente de nuevo.",
-      });
-    } finally {
-      setLoading(false);
-    }
   };
 
   const fetchIncomeData = async () => {
@@ -211,10 +160,10 @@ const AddIncome = ({ onTransactionAdded }) => {
         setOtherIncome(data.other_income?.toString() || "");
         setCashReceived(data.cash_received?.toString() || "");
         setCashierCommission(data.cashier_commission?.toString() || "");
+        setCommissionPorcentaje(data.commission_porcentaje?.toString() || "0");
         setStartPeriod(data.start_period ? dayjs(data.start_period) : null);
         setEndPeriod(data.end_period ? dayjs(data.end_period) : null);
 
-        // Safeguard for importes_personalizados
         const importesPersonalizados = Array.isArray(data.importes_personalizados) ? data.importes_personalizados : [];
         const mappedCustomAmounts = importesPersonalizados.map((item) => ({
           key: item.id_importe || `${Date.now()}-${Math.random()}`,
@@ -222,7 +171,6 @@ const AddIncome = ({ onTransactionAdded }) => {
           action: item.accion || 'suma',
           value: parseFloat(item.valor) || 0,
         }));
-        console.log("mappedCustomAmounts desde fetchIncomeData:", JSON.stringify(mappedCustomAmounts, null, 2));
         setCustomAmounts(mappedCustomAmounts);
         setCustomAmountsTotal(parseFloat(data.amountcustom) || 0);
       } else if (data.category_id === ventaCategoryId) {
@@ -251,12 +199,13 @@ const AddIncome = ({ onTransactionAdded }) => {
     const fev = parseFloat(fevAmount) || 0;
     const diverso = parseFloat(diversoAmount) || 0;
     const otros = parseFloat(otherIncome) || 0;
-    return fev + diverso + otros + customAmountsTotal;
+    const custom = parseFloat(customAmountsTotal) || 0;
+    return fev + diverso + otros + custom;
   };
 
   const handleAmountChange = (e, field) => {
     const rawValue = e.target.value.replace(/\D/g, "");
-    const numericValue = rawValue ? parseInt(rawValue, 10) : 0;
+    const numericValue = rawValue ? parseFloat(rawValue) : 0;
 
     if (field === "fev") setFevAmount(numericValue);
     else if (field === "diverso") setDiversoAmount(numericValue);
@@ -293,29 +242,15 @@ const AddIncome = ({ onTransactionAdded }) => {
 
       let requestBody;
       if (isArqueoChecked) {
-        // Ensure customAmounts is an array
         const safeCustomAmounts = Array.isArray(customAmounts) ? customAmounts : [];
-        console.log("customAmounts antes de filtrar:", JSON.stringify(safeCustomAmounts, null, 2));
-
         const validCustomAmounts = safeCustomAmounts
-          .filter(item => {
-            const isValid = item &&
-              typeof item === 'object' &&
-              item.key &&
-              typeof item.product === 'string' &&
-              item.action &&
-              typeof item.value === 'number';
-            if (!isValid) console.warn("Elemento inválido en customAmounts:", item);
-            return isValid;
-          })
+          .filter(item => item && typeof item === 'object' && item.key && typeof item.product === 'string' && item.action && typeof item.value === 'number')
           .map(item => ({
             id_importe: item.key,
             producto: item.product,
             accion: item.action,
             valor: item.value,
           }));
-
-        console.log("validCustomAmounts después de filtrar:", JSON.stringify(validCustomAmounts, null, 2));
 
         requestBody = {
           ...baseRequestBody,
@@ -329,14 +264,11 @@ const AddIncome = ({ onTransactionAdded }) => {
           start_period: startPeriod?.format("YYYY-MM-DD"),
           end_period: endPeriod?.format("YYYY-MM-DD"),
           amountcustom: customAmountsTotal,
-          importes_personalizados: validCustomAmounts, // Always send an array
+          importes_personalizados: validCustomAmounts,
         };
       } else {
         requestBody = baseRequestBody;
       }
-
-      const requestBodyString = JSON.stringify(requestBody);
-      console.log("Request Body enviado (string):", requestBodyString);
 
       const url = id ? `${apiUrl}/incomes/${id}` : `${apiUrl}/incomes`;
       const method = id ? "PUT" : "POST";
@@ -346,7 +278,7 @@ const AddIncome = ({ onTransactionAdded }) => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: requestBodyString,
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -385,8 +317,6 @@ const AddIncome = ({ onTransactionAdded }) => {
     }
   };
 
- 
-
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -411,18 +341,9 @@ const AddIncome = ({ onTransactionAdded }) => {
     }
   };
 
-  const getCashierName = (cashierId) => {
-    const cashier = cashiers.find((cash) => cash.id_cajero === cashierId);
-    return cashier ? cashier.nombre : "Cajero no encontrado";
-  };
-
   const getAccountName = (accountId) => {
     const account = accounts.find((acc) => acc.id === accountId);
     return account ? account.name : "Cuenta no encontrada";
-  };
-
-  const renderDate = (date) => {
-    return date ? date.format("D MMM YYYY") : "N/A";
   };
 
   const handleDownloadPDF = () => {
@@ -468,12 +389,12 @@ const AddIncome = ({ onTransactionAdded }) => {
       const tableData = incomeData.map((item) => [
         item.arqueo_number,
         item.description,
-        renderDate(date),
+        item.date,
         getAccountName(item.account_id),
-        getCashierName(item.cashier_id) || "N/A",
+        item.cashier_id || "N/A",
         formatCurrency(item.amount),
-        renderDate(startPeriod),
-        renderDate(endPeriod),
+        item.start_period || "N/A",
+        item.end_period || "N/A",
       ]);
 
       autoTable(doc, {
@@ -483,16 +404,6 @@ const AddIncome = ({ onTransactionAdded }) => {
         theme: "grid",
         styles: { fontSize: 10, cellPadding: 2 },
         headStyles: { fillColor: [22, 160, 133], textColor: [255, 255, 255] },
-        columnStyles: {
-          0: { cellWidth: 20 },
-          1: { cellWidth: 40 },
-          2: { cellWidth: 20 },
-          3: { cellWidth: 20 },
-          4: { cellWidth: 20 },
-          5: { cellWidth: 20 },
-          6: { cellWidth: 20 },
-          7: { cellWidth: 20 },
-        },
       });
 
       const totalAmount = isArqueoChecked ? calculateTotalAmount() : parseFloat(amount) || 0;
@@ -505,7 +416,7 @@ const AddIncome = ({ onTransactionAdded }) => {
         doc.text(`Importe FEV: ${formatCurrency(fevAmount)}`, 14, doc.lastAutoTable.finalY + 26);
         doc.text(`Importe Diverso: ${formatCurrency(diversoAmount)}`, 14, doc.lastAutoTable.finalY + 32);
         doc.text(`Otros Ingresos: ${formatCurrency(otherIncome)}`, 14, doc.lastAutoTable.finalY + 38);
-        doc.text(`Importes Fijos: ${formatCurrency(customAmountsTotal)}`, 14, doc.lastAutoTable.finalY + 44);
+        doc.text(`Importes Fijos: मुcustomAmountsTotal)}`, 14, doc.lastAutoTable.finalY + 44);
         doc.text(`Efectivo Recibido: ${formatCurrency(cashReceived)}`, 14, doc.lastAutoTable.finalY + 50);
         doc.text(`Comisión (${CommissionPorcentaje}%): ${formatCurrency(cashierCommission)}`, 14, doc.lastAutoTable.finalY + 56);
         if (comentarios) {
@@ -533,55 +444,6 @@ const AddIncome = ({ onTransactionAdded }) => {
       });
     }
   };
-
-  const renderInvoiceHeader = () => (
-    <div className="border-b-2 border-gray-200 pb-4 mb-6">
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">COMPROBANTE DE ARQUEO</h1>
-          <div className="flex items-center space-x-4">
-            <span className="text-gray-600">No.</span>
-            <Input
-              value={arqueoNumber}
-              onChange={(e) => setArqueoNumber(e.target.value)}
-              placeholder="Número de Arqueo"
-              className="w-40"
-            />
-          </div>
-        </div>
-        <div className="text-right space-y-2">
-          <div className="flex items-center justify-end space-x-4">
-            <p className="text-gray-600">Fecha: {date?.format("DD/MM/YYYY")}</p>
-          </div>
-          <div className="flex items-center justify-end space-x-4">
-            <span className="text-gray-600">Cajero:</span>
-            <Select
-              value={cashierid}
-              onChange={handleCashierChange}
-              className="w-64"
-              placeholder="Selecciona un cajero"
-            >
-              {cashiers.map((cashier) => (
-                <Select.Option key={cashier.id_cajero} value={cashier.id_cajero}>
-                  {cashier.nombre}
-                </Select.Option>
-              ))}
-            </Select>
-          </div>
-        </div>
-      </div>
-      <div className="flex items-center space-x-4">
-        <span className="text-gray-600">Título:</span>
-        <Input
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Añade un título descriptivo"
-          rows={1}
-          className="w-[50em] border p-1"
-        />
-      </div>
-    </div>
-  );
 
   const renderVentaInputs = () => {
     if (isVentaChecked) {
@@ -615,19 +477,22 @@ const AddIncome = ({ onTransactionAdded }) => {
   };
 
   return (
-    <div className="p-6 max-w-[1300px] mx-auto bg-white shadow ">
-      <div className="sticky top-0 z-10 bg-white p-4 shadow-md flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <div className="bg-[#0052CC] p-2">
-            <FileTextOutlined className="text-white" />
+    <div className=" max-w-[1300px] mx-auto bg-white shadow-lg rounded-lg">
+      {/* Encabezado fijo */}
+      <div className="sticky top-0 z-10 bg-white p-4 border-b border-gray-200 flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          <div className="bg-[#0052CC] p-2 rounded">
+            <FileTextOutlined className="text-white text-lg" />
           </div>
-          <div className="flex flex-col">
+          <div>
             <span className="text-[#0052CC] text-sm">Ingresos /</span>
-            <Title level={3}>{id ? "Editar" : "Crear"}</Title>
+            <Title level={3} className="m-0">
+              {id ? "Editar Ingreso" : "Crear Ingreso"}
+            </Title>
           </div>
         </div>
-        <Space>
-          <div className="px-6 py-4 flex justify-end">
+        <Space size="middle">
+          <div>
             <input
               type="file"
               accept=".xlsx, .xls"
@@ -656,14 +521,16 @@ const AddIncome = ({ onTransactionAdded }) => {
           <Button
             onClick={handleSave}
             type="primary"
-            className="bg-[#0052CC]"
+            className="bg-[#0052CC] hover:bg-[#003bb3]"
             style={{ borderRadius: 2 }}
           >
             Guardar
           </Button>
         </Space>
       </div>
-      <div bordered={false} className="mt-6">
+  
+      {/* Contenido principal */}
+      <div className="mt-6 p-4">
         <Radio.Group
           value={isArqueoChecked ? "arqueo" : isVentaChecked ? "venta" : null}
           onChange={(e) => handleCheckboxChange([e.target.value])}
@@ -672,47 +539,54 @@ const AddIncome = ({ onTransactionAdded }) => {
           <Radio value="arqueo">Arqueo</Radio>
           <Radio value="venta">Venta</Radio>
         </Radio.Group>
-        <ArqueoInputs
-          isArqueoChecked={isArqueoChecked}
-          arqueoNumber={arqueoNumber}
-          setArqueoNumber={setArqueoNumber}
-          date={date}
-          cashierid={cashierid}
-          setCashierid={setCashierid}
-          cashiers={cashiers}
-          description={description}
-          setDescription={setDescription}
-          startPeriod={startPeriod}
-          setStartPeriod={setStartPeriod}
-          endPeriod={endPeriod}
-          setEndPeriod={setEndPeriod}
-          account={account}
-          setAccount={setAccount}
-          accounts={accounts}
-          fevAmount={fevAmount}
-          handleAmountChange={handleAmountChange}
-          diversoAmount={diversoAmount}
-          otherIncome={otherIncome}
-          customAmounts={customAmounts}
-          handleCustomAmountsChange={handleCustomAmountsChange}
-          handleCustomTotalsChange={handleCustomTotalsChange}
-          customAmountsTotal={customAmountsTotal}
-          cashReceived={cashReceived}
-          calculateTotalAmount={calculateTotalAmount}
-          CommissionPorcentaje={CommissionPorcentaje}
-          cashierCommission={cashierCommission}
-          comentarios={comentarios}
-          setComentarios={setComentarios}
-          formatCurrency={formatCurrency}
-        />
-        {renderVentaInputs()}
+  
+        <div className="space-y-6">
+          <ArqueoInputs
+            isArqueoChecked={isArqueoChecked}
+            arqueoNumber={arqueoNumber}
+            setArqueoNumber={setArqueoNumber}
+            date={date}
+            cashierid={cashierid}
+            setCashierid={setCashierid}
+            description={description}
+            setDescription={setDescription}
+            startPeriod={startPeriod}
+            setStartPeriod={setStartPeriod}
+            endPeriod={endPeriod}
+            setEndPeriod={setEndPeriod}
+            account={account}
+            setAccount={setAccount}
+            accounts={accounts}
+            fevAmount={fevAmount}
+            handleAmountChange={handleAmountChange}
+            diversoAmount={diversoAmount}
+            otherIncome={otherIncome}
+            customAmounts={customAmounts}
+            handleCustomAmountsChange={handleCustomAmountsChange}
+            handleCustomTotalsChange={handleCustomTotalsChange}
+            customAmountsTotal={customAmountsTotal}
+            cashReceived={cashReceived}
+            calculateTotalAmount={calculateTotalAmount}
+            CommissionPorcentaje={CommissionPorcentaje}
+            setCommissionPorcentaje={setCommissionPorcentaje}
+            cashierCommission={cashierCommission}
+            setCashierCommission={setCashierCommission}
+            comentarios={comentarios}
+            setComentarios={setComentarios}
+            formatCurrency={formatCurrency}
+          />
+          {renderVentaInputs()}
+        </div>
+  
+        <div className="mt-6">
+          <VoucherSection
+            onVoucherChange={setVoucher}
+            initialVouchers={voucher}
+            entryId={id}
+            type="income"
+          />
+        </div>
       </div>
-      <VoucherSection
-        onVoucherChange={setVoucher}
-        initialVouchers={voucher}
-        entryId={id}
-        type="income"
-      />
     </div>
   );
 };

@@ -35,6 +35,7 @@ const { TabPane } = Tabs;
 const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
 
 import TransferModal from "./TransferModal";
+import DateNavigator from "./Add/DateNavigator";
 
 const formatCurrency = (amount) => {
   if (isNaN(amount)) return "$0.00";
@@ -79,14 +80,25 @@ const TransactionsDashboard = () => {
     return [startOfMonth(today), endOfMonth(today)];
   });
 
-
-  const handleMonthChange = (newDate) => {
-    if (!newDate) {
-      console.warn("Fecha inválida detectada:", newDate);
-      return; // Evitamos asignar `false`
+  const handleMonthChange = (dates) => {
+    if (!dates || dates.length !== 2) {
+      console.warn("Rango de fechas inválido:", dates);
+      return;
     }
-    setDateRange([startOfMonth(newDate), endOfMonth(newDate)]);
+    setDateRange(dates); // Actualiza el rango de fechas
   };
+  const formatCurrency = (amount) => {
+    if (isNaN(amount)) return "$0.00";
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  };
+
+
+
 
 
   // Mapping for tab to endpoint conversion
@@ -130,7 +142,12 @@ const TransactionsDashboard = () => {
   const fetchData = async (endpoint) => {
     try {
       const response = await axios.get(`${API_BASE_URL}${endpoint}`);
-      const sortedEntries = response.data.sort((a, b) => new Date(b.date) - new Date(a.date));
+      const allEntries = response.data;
+      const filteredEntries = allEntries.filter((entry) => {
+        const entryDate = new Date(entry.date);
+        return entryDate >= dateRange[0] && entryDate <= dateRange[1];
+      });
+      const sortedEntries = filteredEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
       setEntries(sortedEntries);
       setError(null);
     } catch (error) {
@@ -206,8 +223,8 @@ const TransactionsDashboard = () => {
     fetchAccounts();
     fetchGeneralBalance();
     fetchMonthlyData();
-    /*  fetchData(tabToEndpoint[activeTab]); */
-  }, [activeTab, refreshTrigger, currentMonth]);
+    fetchData(tabToEndpoint[activeTab]); // Llamar a fetchData con el endpoint actual
+  }, [activeTab, dateRange, refreshTrigger]); // Agregar dateRange como dependencia
 
   const applyFilters = (entriesToFilter = entries) => {
     let filtered = entriesToFilter;
@@ -215,10 +232,7 @@ const TransactionsDashboard = () => {
     if (!isSearching) {
       filtered = filtered.filter((entry) => {
         const entryDate = new Date(entry.date);
-        return (
-          entryDate >= startOfMonth(currentMonth) &&
-          entryDate <= endOfMonth(currentMonth)
-        );
+        return entryDate >= dateRange[0] && entryDate <= dateRange[1];
       });
     }
 
@@ -233,15 +247,14 @@ const TransactionsDashboard = () => {
 
     if (filterType !== "all") {
       filtered = filtered.filter((entry) =>
-        filterType === "transfer"
-          ? entry.entryType === "transfer"
-          : entry.type === filterType
+        filterType === "transfer" ? entry.entryType === "transfer" : entry.type === filterType
       );
     }
 
     setFilteredEntries(filtered);
     setCurrentPage(1);
   };
+
 
   useEffect(() => {
     if (location.state?.activeTab) {
@@ -251,7 +264,7 @@ const TransactionsDashboard = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [searchTerm, filterType, entries, currentMonth, isSearching]);
+  }, [searchTerm, filterType, entries, dateRange, isSearching]);
 
   const handleDelete = async (entry) => {
     Modal.confirm({
@@ -306,18 +319,27 @@ const TransactionsDashboard = () => {
     <div className="flex flex-col  bg-white ">
       {/* Header */}
       <div className="px-4 bg-white sticky z-10 shadow-sm ">
-        <div className="max-w-full mx-auto py-2">
+
+
+        <div className="px-4 bg-white sticky z-10 shadow-sm">
           <div className="flex justify-between items-center border-b-3 border-gray-300">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center">
-                <div className=" flex flex-col">
-                  <span className="text-gray-400 text-sm">Área de Contabilidad</span>
-                  <p level={2} className="text-2xl font-bold">
-                    GESTIÓN DE TRANSACCIONES
-                  </p>
-                </div>
+            <div className="px-4 bg-white sticky z-10 shadow-sm">
+              <div className="flex flex-col">
+                <span className="text-gray-400 text-sm">Área de Contabilidad</span>
+                <p level={2} className="text-2xl font-bold">
+                  GESTIÓN DE TRANSACCIONES
+                </p>
               </div>
+
             </div>
+
+
+
+
+
+            {/* Resto del código de TransactionsDashboard */}
+
+
 
             <Space size="middle">
               <div>
@@ -431,6 +453,10 @@ const TransactionsDashboard = () => {
             </Space>
           </div>
 
+          <div className="flex justify-end mt-2">
+            <DateNavigator onMonthChange={handleMonthChange} formatCurrency={formatCurrency} />
+          </div>
+
           {/* Tabs - Mejoradas con indicador azul */}
           <div className="mt-[-1em] border-b-4 border-gray-300">
             <div className="flex overflow-x-auto">
@@ -475,62 +501,66 @@ const TransactionsDashboard = () => {
         </div>
       </div>
 
-      {activeTab === "resumen" ? (
-        // Usar el componente Summary importado
-        <Summary
-          totalIncome={totalIncome}
-          totalExpenses={totalExpenses}
-          balance={balance}
-        />
-      ) : (
-        <div className="shadow-lg overflow-auto">
-          <div className="max-w-full mx-auto">
-            {error && (
-              <div className="p-4 bg-red-50 border-l-4 border-red-500 text-red-700">
-                <div className="flex items-center">
-                  <AlertCircle className="w-5 h-5 mr-2" />
-                  {error}
+      {
+        activeTab === "resumen" ? (
+          // Usar el componente Summary importado
+          <Summary
+            totalIncome={totalIncome}
+            totalExpenses={totalExpenses}
+            balance={balance}
+          />
+        ) : (
+          <div className="shadow-lg overflow-auto">
+            <div className="max-w-full mx-auto">
+              {error && (
+                <div className="p-4 bg-red-50 border-l-4 border-red-500 text-red-700">
+                  <div className="flex items-center">
+                    <AlertCircle className="w-5 h-5 mr-2" />
+                    {error}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-{activeTab === "incomes" && (
-  <IncomeTable
-    entries={paginatedEntries}
-    categories={categories}
-    accounts={accounts}
-    onDelete={handleDelete}
-    onEdit={openEditModal}
-    onOpenContentModal={openContentModal}
-    activeTab={activeTab} // Añadir activeTab como prop
-  />
-)}
+              {activeTab === "incomes" && (
+                <IncomeTable
+                  entries={paginatedEntries} // Entradas ya filtradas por dateRange
+                  categories={categories}
+                  accounts={accounts}
+                  onDelete={handleDelete}
+                  onEdit={openEditModal}
+                  onOpenContentModal={openContentModal}
+                  activeTab={activeTab}
+                  dateRange={dateRange} // Pasar dateRange para sincronización
+                />
+              )}
 
-            {activeTab === "expenses" && (
-              <ExpenseTable
-                entries={paginatedEntries}
+              {activeTab === "expenses" && (
+                <ExpenseTable
+                entries={paginatedEntries} // Entradas ya filtradas por dateRange
                 categories={categories}
                 accounts={accounts}
                 onDelete={handleDelete}
                 onEdit={openEditModal}
                 onOpenContentModal={openContentModal}
-                activeTab={activeTab} // 
-              />
-            )}
+                activeTab={activeTab}
+                dateRange={dateRange} // Pasar da
+                />
+              )}
 
-            {activeTab === "transfers" && (
-              <TransactionTable
-                entries={paginatedEntries}
-                categories={categories}
-                accounts={accounts}
-                onDelete={handleDelete}
-                onEdit={openEditModal}
-                onOpenContentModal={openContentModal}
-              />
-            )}
+              {activeTab === "transfers" && (
+                <TransactionTable
+                  entries={paginatedEntries}
+                  categories={categories}
+                  accounts={accounts}
+                  onDelete={handleDelete}
+                  onEdit={openEditModal}
+                  onOpenContentModal={openContentModal}
+                />
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Modals */}
       <TransferModal
@@ -545,7 +575,10 @@ const TransactionsDashboard = () => {
         onClose={closeContentModal}
         voucherContent={selectedVoucherContent}
       />
-    </div>
+
+
+
+    </div >
   );
 };
 

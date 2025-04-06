@@ -21,7 +21,7 @@ import {
 } from "@ant-design/icons";
 import FloatingActionMenu from "../FloatingActionMenu";
 import DateNavigator from "../Add/DateNavigator";
-import Acciones from "../Acciones";
+
 
 
 const { RangePicker } = DatePicker;
@@ -688,26 +688,7 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
 
     return (
         <>
-            <Acciones
-                showFilters={showFilters}
-                setShowFilters={setShowFilters}
-                selectedRowKeys={selectedRowKeys}
-                handleEditSelected={handleEditSelected}
-                handleDeleteSelected={handleDeleteSelected}
-                handleDownloadSelected={handleDownloadSelected}
-                handleExportSelected={handleExportSelected}
-                clearSelection={clearSelection}
-                loadingMonthlyData={loadingMonthlyData}
-                formatCurrency={formatCurrency}
-                monthlyIncome={monthlyIncome}
-                monthlyExpenses={monthlyExpenses}
-                monthlyBalance={monthlyBalance}
-                setDateRange={setDateRange}
-                setTypeFilter={setTypeFilter}
-                typeFilter={typeFilter}
-                filteredEntries={filteredEntries}
-                setSelectedRowKeys={setSelectedRowKeys}
-            />
+          
 
             {/* Error message if data loading fails */}
             {error && (

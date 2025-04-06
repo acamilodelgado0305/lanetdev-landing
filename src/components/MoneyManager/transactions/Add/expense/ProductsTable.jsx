@@ -208,62 +208,7 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
   const columns = [
 
 
-    ...(hiddenDetails
-      ? [
-        {
-          title: (
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>Categoría</span>
-            </div>
-          ),
-          dataIndex: 'categoria',
-          width: columnWidths.categoria,
-          render: (text, record) => {
-            const usedCategories = items
-              .filter(item => item.key !== record.key)
-              .map(item => item.categoria); // Comparar con el nombre, no el id
-            const availableCategorias = categorias.filter(cat =>
-              !usedCategories.includes(cat.name) // Filtrar por nombre
-            );
-
-            return (
-              <Select
-                value={record.categoria}
-                onChange={(value) => handleValueChange(record.key, 'categoria', value)}
-                className="w-full"
-                placeholder="Selecciona una categoría"
-                dropdownRender={(menu) => (
-                  <div>
-                    {menu}
-                    <Divider style={{ margin: '8px 0' }} />
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'center',
-                        padding: '8px',
-                        cursor: 'pointer',
-                      }}
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => {
-                        console.log("Redirigiendo a crear categoría...");
-                      }}
-                    >
-                      Crear categoría
-                    </div>
-                  </div>
-                )}
-              >
-                {availableCategorias.map((cat) => (
-                  <Select.Option key={cat.id} value={cat.name}> {/* Enviar el name como valor */}
-                    {cat.name}
-                  </Select.Option>
-                ))}
-              </Select>
-            );
-          },
-        }
-      ]
-      : []),
+    
     {
       title: (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -403,6 +348,62 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
       width: columnWidths.total,
       render: (text) => formatCurrency(text)
     },
+    ...(hiddenDetails
+      ? [
+        {
+          title: (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>Categoría</span>
+            </div>
+          ),
+          dataIndex: 'categoria',
+          width: columnWidths.categoria,
+          render: (text, record) => {
+            const usedCategories = items
+              .filter(item => item.key !== record.key)
+              .map(item => item.categoria); // Comparar con el nombre, no el id
+            const availableCategorias = categorias.filter(cat =>
+              !usedCategories.includes(cat.name) // Filtrar por nombre
+            );
+
+            return (
+              <Select
+                value={record.categoria}
+                onChange={(value) => handleValueChange(record.key, 'categoria', value)}
+                className="w-full"
+                placeholder="Selecciona una categoría"
+                dropdownRender={(menu) => (
+                  <div>
+                    {menu}
+                    <Divider style={{ margin: '8px 0' }} />
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        padding: '8px',
+                        cursor: 'pointer',
+                      }}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => {
+                        console.log("Redirigiendo a crear categoría...");
+                      }}
+                    >
+                      Crear categoría
+                    </div>
+                  </div>
+                )}
+              >
+                {availableCategorias.map((cat) => (
+                  <Select.Option key={cat.id} value={cat.name}> {/* Enviar el name como valor */}
+                    {cat.name}
+                  </Select.Option>
+                ))}
+              </Select>
+            );
+          },
+        }
+      ]
+      : []),
     {
       title: (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -432,10 +433,11 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
             <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Total Bruto:</div>
             <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.totalBruto)}</div>
-            <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Subtotal:</div>
-            <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.subtotal)}</div>
             <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Descuentos:</div>
             <div style={{ textAlign: 'right', color: '#ff4d4f' }}>-{formatCurrency(totals.descuentos)}</div>
+            <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Subtotal:</div>
+            <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.subtotal)}</div>
+           
             {/* Mostrar estos dos campos solo si hiddenImpuestos es false */}
             {!hiddenImpuestos && (
               <>
