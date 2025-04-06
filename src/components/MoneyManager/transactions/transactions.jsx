@@ -21,6 +21,8 @@ import {
   getCategorias,
   deleteTransaction,
   deleteTransfer,
+  deleteExpense,
+  deleteIncome,
 } from "../../../services/moneymanager/moneyService";
 
 const { Title, Text } = Typography;
@@ -29,6 +31,7 @@ const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
 
 import TransferModal from "./TransferModal";
 import DateNavigator from "./Add/DateNavigator";
+import ActionButtons from "./ActionButtons";
 
 const formatCurrency = (amount) => {
   if (isNaN(amount)) return "$0.00";
@@ -75,12 +78,28 @@ const TransactionsDashboard = () => {
   // Función para manejar la edición
   const handleEditSelected = () => {
     if (selectedRowKeys.length === 1) {
-      const selectedEntry = filteredEntries.find((entry) => entry.id === selectedRowKeys[0]);
-      openEditModal(selectedEntry);
+      // Buscar la entrada seleccionada
+      const entry = filteredEntries.find((e) => e.id === selectedRowKeys[0]);
+
+      // Validar el tipo de transacción y redirigir a la ruta de edición correspondiente
+      if (entry) {
+        if (entry.entryType === "income") {
+          navigate(`/index/moneymanager/ingresos/edit/${entry.id}`, { state: { returnTab: activeTab } });
+        } else if (entry.entryType === "expense") {
+          navigate(`/index/moneymanager/egresos/edit/${entry.id}`, { state: { returnTab: activeTab } });
+        } else if (entry.entryType === "transfer") {
+          navigate(`/index/moneymanager/transferencias/edit/${entry.id}`, { state: { returnTab: activeTab } });
+        } else {
+          message.warning("Tipo de transacción no válido para editar.");
+        }
+      } else {
+        message.warning("No se encontró un elemento con el ID seleccionado.");
+      }
     } else {
       message.warning("Seleccione exactamente un elemento para editar.");
     }
   };
+
 
   // Función para manejar la eliminación
   const handleDeleteSelected = () => {
@@ -93,13 +112,16 @@ const TransactionsDashboard = () => {
             for (const id of selectedRowKeys) {
               const entry = filteredEntries.find((e) => e.id === id);
               if (entry.entryType === "transfer") {
-                await deleteTransfer(entry.id);
-              } else {
-                await deleteTransaction(entry.id);
+                await deleteTransfer(entry.id);  // Si es una transferencia
+              } else if (entry.entryType === "expense") {
+                await deleteExpense(entry.id);  // Si es un egreso (Expense)
+              } else if (entry.entryType === "income") {
+                await deleteIncome(entry.id);  // Si es un ingreso (Income)
               }
             }
+
             setEntries(entries.filter((e) => !selectedRowKeys.includes(e.id)));
-            setSelectedRowKeys([]);
+            setSelectedRowKeys([]);  // Limpiar la selección de filas
             message.success("Elementos eliminados con éxito");
             fetchGeneralBalance();
             fetchMonthlyData();
@@ -405,94 +427,14 @@ const TransactionsDashboard = () => {
             </Tooltip>
           </Space>
         </div>
-
-
-
-
         <div className="flex justify-between mt-2">
-          <div className="flex items-center space-x-2 mt-[-3em]">
-            <Tooltip title="Editar selección">
-              <Button
-                type="text"
-                icon={<EditOutlined style={{ fontSize: "15px" }} />}
-                onClick={handleEditSelected}
-                disabled={selectedRowKeys.length !== 1}
-                className="hover:bg-gray-100"
-                style={{
-                  width: 30,
-                  height: 30,
-                  border: "1px solid #d9d9d9",
-                  borderRadius: 0, // Bordes cuadrados
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              />
-            </Tooltip>
-            <Popconfirm
-              title={`¿Está seguro de eliminar ${selectedRowKeys.length} elemento(s)?`}
-              onConfirm={handleDeleteSelected}
-              okText="Sí, eliminar"
-              cancelText="Cancelar"
-              placement="topRight"
-              disabled={selectedRowKeys.length === 0}
-            >
-              <Tooltip title="Eliminar selección">
-                <Button
-                  type="text"
-                  icon={<DeleteOutlined style={{ fontSize: "15px" }} />}
-                  disabled={selectedRowKeys.length === 0}
-                  className="hover:bg-gray-100"
-                  style={{
-                    width: 30,
-                    height: 30,
-                    border: "1px solid #d9d9d9",
-                    borderRadius: 0, // Bordes cuadrados
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                />
-              </Tooltip>
-            </Popconfirm>
-            <Tooltip title="Descargar selección">
-              <Button
-                type="text"
-                icon={<DownloadOutlined style={{ fontSize: "15px" }} />}
-                onClick={handleDownloadSelected}
-                disabled={selectedRowKeys.length === 0}
-                className="hover:bg-gray-100"
-                style={{
-                  width: 30,
-                  height: 30,
-                  border: "1px solid #d9d9d9",
-                  borderRadius: 0, // Bordes cuadrados
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              />
-            </Tooltip>
-            <Tooltip title="Limpiar selección">
-              <Button
-                type="text"
-                icon={<CloseOutlined style={{ fontSize: "15px" }} />}
-                onClick={handleClearSelection}
-                disabled={selectedRowKeys.length === 0}
-                className="hover:bg-gray-100"
-                style={{
-                  width: 30,
-                  height: 30,
-                  border: "1px solid #d9d9d9",
-                  borderRadius: 0, // Bordes cuadrados
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              />
-            </Tooltip>
-          </div>
-
+          <ActionButtons
+            handleEditSelected={handleEditSelected}
+            handleDeleteSelected={handleDeleteSelected}
+            handleDownloadSelected={handleDownloadSelected}
+            handleClearSelection={handleClearSelection}
+            selectedRowKeys={selectedRowKeys}
+          />
           <DateNavigator onMonthChange={handleMonthChange} formatCurrency={formatCurrency} />
         </div>
 
