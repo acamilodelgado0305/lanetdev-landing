@@ -19,6 +19,7 @@ import ViewIncome from "./ViewIncome";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
+
 const { RangePicker } = DatePicker;
 const { Title, Text } = Typography;
 

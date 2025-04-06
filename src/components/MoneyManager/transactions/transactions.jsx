@@ -1,34 +1,26 @@
 import React, { useEffect, useState } from "react";
 import { format as formatDate, startOfMonth, endOfMonth, subMonths, addMonths } from "date-fns";
 import axios from "axios";
-import { Modal, message, Button, Card, Row, Col, Statistic, Typography, Tabs, Space, Tooltip } from "antd";
-import { useNavigate, useLocation } from 'react-router-dom';
+import { Modal, message, Button, Typography, Tabs, Space, Tooltip, Popconfirm } from "antd";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
-  TrendingUp,
-  CreditCard,
-  ChevronLeft,
-  ChevronRight,
   AlertCircle,
-  ArrowLeftRight,
-  FileText,
-  Share2,
-  Zap,
-  TrendingDown,
-  BarChart2
-} from 'lucide-react';
-import { PlusOutlined, SwapOutlined, ArrowUpOutlined, ArrowDownOutlined, DollarOutlined } from '@ant-design/icons';
+} from "lucide-react";
+import { PlusOutlined, EditOutlined, SwapOutlined, ArrowUpOutlined, ArrowDownOutlined, DeleteOutlined, DownloadOutlined, CloseOutlined } from "@ant-design/icons";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 import VoucherContentModal from "./ViewImageModal";
 import TrasferTable from "./components/TablaTransferencias";
 import ExpenseTable from "./components/ExpenseTable/ExpenseTable";
 import IncomeTable from "./Add/Income/IncomeTable";
 import Summary from "./Summary";
-import { useAuth } from '../../Context/AuthProvider';
+import { useAuth } from "../../Context/AuthProvider";
 import {
   getAccounts,
   getCategorias,
   deleteTransaction,
-  deleteTransfer
+  deleteTransfer,
 } from "../../../services/moneymanager/moneyService";
 
 const { Title, Text } = Typography;
@@ -74,10 +66,91 @@ const TransactionsDashboard = () => {
   const [monthlyBalance, setMonthlyBalance] = useState(0);
   const [monthlyIncome, setMonthlyIncome] = useState(0);
   const [monthlyExpenses, setMonthlyExpenses] = useState(0);
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [dateRange, setDateRange] = useState(() => {
     const today = new Date();
     return [startOfMonth(today), endOfMonth(today)];
   });
+
+  // Función para manejar la edición
+  const handleEditSelected = () => {
+    if (selectedRowKeys.length === 1) {
+      const selectedEntry = filteredEntries.find((entry) => entry.id === selectedRowKeys[0]);
+      openEditModal(selectedEntry);
+    } else {
+      message.warning("Seleccione exactamente un elemento para editar.");
+    }
+  };
+
+  // Función para manejar la eliminación
+  const handleDeleteSelected = () => {
+    if (selectedRowKeys.length > 0) {
+      Modal.confirm({
+        title: `¿Está seguro de que desea eliminar ${selectedRowKeys.length} elemento(s)?`,
+        content: "Esta acción no se puede deshacer.",
+        onOk: async () => {
+          try {
+            for (const id of selectedRowKeys) {
+              const entry = filteredEntries.find((e) => e.id === id);
+              if (entry.entryType === "transfer") {
+                await deleteTransfer(entry.id);
+              } else {
+                await deleteTransaction(entry.id);
+              }
+            }
+            setEntries(entries.filter((e) => !selectedRowKeys.includes(e.id)));
+            setSelectedRowKeys([]);
+            message.success("Elementos eliminados con éxito");
+            fetchGeneralBalance();
+            fetchMonthlyData();
+          } catch (error) {
+            console.error("Error al eliminar:", error);
+            message.error("Error al eliminar los elementos");
+          }
+        },
+      });
+    } else {
+      message.warning("Seleccione al menos un elemento para eliminar.");
+    }
+  };
+
+  // Función para manejar la descarga
+  const handleDownloadSelected = () => {
+    if (selectedRowKeys.length > 0) {
+      const selectedEntries = filteredEntries.filter((entry) => selectedRowKeys.includes(entry.id));
+      const doc = new jsPDF();
+      doc.setFontSize(18);
+      doc.text("Reporte de Transacciones", 105, 20, { align: "center" });
+      doc.setFontSize(12);
+      doc.text(`Fecha: ${formatDate(new Date(), "d MMMM yyyy")}`, 14, 30);
+
+      const tableData = selectedEntries.map((entry) => [
+        entry.entryType || "N/A",
+        entry.description || "Sin descripción",
+        formatDate(new Date(entry.date), "d MMMM yyyy"),
+        entry.amount ? formatCurrency(entry.amount) : "$0.00",
+      ]);
+
+      autoTable(doc, {
+        startY: 40,
+        head: [["Tipo", "Descripción", "Fecha", "Monto"]],
+        body: tableData,
+        theme: "grid",
+        styles: { fontSize: 10, cellPadding: 2 },
+        headStyles: { fillColor: [22, 160, 133], textColor: [255, 255, 255] },
+      });
+
+      doc.save(`Reporte_Transacciones_${formatDate(new Date(), "yyyy-MM-dd")}.pdf`);
+      message.success("Reporte descargado con éxito");
+    } else {
+      message.warning("Seleccione al menos un elemento para descargar.");
+    }
+  };
+
+  // Función para limpiar la selección
+  const handleClearSelection = () => {
+    setSelectedRowKeys([]);
+  };
 
   const handleMonthChange = (dates) => {
     if (!dates || dates.length !== 2) {
@@ -90,11 +163,7 @@ const TransactionsDashboard = () => {
   const tabToEndpoint = {
     incomes: "/incomes",
     expenses: "/expenses",
-    transfers: "/transfers"
-  };
-
-  const handleNavigate = (path) => {
-    navigate(path);
+    transfers: "/transfers",
   };
 
   const openContentModal = (voucherContent) => {
@@ -113,7 +182,7 @@ const TransactionsDashboard = () => {
   };
 
   const openTransferModal = () => {
-    setTransactionType('transfer');
+    setTransactionType("transfer");
     setIsModalOpen(true);
     setEditTransaction(null);
   };
@@ -133,7 +202,7 @@ const TransactionsDashboard = () => {
       });
       const sortedEntries = filteredEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
       setEntries(sortedEntries);
-      setFilteredEntries(sortedEntries); // Mostrar todas las entradas filtradas
+      setFilteredEntries(sortedEntries);
       setError(null);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -263,21 +332,14 @@ const TransactionsDashboard = () => {
 
   const handleTabChange = (key) => {
     setActiveTab(key);
-  };
-
-  const handlePreviousMonth = () => {
-    setCurrentMonth(subMonths(currentMonth, 1));
-  };
-
-  const handleNextMonth = () => {
-    setCurrentMonth(addMonths(currentMonth, 1));
+    setSelectedRowKeys([]); // Limpiar selección al cambiar de pestaña
   };
 
   return (
     <div className="flex flex-col bg-white">
       {/* Header */}
-      <div className="px-4 bg-white sticky z-10 shadow-sm">
-        <div className="flex justify-between items-center border-b-3 border-gray-300">
+      <div className="px-4 bg-white sticky top-0 z-10 shadow-sm">
+        <div className="flex justify-between items-center border-b-3 border-gray-300 pt-4">
           <div>
             <span className="text-gray-400 text-sm">Área de Contabilidad</span>
             <p className="text-2xl font-bold">GESTIÓN DE TRANSACCIONES</p>
@@ -305,6 +367,11 @@ const TransactionsDashboard = () => {
                 </div>
               </div>
             </div>
+
+
+            {/* Botones de acción */}
+
+            {/* Botones de creación */}
             <Button
               type="primary"
               icon={<PlusOutlined />}
@@ -339,7 +406,93 @@ const TransactionsDashboard = () => {
           </Space>
         </div>
 
-        <div className="flex justify-end mt-2">
+
+
+
+        <div className="flex justify-between mt-2">
+          <div className="flex items-center space-x-2 mt-[-3em]">
+            <Tooltip title="Editar selección">
+              <Button
+                type="text"
+                icon={<EditOutlined style={{ fontSize: "15px" }} />}
+                onClick={handleEditSelected}
+                disabled={selectedRowKeys.length !== 1}
+                className="hover:bg-gray-100"
+                style={{
+                  width: 30,
+                  height: 30,
+                  border: "1px solid #d9d9d9",
+                  borderRadius: 0, // Bordes cuadrados
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              />
+            </Tooltip>
+            <Popconfirm
+              title={`¿Está seguro de eliminar ${selectedRowKeys.length} elemento(s)?`}
+              onConfirm={handleDeleteSelected}
+              okText="Sí, eliminar"
+              cancelText="Cancelar"
+              placement="topRight"
+              disabled={selectedRowKeys.length === 0}
+            >
+              <Tooltip title="Eliminar selección">
+                <Button
+                  type="text"
+                  icon={<DeleteOutlined style={{ fontSize: "15px" }} />}
+                  disabled={selectedRowKeys.length === 0}
+                  className="hover:bg-gray-100"
+                  style={{
+                    width: 30,
+                    height: 30,
+                    border: "1px solid #d9d9d9",
+                    borderRadius: 0, // Bordes cuadrados
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                />
+              </Tooltip>
+            </Popconfirm>
+            <Tooltip title="Descargar selección">
+              <Button
+                type="text"
+                icon={<DownloadOutlined style={{ fontSize: "15px" }} />}
+                onClick={handleDownloadSelected}
+                disabled={selectedRowKeys.length === 0}
+                className="hover:bg-gray-100"
+                style={{
+                  width: 30,
+                  height: 30,
+                  border: "1px solid #d9d9d9",
+                  borderRadius: 0, // Bordes cuadrados
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              />
+            </Tooltip>
+            <Tooltip title="Limpiar selección">
+              <Button
+                type="text"
+                icon={<CloseOutlined style={{ fontSize: "15px" }} />}
+                onClick={handleClearSelection}
+                disabled={selectedRowKeys.length === 0}
+                className="hover:bg-gray-100"
+                style={{
+                  width: 30,
+                  height: 30,
+                  border: "1px solid #d9d9d9",
+                  borderRadius: 0, // Bordes cuadrados
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              />
+            </Tooltip>
+          </div>
+
           <DateNavigator onMonthChange={handleMonthChange} formatCurrency={formatCurrency} />
         </div>
 
@@ -347,26 +500,26 @@ const TransactionsDashboard = () => {
         <div className="mt-[-1em] border-b-4 border-gray-300">
           <div className="flex overflow-x-auto">
             <div
-              className={`py-2 px-4 cursor-pointer border-b-4 ${activeTab === 'resumen' ? 'border-[#0052CC] text-[#0052CC]' : 'border-transparent text-gray-800'}`}
-              onClick={() => handleTabChange('resumen')}
+              className={`py-2 px-4 cursor-pointer border-b-4 ${activeTab === "resumen" ? "border-[#0052CC] text-[#0052CC]" : "border-transparent text-gray-800"}`}
+              onClick={() => handleTabChange("resumen")}
             >
               Resumen
             </div>
             <div
-              className={`py-2 px-4 cursor-pointer border-b-4 ${activeTab === 'incomes' ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-800'}`}
-              onClick={() => handleTabChange('incomes')}
+              className={`py-2 px-4 cursor-pointer border-b-4 ${activeTab === "incomes" ? "border-blue-500 text-blue-500" : "border-transparent text-gray-800"}`}
+              onClick={() => handleTabChange("incomes")}
             >
               Ingresos
             </div>
             <div
-              className={`py-2 px-4 cursor-pointer border-b-4 ${activeTab === 'expenses' ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-800'}`}
-              onClick={() => handleTabChange('expenses')}
+              className={`py-2 px-4 cursor-pointer border-b-4 ${activeTab === "expenses" ? "border-blue-500 text-blue-500" : "border-transparent text-gray-800"}`}
+              onClick={() => handleTabChange("expenses")}
             >
               Egresos
             </div>
             <div
-              className={`py-2 px-4 cursor-pointer border-b-4 ${activeTab === 'transfers' ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-800'}`}
-              onClick={() => handleTabChange('transfers')}
+              className={`py-2 px-4 cursor-pointer border-b-4 ${activeTab === "transfers" ? "border-blue-500 text-blue-500" : "border-transparent text-gray-800"}`}
+              onClick={() => handleTabChange("transfers")}
             >
               Transferencias
             </div>
@@ -390,7 +543,7 @@ const TransactionsDashboard = () => {
 
             {activeTab === "incomes" && (
               <IncomeTable
-                entries={filteredEntries} // Mostrar todas las entradas filtradas
+                entries={filteredEntries}
                 categories={categories}
                 accounts={accounts}
                 onDelete={handleDelete}
@@ -398,12 +551,14 @@ const TransactionsDashboard = () => {
                 onOpenContentModal={openContentModal}
                 activeTab={activeTab}
                 dateRange={dateRange}
+                selectedRowKeys={selectedRowKeys}
+                setSelectedRowKeys={setSelectedRowKeys}
               />
             )}
 
             {activeTab === "expenses" && (
               <ExpenseTable
-                entries={filteredEntries} // Mostrar todas las entradas filtradas
+                entries={filteredEntries}
                 categories={categories}
                 accounts={accounts}
                 onDelete={handleDelete}
@@ -411,12 +566,14 @@ const TransactionsDashboard = () => {
                 onOpenContentModal={openContentModal}
                 activeTab={activeTab}
                 dateRange={dateRange}
+                selectedRowKeys={selectedRowKeys}
+                setSelectedRowKeys={setSelectedRowKeys}
               />
             )}
 
             {activeTab === "transfers" && (
               <TrasferTable
-                entries={filteredEntries} // Mostrar todas las entradas filtradas
+                entries={filteredEntries}
                 categories={categories}
                 accounts={accounts}
                 onDelete={handleDelete}
@@ -424,6 +581,8 @@ const TransactionsDashboard = () => {
                 onOpenContentModal={openContentModal}
                 activeTab={activeTab}
                 dateRange={dateRange}
+                selectedRowKeys={selectedRowKeys}
+                setSelectedRowKeys={setSelectedRowKeys}
               />
             )}
           </div>

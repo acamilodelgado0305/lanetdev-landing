@@ -16,14 +16,15 @@ import autoTable from "jspdf-autotable";
 
 const { Text } = Typography;
 
-const ExpenseTable = ({ entries = [], categories = [], accounts = [], onDelete, onEdit, onOpenContentModal, activeTab, dateRange }) => {
+const ExpenseTable = ({ entries = [], categories = [], accounts = [], onDelete, onEdit, onOpenContentModal, activeTab, dateRange, selectedRowKeys,
+  setSelectedRowKeys,}) => {
   const navigate = useNavigate();
 
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedImages, setSelectedImages] = useState([]);
   const [searchText, setSearchText] = useState({});
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+
   const [showFilters, setShowFilters] = useState(false);
   const [filteredEntries, setFilteredEntries] = useState(entries);
   const [typeFilter, setTypeFilter] = useState(null);
