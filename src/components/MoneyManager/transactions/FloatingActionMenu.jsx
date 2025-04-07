@@ -44,7 +44,7 @@ const FloatingActionMenu = ({
         onClick={onEdit}
         disabled={selectedCount !== 1}
         style={{
-          color: selectedCount === 1 ? "#1890ff" : "#bfbfbf",
+          color: selectedCount === 1 ? "#ffffff" : "#bfbfbf",
           fontSize: 14,
         }}
       >
@@ -56,7 +56,7 @@ const FloatingActionMenu = ({
         type="text"
         icon={<DownloadOutlined />}
         onClick={onDownload}
-        style={{ color: "#1890ff", fontSize: 14 }}
+        style={{ color: "#ffffff", fontSize: 14 }}
       >
         Descargar
       </Button>

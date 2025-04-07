@@ -25,6 +25,7 @@ const ExpenseTable = ({
   entries = [],
   categories = [],
   accounts = [],
+  onDelete,
   onEdit,
   onOpenContentModal,
   activeTab,

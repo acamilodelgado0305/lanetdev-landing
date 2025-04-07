@@ -26,6 +26,8 @@ const IncomeTable = ({
   entries = [],
   categories = [],
   accounts = [],
+  onDelete,
+  onEdit,
   onOpenContentModal,
   activeTab,
   dateRange,
@@ -208,18 +210,31 @@ const IncomeTable = ({
           );
           await Promise.all(deletePromises);
 
+          // Actualizar el estado local eliminando las entradas borradas
+          const updatedEntries = filteredEntries.filter(
+            (entry) => !selectedRowKeys.includes(entry.id)
+          );
+          setFilteredEntries(updatedEntries);
+
+          // Notificar al componente padre para actualizar las entradas globales
+          if (onDelete) {
+            const entriesToDelete = filteredEntries.filter((entry) =>
+              selectedRowKeys.includes(entry.id)
+            );
+            entriesToDelete.forEach((entry) =>
+              onDelete({ ...entry, entryType: "expense" })
+            );
+          }
+
+          // Limpiar selección
+          setSelectedRowKeys([]);
+
           Swal.fire({
             icon: "success",
             title: "Eliminado",
             text: "Los ingresos seleccionados han sido eliminados exitosamente.",
             confirmButtonColor: "#3085d6",
           });
-
-          const entriesToDelete = filteredEntries.filter((entry) => selectedRowKeys.includes(entry.id));
-          entriesToDelete.forEach((entry) => {
-            onDelete({ ...entry, entryType: "income" });
-          });
-          setSelectedRowKeys([]);
         } catch (error) {
           console.error("Error al eliminar los ingresos:", error);
           Swal.fire({
@@ -232,6 +247,7 @@ const IncomeTable = ({
       }
     });
   };
+
 
   // New function to handle copying selected items to clipboard
   const handleCopySelected = () => {
@@ -260,47 +276,9 @@ const IncomeTable = ({
     });
   };
 
-  // Pasar la función al padre si existe la prop
 
 
-  const handleDelete = async (id) => {
-    Swal.fire({
-      title: "¿Está seguro?",
-      text: "Esta acción eliminará el ingreso seleccionado permanentemente.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar",
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          const API_BASE_URL = import.meta.env.VITE_API_FINANZAS || "/api";
-          await axios.delete(`${API_BASE_URL}/incomes/${id}`);
-          Swal.fire({
-            icon: "success",
-            title: "Eliminado",
-            text: "El ingreso ha sido eliminado exitosamente.",
-            confirmButtonColor: "#3085d6",
-          });
-          // Llamar a onDelete para actualizar el estado en el componente padre
-          const entryToDelete = filteredEntries.find((entry) => entry.id === id);
-          if (entryToDelete) {
-            onDelete({ ...entryToDelete, entryType: "income" });
-          }
-        } catch (error) {
-          console.error("Error al eliminar el ingreso:", error);
-          Swal.fire({
-            icon: "error",
-            title: "Error",
-            text: "No se pudo eliminar el ingreso. Por favor, intente de nuevo.",
-            confirmButtonColor: "#3085d6",
-          });
-        }
-      }
-    });
-  };
+
 
   const handleDownloadSelected = () => {
     if (selectedRowKeys.length === 0) {
