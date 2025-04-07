@@ -70,6 +70,12 @@ const TransactionsDashboard = () => {
   const [monthlyIncome, setMonthlyIncome] = useState(0);
   const [monthlyExpenses, setMonthlyExpenses] = useState(0);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+
+
+  const [deleteSelectedHandler, setDeleteSelectedHandler] = useState(null);
+  const [downloadSelectedHandler, setDownloadSelectedHandler] = useState(null);
+
+
   const [dateRange, setDateRange] = useState(() => {
     const today = new Date();
     return [startOfMonth(today), endOfMonth(today)];
@@ -101,7 +107,15 @@ const TransactionsDashboard = () => {
   };
 
 
+  // Función para manejar la eliminación
 
+  // Función para manejar la descarga
+
+
+  // Función para limpiar la selección
+  const handleClearSelection = () => {
+    setSelectedRowKeys([]);
+  };
 
   const handleMonthChange = (dates) => {
     if (!dates || dates.length !== 2) {
@@ -258,7 +272,18 @@ const TransactionsDashboard = () => {
     applyFilters();
   }, [searchTerm, filterType, entries, dateRange, isSearching]);
 
+  const handleDelete = (entry) => {
+    setEntries((prev) => prev.filter((e) => e.id !== entry.id));
+  };
 
+  const handleEdit = (entry) => {
+    // Lógica de edición
+  };
+
+  const handleDownloadSelected = () => {
+    // Lógica de descarga (puedes moverla aquí desde IncomeTable si también la quieres externa)
+    console.log("Descargar seleccionados:", selectedRowKeys);
+  };
 
   const handleTabChange = (key) => {
     setActiveTab(key);
@@ -267,42 +292,44 @@ const TransactionsDashboard = () => {
 
   return (
     <div className="flex flex-col bg-white">
+
+
       {/* Header */}
       <div className="px-4 bg-white sticky top-0 z-10 shadow-sm">
-        <div className="flex justify-between items-center border-b-3 border-gray-300 ">
+        <div className="flex justify-between items-start flex-wrap gap-4 mt-2">
+          {/* Botones a la izquierda */}
+
           <div>
             <span className="text-gray-400 text-sm">Área de Contabilidad</span>
             <p className="text-2xl font-bold">GESTIÓN DE TRANSACCIONES</p>
           </div>
 
-          <Space size="middle">
-            <div className="mt-10">
-              <div className="flex items-center justify-end space-x-2">
-                <div className="px-2 rounded text-center flex-none w-26">
-                  <h3 className="text-gray-500 text-[10px] font-medium uppercase">Ingresos totales</h3>
-                  <p className="text-green-600 text-sm font-semibold mt-1 truncate">
-                    {formatCurrency(totalIncome)}
-                  </p>
-                </div>
-                <div className="px-2 rounded text-center flex-none w-26">
-                  <h3 className="text-gray-500 text-[10px] font-medium uppercase">Egresos totales</h3>
-                  <p className="text-red-600 text-sm font-semibold mt-1 truncate">
-                    {formatCurrency(totalExpenses)}
-                  </p>
-                </div>
-                <div className="px-2 rounded text-center flex-none w-26">
-                  <h3 className="text-gray-500 text-[10px] font-medium uppercase">Balance</h3>
-                  <p className="text-blue-600 text-sm font-semibold mt-1 truncate">
-                    {formatCurrency(balance)}
-                  </p>
-                </div>
-              </div>
+
+          {/* Balances a la derecha */}
+          <div className="flex items-center justify-end space-x-2 mt-2 sm:mt-0">
+            <div className="px-2 rounded text-center flex-none w-26">
+              <h3 className="text-gray-500 text-[10px] font-medium uppercase">Ingresos totales</h3>
+              <p className="text-green-600 text-sm font-semibold mt-1 truncate">
+                {formatCurrency(totalIncome)}
+              </p>
             </div>
+            <div className="px-2 rounded text-center flex-none w-26">
+              <h3 className="text-gray-500 text-[10px] font-medium uppercase">Egresos totales</h3>
+              <p className="text-red-600 text-sm font-semibold mt-1 truncate">
+                {formatCurrency(totalExpenses)}
+              </p>
+            </div>
+            <div className="px-2 rounded text-center flex-none w-26">
+              <h3 className="text-gray-500 text-[10px] font-medium uppercase">Balance</h3>
+              <p className="text-blue-600 text-sm font-semibold mt-1 truncate">
+                {formatCurrency(balance)}
+              </p>
+            </div>
+          </div>
+        </div>
 
-
-
-
-            {/* Botones de creación */}
+        <div className="flex justify-between items-start flex-wrap gap-4">
+          <div className="flex gap-2 flex-wrap">
             <Button
               type="primary"
               icon={<PlusOutlined />}
@@ -334,43 +361,40 @@ const TransactionsDashboard = () => {
                 Nueva Transferencia
               </Button>
             </Tooltip>
-          </Space>
-        </div>
-        <div className="flex justify-between items-start flex-wrap gap-4">
-          <div className=" border-b-4 border-gray-300">
-            <div className="flex overflow-x-auto">
-              <div
-                className={`py-2 px-4 cursor-pointer border-b-4 ${activeTab === "resumen" ? "border-[#0052CC] text-[#0052CC]" : "border-transparent text-gray-800"}`}
-                onClick={() => handleTabChange("resumen")}
-              >
-                Resumen
-              </div>
-              <div
-                className={`py-2 px-4 cursor-pointer border-b-4 ${activeTab === "incomes" ? "border-blue-500 text-blue-500" : "border-transparent text-gray-800"}`}
-                onClick={() => handleTabChange("incomes")}
-              >
-                Ingresos
-              </div>
-              <div
-                className={`py-2 px-4 cursor-pointer border-b-4 ${activeTab === "expenses" ? "border-blue-500 text-blue-500" : "border-transparent text-gray-800"}`}
-                onClick={() => handleTabChange("expenses")}
-              >
-                Egresos
-              </div>
-              <div
-                className={`py-2 px-4 cursor-pointer border-b-4 ${activeTab === "transfers" ? "border-blue-500 text-blue-500" : "border-transparent text-gray-800"}`}
-                onClick={() => handleTabChange("transfers")}
-              >
-                Transferencias
-              </div>
-            </div>
           </div>
 
           <DateNavigator onMonthChange={handleMonthChange} formatCurrency={formatCurrency} />
         </div>
 
         {/* Tabs */}
-
+        <div className="mt-[-1em] border-b-4 border-gray-300">
+          <div className="flex overflow-x-auto">
+            <div
+              className={`py-2 px-4 cursor-pointer border-b-4 ${activeTab === "resumen" ? "border-[#0052CC] text-[#0052CC]" : "border-transparent text-gray-800"}`}
+              onClick={() => handleTabChange("resumen")}
+            >
+              Resumen
+            </div>
+            <div
+              className={`py-2 px-4 cursor-pointer border-b-4 ${activeTab === "incomes" ? "border-blue-500 text-blue-500" : "border-transparent text-gray-800"}`}
+              onClick={() => handleTabChange("incomes")}
+            >
+              Ingresos
+            </div>
+            <div
+              className={`py-2 px-4 cursor-pointer border-b-4 ${activeTab === "expenses" ? "border-blue-500 text-blue-500" : "border-transparent text-gray-800"}`}
+              onClick={() => handleTabChange("expenses")}
+            >
+              Egresos
+            </div>
+            <div
+              className={`py-2 px-4 cursor-pointer border-b-4 ${activeTab === "transfers" ? "border-blue-500 text-blue-500" : "border-transparent text-gray-800"}`}
+              onClick={() => handleTabChange("transfers")}
+            >
+              Transferencias
+            </div>
+          </div>
+        </div>
       </div>
 
       {activeTab === "resumen" ? (
@@ -392,7 +416,7 @@ const TransactionsDashboard = () => {
                 entries={filteredEntries}
                 categories={categories}
                 accounts={accounts}
-              
+                onDelete={handleDelete}
                 onEdit={openEditModal}
                 onOpenContentModal={openContentModal}
                 activeTab={activeTab}
@@ -406,6 +430,8 @@ const TransactionsDashboard = () => {
               <ExpenseTable
                 entries={filteredEntries}
                 categories={categories}
+                accounts={accounts}
+                onDelete={handleDelete}
                 onEdit={openEditModal}
                 onOpenContentModal={openContentModal}
                 activeTab={activeTab}
@@ -420,7 +446,7 @@ const TransactionsDashboard = () => {
                 entries={filteredEntries}
                 categories={categories}
                 accounts={accounts}
-         
+                onDelete={handleDelete}
                 onEdit={openEditModal}
                 onOpenContentModal={openContentModal}
                 activeTab={activeTab}

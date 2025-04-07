@@ -4,11 +4,7 @@ import { Button, Tooltip, Popconfirm } from "antd";
 import { EditOutlined, DeleteOutlined, DownloadOutlined, CloseOutlined } from "@ant-design/icons";
 
 const ActionButtons = ({
-    handleEditSelected,
-    handleDeleteSelected,
-    handleDownloadSelected,
-    handleClearSelection,
-    selectedRowKeys,
+    handleDeleteSelected, handleDownloadSelected, selectedRowKeys
 }) => {
     return (
         <div className="flex items-center space-x-2 mt-[-3em]">
@@ -16,7 +12,7 @@ const ActionButtons = ({
                 <Button
                     type="text"
                     icon={<EditOutlined style={{ fontSize: "15px" }} />}
-                    onClick={handleEditSelected}
+                    onClick={""}
                     disabled={selectedRowKeys.length !== 1}
                     className="hover:bg-gray-100"
                     style={{
@@ -72,7 +68,6 @@ const ActionButtons = ({
                 <Button
                     type="text"
                     icon={<CloseOutlined style={{ fontSize: "15px" }} />}
-                    onClick={handleClearSelection}
                     disabled={selectedRowKeys.length === 0}
                     className="hover:bg-gray-100"
                     style={{

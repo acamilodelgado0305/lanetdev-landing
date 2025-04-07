@@ -14,20 +14,26 @@ import {
   SearchOutlined,
   CalendarOutlined,
 } from "@ant-design/icons";
-import FloatingActionMenu from "../../FloatingActionMenu";
+import FloatingActionMenu from "../../FloatingActionMenu"; // Ensure this path is correct
 import ViewIncome from "./ViewIncome";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-
 const { RangePicker } = DatePicker;
 const { Title, Text } = Typography;
 
-const IncomeTable = ({ entries = [], categories = [], accounts = [], onDelete, onEdit, onOpenContentModal, activeTab, dateRange, selectedRowKeys,
-  setSelectedRowKeys, }) => {
+const IncomeTable = ({
+  entries = [],
+  categories = [],
+  accounts = [],
+  onOpenContentModal,
+  activeTab,
+  dateRange,
+}) => {
   const navigate = useNavigate();
 
   const [selectedEntry, setSelectedEntry] = useState(null);
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedImages, setSelectedImages] = useState([]);
   const [searchText, setSearchText] = useState({});
@@ -172,32 +178,129 @@ const IncomeTable = ({ entries = [], categories = [], accounts = [], onDelete, o
     }
   };
 
-  const handleDeleteSelected = () => {
-    console.log("Eliminando registros:", selectedRowKeys);  // Verifica que los registros se están pasando correctamente
-
-    if (selectedRowKeys.length > 0) {
+  const handleDeleteSelected = async () => {
+    if (selectedRowKeys.length === 0) {
       Swal.fire({
-        title: "¿Está seguro?",
-        text: `¿Desea eliminar ${selectedRowKeys.length} registro(s) seleccionado(s)?`,
+        title: "Selección vacía",
+        text: "Por favor, seleccione al menos un registro para eliminar.",
         icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#d33",
-        cancelButtonColor: "#3085d6",
-        confirmButtonText: "Sí, eliminar",
-        cancelButtonText: "Cancelar",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          selectedRowKeys.forEach((id) => {
-            const entryToDelete = filteredEntries.find((entry) => entry.id === id);
-            console.log("Eliminando entrada:", entryToDelete);  // Verifica que la entrada se encuentra
-            onDelete(entryToDelete);  // Aquí se llama a onDelete
-          });
-          setSelectedRowKeys([]); // Limpiar la selección después de eliminar
-        }
+        confirmButtonColor: "#3085d6",
+        confirmButtonText: "Entendido",
       });
+      return;
     }
+
+    Swal.fire({
+      title: "¿Está seguro?",
+      text: `¿Desea eliminar ${selectedRowKeys.length} registro(s) seleccionado(s)?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const API_BASE_URL = import.meta.env.VITE_API_FINANZAS || "/api";
+          const deletePromises = selectedRowKeys.map((id) =>
+            axios.delete(`${API_BASE_URL}/incomes/${id}`)
+          );
+          await Promise.all(deletePromises);
+
+          Swal.fire({
+            icon: "success",
+            title: "Eliminado",
+            text: "Los ingresos seleccionados han sido eliminados exitosamente.",
+            confirmButtonColor: "#3085d6",
+          });
+
+          const entriesToDelete = filteredEntries.filter((entry) => selectedRowKeys.includes(entry.id));
+          entriesToDelete.forEach((entry) => {
+            onDelete({ ...entry, entryType: "income" });
+          });
+          setSelectedRowKeys([]);
+        } catch (error) {
+          console.error("Error al eliminar los ingresos:", error);
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "No se pudieron eliminar los ingresos. Por favor, intente de nuevo.",
+            confirmButtonColor: "#3085d6",
+          });
+        }
+      }
+    });
   };
 
+  // New function to handle copying selected items to clipboard
+  const handleCopySelected = () => {
+    const selectedItems = filteredEntries.filter((item) => selectedRowKeys.includes(item.id));
+    const textToCopy = selectedItems
+      .map((item) => {
+        return `N° Arqueo: ${item.arqueo_number || "N/A"}, Descripción: ${item.description}, Fecha: ${renderDate(item.date)}, Cuenta: ${getAccountName(item.account_id)}, Cajero: ${getCashierName(item.cashier_id)}, Monto: ${formatCurrency(item.amount)}, Desde: ${renderDate(item.start_period)}, Hasta: ${renderDate(item.end_period)}`;
+      })
+      .join("\n");
+
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      Swal.fire({
+        icon: "success",
+        title: "Copiado",
+        text: "Los elementos seleccionados han sido copiados al portapapeles.",
+        confirmButtonColor: "#3085d6",
+      });
+    }).catch((error) => {
+      console.error("Error al copiar al portapapeles:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo copiar al portapapeles. Por favor, intente de nuevo.",
+        confirmButtonColor: "#3085d6",
+      });
+    });
+  };
+
+  // Pasar la función al padre si existe la prop
+
+
+  const handleDelete = async (id) => {
+    Swal.fire({
+      title: "¿Está seguro?",
+      text: "Esta acción eliminará el ingreso seleccionado permanentemente.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const API_BASE_URL = import.meta.env.VITE_API_FINANZAS || "/api";
+          await axios.delete(`${API_BASE_URL}/incomes/${id}`);
+          Swal.fire({
+            icon: "success",
+            title: "Eliminado",
+            text: "El ingreso ha sido eliminado exitosamente.",
+            confirmButtonColor: "#3085d6",
+          });
+          // Llamar a onDelete para actualizar el estado en el componente padre
+          const entryToDelete = filteredEntries.find((entry) => entry.id === id);
+          if (entryToDelete) {
+            onDelete({ ...entryToDelete, entryType: "income" });
+          }
+        } catch (error) {
+          console.error("Error al eliminar el ingreso:", error);
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "No se pudo eliminar el ingreso. Por favor, intente de nuevo.",
+            confirmButtonColor: "#3085d6",
+          });
+        }
+      }
+    });
+  };
 
   const handleDownloadSelected = () => {
     if (selectedRowKeys.length === 0) {
@@ -549,11 +652,12 @@ const IncomeTable = ({ entries = [], categories = [], accounts = [], onDelete, o
           "—"
         ),
       width: 130,
-    }
+    },
   ];
 
   return (
     <div className="px-5 py-2 bg-white">
+
       <Table
         rowSelection={rowSelection}
         dataSource={filteredEntries}
@@ -562,10 +666,12 @@ const IncomeTable = ({ entries = [], categories = [], accounts = [], onDelete, o
         pagination={false}
         bordered
         size="middle"
-        className="thick-bordered-table"
+        className="thick-bordered-table custom-checkbox-size"
         onRow={(record) => ({
           onClick: (e) => {
-            if (e.target.tagName !== "INPUT" && e.target.tagName !== "BUTTON" && e.target.tagName !== "A") {
+            const { tagName } = e.target;
+            if (tagName !== "INPUT" && tagName !== "BUTTON" && tagName !== "A") {
+              rowSelection.onChange([record.id], [record]);
               setSelectedEntry(record);
               setIsViewModalOpen(true);
             }
@@ -575,7 +681,21 @@ const IncomeTable = ({ entries = [], categories = [], accounts = [], onDelete, o
         scroll={{ x: "max-content" }}
       />
 
-      <ViewIncome entry={selectedEntry} visible={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} activeTab={activeTab} />
+      {/* Add the FloatingActionMenu here */}
+      <FloatingActionMenu
+        selectedCount={selectedRowKeys.length}
+        onEdit={handleEditSelected}
+        onCopy={handleCopySelected}
+        onDelete={handleDeleteSelected}
+        visible={selectedRowKeys.length > 0}
+      />
+
+      <ViewIncome
+        entry={selectedEntry}
+        visible={isViewModalOpen}
+        onClose={() => setIsViewModalOpen(false)}
+        activeTab={activeTab}
+      />
 
       <Drawer
         visible={isDrawerOpen}

@@ -1,117 +1,75 @@
 import React from "react";
-import { Button, Tooltip, Popconfirm } from "antd";
-import {
-  EditOutlined,
-  DeleteOutlined,
-  DownloadOutlined,
-  CloseOutlined,
-} from "@ant-design/icons";
+import { Button } from "antd";
+import { EditOutlined, DownloadOutlined, DeleteOutlined } from "@ant-design/icons";
 
 const FloatingActionMenu = ({
-  selectedRowKeys,
+  selectedCount,
   onEdit,
-  onDelete,
   onDownload,
-  onClearSelection,
+  onDelete,
+  visible,
 }) => {
-  // Mostrar el menú solo si hay filas seleccionadas
-  if (selectedRowKeys.length === 0) return null;
+  // If the menu is not visible (i.e., no items are selected), don't render anything
+  if (!visible || selectedCount === 0) {
+    return null;
+  }
 
   return (
     <div
-      className="fixed bottom-5 right-5 bg-white rounded-lg shadow-lg z-50 px-4 py-2 border border-gray-200"
-      style={{ minWidth: "200px" }}
+      style={{
+        position: "fixed",
+        bottom: 20,
+        left: "50%",
+        transform: "translateX(-50%)",
+        backgroundColor: "#1f1f1f",
+        borderRadius: 8,
+        padding: "8px 16px",
+        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+        display: "flex",
+        alignItems: "center",
+        gap: 16,
+        zIndex: 1000,
+      }}
     >
-      <div className="flex justify-between items-center">
-        <span className="text-gray-600">
-          {selectedRowKeys.length} seleccionado(s)
-        </span>
-        <div className="flex items-center space-x-2">
-          {/* Botón Editar */}
-          <Tooltip title="Editar">
-            <Button
-              type="text"
-              icon={<EditOutlined className="text-gray-500" />}
-              onClick={onEdit}
-              disabled={selectedRowKeys.length !== 1} // Solo habilitado si hay exactamente 1 seleccionado
-              className="hover:bg-gray-100 text-gray-500"
-              style={{
-                width: 30,
-                height: 30,
-                borderRadius: 0,
-                border: "1px solid #d9d9d9",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            />
-          </Tooltip>
+      {/* Display the number of selected items */}
+      <span style={{ color: "#fff", fontSize: 14 }}>
+        {selectedCount} elemento{selectedCount > 1 ? "s" : ""} seleccionado
+        {selectedCount > 1 ? "s" : ""}
+      </span>
 
-          {/* Botón Eliminar */}
-          <Popconfirm
-            title={`¿Está seguro de eliminar ${selectedRowKeys.length} elemento(s) seleccionado(s)?`}
-            onConfirm={onDelete}
-            okText="Sí, eliminar"
-            cancelText="Cancelar"
-            placement="topRight"
-          >
-            <Tooltip title="Eliminar">
-              <Button
-                type="text"
-                icon={<DeleteOutlined className="text-gray-500" />}
-                className="hover:bg-gray-100 text-gray-500"
-                style={{
-                  width: 30,
-                  height: 30,
-                  borderRadius: 0,
-                  border: "1px solid #d9d9d9",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              />
-            </Tooltip>
-          </Popconfirm>
+      {/* Edit Button (only enabled if exactly one item is selected) */}
+      <Button
+        type="text"
+        icon={<EditOutlined />}
+        onClick={onEdit}
+        disabled={selectedCount !== 1}
+        style={{
+          color: selectedCount === 1 ? "#1890ff" : "#bfbfbf",
+          fontSize: 14,
+        }}
+      >
+        Editar
+      </Button>
 
-          {/* Botón Descargar */}
-          <Tooltip title="Descargar comprobantes">
-            <Button
-              type="text"
-              icon={<DownloadOutlined className="text-gray-500" />}
-              onClick={onDownload}
-              className="hover:bg-gray-100 text-gray-500"
-              style={{
-                width: 30,
-                height: 30,
-                borderRadius: 0,
-                border: "1px solid #d9d9d9",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            />
-          </Tooltip>
+      {/* Download Button */}
+      <Button
+        type="text"
+        icon={<DownloadOutlined />}
+        onClick={onDownload}
+        style={{ color: "#1890ff", fontSize: 14 }}
+      >
+        Descargar
+      </Button>
 
-          {/* Botón Limpiar Selección */}
-          <Tooltip title="Limpiar selección">
-            <Button
-              type="text"
-              icon={<CloseOutlined className="text-gray-500" />}
-              onClick={onClearSelection}
-              className="hover:bg-gray-100 text-gray-500"
-              style={{
-                width: 30,
-                height: 30,
-                borderRadius: 0,
-                border: "1px solid #d9d9d9",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            />
-          </Tooltip>
-        </div>
-      </div>
+      {/* Delete Button */}
+      <Button
+        type="text"
+        icon={<DeleteOutlined />}
+        onClick={onDelete}
+        style={{ color: "#ff4d4f", fontSize: 14 }}
+      >
+        Eliminar
+      </Button>
     </div>
   );
 };
