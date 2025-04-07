@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { format as formatDate, startOfMonth, endOfMonth, subMonths, addMonths } from "date-fns";
 import axios from "axios";
-import { Modal, message, Button, Typography, Tabs, Space, Tooltip, Popconfirm } from "antd";
+import { Modal, message, Button, Typography, Tabs, Space, Tooltip, Popconfirm, Spin } from "antd";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   AlertCircle,
@@ -74,34 +74,7 @@ const TransactionsDashboard = () => {
     const today = new Date();
     return [startOfMonth(today), endOfMonth(today)];
   });
-
-  // Función para manejar la edición
-  const handleEditSelected = () => {
-    if (selectedRowKeys.length === 1) {
-      // Buscar la entrada seleccionada
-      const entry = filteredEntries.find((e) => e.id === selectedRowKeys[0]);
-
-      // Validar el tipo de transacción y redirigir a la ruta de edición correspondiente
-      if (entry) {
-        if (entry.entryType === "income") {
-          navigate(`/index/moneymanager/ingresos/edit/${entry.id}`, { state: { returnTab: activeTab } });
-        } else if (entry.entryType === "expense") {
-          navigate(`/index/moneymanager/egresos/edit/${entry.id}`, { state: { returnTab: activeTab } });
-        } else if (entry.entryType === "transfer") {
-          navigate(`/index/moneymanager/transferencias/edit/${entry.id}`, { state: { returnTab: activeTab } });
-        } else {
-          message.warning("Tipo de transacción no válido para editar.");
-        }
-      } else {
-        message.warning("No se encontró un elemento con el ID seleccionado.");
-      }
-    } else {
-      message.warning("Seleccione exactamente un elemento para editar.");
-    }
-  };
-
-
-
+  const [isLoading, setIsLoading] = useState(false); // Nuevo estado de carga
 
   const handleMonthChange = (dates) => {
     if (!dates || dates.length !== 2) {
@@ -144,6 +117,7 @@ const TransactionsDashboard = () => {
   };
 
   const fetchData = async (endpoint) => {
+    setIsLoading(true); // Activar estado de carga
     try {
       const response = await axios.get(`${API_BASE_URL}${endpoint}`);
       const allEntries = response.data;
@@ -156,8 +130,10 @@ const TransactionsDashboard = () => {
       setFilteredEntries(sortedEntries);
       setError(null);
     } catch (error) {
-      console.error("Error fetching data:", error);
+  
       setError("Error al cargar los datos");
+    } finally {
+      setIsLoading(false); // Desactivar estado de carga
     }
   };
 
@@ -258,8 +234,6 @@ const TransactionsDashboard = () => {
     applyFilters();
   }, [searchTerm, filterType, entries, dateRange, isSearching]);
 
-
-
   const handleTabChange = (key) => {
     setActiveTab(key);
     setSelectedRowKeys([]); // Limpiar selección al cambiar de pestaña
@@ -298,10 +272,6 @@ const TransactionsDashboard = () => {
                 </div>
               </div>
             </div>
-
-
-
-
             {/* Botones de creación */}
             <Button
               type="primary"
@@ -328,7 +298,9 @@ const TransactionsDashboard = () => {
               <Button
                 type="primary"
                 icon={<SwapOutlined />}
-                onClick={openTransferModal}
+                onClick={() =>
+                  navigate("/index/moneymanager/transactions/nuevatransferencia", { state: { returnTab: "expenses" } })
+                }
                 style={{ backgroundColor: "#0052CC", borderColor: "#0052CC" }}
               >
                 Nueva Transferencia
@@ -368,9 +340,6 @@ const TransactionsDashboard = () => {
 
           <DateNavigator onMonthChange={handleMonthChange} formatCurrency={formatCurrency} />
         </div>
-
-        {/* Tabs */}
-
       </div>
 
       {activeTab === "resumen" ? (
@@ -388,46 +357,50 @@ const TransactionsDashboard = () => {
             )}
 
             {activeTab === "incomes" && (
-              <IncomeTable
-                entries={filteredEntries}
-                categories={categories}
-                accounts={accounts}
-              
-                onEdit={openEditModal}
-                onOpenContentModal={openContentModal}
-                activeTab={activeTab}
-                dateRange={dateRange}
-                selectedRowKeys={selectedRowKeys}
-                setSelectedRowKeys={setSelectedRowKeys}
-              />
+              <Spin spinning={isLoading} tip="Cargando datos...">
+                <IncomeTable
+                  entries={filteredEntries}
+                  categories={categories}
+                  accounts={accounts}
+                  onEdit={openEditModal}
+                  onOpenContentModal={openContentModal}
+                  activeTab={activeTab}
+                  dateRange={dateRange}
+                  selectedRowKeys={selectedRowKeys}
+                  setSelectedRowKeys={setSelectedRowKeys}
+                />
+              </Spin>
             )}
 
             {activeTab === "expenses" && (
-              <ExpenseTable
-                entries={filteredEntries}
-                categories={categories}
-                onEdit={openEditModal}
-                onOpenContentModal={openContentModal}
-                activeTab={activeTab}
-                dateRange={dateRange}
-                selectedRowKeys={selectedRowKeys}
-                setSelectedRowKeys={setSelectedRowKeys}
-              />
+              <Spin spinning={isLoading} tip="Cargando datos...">
+                <ExpenseTable
+                  entries={filteredEntries}
+                  categories={categories}
+                  onEdit={openEditModal}
+                  onOpenContentModal={openContentModal}
+                  activeTab={activeTab}
+                  dateRange={dateRange}
+                  selectedRowKeys={selectedRowKeys}
+                  setSelectedRowKeys={setSelectedRowKeys}
+                />
+              </Spin>
             )}
 
             {activeTab === "transfers" && (
-              <TrasferTable
-                entries={filteredEntries}
-                categories={categories}
-                accounts={accounts}
-         
-                onEdit={openEditModal}
-                onOpenContentModal={openContentModal}
-                activeTab={activeTab}
-                dateRange={dateRange}
-                selectedRowKeys={selectedRowKeys}
-                setSelectedRowKeys={setSelectedRowKeys}
-              />
+              <Spin spinning={isLoading} tip="Cargando datos...">
+                <TrasferTable
+                  entries={filteredEntries}
+                  categories={categories}
+                  accounts={accounts}
+                  onEdit={openEditModal}
+                  onOpenContentModal={openContentModal}
+                  activeTab={activeTab}
+                  dateRange={dateRange}
+                  selectedRowKeys={selectedRowKeys}
+                  setSelectedRowKeys={setSelectedRowKeys}
+                />
+              </Spin>
             )}
           </div>
         </div>

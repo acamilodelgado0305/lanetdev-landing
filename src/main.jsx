@@ -38,6 +38,7 @@ import PaginaProveedores from "./components/MoneyManager/proveedores/ProvidersPa
 import IncomeView from "./components/MoneyManager/transactions/Add/Income/ViewIncome.jsx";
 import Administracion from "./components/Administracion/Administracion.jsx";
 import InicioTerceros from "./components/Terceros/InicioTerceros.jsx";
+import AddTransfer from "./components/MoneyManager/transactions/Add/transferencia/AddTransfer.jsx";
 import 'antd/dist/reset.css';
 
 
@@ -128,6 +129,11 @@ const router = createBrowserRouter([
           {
             path: "egresos/edit/:id",
             element: <AddExpense />,
+          },
+
+          {
+            path: "transactions/nuevatransferencia",
+            element: <AddTransfer />,
           },
           {
             path: "categorias",

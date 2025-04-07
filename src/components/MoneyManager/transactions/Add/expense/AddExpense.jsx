@@ -196,6 +196,10 @@ const AddExpense = () => {
     setProveedor(value);
   };
 
+  const handleCategoriaChange = (value) => {
+    setCategoria(value);
+  };
+
   const handleHiddenDetailsChange = (value) => {
     setIsHiddenDetails(value);
   };
@@ -514,6 +518,7 @@ const AddExpense = () => {
           setDate={setDate}
           proveedor={proveedor}
           handleProveedorChange={handleProveedorChange}
+          handleCategoriaChange={handleCategoriaChange}
           proveedores={proveedores}
           categoria={categoria}
           setCategoria={setCategoria}

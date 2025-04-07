@@ -193,9 +193,11 @@ const ExpenseTable = ({
 
   const handleEditSelected = () => {
     if (selectedRowKeys.length === 1) {
-      onEdit(filteredEntries.find((entry) => entry.id === selectedRowKeys[0]));
+        navigate(`/index/moneymanager/egresos/edit/${selectedRowKeys[0]}`, {
+            state: { returnTab: activeTab }, // Pasar activeTab como returnTab
+        });
     }
-  };
+};
 
   const handleDeleteSelected = async () => {
     if (selectedRowKeys.length === 0) {
@@ -268,100 +270,147 @@ const ExpenseTable = ({
   // Pasar la función al padre si existe la prop
 
 
-  const handleDownloadSelected = () => {
-    if (selectedRowKeys.length === 0) {
-      Swal.fire({
-        title: "Selección vacía",
-        text: "Por favor, seleccione al menos un registro",
-        icon: "warning",
-        confirmButtonColor: "#3085d6",
-        confirmButtonText: "Entendido",
-      });
-      return;
-    }
-    const selectedItems = filteredEntries.filter((item) => selectedRowKeys.includes(item.id));
-    generateExpensePDF(selectedItems);
-  };
+ 
 
   const generateExpensePDF = (items) => {
     Swal.fire({
-      title: "Generando PDF",
-      text: "Por favor espere...",
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      },
+        title: "Generando PDF",
+        text: "Por favor espere...",
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        },
     });
 
     try {
-      const doc = new jsPDF();
-      doc.setFontSize(18);
-      doc.setFont("helvetica", "bold");
-      doc.text("FACTURA DE EGRESOS", 105, 20, { align: "center" });
-      doc.setFontSize(12);
-      doc.setFont("helvetica", "normal");
-      doc.text("Nombre de la Empresa", 14, 30);
-      doc.text("NIT: 123456789-0", 14, 36);
-      doc.text("Dirección: Calle 123 #45-67, Bogotá, Colombia", 14, 42);
-      doc.text("Teléfono: +57 123 456 7890", 14, 48);
-      doc.text(`Fecha: ${formatDate(new Date(), "d MMMM yyyy", { locale: es })}`, 140, 30);
-      doc.text(`Factura N°: ${Math.floor(Math.random() * 1000000)}`, 140, 36);
+        const doc = new jsPDF();
 
-      const tableData = items.map((item) => [
-        item.invoice_number || "N/A",
-        item.description || "Sin descripción",
-        item.category || "Sin Categoría",
-        renderDate(item.date),
-        getAccountName(item.account_id),
-        getProviderName(item.provider_id),
-        formatCurrency(item.total_gross || 0),
-        formatCurrency(item.discounts || 0),
-        formatCurrency(item.total_net || 0),
-      ]);
+        // Header
+        doc.setFontSize(18);
+        doc.setFont("helvetica", "bold");
+        doc.text("FACTURA DE EGRESOS", 105, 20, { align: "center" });
 
-      autoTable(doc, {
-        startY: 60,
-        head: [["N° Egreso", "Descripción", "Categoría", "Fecha", "Cuenta", "Proveedor", "Base", "Impuestos", "Total Neto"]],
-        body: tableData,
-        theme: "grid",
-        styles: { fontSize: 10, cellPadding: 2 },
-        headStyles: { fillColor: [22, 160, 133], textColor: [255, 255, 255] },
-        columnStyles: {
-          0: { cellWidth: 20 },
-          1: { cellWidth: 40 },
-          2: { cellWidth: 20 },
-          3: { cellWidth: 20 },
-          4: { cellWidth: 20 },
-          5: { cellWidth: 20 },
-          6: { cellWidth: 20 },
-          7: { cellWidth: 20 },
-        },
-      });
+        // Company Info (customize as needed)
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "normal");
+        doc.text("Nombre de la Empresa", 14, 30);
+        doc.text("NIT: 123456789-0", 14, 36);
+        doc.text("Dirección: Calle 123 #45-67, Bogotá, Colombia", 14, 42);
+        doc.text("Teléfono: +57 123 456 7890", 14, 48);
 
-      const totalNet = items.reduce((sum, item) => sum + (item.total_net || 0), 0);
-      doc.setFontSize(12);
-      doc.text(`Total Neto: ${formatCurrency(totalNet)}`, 140, doc.lastAutoTable.finalY + 10);
-      doc.setFontSize(10);
-      doc.text("Gracias por su negocio", 105, 280, { align: "center" });
-      doc.text("Este documento no tiene validez fiscal", 105, 286, { align: "center" });
+        // Invoice Info
+        doc.text(`Fecha: ${formatDate(new Date(), "d MMMM yyyy", { locale: es })}`, 140, 30);
+        doc.text(`Factura N°: ${Math.floor(Math.random() * 1000000)}`, 140, 36);
 
-      doc.save(`Factura_Egresos_${formatDate(new Date(), "yyyy-MM-dd")}.pdf`);
+        // Table of Expenses
+        const tableData = items.map(item => [
+            item.invoice_number || "N/A",
+            item.description || "Sin descripción",
+            item.category || "Sin Sin Categoria",
+            renderDate(item.date),
+            getAccountName(item.account_id),
+            getProviderName(item.provider_id),
+            formatCurrency(item.total_gross || 0),
+            formatCurrency(item.discounts || 0),
+            formatCurrency(item.total_net || 0),
+        ]);
 
-      Swal.fire({
-        icon: "success",
-        title: "PDF Generado",
-        text: "El comprobante se ha descargado correctamente",
-      });
+        autoTable(doc, {
+            startY: 60,
+            head: [["N° Egreso", "Descripción", "Fecha", "Cuenta", "Proveedor", "Base", "Impuestos", "Total Neto"]],
+            body: tableData,
+            theme: "grid",
+            styles: { fontSize: 10, cellPadding: 2 },
+            headStyles: { fillColor: [22, 160, 133], textColor: [255, 255, 255] },
+            columnStyles: {
+                0: { cellWidth: 20 },
+                1: { cellWidth: 40 },
+                2: { cellWidth: 20 },
+                3: { cellWidth: 20 },
+                4: { cellWidth: 20 },
+                5: { cellWidth: 20 },
+                6: { cellWidth: 20 },
+                7: { cellWidth: 20 },
+            },
+        });
+
+        // Total
+        const totalNet = items.reduce((sum, item) => sum + (item.total_net || 0), 0);
+        doc.setFontSize(12);
+        doc.text(`Total Neto: ${formatCurrency(totalNet)}`, 140, doc.lastAutoTable.finalY + 10);
+
+        // Footer
+        doc.setFontSize(10);
+        doc.text("Gracias por su negocio", 105, 280, { align: "center" });
+        doc.text("Este documento no tiene validez fiscal", 105, 286, { align: "center" });
+
+        // Save the PDF
+        doc.save(`Factura_Egresos_${formatDate(new Date(), "yyyy-MM-dd")}.pdf`);
+
+        Swal.fire({
+            icon: "success",
+            title: "PDF Generado",
+            text: "El comprobante se ha descargado correctamente",
+        });
     } catch (error) {
-      console.error("Error al generar PDF:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: `No se pudo generar el PDF: ${error.message}`,
-      });
+        console.error("Error al generar PDF:", error);
+        Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: `No se pudo generar el PDF: ${error.message}`,
+        });
     }
-  };
+};
 
+const handleBatchOperation = (operation) => {
+    if (selectedRowKeys.length === 0) {
+        Swal.fire({
+            title: 'Selección vacía',
+            text: 'Por favor, seleccione al menos un registro',
+            icon: 'warning',
+            confirmButtonColor: '#3085d6',
+            confirmButtonText: 'Entendido'
+        });
+        return;
+    }
+
+    const selectedItems = entries.filter(item => selectedRowKeys.includes(item.id));
+
+    switch (operation) {
+        case 'delete':
+            Swal.fire({
+                title: '¿Está seguro?',
+                text: `¿Desea eliminar ${selectedRowKeys.length} registro(s) seleccionado(s)?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const deletePromises = selectedRowKeys.map(id => handleDeleteItem(id));
+                    Promise.all(deletePromises)
+                        .then(() => {
+                            Swal.fire('¡Eliminado!', 'Los registros han sido eliminados.', 'success');
+                            setSelectedRowKeys([]);
+                            fetchData();
+                        })
+                        .catch(error => {
+                            console.error("Error eliminando registros:", error);
+                            Swal.fire('Error', 'Hubo un problema al eliminar los registros.', 'error');
+                        });
+                }
+            });
+            break;
+        case 'export':
+            console.log("Exportar seleccionados:", selectedItems);
+            // Add your export logic here
+            break;
+        default:
+            break;
+    }
+};
   const openDrawer = (images) => {
     setSelectedImages(images);
     setIsDrawerOpen(true);

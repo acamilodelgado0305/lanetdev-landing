@@ -176,9 +176,11 @@ const IncomeTable = ({
 
   const handleEditSelected = () => {
     if (selectedRowKeys.length === 1) {
-      onEdit(filteredEntries.find((entry) => entry.id === selectedRowKeys[0]));
+        navigate(`/index/moneymanager/ingresos/edit/${selectedRowKeys[0]}`, {
+            state: { returnTab: activeTab }, // Pasar activeTab como returnTab
+        });
     }
-  };
+};
 
   const handleDeleteSelected = async () => {
     if (selectedRowKeys.length === 0) {
