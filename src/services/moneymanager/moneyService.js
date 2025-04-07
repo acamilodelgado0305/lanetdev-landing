@@ -160,3 +160,24 @@ export const deleteTransfer = async (id) => {
         throw error;
     }
 };
+// Para eliminar un ingreso (Income)
+export const deleteIncome = async (id) => {
+    try {
+        const response = await moneyApi.delete(`/incomes/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error('Error al eliminar el ingreso:', error);
+        throw error;
+    }
+};
+
+// Para eliminar un egreso (Expense)
+export const deleteExpense = async (id) => {
+    try {
+        const response = await moneyApi.delete(`/expenses/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error('Error al eliminar el egreso:', error);
+        throw error;
+    }
+};

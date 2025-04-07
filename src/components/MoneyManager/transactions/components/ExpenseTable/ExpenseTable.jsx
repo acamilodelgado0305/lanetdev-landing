@@ -9,21 +9,35 @@ import axios from "axios";
 import {
   DownloadOutlined,
   SearchOutlined,
+  EditOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import ViewExpense from "../../Add/expense/ViewExpense";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import FloatingActionMenu from "../../FloatingActionMenu";
+
+// FloatingActionMenu Component (same as used in IncomeTable)
 
 const { Text } = Typography;
 
-const ExpenseTable = ({ entries = [], categories = [], accounts = [], onDelete, onEdit, onOpenContentModal, activeTab, dateRange }) => {
-  const navigate = useNavigate();
+const ExpenseTable = ({
+  entries = [],
+  categories = [],
+  accounts = [],
+  onDelete,
+  onEdit,
+  onOpenContentModal,
+  activeTab,
+  dateRange,
 
+}) => {
+  const navigate = useNavigate();
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedImages, setSelectedImages] = useState([]);
   const [searchText, setSearchText] = useState({});
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
   const [filteredEntries, setFilteredEntries] = useState(entries);
   const [typeFilter, setTypeFilter] = useState(null);
@@ -179,124 +193,224 @@ const ExpenseTable = ({ entries = [], categories = [], accounts = [], onDelete, 
 
   const handleEditSelected = () => {
     if (selectedRowKeys.length === 1) {
-      onEdit(filteredEntries.find((entry) => entry.id === selectedRowKeys[0]));
+        navigate(`/index/moneymanager/egresos/edit/${selectedRowKeys[0]}`, {
+            state: { returnTab: activeTab }, // Pasar activeTab como returnTab
+        });
     }
-  };
+};
 
-  const handleDeleteSelected = () => {
-    if (selectedRowKeys.length > 0) {
-      Swal.fire({
-        title: "¿Está seguro?",
-        text: `¿Desea eliminar ${selectedRowKeys.length} registro(s) seleccionado(s)?`,
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#d33",
-        cancelButtonColor: "#3085d6",
-        confirmButtonText: "Sí, eliminar",
-        cancelButtonText: "Cancelar",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          selectedRowKeys.forEach((id) => onDelete(filteredEntries.find((entry) => entry.id === id)));
-          setSelectedRowKeys([]);
-        }
-      });
-    }
-  };
-
-  const handleDownloadSelected = () => {
+  const handleDeleteSelected = async () => {
     if (selectedRowKeys.length === 0) {
       Swal.fire({
         title: "Selección vacía",
-        text: "Por favor, seleccione al menos un registro",
+        text: "Por favor, seleccione al menos un registro para eliminar.",
         icon: "warning",
         confirmButtonColor: "#3085d6",
         confirmButtonText: "Entendido",
       });
       return;
     }
-    const selectedItems = filteredEntries.filter((item) => selectedRowKeys.includes(item.id));
-    generateExpensePDF(selectedItems);
+
+    Swal.fire({
+      title: "¿Está seguro?",
+      text: `¿Desea eliminar ${selectedRowKeys.length} registro(s) seleccionado(s)?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const API_BASE_URL = import.meta.env.VITE_API_FINANZAS || "/api";
+          const deletePromises = selectedRowKeys.map((id) =>
+            axios.delete(`${API_BASE_URL}/expenses/${id}`)
+          );
+          await Promise.all(deletePromises);
+
+          // Actualizar el estado local eliminando las entradas borradas
+          const updatedEntries = filteredEntries.filter(
+            (entry) => !selectedRowKeys.includes(entry.id)
+          );
+          setFilteredEntries(updatedEntries);
+
+          // Notificar al componente padre para actualizar las entradas globales
+          if (onDelete) {
+            const entriesToDelete = filteredEntries.filter((entry) =>
+              selectedRowKeys.includes(entry.id)
+            );
+            entriesToDelete.forEach((entry) =>
+              onDelete({ ...entry, entryType: "expense" })
+            );
+          }
+
+          // Limpiar selección
+          setSelectedRowKeys([]);
+
+          Swal.fire({
+            icon: "success",
+            title: "Eliminado",
+            text: "Los egresos seleccionados han sido eliminados exitosamente.",
+            confirmButtonColor: "#3085d6",
+          });
+        } catch (error) {
+          console.error("Error al eliminar los egresos:", error);
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "No se pudieron eliminar los egresos. Por favor, intente de nuevo.",
+            confirmButtonColor: "#3085d6",
+          });
+        }
+      }
+    });
   };
+
+  // Pasar la función al padre si existe la prop
+
+
+ 
 
   const generateExpensePDF = (items) => {
     Swal.fire({
-      title: "Generando PDF",
-      text: "Por favor espere...",
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      },
+        title: "Generando PDF",
+        text: "Por favor espere...",
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        },
     });
 
     try {
-      const doc = new jsPDF();
-      doc.setFontSize(18);
-      doc.setFont("helvetica", "bold");
-      doc.text("FACTURA DE EGRESOS", 105, 20, { align: "center" });
-      doc.setFontSize(12);
-      doc.setFont("helvetica", "normal");
-      doc.text("Nombre de la Empresa", 14, 30);
-      doc.text("NIT: 123456789-0", 14, 36);
-      doc.text("Dirección: Calle 123 #45-67, Bogotá, Colombia", 14, 42);
-      doc.text("Teléfono: +57 123 456 7890", 14, 48);
-      doc.text(`Fecha: ${formatDate(new Date(), "d MMMM yyyy", { locale: es })}`, 140, 30);
-      doc.text(`Factura N°: ${Math.floor(Math.random() * 1000000)}`, 140, 36);
+        const doc = new jsPDF();
 
-      const tableData = items.map((item) => [
-        item.invoice_number || "N/A",
-        item.description || "Sin descripción",
-        item.category || "Sin Categoría",
-        renderDate(item.date),
-        getAccountName(item.account_id),
-        getProviderName(item.provider_id),
-        formatCurrency(item.total_gross || 0),
-        formatCurrency(item.discounts || 0),
-        formatCurrency(item.total_net || 0),
-      ]);
+        // Header
+        doc.setFontSize(18);
+        doc.setFont("helvetica", "bold");
+        doc.text("FACTURA DE EGRESOS", 105, 20, { align: "center" });
 
-      autoTable(doc, {
-        startY: 60,
-        head: [["N° Egreso", "Descripción", "Categoría", "Fecha", "Cuenta", "Proveedor", "Base", "Impuestos", "Total Neto"]],
-        body: tableData,
-        theme: "grid",
-        styles: { fontSize: 10, cellPadding: 2 },
-        headStyles: { fillColor: [22, 160, 133], textColor: [255, 255, 255] },
-        columnStyles: {
-          0: { cellWidth: 20 },
-          1: { cellWidth: 40 },
-          2: { cellWidth: 20 },
-          3: { cellWidth: 20 },
-          4: { cellWidth: 20 },
-          5: { cellWidth: 20 },
-          6: { cellWidth: 20 },
-          7: { cellWidth: 20 },
-        },
-      });
+        // Company Info (customize as needed)
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "normal");
+        doc.text("Nombre de la Empresa", 14, 30);
+        doc.text("NIT: 123456789-0", 14, 36);
+        doc.text("Dirección: Calle 123 #45-67, Bogotá, Colombia", 14, 42);
+        doc.text("Teléfono: +57 123 456 7890", 14, 48);
 
-      const totalNet = items.reduce((sum, item) => sum + (item.total_net || 0), 0);
-      doc.setFontSize(12);
-      doc.text(`Total Neto: ${formatCurrency(totalNet)}`, 140, doc.lastAutoTable.finalY + 10);
-      doc.setFontSize(10);
-      doc.text("Gracias por su negocio", 105, 280, { align: "center" });
-      doc.text("Este documento no tiene validez fiscal", 105, 286, { align: "center" });
+        // Invoice Info
+        doc.text(`Fecha: ${formatDate(new Date(), "d MMMM yyyy", { locale: es })}`, 140, 30);
+        doc.text(`Factura N°: ${Math.floor(Math.random() * 1000000)}`, 140, 36);
 
-      doc.save(`Factura_Egresos_${formatDate(new Date(), "yyyy-MM-dd")}.pdf`);
+        // Table of Expenses
+        const tableData = items.map(item => [
+            item.invoice_number || "N/A",
+            item.description || "Sin descripción",
+            item.category || "Sin Sin Categoria",
+            renderDate(item.date),
+            getAccountName(item.account_id),
+            getProviderName(item.provider_id),
+            formatCurrency(item.total_gross || 0),
+            formatCurrency(item.discounts || 0),
+            formatCurrency(item.total_net || 0),
+        ]);
 
-      Swal.fire({
-        icon: "success",
-        title: "PDF Generado",
-        text: "El comprobante se ha descargado correctamente",
-      });
+        autoTable(doc, {
+            startY: 60,
+            head: [["N° Egreso", "Descripción", "Fecha", "Cuenta", "Proveedor", "Base", "Impuestos", "Total Neto"]],
+            body: tableData,
+            theme: "grid",
+            styles: { fontSize: 10, cellPadding: 2 },
+            headStyles: { fillColor: [22, 160, 133], textColor: [255, 255, 255] },
+            columnStyles: {
+                0: { cellWidth: 20 },
+                1: { cellWidth: 40 },
+                2: { cellWidth: 20 },
+                3: { cellWidth: 20 },
+                4: { cellWidth: 20 },
+                5: { cellWidth: 20 },
+                6: { cellWidth: 20 },
+                7: { cellWidth: 20 },
+            },
+        });
+
+        // Total
+        const totalNet = items.reduce((sum, item) => sum + (item.total_net || 0), 0);
+        doc.setFontSize(12);
+        doc.text(`Total Neto: ${formatCurrency(totalNet)}`, 140, doc.lastAutoTable.finalY + 10);
+
+        // Footer
+        doc.setFontSize(10);
+        doc.text("Gracias por su negocio", 105, 280, { align: "center" });
+        doc.text("Este documento no tiene validez fiscal", 105, 286, { align: "center" });
+
+        // Save the PDF
+        doc.save(`Factura_Egresos_${formatDate(new Date(), "yyyy-MM-dd")}.pdf`);
+
+        Swal.fire({
+            icon: "success",
+            title: "PDF Generado",
+            text: "El comprobante se ha descargado correctamente",
+        });
     } catch (error) {
-      console.error("Error al generar PDF:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: `No se pudo generar el PDF: ${error.message}`,
-      });
+        console.error("Error al generar PDF:", error);
+        Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: `No se pudo generar el PDF: ${error.message}`,
+        });
     }
-  };
+};
 
+const handleBatchOperation = (operation) => {
+    if (selectedRowKeys.length === 0) {
+        Swal.fire({
+            title: 'Selección vacía',
+            text: 'Por favor, seleccione al menos un registro',
+            icon: 'warning',
+            confirmButtonColor: '#3085d6',
+            confirmButtonText: 'Entendido'
+        });
+        return;
+    }
+
+    const selectedItems = entries.filter(item => selectedRowKeys.includes(item.id));
+
+    switch (operation) {
+        case 'delete':
+            Swal.fire({
+                title: '¿Está seguro?',
+                text: `¿Desea eliminar ${selectedRowKeys.length} registro(s) seleccionado(s)?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const deletePromises = selectedRowKeys.map(id => handleDeleteItem(id));
+                    Promise.all(deletePromises)
+                        .then(() => {
+                            Swal.fire('¡Eliminado!', 'Los registros han sido eliminados.', 'success');
+                            setSelectedRowKeys([]);
+                            fetchData();
+                        })
+                        .catch(error => {
+                            console.error("Error eliminando registros:", error);
+                            Swal.fire('Error', 'Hubo un problema al eliminar los registros.', 'error');
+                        });
+                }
+            });
+            break;
+        case 'export':
+            console.log("Exportar seleccionados:", selectedItems);
+            // Add your export logic here
+            break;
+        default:
+            break;
+    }
+};
   const openDrawer = (images) => {
     setSelectedImages(images);
     setIsDrawerOpen(true);
@@ -336,11 +450,11 @@ const ExpenseTable = ({ entries = [], categories = [], accounts = [], onDelete, 
     {
       title: (
         <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-          N° de egreso
-          <input
+          <Text strong>N° de Egreso</Text>
+          <Input
             prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
             onChange={(e) => handleSearch(e.target.value, "invoice_number")}
-            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, border: "1px solid #d9d9d9", borderRadius: 4, outline: "none", width: 80 }}
+            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, borderRadius: 4, outline: "none", width: 80 }}
           />
         </div>
       ),
@@ -348,24 +462,16 @@ const ExpenseTable = ({ entries = [], categories = [], accounts = [], onDelete, 
       key: "invoice_number",
       sorter: (a, b) => a.invoice_number - b.invoice_number,
       render: (text) => <a>{text || "No disponible"}</a>,
-      width: 30,
+      width: 100,
     },
     {
       title: (
         <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-          Fecha y Hora
-          <input
+          <Text strong>Fecha y Hora</Text>
+          <Input
             prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
             onChange={(e) => handleSearch(e.target.value, "date")}
-            style={{
-              marginTop: 2,
-              padding: 4,
-              height: 28,
-              fontSize: 12,
-              border: "1px solid #d9d9d9",
-              borderRadius: 4,
-              outline: "none",
-            }}
+            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, borderRadius: 4, outline: "none" }}
           />
         </div>
       ),
@@ -374,16 +480,16 @@ const ExpenseTable = ({ entries = [], categories = [], accounts = [], onDelete, 
       render: (text) => renderDate(text),
       sorter: (a, b) => new Date(a.date) - new Date(b.date),
       sortDirections: ["descend", "ascend"],
-      width: 150,
+      width: 180,
     },
     {
       title: (
         <div className="flex flex-col" style={{ margin: "2px 0", gap: 1, lineHeight: 1 }}>
-          Categoría
-          <input
+          <Text strong>Categoría</Text>
+          <Input
             prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
             onChange={(e) => handleSearch(e.target.value, "category")}
-            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, border: "1px solid #d9d9d9", borderRadius: 4, outline: "none", width: 180 }}
+            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, borderRadius: 4, outline: "none", width: 180 }}
           />
         </div>
       ),
@@ -392,25 +498,16 @@ const ExpenseTable = ({ entries = [], categories = [], accounts = [], onDelete, 
       render: (category) => <Tag color="purple">{category}</Tag>,
       sortDirections: ["ascend", "descend"],
       ellipsis: true,
-      width: 130,
+      width: 150,
     },
     {
       title: (
         <div className="flex flex-col" style={{ margin: "2px 0", gap: 1, lineHeight: 1 }}>
-          Título
-          <input
+          <Text strong>Título</Text>
+          <Input
             prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
             onChange={(e) => handleSearch(e.target.value, "description")}
-            style={{
-              marginTop: 2,
-              padding: 4,
-              height: 28,
-              fontSize: 12,
-              border: "1px solid #d9d9d9",
-              borderRadius: 4,
-              outline: "none",
-              width: 180,
-            }}
+            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, borderRadius: 4, outline: "none", width: 180 }}
           />
         </div>
       ),
@@ -418,7 +515,7 @@ const ExpenseTable = ({ entries = [], categories = [], accounts = [], onDelete, 
       key: "description",
       sorter: (a, b) => a.description.localeCompare(b.description),
       sortDirections: ["ascend", "descend"],
-      width: 90,
+      width: 200,
       ellipsis: true,
       render: (text) => (
         <div
@@ -436,11 +533,11 @@ const ExpenseTable = ({ entries = [], categories = [], accounts = [], onDelete, 
     {
       title: (
         <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-          Cuenta
-          <input
+          <Text strong>Cuenta</Text>
+          <Input
             prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
             onChange={(e) => handleSearch(e.target.value, "account_id")}
-            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, border: "1px solid #d9d9d9", borderRadius: 4, outline: "none", width: 180 }}
+            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, borderRadius: 4, outline: "none", width: 180 }}
           />
         </div>
       ),
@@ -449,16 +546,16 @@ const ExpenseTable = ({ entries = [], categories = [], accounts = [], onDelete, 
       render: (id) => <Tag color="blue">{getAccountName(id)}</Tag>,
       sorter: (a, b) => getAccountName(a.account_id).localeCompare(getAccountName(b.account_id)),
       sortDirections: ["ascend", "descend"],
-      width: 100,
+      width: 150,
     },
     {
       title: (
         <div className="flex flex-col" style={{ margin: "2px 0", gap: 1, lineHeight: 1 }}>
-          Proveedor
-          <input
+          <Text strong>Proveedor</Text>
+          <Input
             prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
             onChange={(e) => handleSearch(e.target.value, "provider_id")}
-            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, border: "1px solid #d9d9d9", borderRadius: 4, outline: "none" }}
+            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, borderRadius: 4, outline: "none" }}
           />
         </div>
       ),
@@ -467,66 +564,90 @@ const ExpenseTable = ({ entries = [], categories = [], accounts = [], onDelete, 
       render: (providerId) => <Tag color="orange">{getProviderName(providerId)}</Tag>,
       sorter: (a, b) => getProviderName(a.provider_id).localeCompare(getProviderName(b.provider_id)),
       sortDirections: ["ascend", "descend"],
-      width: 100,
+      width: 150,
     },
     {
       title: (
         <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-          Base
-          <input
+          <Text strong>Base</Text>
+          <Input
             prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
             onChange={(e) => handleSearch(e.target.value, "total_gross")}
-            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, border: "1px solid #d9d9d9", borderRadius: 4, outline: "none" }}
+            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, borderRadius: 4, outline: "none" }}
           />
         </div>
       ),
       dataIndex: "total_gross",
       key: "total_gross",
-      render: (total_gross) => <span className="font-bold">{formatCurrency(total_gross)}</span>,
+      render: (total_gross) => <span className="font-semibold text-gray-700">{formatCurrency(total_gross)}</span>,
       sorter: (a, b) => a.total_gross - b.total_gross,
       sortDirections: ["descend", "ascend"],
-      width: 100,
+      width: 120,
     },
     {
       title: (
         <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-          Impuestos
-          <input
+          <Text strong>Impuestos</Text>
+          <Input
             prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
             onChange={(e) => handleSearch(e.target.value, "discounts")}
-            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, border: "1px solid #d9d9d9", borderRadius: 4, outline: "none" }}
+            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, borderRadius: 4, outline: "none" }}
           />
         </div>
       ),
       dataIndex: "discounts",
       key: "discounts",
-      render: (discounts) => <span className="font-bold">{formatCurrency(discounts)}</span>,
+      render: (discounts) => <span className="font-semibold text-gray-700">{formatCurrency(discounts)}</span>,
       sorter: (a, b) => a.discounts - b.discounts,
       sortDirections: ["descend", "ascend"],
-      width: 100,
+      width: 120,
     },
     {
       title: (
         <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-          Total Neto
-          <input
+          <Text strong>Total Neto</Text>
+          <Input
             prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
             onChange={(e) => handleSearch(e.target.value, "total_net")}
-            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, border: "1px solid #d9d9d9", borderRadius: 4, outline: "none" }}
+            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, borderRadius: 4, outline: "none" }}
           />
         </div>
       ),
       dataIndex: "total_net",
       key: "total_net",
-      render: (total_net) => <span className="font-bold">{formatCurrency(total_net)}</span>,
+      render: (total_net) => <span className="font-semibold text-gray-700">{formatCurrency(total_net)}</span>,
       sorter: (a, b) => a.total_net - b.total_net,
       sortDirections: ["descend", "ascend"],
-      width: 100,
+      width: 120,
+    },
+    {
+      title: "Acciones",
+      key: "actions",
+      render: (_, record) => (
+        <Space size="middle">
+          <Button
+            type="link"
+            icon={<EditOutlined />}
+            onClick={() => onEdit(record)}
+          >
+            Editar
+          </Button>
+          <Button
+            type="link"
+            icon={<DeleteOutlined />}
+            danger
+            onClick={() => handleDelete(record.id)}
+          >
+            Eliminar
+          </Button>
+        </Space>
+      ),
+      width: 150,
     },
   ];
 
   return (
-    <div className="px-5 py-2 bg-white">
+    <div className="px-6 py-4 bg-gray-50 rounded-lg shadow-sm">
       <Table
         rowSelection={rowSelection}
         dataSource={filteredEntries}
@@ -535,10 +656,12 @@ const ExpenseTable = ({ entries = [], categories = [], accounts = [], onDelete, 
         pagination={false}
         bordered
         size="middle"
-        className="thick-bordered-table"
+        className="thick-bordered-table custom-checkbox-size"
         onRow={(record) => ({
           onClick: (e) => {
-            if (e.target.tagName !== "INPUT" && e.target.tagName !== "BUTTON" && e.target.tagName !== "A") {
+            const { tagName } = e.target;
+            if (tagName !== "INPUT" && tagName !== "BUTTON" && tagName !== "A") {
+              rowSelection.onChange([record.id], [record]);
               setSelectedEntry(record);
               setIsViewModalOpen(true);
             }
@@ -548,22 +671,36 @@ const ExpenseTable = ({ entries = [], categories = [], accounts = [], onDelete, 
         scroll={{ x: "max-content" }}
       />
 
-      <ViewExpense entry={selectedEntry} visible={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} activeTab={activeTab} />
+
+      <FloatingActionMenu
+        selectedCount={selectedRowKeys.length}
+        onEdit={handleEditSelected}
+        onDelete={handleDeleteSelected}
+        visible={selectedRowKeys.length > 0}
+      />
+
+      <ViewExpense
+        entry={selectedEntry}
+        visible={isViewModalOpen}
+        onClose={() => setIsViewModalOpen(false)}
+        activeTab={activeTab}
+      />
 
       <Drawer
         visible={isDrawerOpen}
         onClose={closeDrawer}
         placement="right"
         width={420}
-        title="Comprobantes de egresos"
+        title="Comprobantes de Egresos"
         extra={
           selectedImages.length > 1 && (
             <Button
               type="primary"
               onClick={() => downloadAllImages(selectedImages)}
               icon={<DownloadOutlined />}
+              style={{ borderRadius: "6px", height: "40px" }}
             >
-              Descargar todas
+              Descargar Todas
             </Button>
           )
         }
@@ -575,13 +712,14 @@ const ExpenseTable = ({ entries = [], categories = [], accounts = [], onDelete, 
                 <img
                   src={image}
                   alt={`Comprobante ${index + 1}`}
-                  className="w-full h-full object-cover border rounded-md"
+                  className="w-full h-full object-cover border rounded-md shadow-sm"
                 />
                 <Button
                   type="primary"
                   className="absolute bottom-2 left-1/2 transform -translate-x-1/2"
                   onClick={() => downloadImage(image)}
                   icon={<DownloadOutlined />}
+                  style={{ borderRadius: "6px", height: "40px" }}
                 >
                   Descargar
                 </Button>
@@ -592,28 +730,44 @@ const ExpenseTable = ({ entries = [], categories = [], accounts = [], onDelete, 
       </Drawer>
 
       <style>{`
-        .ant-table-cell {
-          padding: 12px !important;
-          font-size: 14px;
-        }
-        .ant-table-thead > tr > th {
-          background-color: #f5f5f5;
+        .custom-table .ant-table-thead > tr > th {
+          background-color: #f9fafb;
           font-weight: 600;
+          color: #374151;
+          border-bottom: 2px solid #e5e7eb;
+          padding: 12px 16px;
+          font-size: 13px;
+          text-transform: uppercase;
         }
-        .ant-table-row:hover {
-          cursor: pointer;
+        .custom-table .ant-table-tbody > tr > td {
+          padding: 12px 16px;
+          font-size: 14px;
+          color: #4b5563;
+          border-bottom: 1px solid #e5e7eb;
         }
-        .ant-checkbox-wrapper {
+        .custom-table .ant-table-tbody > tr:hover > td {
+          background-color: #f9fafb;
+        }
+        .custom-table .ant-checkbox-wrapper {
           cursor: default;
         }
-        .ant-tag {
+        .custom-table .ant-tag {
           margin-right: 0;
-        }
-        .ant-input-affix-wrapper {
+          padding: 2px 8px;
+          font-size: 12px;
           border-radius: 4px;
         }
-        .hover\\:bg-gray-50:hover {
-          background-color: #f9f9f9;
+        .custom-table .ant-input {
+          border-radius: 4px;
+          border: 1px solid #d1d5db;
+          font-size: 12px;
+        }
+        .custom-table .ant-input:hover, .custom-table .ant-input:focus {
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+        .hover\\:bg-gray-100:hover {
+          background-color: #f9fafb;
         }
         .transition-colors {
           transition: background-color 0.3s ease;

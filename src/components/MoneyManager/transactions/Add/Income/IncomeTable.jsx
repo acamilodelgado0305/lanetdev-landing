@@ -14,7 +14,7 @@ import {
   SearchOutlined,
   CalendarOutlined,
 } from "@ant-design/icons";
-import FloatingActionMenu from "../../FloatingActionMenu";
+import FloatingActionMenu from "../../FloatingActionMenu"; // Ensure this path is correct
 import ViewIncome from "./ViewIncome";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -22,14 +22,23 @@ import autoTable from "jspdf-autotable";
 const { RangePicker } = DatePicker;
 const { Title, Text } = Typography;
 
-const IncomeTable = ({ entries = [], categories = [], accounts = [], onDelete, onEdit, onOpenContentModal, activeTab, dateRange }) => {
+const IncomeTable = ({
+  entries = [],
+  categories = [],
+  accounts = [],
+  onDelete,
+  onEdit,
+  onOpenContentModal,
+  activeTab,
+  dateRange,
+}) => {
   const navigate = useNavigate();
 
   const [selectedEntry, setSelectedEntry] = useState(null);
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedImages, setSelectedImages] = useState([]);
   const [searchText, setSearchText] = useState({});
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
   const [filteredEntries, setFilteredEntries] = useState(entries);
   const [typeFilter, setTypeFilter] = useState(null);
@@ -147,31 +156,131 @@ const IncomeTable = ({ entries = [], categories = [], accounts = [], onDelete, o
     }
   };
 
-  const handleEditSelected = () => {
-    if (selectedRowKeys.length === 1) {
-      onEdit(filteredEntries.find((entry) => entry.id === selectedRowKeys[0]));
-    }
+  const onSelectChange = (newSelectedRowKeys) => {
+    setSelectedRowKeys(newSelectedRowKeys);
+  };
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: onSelectChange,
+    columnWidth: 48,
+    selections: [
+      Table.SELECTION_ALL,
+      Table.SELECTION_INVERT,
+      {
+        key: "none",
+        text: "Deseleccionar todo",
+        onSelect: () => setSelectedRowKeys([]),
+      },
+    ],
   };
 
-  const handleDeleteSelected = () => {
-    if (selectedRowKeys.length > 0) {
-      Swal.fire({
-        title: "¿Está seguro?",
-        text: `¿Desea eliminar ${selectedRowKeys.length} registro(s) seleccionado(s)?`,
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#d33",
-        cancelButtonColor: "#3085d6",
-        confirmButtonText: "Sí, eliminar",
-        cancelButtonText: "Cancelar",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          selectedRowKeys.forEach((id) => onDelete(filteredEntries.find((entry) => entry.id === id)));
-          setSelectedRowKeys([]);
-        }
-      });
+  const handleEditSelected = () => {
+    if (selectedRowKeys.length === 1) {
+        navigate(`/index/moneymanager/ingresos/edit/${selectedRowKeys[0]}`, {
+            state: { returnTab: activeTab }, // Pasar activeTab como returnTab
+        });
     }
+};
+
+  const handleDeleteSelected = async () => {
+    if (selectedRowKeys.length === 0) {
+      Swal.fire({
+        title: "Selección vacía",
+        text: "Por favor, seleccione al menos un registro para eliminar.",
+        icon: "warning",
+        confirmButtonColor: "#3085d6",
+        confirmButtonText: "Entendido",
+      });
+      return;
+    }
+
+    Swal.fire({
+      title: "¿Está seguro?",
+      text: `¿Desea eliminar ${selectedRowKeys.length} registro(s) seleccionado(s)?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const API_BASE_URL = import.meta.env.VITE_API_FINANZAS || "/api";
+          const deletePromises = selectedRowKeys.map((id) =>
+            axios.delete(`${API_BASE_URL}/incomes/${id}`)
+          );
+          await Promise.all(deletePromises);
+
+          // Actualizar el estado local eliminando las entradas borradas
+          const updatedEntries = filteredEntries.filter(
+            (entry) => !selectedRowKeys.includes(entry.id)
+          );
+          setFilteredEntries(updatedEntries);
+
+          // Notificar al componente padre para actualizar las entradas globales
+          if (onDelete) {
+            const entriesToDelete = filteredEntries.filter((entry) =>
+              selectedRowKeys.includes(entry.id)
+            );
+            entriesToDelete.forEach((entry) =>
+              onDelete({ ...entry, entryType: "expense" })
+            );
+          }
+
+          // Limpiar selección
+          setSelectedRowKeys([]);
+
+          Swal.fire({
+            icon: "success",
+            title: "Eliminado",
+            text: "Los ingresos seleccionados han sido eliminados exitosamente.",
+            confirmButtonColor: "#3085d6",
+          });
+        } catch (error) {
+          console.error("Error al eliminar los ingresos:", error);
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "No se pudieron eliminar los ingresos. Por favor, intente de nuevo.",
+            confirmButtonColor: "#3085d6",
+          });
+        }
+      }
+    });
   };
+
+
+  // New function to handle copying selected items to clipboard
+  const handleCopySelected = () => {
+    const selectedItems = filteredEntries.filter((item) => selectedRowKeys.includes(item.id));
+    const textToCopy = selectedItems
+      .map((item) => {
+        return `N° Arqueo: ${item.arqueo_number || "N/A"}, Descripción: ${item.description}, Fecha: ${renderDate(item.date)}, Cuenta: ${getAccountName(item.account_id)}, Cajero: ${getCashierName(item.cashier_id)}, Monto: ${formatCurrency(item.amount)}, Desde: ${renderDate(item.start_period)}, Hasta: ${renderDate(item.end_period)}`;
+      })
+      .join("\n");
+
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      Swal.fire({
+        icon: "success",
+        title: "Copiado",
+        text: "Los elementos seleccionados han sido copiados al portapapeles.",
+        confirmButtonColor: "#3085d6",
+      });
+    }).catch((error) => {
+      console.error("Error al copiar al portapapeles:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo copiar al portapapeles. Por favor, intente de nuevo.",
+        confirmButtonColor: "#3085d6",
+      });
+    });
+  };
+
+
+
+
 
   const handleDownloadSelected = () => {
     if (selectedRowKeys.length === 0) {
@@ -278,280 +387,271 @@ const IncomeTable = ({ entries = [], categories = [], accounts = [], onDelete, o
 
   const columns = [
     {
-        title: (
-            <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                Fecha y Hora
-                <input
-                    prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
-                    onChange={(e) => handleSearch(e.target.value, "date")}
-                    style={{
-                        marginTop: 2,
-                        padding: 4,
-                        height: 28,
-                        fontSize: 12,
-                        border: "1px solid #d9d9d9",
-                        borderRadius: 4,
-                        outline: "none",
-                    }}
-                />
-            </div>
-        ),
-        dataIndex: "date",
-        key: "date",
-        render: (text) => renderDate(text),
-        sorter: (a, b) => new Date(a.date) - new Date(b.date),
-        sortDirections: ["descend", "ascend"],
-        width: 180,
+      title: (
+        <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+          Fecha y Hora
+          <input
+            prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
+            onChange={(e) => handleSearch(e.target.value, "date")}
+            style={{
+              marginTop: 2,
+              padding: 4,
+              height: 28,
+              fontSize: 12,
+              border: "1px solid #d9d9d9",
+              borderRadius: 4,
+              outline: "none",
+            }}
+          />
+        </div>
+      ),
+      dataIndex: "date",
+      key: "date",
+      render: (text) => renderDate(text),
+      sorter: (a, b) => new Date(a.date) - new Date(b.date),
+      sortDirections: ["descend", "ascend"],
+      width: 180,
     },
     {
-        title: (
-            <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                N° Arqueo
-                <input
-                    prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                    onChange={(e) => handleSearch(e.target.value, "arqueo_number")}
-                    style={{
-                        marginTop: 2,
-                        padding: 4,
-                        height: 28,
-                        fontSize: 12,
-                        border: '1px solid #d9d9d9',
-                        borderRadius: 4,
-                        outline: 'none',
-                    }}
-                />
-            </div>
-        ),
-        dataIndex: "arqueo_number",
-        key: "arqueo_number",
-        sorter: (a, b) => a.arqueo_number - b.arqueo_number,
-        render: (text) => <a>{text || "No disponible"}</a>,
-        width: 110,
+      title: (
+        <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+          N° Arqueo
+          <input
+            prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+            onChange={(e) => handleSearch(e.target.value, "arqueo_number")}
+            style={{
+              marginTop: 2,
+              padding: 4,
+              height: 28,
+              fontSize: 12,
+              border: '1px solid #d9d9d9',
+              borderRadius: 4,
+              outline: 'none',
+            }}
+          />
+        </div>
+      ),
+      dataIndex: "arqueo_number",
+      key: "arqueo_number",
+      sorter: (a, b) => a.arqueo_number - b.arqueo_number,
+      render: (text) => <a>{text || "No disponible"}</a>,
+      width: 110,
     },
     {
-        title: (
-            <div className="flex flex-col" style={{ margin: "2px 0", gap: 1, lineHeight: 1 }}>
-                Titulo
-                <input
-                    prefix={<SearchOutlined style={{ color: '#d9d9d9' }} />}
-                    onChange={(e) => handleSearch(e.target.value, "description")}
-                    style={{
-                        marginTop: 2,
-                        padding: 4,
-                        height: 28,
-                        fontSize: 12,
-                        border: '1px solid #d9d9d9',
-                        borderRadius: 4,
-                        outline: 'none',
-                    }}
-                />
-            </div>
-        ),
-        dataIndex: "description",
-        key: "description",
-        sorter: (a, b) => a.description.localeCompare(b.description),
-        sortDirections: ["ascend", "descend"],
-        ellipsis: true,
-        width: 300,
+      title: (
+        <div className="flex flex-col" style={{ margin: "2px 0", gap: 1, lineHeight: 1 }}>
+          Titulo
+          <input
+            prefix={<SearchOutlined style={{ color: '#d9d9d9' }} />}
+            onChange={(e) => handleSearch(e.target.value, "description")}
+            style={{
+              marginTop: 2,
+              padding: 4,
+              height: 28,
+              fontSize: 12,
+              border: '1px solid #d9d9d9',
+              borderRadius: 4,
+              outline: 'none',
+            }}
+          />
+        </div>
+      ),
+      dataIndex: "description",
+      key: "description",
+      sorter: (a, b) => a.description.localeCompare(b.description),
+      sortDirections: ["ascend", "descend"],
+      ellipsis: true,
+      width: 300,
     },
     {
-        title: (
-            <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                Cuenta
-                <input
-                    prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                    onChange={(e) => handleSearch(e.target.value, "account_id")}
-                    style={{
-                        marginTop: 2,
-                        padding: 4,
-                        height: 28,
-                        fontSize: 12,
-                        border: '1px solid #d9d9d9',
-                        borderRadius: 4,
-                        outline: 'none',
-                    }}
-                />
-            </div>
-        ),
-        dataIndex: "account_id",
-        key: "account_id",
-        render: (id) => <Tag color="blue">{getAccountName(id)}</Tag>,
-        sorter: (a, b) => getAccountName(a.account_id).localeCompare(getAccountName(b.account_id)),
-        sortDirections: ["ascend", "descend"],
-        width: 150,
+      title: (
+        <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+          Cuenta
+          <input
+            prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+            onChange={(e) => handleSearch(e.target.value, "account_id")}
+            style={{
+              marginTop: 2,
+              padding: 4,
+              height: 28,
+              fontSize: 12,
+              border: '1px solid #d9d9d9',
+              borderRadius: 4,
+              outline: 'none',
+            }}
+          />
+        </div>
+      ),
+      dataIndex: "account_id",
+      key: "account_id",
+      render: (id) => <Tag color="blue">{getAccountName(id)}</Tag>,
+      sorter: (a, b) => getAccountName(a.account_id).localeCompare(getAccountName(b.account_id)),
+      sortDirections: ["ascend", "descend"],
+      width: 150,
     },
     {
-        title: (
-            <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                Cajero
-                <input
-                    prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                    onChange={(e) => handleSearch(e.target.value, "cashier_id")}
-                    style={{
-                        marginTop: 2,
-                        padding: 4,
-                        height: 28,
-                        fontSize: 12,
-                        border: '1px solid #d9d9d9',
-                        borderRadius: 4,
-                        outline: 'none',
-                    }}
-                />
-            </div>
-        ),
-        dataIndex: "cashier_id",
-        key: "cashier_id",
-        sorter: (a, b) => getCashierName(a.cashier_id).localeCompare(getCashierName(b.cashier_id)),
-        render: (cashierId) => <Tag color="purple">{getCashierName(cashierId)}</Tag>,
-        width: 150,
+      title: (
+        <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+          Cajero
+          <input
+            prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+            onChange={(e) => handleSearch(e.target.value, "cashier_id")}
+            style={{
+              marginTop: 2,
+              padding: 4,
+              height: 28,
+              fontSize: 12,
+              border: '1px solid #d9d9d9',
+              borderRadius: 4,
+              outline: 'none',
+            }}
+          />
+        </div>
+      ),
+      dataIndex: "cashier_id",
+      key: "cashier_id",
+      sorter: (a, b) => getCashierName(a.cashier_id).localeCompare(getCashierName(b.cashier_id)),
+      render: (cashierId) => <Tag color="purple">{getCashierName(cashierId)}</Tag>,
+      width: 150,
     },
     {
-        title: (
-            <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                Monto Total
-                <input
-                    prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                    onChange={(e) => handleSearch(e.target.value, "cash_received")}
-                    style={{
-                        marginTop: 2,
-                        padding: 4,
-                        height: 28,
-                        fontSize: 12,
-                        border: '1px solid #d9d9d9',
-                        borderRadius: 4,
-                        outline: 'none',
-                    }}
-                />
-            </div>
-        ),
-        dataIndex: "cash_received",
-        key: "cash_received",
-        render: (cashReceived, record) => {
-            const totalAmount = parseFloat(record.amount) || 0;
-            const cashReceivedValue = parseFloat(cashReceived) || 0;
-            const difference = cashReceivedValue - totalAmount;
-            const isCashMatch = Math.abs(difference) < 0.01;
+      title: (
+        <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+          Monto Total
+          <input
+            prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+            onChange={(e) => handleSearch(e.target.value, "cash_received")}
+            style={{
+              marginTop: 2,
+              padding: 4,
+              height: 28,
+              fontSize: 12,
+              border: '1px solid #d9d9d9',
+              borderRadius: 4,
+              outline: 'none',
+            }}
+          />
+        </div>
+      ),
+      dataIndex: "cash_received",
+      key: "cash_received",
+      render: (cashReceived, record) => {
+        const totalAmount = parseFloat(record.amount) || 0;
+        const cashReceivedValue = parseFloat(cashReceived) || 0;
+        const difference = cashReceivedValue - totalAmount;
+        const isCashMatch = Math.abs(difference) < 0.01;
 
-            let indicator = null;
-            if (record.type === "arqueo" && !isCashMatch) {
-                if (difference > 0) {
-                    indicator = <span className="text-green-600 font-bold ml-2">$</span>;
-                } else if (difference < 0) {
-                    indicator = <span className="text-red-600 font-bold ml-2">-$</span>;
-                }
-            }
+        let indicator = null;
+        if (record.type === "arqueo" && !isCashMatch) {
+          if (difference > 0) {
+            indicator = <span className="text-green-600 font-bold ml-2">$</span>;
+          } else if (difference < 0) {
+            indicator = <span className="text-red-600 font-bold ml-2">-$</span>;
+          }
+        }
 
-            return (
-                <span className="flex items-center justify-end">
-                    <span className="font-bold">{formatCurrency(cashReceivedValue)}</span>
-                    {indicator}
-                </span>
-            );
-        },
-        sorter: (a, b) => (parseFloat(a.cash_received) || 0) - (parseFloat(b.cash_received) || 0),
-        sortDirections: ["descend", "ascend"],
-        width: 140,
+        return (
+          <span className="flex items-center justify-end">
+            <span className="font-bold">{formatCurrency(cashReceivedValue)}</span>
+            {indicator}
+          </span>
+        );
+      },
+      sorter: (a, b) => (parseFloat(a.cash_received) || 0) - (parseFloat(b.cash_received) || 0),
+      sortDirections: ["descend", "ascend"],
+      width: 140,
     },
     {
-        title: (
-            <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                Desde
-                <input
-                    prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                    onChange={(e) => handleSearch(e.target.value, "start_period")}
-                    style={{
-                        marginTop: 2,
-                        padding: 4,
-                        height: 28,
-                        fontSize: 12,
-                        border: '1px solid #d9d9d9',
-                        borderRadius: 4,
-                        outline: 'none',
-                    }}
-                />
-            </div>
+      title: (
+        <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+          Desde
+          <input
+            prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+            onChange={(e) => handleSearch(e.target.value, "start_period")}
+            style={{
+              marginTop: 2,
+              padding: 4,
+              height: 28,
+              fontSize: 12,
+              border: '1px solid #d9d9d9',
+              borderRadius: 4,
+              outline: 'none',
+            }}
+          />
+        </div>
+      ),
+      dataIndex: "start_period",
+      key: "start_period",
+      render: (text) => renderDate(text),
+      sorter: (a, b) => new Date(a.start_period || 0) - new Date(b.start_period || 0),
+      sortDirections: ["descend", "ascend"],
+      width: 120,
+    },
+    {
+      title: (
+        <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+          Hasta
+          <Input
+            prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+            onChange={(e) => handleSearch(e.target.value, "end_period")}
+            style={{
+              marginTop: 2,
+              padding: 4,
+              height: 28,
+              fontSize: 12,
+              border: '1px solid #d9d9d9',
+              borderRadius: 4,
+              outline: 'none',
+            }}
+          />
+        </div>
+      ),
+      dataIndex: "end_period",
+      key: "end_period",
+      render: (text) => renderDate(text),
+      sorter: (a, b) => new Date(a.end_period || 0) - new Date(b.end_period || 0),
+      sortDirections: ["descend", "ascend"],
+      width: 120,
+    },
+    {
+      title: "Comprobante",
+      dataIndex: "voucher",
+      key: "voucher",
+      render: (vouchers) =>
+        Array.isArray(vouchers) && vouchers.length > 0 ? (
+          <Button
+            type="link"
+            onClick={(e) => {
+              e.stopPropagation();
+              openDrawer(vouchers);
+            }}
+          >
+            Ver comprobante
+          </Button>
+        ) : (
+          "—"
         ),
-        dataIndex: "start_period",
-        key: "start_period",
-        render: (text) => renderDate(text),
-        sorter: (a, b) => new Date(a.start_period || 0) - new Date(b.start_period || 0),
-        sortDirections: ["descend", "ascend"],
-        width: 120,
+      width: 130,
     },
-    {
-        title: (
-            <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-                Hasta
-                <Input
-                    prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                    onChange={(e) => handleSearch(e.target.value, "end_period")}
-                    style={{
-                        marginTop: 2,
-                        padding: 4,
-                        height: 28,
-                        fontSize: 12,
-                        border: '1px solid #d9d9d9',
-                        borderRadius: 4,
-                        outline: 'none',
-                    }}
-                />
-            </div>
-        ),
-        dataIndex: "end_period",
-        key: "end_period",
-        render: (text) => renderDate(text),
-        sorter: (a, b) => new Date(a.end_period || 0) - new Date(b.end_period || 0),
-        sortDirections: ["descend", "ascend"],
-        width: 120,
-    },
-    {
-        title: "Comprobante",
-        dataIndex: "voucher",
-        key: "voucher",
-        render: (vouchers) =>
-            Array.isArray(vouchers) && vouchers.length > 0 ? (
-                <Button
-                    type="link"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        openDrawer(vouchers);
-                    }}
-                >
-                    Ver comprobante
-                </Button>
-            ) : (
-                "—"
-            ),
-        width: 130,
-    }
-];
+  ];
 
   return (
     <div className="px-5 py-2 bg-white">
+
       <Table
-        rowSelection={{
-          selectedRowKeys,
-          onChange: (newSelectedRowKeys) => setSelectedRowKeys(newSelectedRowKeys),
-          columnWidth: 48,
-          selections: [
-            Table.SELECTION_ALL,
-            Table.SELECTION_INVERT,
-            {
-              key: "none",
-              text: "Deseleccionar todo",
-              onSelect: () => setSelectedRowKeys([]),
-            },
-          ],
-        }}
+        rowSelection={rowSelection}
         dataSource={filteredEntries}
         columns={columns}
         rowKey={(record) => record.id}
         pagination={false}
         bordered
         size="middle"
+        className="thick-bordered-table custom-checkbox-size"
         onRow={(record) => ({
           onClick: (e) => {
-            if (e.target.tagName !== "INPUT" && e.target.tagName !== "BUTTON" && e.target.tagName !== "A") {
+            const { tagName } = e.target;
+            if (tagName !== "INPUT" && tagName !== "BUTTON" && tagName !== "A") {
+              rowSelection.onChange([record.id], [record]);
               setSelectedEntry(record);
               setIsViewModalOpen(true);
             }
@@ -561,7 +661,21 @@ const IncomeTable = ({ entries = [], categories = [], accounts = [], onDelete, o
         scroll={{ x: "max-content" }}
       />
 
-      <ViewIncome entry={selectedEntry} visible={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} activeTab={activeTab} />
+      {/* Add the FloatingActionMenu here */}
+      <FloatingActionMenu
+        selectedCount={selectedRowKeys.length}
+        onEdit={handleEditSelected}
+        onCopy={handleCopySelected}
+        onDelete={handleDeleteSelected}
+        visible={selectedRowKeys.length > 0}
+      />
+
+      <ViewIncome
+        entry={selectedEntry}
+        visible={isViewModalOpen}
+        onClose={() => setIsViewModalOpen(false)}
+        activeTab={activeTab}
+      />
 
       <Drawer
         visible={isDrawerOpen}
