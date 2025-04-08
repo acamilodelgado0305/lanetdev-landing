@@ -132,7 +132,7 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-6" onClick={onClose}>
-      <Card className="w-[95%] max-w-[1S00px] max-h-[85vh] bg-white shadow-xl  overflow-auto" bodyStyle={{ padding: 0 }} onClick={(e) => e.stopPropagation()}>
+      <Card className="w-[95%] max-w-[1400px] max-h-[85vh] bg-white shadow-xl  overflow-auto" bodyStyle={{ padding: 0 }} onClick={(e) => e.stopPropagation()}>
         {/* Encabezado */}
         <div className="p-6 bg-gray-100 border-b border-gray-200 flex justify-between items-center">
           <div>

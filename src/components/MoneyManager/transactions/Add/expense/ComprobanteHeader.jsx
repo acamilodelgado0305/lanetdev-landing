@@ -22,12 +22,15 @@ const ComprobanteEgresoHeader = ({
   setCategoria,
   categorias,
   isHiddenDetails,
+  handleCategoriaChange,
 }) => {
   // Función para obtener el número de identificación del proveedor
   const getProveedorIdentificacion = (provId) => {
     const prov = proveedores.find((p) => p.id === provId);
     return prov ? prov.numero_identificacion || 'N/A' : 'N/A';
   };
+
+  
 
   return (
     <div className="bg-white border border-gray-300 rounded-lg shadow-sm p-6 mb-6">
@@ -80,11 +83,10 @@ const ComprobanteEgresoHeader = ({
         </Col>
       </Row>
 
-      {/* Segunda Sección: Detalles del Comprobante */}
       <Row gutter={[16, 8]} className="p-4 border-t border-gray-200">
         <Col xs={24} md={12}>
-          <div className="mb-3">
-            <Text className="text-gray-700 font-medium block mb-1">Descripción</Text>
+          <div className="">
+            <Text className="text-gray-700 font-medium block mb-1">Titúlo</Text>
             <Input
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -93,7 +95,7 @@ const ComprobanteEgresoHeader = ({
             />
           </div>
           <div className="mb-3">
-            <Text className="text-gray-700 font-medium block mb-1">Tipo de Egreso</Text>
+            <Text className="text-gray-700 font-medium block ">Tipo de Egreso</Text>
             <Select
               value={tipo}
               onChange={(value) => setTipo(value)}
@@ -102,71 +104,17 @@ const ComprobanteEgresoHeader = ({
             >
               <Select.Option value="Legal">Legal</Select.Option>
               <Select.Option value="Diverso">Diverso</Select.Option>
-              <Select.Option value="Operativo">Operativo</Select.Option>
-              <Select.Option value="Inversión">Inversión</Select.Option>
             </Select>
-          </div>
-        </Col>
-        <Col xs={24} md={12}>
-          <div className="mb-3">
-            <Text className="text-gray-700 font-medium block mb-1">Proveedor</Text>
-            <Select
-              value={proveedor}
-              onChange={handleProveedorChange}
-              className="w-full h-9"
-              placeholder="Selecciona un proveedor"
-              showSearch
-              optionFilterProp="children"
-              filterOption={(input, option) =>
-                option.children.toLowerCase().includes(input.toLowerCase())
-              }
-            >
-              {Array.isArray(proveedores) &&
-                proveedores.map((provider) => (
-                  <Select.Option key={provider.id} value={provider.id}>
-                    {provider.nombre_comercial}
-                  </Select.Option>
-                ))}
-            </Select>
-          </div>
 
-          <div className="mb-3">
-            <Text className="text-gray-700 font-medium block mb-1">Proveedor</Text>
-            <Select
-              value={proveedor}
-              onChange={handleProveedorChange}
-              className="w-full h-9"
-              placeholder="Selecciona un proveedor"
-              showSearch
-              optionFilterProp="children"
-              filterOption={(input, option) =>
-                option.children.toLowerCase().includes(input.toLowerCase())
-              }
-            >
-              {Array.isArray(proveedores) &&
-                proveedores.map((provider) => (
-                  <Select.Option key={provider.id} value={provider.id}>
-                    {provider.nombre_comercial}
-                  </Select.Option>
-                ))}
-            </Select>
-          </div>
-          <div className="mb-3">
-            <Text className="text-gray-700 font-medium block mb-1">No. Identificación Proveedor</Text>
-            <Input
-              value={getProveedorIdentificacion(proveedor)}
-              disabled
-              className="w-full h-9 border-gray-300 rounded-md bg-gray-100 text-gray-600"
-            />
-          </div>
-          {!isHiddenDetails ? (
+            {!isHiddenDetails ? (
             <div className="mb-3">
-              <Text className="text-gray-700 font-medium block mb-1">Categoría Contable</Text>
+              <Text className="text-gray-700 font-medium block ">Categoría Contable</Text>
               <Select
                 value={categoria}
                 onChange={(value) => setCategoria(value)}
                 className="w-full h-9"
                 placeholder="Selecciona una categoría"
+                showSearch
                 dropdownRender={(menu) => (
                   <div>
                     {menu}
@@ -200,6 +148,41 @@ const ComprobanteEgresoHeader = ({
             // Placeholder invisible para mantener el tamaño
             <div className="mb-3" style={{ height: '72px' }}></div>
           )}
+          </div>
+        </Col>
+        <Col xs={24} md={12}>
+          <div className="mb-3">
+            <Text className="text-gray-700 font-medium block mb-1">Proveedor</Text>
+            <Select
+              value={proveedor}
+              onChange={handleProveedorChange}
+              className="w-full h-9"
+              placeholder="Selecciona un proveedor"
+              showSearch
+              optionFilterProp="children"
+              filterOption={(input, option) =>
+                option.children.toLowerCase().includes(input.toLowerCase())
+              }
+            >
+              {Array.isArray(proveedores) &&
+                proveedores.map((provider) => (
+                  <Select.Option key={provider.id} value={provider.id}>
+                    {provider.nombre_comercial}
+                  </Select.Option>
+                ))}
+            </Select>
+          </div>
+
+          
+          <div className="mb-3">
+            <Text className="text-gray-700 font-medium block mb-1">No. Identificación Proveedor</Text>
+            <Input
+              value={getProveedorIdentificacion(proveedor)}
+              disabled
+              className="w-full h-9 border-gray-300 rounded-md bg-gray-100 text-gray-600"
+            />
+          </div>
+          
         </Col>
       </Row>
     </div>

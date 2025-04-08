@@ -2,6 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+
+
+@layer components {
+  .custom-checkbox-size .ant-checkbox-inner {
+    @apply w-5 h-5; /* 24px por 24px */
+  }
+
+  .custom-checkbox-size .ant-checkbox {
+    @apply scale-125; /* Agrandar todo el checkbox */
+  }
+}
+
+
 /* Stilos Generales */
 
 html {
