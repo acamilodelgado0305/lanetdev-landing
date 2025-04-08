@@ -139,7 +139,7 @@ const ImportePersonalizado = ({ items, onItemsChange, onTotalsChange }) => {
   );
 
   return (
-    <div style={{ width: '100%' }}>
+    <div className='w-full'>
       <Table
         dataSource={items}
         columns={columns}

@@ -110,9 +110,10 @@ const ArqueoInputs = ({
   const renderContent = () => (
     <div className="flex flex-col md:flex-row gap-6">
       {/* Columna Izquierda - Información de Cajero y Cuenta */}
-      <div className="w-full md:w-96">
+      <div className="w-full w-[38em]">
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 space-y-6">
-          {/* Sección Cajero */}
+
+
           <div className="space-y-2">
             <label className="text-gray-700 font-semibold text-sm uppercase tracking-wide">
               Cajero
@@ -132,6 +133,27 @@ const ArqueoInputs = ({
               ))}
             </Select>
           </div>
+
+
+          <div className="space-y-4">
+            <Title level={4}>Período de Arqueo</Title>
+            <div className="flex space-x-4">
+              <DatePicker
+                value={startPeriod}
+                onChange={(date) => setStartPeriod(date)}
+                placeholder="Fecha Inicio"
+                className="w-40"
+              />
+              <DatePicker
+                value={endPeriod}
+                onChange={(date) => setEndPeriod(date)}
+                placeholder="Fecha Fin"
+                className="w-40"
+              />
+            </div>
+          </div>
+          {/* Sección Cajero */}
+
 
           {/* Sección Cuenta */}
           <div className="space-y-2">
@@ -159,13 +181,18 @@ const ArqueoInputs = ({
   const renderInvoiceHeader = () => (
     <div className="border-b-2 border-gray-200 pb-4 mb-6">
       {/* Encabezado superior */}
-      <div className="flex bg-gray-100 p-2 rounded-md justify-between items-center mb-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800">COMPROBANTE DE ARQUEO</h1>
-          <p className="text-sm text-gray-500">Documento de control interno</p>
+      <div className="flex  p-2 rounded-md justify-between items-center mb-4">
+        <div className="flex items-center space-x-3 w-full md:w-2/3">
+          <span className="text-gray-600 font-semibold whitespace-nowrap">Título:</span>
+          <Input
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Añade un título descriptivo"
+            className="w-full border p-2 rounded-md"
+          />
         </div>
         <div className="text-right">
-          <div className="flex items-center space-x-2 p-2 bg-white rounded-md shadow-sm">
+          <div className="flex items-center space-x-2 p-2 rounded-md   ">
             <span className="text-gray-700 font-semibold">No.</span>
             <Input
               value={arqueoNumber}
@@ -177,51 +204,23 @@ const ArqueoInputs = ({
         </div>
       </div>
 
-      <div className=" p-6">
+      <div className=" px-6">
 
-      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-    {/* Título */}
-    <div className="flex items-center space-x-3 w-full md:w-2/3">
-      <span className="text-gray-600 font-semibold whitespace-nowrap">Título:</span>
-      <Input
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        placeholder="Añade un título descriptivo"
-        className="w-full border p-2 rounded-md"
-      />
-    </div>
+        <div className="flex justify-end items-end  gap-4">
 
-    {/* Fecha */}
-    <div className="flex justify-between items-start mb-4">
-          <div className="space-y-2">
+          <div className="flex justify-between items-start mb-4">
+            <div className="space-y-2">
 
-          </div>
-          <div className="text-right space-y-2">
-            <p className="text-gray-600">
-              <span className="font-semibold">Fecha:</span> {date?.format("DD/MM/YYYY")}
-            </p>
+            </div>
+            <div className="text-right space-y-2">
+              <p className="text-gray-600">
+                <span className="font-semibold">Fecha:</span> {date?.format("DD/MM/YYYY")}
+              </p>
+            </div>
           </div>
         </div>
-  </div>
 
 
-        <div className="space-y-4">
-          <Title level={4}>Período de Arqueo</Title>
-          <div className="flex space-x-4">
-            <DatePicker
-              value={startPeriod}
-              onChange={(date) => setStartPeriod(date)}
-              placeholder="Fecha Inicio"
-              className="w-40"
-            />
-            <DatePicker
-              value={endPeriod}
-              onChange={(date) => setEndPeriod(date)}
-              placeholder="Fecha Fin"
-              className="w-40"
-            />
-          </div>
-        </div>
 
 
         <Divider />
@@ -339,31 +338,68 @@ const ArqueoInputs = ({
               </td>
             </tr>
 
-            {/* Importes Fijos */}
-            {showFixedAmounts && (
-              <tr className="hover:bg-gray-50">
-                <td className="p-3 border-b">Importes Fijos</td>
-                <td className="p-3 border-b text-right">
-                  {formatCurrency(customAmountsTotal)}
-                </td>
-              </tr>
-            )}
+            <tr className="hover:bg-gray-50">
+              <div className="w-full p-4 bg-gray-50 ">
 
-            {/* Subtotal */}
-            
+                <div className="p-3 bg-gray-50 border-t flex justify-between items-center ">
+                  <span className="text-sm font-medium text-gray-700">Mostrar Detalle de Importes Fijos</span>
+                  <button
+                    className="flex items-center space-x-2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                    onClick={() => setShowFixedAmounts(!showFixedAmounts)}
+                  >
+                    <span>{showFixedAmounts}</span>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className={`h-5 w-5 transition-transform transform ${showFixedAmounts ? "rotate-180" : ""
+                        }`}
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                </div>
 
-         
 
-            {/* Total */}
-            <tr className="bg-gray-100 font-bold">
-              <td className="p-3 border-t">Total a Cobrar</td>
-              <td className="p-3 border-t text-right">
+                {/* Importes Fijos */}
+                {showFixedAmounts && (
+                  <tr className="hover:bg-gray-50">
+                    <td className="p-3 border-b">Importes Fijos</td>
+                    <td className="p-3 border-b text-right">
+                      {formatCurrency(customAmountsTotal)}
+                    </td>
+                  </tr>
+                )}
+
+                {showFixedAmounts && (
+                  <div className="w-full p-4 bg-gray-50 ">
+                    <Title level={5} className="mb-3">Detalles de Importes Fijos</Title>
+                    <ImportePersonalizado
+                      items={customAmounts}
+                      onItemsChange={handleCustomAmountsChange}
+                      onTotalsChange={handleCustomTotalsChange}
+                    />
+                  </div>
+                )}
+
+
+              </div>
+
+
+            </tr>
+            <tr className="bg-green-400 font-bold">
+              <td className="p-6 border-t text-xl text-left">Total a Cobrar</td>
+              <td className="p-6 border-t text-xl text-right">
                 {formatCurrency(amount)}
               </td>
             </tr>
 
-               {/* Comisión */}
-               <tr className="hover:bg-gray-50">
+            {/* Comisión */}
+            <tr className="hover:bg-gray-50">
               <td className="p-3 border-b">Comisión ({localCommissionPorcentaje}%)</td>
               <td className="p-3 border-b text-right">
                 {formatCurrency(calculatedCommission)}
@@ -385,27 +421,11 @@ const ArqueoInputs = ({
           </tbody>
         </table>
 
-        {/* Checkbox para Importes Fijos */}
-        <div className="p-3 bg-gray-50 border-t">
-          <Checkbox
-            checked={showFixedAmounts}
-            onChange={(e) => setShowFixedAmounts(e.target.checked)}
-          >
-            Mostrar Detalle de Importes Fijos
-          </Checkbox>
-        </div>
 
-        {/* Detalle de Importes Fijos */}
-        {showFixedAmounts && (
-          <div className="p-4 bg-gray-50 border-t">
-            <Title level={5} className="mb-3">Detalles de Importes Fijos</Title>
-            <ImportePersonalizado
-              items={customAmounts}
-              onItemsChange={handleCustomAmountsChange}
-              onTotalsChange={handleCustomTotalsChange}
-            />
-          </div>
-        )}
+
+
+
+
       </div>
 
       {renderDiscrepancyMessage()}

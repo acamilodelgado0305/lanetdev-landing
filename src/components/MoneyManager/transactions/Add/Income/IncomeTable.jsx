@@ -176,11 +176,11 @@ const IncomeTable = ({
 
   const handleEditSelected = () => {
     if (selectedRowKeys.length === 1) {
-        navigate(`/index/moneymanager/ingresos/edit/${selectedRowKeys[0]}`, {
-            state: { returnTab: activeTab }, // Pasar activeTab como returnTab
-        });
+      navigate(`/index/moneymanager/ingresos/edit/${selectedRowKeys[0]}`, {
+        state: { returnTab: activeTab }, // Pasar activeTab como returnTab
+      });
     }
-};
+  };
 
   const handleDeleteSelected = async () => {
     if (selectedRowKeys.length === 0) {
@@ -210,7 +210,12 @@ const IncomeTable = ({
           const deletePromises = selectedRowKeys.map((id) =>
             axios.delete(`${API_BASE_URL}/incomes/${id}`)
           );
-          await Promise.all(deletePromises);
+          const responses = await Promise.all(deletePromises);
+
+          // Verificar si alguna eliminación resultó en un saldo negativo
+          const hasNegativeBalance = responses.some(
+            (response) => response.data.data.warning
+          );
 
           // Actualizar el estado local eliminando las entradas borradas
           const updatedEntries = filteredEntries.filter(
@@ -231,11 +236,23 @@ const IncomeTable = ({
           // Limpiar selección
           setSelectedRowKeys([]);
 
+          // Mostrar mensaje de éxito
           Swal.fire({
             icon: "success",
             title: "Eliminado",
             text: "Los ingresos seleccionados han sido eliminados exitosamente.",
             confirmButtonColor: "#3085d6",
+          }).then(() => {
+            // Si hay saldo negativo, mostrar una advertencia adicional
+            if (hasNegativeBalance) {
+              Swal.fire({
+                icon: "warning",
+                title: "Advertencia",
+                text: "Una o más cuentas tienen ahora un saldo negativo después de la eliminación.",
+                confirmButtonColor: "#3085d6",
+                confirmButtonText: "Entendido",
+              });
+            }
           });
         } catch (error) {
           console.error("Error al eliminar los ingresos:", error);

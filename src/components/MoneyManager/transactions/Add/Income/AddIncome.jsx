@@ -479,18 +479,16 @@ const AddIncome = ({ onTransactionAdded }) => {
   return (
     <div className=" max-w-[1300px] mx-auto bg-white shadow-lg rounded-lg">
       {/* Encabezado fijo */}
-      <div className="sticky top-0 z-10 bg-white p-4 border-b border-gray-200 flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <div className="bg-[#0052CC] p-2 rounded">
-            <FileTextOutlined className="text-white text-lg" />
+      <div className="sticky top-0 z-10 bg-white px-4 pt-4 border-b border-gray-200 flex justify-between items-center">
+
+          <div className="flex px-2 rounded-md justify-between items-center mb-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-800">COMPROBANTE DE INGRESO</h1>
+              <p className="text-sm text-gray-500">Documento de control interno</p>
+            </div>
+
           </div>
-          <div>
-            <span className="text-[#0052CC] text-sm">Ingresos /</span>
-            <Title level={3} className="m-0">
-              {id ? "Editar Ingreso" : "Crear Ingreso"}
-            </Title>
-          </div>
-        </div>
+  
         <Space size="middle">
           <div>
             <input
@@ -528,9 +526,9 @@ const AddIncome = ({ onTransactionAdded }) => {
           </Button>
         </Space>
       </div>
-  
+
       {/* Contenido principal */}
-      <div className="mt-6 p-4">
+      <div className="mt-2 p-4">
         <Radio.Group
           value={isArqueoChecked ? "arqueo" : isVentaChecked ? "venta" : null}
           onChange={(e) => handleCheckboxChange([e.target.value])}
@@ -539,7 +537,7 @@ const AddIncome = ({ onTransactionAdded }) => {
           <Radio value="arqueo">Arqueo</Radio>
           <Radio value="venta">Venta</Radio>
         </Radio.Group>
-  
+
         <div className="space-y-6">
           <ArqueoInputs
             isArqueoChecked={isArqueoChecked}
@@ -577,7 +575,7 @@ const AddIncome = ({ onTransactionAdded }) => {
           />
           {renderVentaInputs()}
         </div>
-  
+
         <div className="mt-6">
           <VoucherSection
             onVoucherChange={setVoucher}
