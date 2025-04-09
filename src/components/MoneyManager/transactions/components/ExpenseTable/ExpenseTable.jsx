@@ -588,7 +588,7 @@ const ExpenseTable = ({
     {
       title: (
         <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-          <Text strong>Impuestos</Text>
+          <Text strong>Descuentos</Text>
           <Input
             prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
             onChange={(e) => handleSearch(e.target.value, "discounts")}
@@ -598,6 +598,24 @@ const ExpenseTable = ({
       ),
       dataIndex: "discounts",
       key: "discounts",
+      render: (discounts) => <span className="font-semibold text-gray-700">{formatCurrency(discounts)}</span>,
+      sorter: (a, b) => a.discounts - b.discounts,
+      sortDirections: ["descend", "ascend"],
+      width: 120,
+    },
+    {
+      title: (
+        <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+          <Text strong>Total Impuestos</Text>
+          <Input
+            prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
+            onChange={(e) => handleSearch(e.target.value, "total_impuestos")}
+            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, borderRadius: 4, outline: "none" }}
+          />
+        </div>
+      ),
+      dataIndex: "total_impuestos",
+      key: "total_impuestos",
       render: (discounts) => <span className="font-semibold text-gray-700">{formatCurrency(discounts)}</span>,
       sorter: (a, b) => a.discounts - b.discounts,
       sortDirections: ["descend", "ascend"],
