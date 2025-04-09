@@ -618,6 +618,9 @@ const AddExpense = () => {
       {renderCompraInputs()}
 
       <div className="space-y-4 p-6">
+      <label className="text font-semibold text-sm uppercase tracking-wide">
+              ¿De dónde salío la plata?
+            </label>
         <AccountSelector
           selectedAccount={account}
           onAccountSelect={(value) => setAccount(value)}
