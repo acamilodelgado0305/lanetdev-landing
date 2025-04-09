@@ -6,7 +6,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import {
   AlertCircle,
 } from "lucide-react";
-import { PlusOutlined, EditOutlined, SwapOutlined, ArrowUpOutlined, ArrowDownOutlined, DeleteOutlined, DownloadOutlined, CloseOutlined } from "@ant-design/icons";
+import { PlusOutlined, EditOutlined, SwapOutlined, ReloadOutlined , ArrowDownOutlined, DeleteOutlined, DownloadOutlined, CloseOutlined } from "@ant-design/icons";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -70,6 +70,9 @@ const TransactionsDashboard = () => {
   const [monthlyIncome, setMonthlyIncome] = useState(0);
   const [monthlyExpenses, setMonthlyExpenses] = useState(0);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [dateRange, setDateRange] = useState(() => {
     const today = new Date();
     return [startOfMonth(today), endOfMonth(today)];
@@ -114,6 +117,25 @@ const TransactionsDashboard = () => {
   const closeModal = () => {
     setIsModalOpen(false);
     setTransactionType(null);
+  };
+
+
+  const handleRefreshBalances = async () => {
+    setIsRefreshing(true);
+    try {
+      // Refresh all balance-related data
+      await Promise.all([
+        fetchGeneralBalance(),
+        fetchMonthlyData(),
+        fetchData(tabToEndpoint[activeTab])
+      ]);
+      message.success("Balances actualizados exitosamente");
+    } catch (error) {
+      message.error("Error al actualizar los balances");
+      console.error("Refresh error:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const fetchData = async (endpoint) => {
@@ -306,6 +328,17 @@ const TransactionsDashboard = () => {
                 Nueva Transferencia
               </Button>
             </Tooltip>
+
+            <Tooltip title="Actualizar balances">
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={handleRefreshBalances}
+              loading={isRefreshing}
+              style={{ backgroundColor: "#1890ff", borderColor: "#1890ff", color: "white" }}
+            >
+              {isRefreshing ? "Actualizando..." : "Actualizar"}
+            </Button>
+          </Tooltip>
           </Space>
         </div>
         <div className="flex justify-between items-start flex-wrap gap-4">
