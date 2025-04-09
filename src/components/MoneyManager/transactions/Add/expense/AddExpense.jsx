@@ -37,7 +37,7 @@ const AddExpense = () => {
   const [accounts, setAccounts] = useState([]);
   const [date, setDate] = useState(dayjs());
   const [proveedores, setProveedores] = useState([]);
-  
+
   const [loading, setLoading] = useState(false);
   const [proveedor, setProveedor] = useState("");
   const [categoria, setCategoria] = useState("");
@@ -91,7 +91,7 @@ const AddExpense = () => {
   };
 
 
- 
+
   // Función para cargar los datos del egreso existente
   const fetchExpenseData = async () => {
     try {
@@ -112,7 +112,7 @@ const AddExpense = () => {
       setFacturaNumber(data.invoice_number || "");
       setFacturaProvNumber(data.provider_invoice_number || "");
       setTipo(data.type || "");
-    
+
 
       // Mapear ítems y totales
       if (data.items && data.items.length > 0) {
@@ -572,16 +572,15 @@ const AddExpense = () => {
 
   return (
     <div className="max-w-[1400px] mx-auto bg-white  ">
-      <div className="sticky top-0 z-10 bg-white p-4  flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <div className="bg-[#0052CC] p-2">
-            <FileTextOutlined className="text-white" />
+      <div className="sticky top-0 z-10 bg-white px-4 pt-4 border-b border-gray-200 flex justify-between items-center">
+        <div className="flex px-2 rounded-md justify-between items-center mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800">COMPROBANTE DE EGRESO</h1>
+            <p className="text-sm text-gray-500">Documento de control interno</p>
           </div>
-          <div className="flex flex-col">
-            <span className="text-[#0052CC] text-sm">Egresos /</span>
-            <Title level={3}>{id ? "Editar" : "Nuevo"}</Title>
-          </div>
+
         </div>
+
         <Space>
 
           <div className="px-6 py-4 flex justify-end">

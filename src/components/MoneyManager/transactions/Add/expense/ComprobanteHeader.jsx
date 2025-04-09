@@ -33,25 +33,11 @@ const ComprobanteEgresoHeader = ({
   
 
   return (
-    <div className="bg-white border border-gray-300 rounded-lg shadow-sm p-6 mb-6">
-      {/* Encabezado Empresarial */}
-      <Row justify="space-between" align="middle" className="mb-4">
-        <Col>
-          <div className="flex items-center gap-4">
-            {/* Logo (Opcional, descomentarlo si tienes uno) */}
-            {/* <img src={logoPlaceholder} alt="Logo Empresa" className="h-12 w-12 object-contain" /> */}
-            <div>
-              <Title level={3} className="text-gray-900 font-semibold m-0">
-                COMPROBANTE DE EGRESO
-              </Title>
-            </div>
-          </div>
-        </Col>
-        
-      </Row>
+    <div className="bg-white  shadow-sm px-6 py-2 mb-6">
+      
 
       {/* Primera Sección: Números de Factura */}
-      <Row gutter={[16, 8]} className="bg-gray-50 p-4 rounded-md mb-4 border border-gray-200">
+      <Row gutter={[16, 8]} className=" px-4 rounded-md mb-4 ">
         <Col span={8}>
           <Text className="text-gray-700 font-medium block mb-1">No. Comprobante</Text>
           <Input

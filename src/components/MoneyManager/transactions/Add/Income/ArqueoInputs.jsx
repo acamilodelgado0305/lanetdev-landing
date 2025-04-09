@@ -111,7 +111,7 @@ const ArqueoInputs = ({
     <div className="flex flex-col md:flex-row gap-6">
       {/* Columna Izquierda - Información de Cajero y Cuenta */}
       <div className="w-full md:w-1/2">
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 space-y-6">
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 space-y-6 mb-2">
           {/* Sección Cajero */}
           <div className="space-y-2">
             <label className="text-gray-700 font-semibold text-sm uppercase tracking-wide">
@@ -153,7 +153,7 @@ const ArqueoInputs = ({
           </div>
 
           {/* Sección Cuenta */}
-          <div className="space-y-2">
+          <div className="space-y-2 ">
             <label className="text-gray-700 font-semibold text-sm uppercase tracking-wide">
               Donde ingresa el dinero *
             </label>
@@ -165,7 +165,22 @@ const ArqueoInputs = ({
             />
           </div>
         </div>
+
+
+        <div className="space-y-2 ">
+          <Title level={4}>Observaciones</Title>
+          <textarea
+            value={comentarios}
+            onChange={(e) => setComentarios(e.target.value)}
+            placeholder="Añade comentarios adicionales"
+            rows={5}
+            className="w-full border p-2"
+          />
+        </div>
       </div>
+
+
+      
 
       {/* Columna Derecha - Detalles de la Factura */}
       <div className="w-full md:w-1/2">
@@ -178,7 +193,7 @@ const ArqueoInputs = ({
   const renderInvoiceHeader = () => (
     <div className="border-b-2 border-gray-200 pb-4 mb-6">
       {/* Encabezado superior */}
-      <div className="flex  p-2 rounded-md justify-between items-center mb-4">
+      <div className="flex  p-2 rounded-md justify-between items-center mb-2 mt-[-2em]">
         <div className="flex items-center space-x-3 w-full md:w-2/3">
           <span className="text-gray-600 font-semibold whitespace-nowrap">Título:</span>
           <Input
@@ -205,7 +220,7 @@ const ArqueoInputs = ({
 
         <div className="flex justify-end items-end  gap-4">
 
-          <div className="flex justify-between items-start mb-4">
+          <div className="flex justify-between items-start mb-2">
             <div className="space-y-2">
 
             </div>
@@ -220,22 +235,13 @@ const ArqueoInputs = ({
 
 
 
-        <Divider />
+  
 
         {renderContent()}
 
 
 
-        <div className="space-y-4">
-          <Title level={4}>Observaciones</Title>
-          <textarea
-            value={comentarios}
-            onChange={(e) => setComentarios(e.target.value)}
-            placeholder="Añade comentarios adicionales"
-            rows={3}
-            className="w-full border p-2"
-          />
-        </div>
+        
       </div>
 
     </div>
@@ -388,9 +394,9 @@ const ArqueoInputs = ({
 
 
             </tr>
-            <tr className="bg-green-400 font-bold">
-              <td className="p-6 border-t text-xl text-left">Total a Cobrar</td>
-              <td className="p-6 border-t text-xl text-right">
+            <tr className="bg-blue-600 font-bold">
+              <td className="p-6 border-t text-xl text-white text-left">Total a Cobrar</td>
+              <td className="p-6 border-t text-xl  text-white text-right">
                 {formatCurrency(amount)}
               </td>
             </tr>
