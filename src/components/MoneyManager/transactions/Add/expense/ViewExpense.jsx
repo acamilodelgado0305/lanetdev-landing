@@ -11,6 +11,7 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const [accounts, setAccounts] = useState([]);
+  const [providers, setProviders] = useState([]); // Nuevo estado para proveedores
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [currentImage, setCurrentImage] = useState(null);
 
@@ -20,6 +21,7 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
 
   useEffect(() => {
     fetchAccounts();
+    fetchProviders(); // Llamada para obtener proveedores
   }, []);
 
   const fetchExpenseData = async (id) => {
@@ -44,7 +46,29 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
     }
   };
 
+  const fetchProviders = async () => {
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_FINANZAS || "/api";
+      const response = await axios.get(`${API_BASE_URL}/terceros`);
+      const providersArray = response.data;
+      if (Array.isArray(providersArray) && providersArray.length > 0) {
+        setProviders(providersArray);
+      } else {
+        setProviders([]);
+      }
+    } catch (error) {
+      console.error("Error al obtener los proveedores:", error);
+      setProviders([]);
+    }
+  };
+
   const getAccountName = (accountId) => accounts.find((acc) => acc.id === accountId)?.name || "No asignada";
+
+  const getProviderName = (providerId) => {
+    if (!providerId) return "Proveedor no especificado";
+    const provider = providers.find((provider) => provider.id === providerId);
+    return provider ? provider.nombre : "Proveedor no encontrado";
+  };
 
   const handleEditSelected = () => navigate(`/index/moneymanager/egresos/edit/${entry.id}`, { state: { returnTab: activeTab } });
 
@@ -57,10 +81,37 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
   };
 
   const renderDate = (date) => {
-    if (!date) return "Sin fecha";
+    if (!date) {
+      console.log("Fecha recibida es nula o indefinida:", date);
+      return "Sin fecha";
+    }
+
     try {
-      const parsedDate = DateTime.fromISO(date, { zone: "America/Bogota" });
-      return parsedDate.isValid ? parsedDate.setLocale("es").toFormat("d 'de' MMMM 'de' yyyy HH:mm") : "Fecha inválida";
+      let parsedDate;
+
+      if (typeof date === "string") {
+        const cleanDate = date.endsWith("Z") ? date.substring(0, date.length - 1) : date;
+        parsedDate = DateTime.fromISO(cleanDate, { zone: "America/Bogota" });
+        if (!parsedDate.isValid) {
+          parsedDate = DateTime.fromSQL(cleanDate, { zone: "America/Bogota" });
+        }
+        if (!parsedDate.isValid) {
+          const formats = ["yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd'T'HH:mm:ss", "dd/MM/yyyy HH:mm:ss", "yyyy-MM-dd"];
+          for (const format of formats) {
+            parsedDate = DateTime.fromFormat(cleanDate, format, { zone: "America/Bogota" });
+            if (parsedDate.isValid) break;
+          }
+        }
+      } else if (date instanceof Date) {
+        parsedDate = DateTime.fromJSDate(date, { zone: "America/Bogota" });
+      }
+
+      if (!parsedDate || !parsedDate.isValid) {
+        console.error("No se pudo parsear la fecha:", date);
+        return "Fecha inválida";
+      }
+
+      return parsedDate.setLocale("es").toFormat("d 'de' MMMM 'de' yyyy HH:mm");
     } catch (error) {
       console.error("Error al formatear la fecha:", error);
       return "Fecha inválida";
@@ -123,12 +174,11 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
             <div className="col-span-2">
               <div className="mb-6">
                 <div className="grid grid-cols-2 gap-4 text-sm text-gray-700" style={{ fontFamily: "SF Pro Text, sans-serif" }}>
-           
                   <div><span className="font-bold">Cuenta:</span> {getAccountName(expenseData.account_id)}</div>
                   <div><span className="font-bold">Tipo:</span> {expenseData.type}</div>
                   <div><span className="font-bold">Descripción:</span> {expenseData.description}</div>
                   <div><span className="font-bold">Estado:</span> {expenseData.estado ? "Activo" : "Inactivo"}</div>
-                  <div><span className="font-bold">Proveedor ID:</span> {expenseData.provider_id}</div>
+                  <div><span className="font-bold">Proveedor:</span> {getProviderName(expenseData.provider_id)}</div>
                   <div><span className="font-bold">Categoría:</span> {expenseData.category}</div>
                 </div>
               </div>
@@ -169,8 +219,8 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
                   <div className="flex justify-between mb-2"><span>Total Bruto</span><span>{formatCurrency(expenseData.total_gross)}</span></div>
                   <div className="flex justify-between mb-2"><span>Descuentos</span><span className="text-green-600">-{formatCurrency(expenseData.discounts)}</span></div>
                   <div className="flex justify-between mb-2"><span>Subtotal</span><span>{formatCurrency(expenseData.subtotal)}</span></div>
-                  <div className="flex justify-between mb-2"><span></span><span>{formatCurrency(expenseData.ret_vat)}</span></div>
-                  <div className="flex justify-between mb-2"><span></span><span>{formatCurrency(expenseData.ret_ica)}</span></div>
+                  <div className="flex justify-between mb-2"><span>IVA </span><span>{formatCurrency(expenseData.ret_vat)}</span></div>
+                  <div className="flex justify-between mb-2"><span>ICA </span><span>{formatCurrency(expenseData.ret_ica)}</span></div>
                   <div className="flex justify-between mb-2"><span>Total Impuestos</span><span>{formatCurrency(expenseData.total_impuestos)}</span></div>
                   <div className="flex justify-between border-t pt-2 font-semibold"><span>Total Neto</span><span className="text-red-600">{formatCurrency(expenseData.total_net)}</span></div>
                 </div>
@@ -206,7 +256,7 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
         {/* Modal */}
         <Modal open={isImageModalOpen} onCancel={() => setIsImageModalOpen(false)} footer={null} width="90%" style={{ maxWidth: "1600px" }} bodyStyle={{ padding: 0, height: "80vh" }} centered>
           <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-            {currentImage?.endsWith(".pdf") ? <iframe src={currentImage} className="w-full h-full bordering-0" /> : <img src={currentImage} alt="Comprobante" className="max-w-full max-h-full object-contain" />}
+            {currentImage?.endsWith(".pdf") ? <iframe src={currentImage} className="w-full h-full border-0" /> : <img src={currentImage} alt="Comprobante" className="max-w-full max-h-full object-contain" />}
           </div>
         </Modal>
       </Card>
