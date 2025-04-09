@@ -13,6 +13,8 @@ import {
   FilterOutlined,
   SearchOutlined,
   CalendarOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined
 } from "@ant-design/icons";
 import FloatingActionMenu from "../../FloatingActionMenu"; // Ensure this path is correct
 import ViewIncome from "./ViewIncome";
@@ -634,20 +636,29 @@ const IncomeTable = ({
       title: "Comprobante",
       dataIndex: "voucher",
       key: "voucher",
-      render: (vouchers) =>
+      render: (vouchers) => (
         Array.isArray(vouchers) && vouchers.length > 0 ? (
-          <Button
-            type="link"
-            onClick={(e) => {
-              e.stopPropagation();
-              openDrawer(vouchers);
-            }}
-          >
-            Ver comprobante
-          </Button>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <Tooltip title="Comprobantes disponibles">
+              <CheckCircleOutlined style={{ color: 'green', fontSize: 24 }} />
+            </Tooltip>
+            <Button
+              type="link"
+              onClick={(e) => {
+                e.stopPropagation();
+                openDrawer(vouchers);
+              }}
+              style={{ padding: 0, height: 'auto' }}
+            />
+          </div>
         ) : (
-          "—"
-        ),
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <Tooltip title="Sin comprobantes">
+              <CloseCircleOutlined style={{ color: 'red', fontSize: 24 }} />
+            </Tooltip>
+          </div>
+        )
+      ),
       width: 130,
     },
   ];
