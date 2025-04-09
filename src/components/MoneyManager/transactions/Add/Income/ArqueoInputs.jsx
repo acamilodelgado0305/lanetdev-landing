@@ -110,10 +110,9 @@ const ArqueoInputs = ({
   const renderContent = () => (
     <div className="flex flex-col md:flex-row gap-6">
       {/* Columna Izquierda - Información de Cajero y Cuenta */}
-      <div className="w-full w-[38em]">
+      <div className="w-full md:w-1/2">
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 space-y-6">
-
-
+          {/* Sección Cajero */}
           <div className="space-y-2">
             <label className="text-gray-700 font-semibold text-sm uppercase tracking-wide">
               Cajero
@@ -134,7 +133,7 @@ const ArqueoInputs = ({
             </Select>
           </div>
 
-
+          {/* Sección Período de Arqueo */}
           <div className="space-y-4">
             <Title level={4}>Período de Arqueo</Title>
             <div className="flex space-x-4">
@@ -152,8 +151,6 @@ const ArqueoInputs = ({
               />
             </div>
           </div>
-          {/* Sección Cajero */}
-
 
           {/* Sección Cuenta */}
           <div className="space-y-2">
@@ -171,7 +168,7 @@ const ArqueoInputs = ({
       </div>
 
       {/* Columna Derecha - Detalles de la Factura */}
-      <div className="flex-1 w-full">
+      <div className="w-full md:w-1/2">
         {renderInvoiceDetails()}
       </div>
     </div>
