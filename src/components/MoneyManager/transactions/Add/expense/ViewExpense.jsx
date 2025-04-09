@@ -50,56 +50,43 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
 
   const formatCurrency = (amount) => new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(amount || 0);
 
-    const renderDate = (date) => {
-      if (!date) {
-        console.log("Fecha recibida es nula o indefinida:", date);
-        return "Sin fecha";
+  const renderDate = (date) => {
+    if (!date) {
+      console.log("Fecha recibida es nula o indefinida:", date);
+      return "Sin fecha";
+    }
+
+    try {
+      let parsedDate;
+
+      if (typeof date === "string") {
+        const cleanDate = date.endsWith("Z") ? date.substring(0, date.length - 1) : date;
+        parsedDate = DateTime.fromISO(cleanDate, { zone: "America/Bogota" });
+        if (!parsedDate.isValid) {
+          parsedDate = DateTime.fromSQL(cleanDate, { zone: "America/Bogota" });
+        }
+        if (!parsedDate.isValid) {
+          const formats = ["yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd'T'HH:mm:ss", "dd/MM/yyyy HH:mm:ss", "yyyy-MM-dd"];
+          for (const format of formats) {
+            parsedDate = DateTime.fromFormat(cleanDate, format, { zone: "America/Bogota" });
+            if (parsedDate.isValid) break;
+          }
+        }
+      } else if (date instanceof Date) {
+        parsedDate = DateTime.fromJSDate(date, { zone: "America/Bogota" });
       }
-  
-      try {
-        let parsedDate;
-  
-        if (typeof date === "string") {
-          const cleanDate = date.endsWith("Z") ? date.substring(0, date.length - 1) : date;
-  
-          // Intentar con ISO primero
-          parsedDate = DateTime.fromISO(cleanDate, { zone: "America/Bogota" });
-  
-          // Si no funciona, intentar con formato SQL
-          if (!parsedDate.isValid) {
-            console.log("Intento con fromSQL para:", cleanDate);
-            parsedDate = DateTime.fromSQL(cleanDate, { zone: "America/Bogota" });
-          }
-  
-          // Si aún no es válido, intentar formatos comunes
-          if (!parsedDate.isValid) {
-            console.log("Intento con formatos personalizados para:", cleanDate);
-            const formats = [
-              "yyyy-MM-dd HH:mm:ss",
-              "yyyy-MM-dd'T'HH:mm:ss",
-              "dd/MM/yyyy HH:mm:ss",
-              "yyyy-MM-dd",
-            ];
-            for (const format of formats) {
-              parsedDate = DateTime.fromFormat(cleanDate, format, { zone: "America/Bogota" });
-              if (parsedDate.isValid) break;
-            }
-          }
-        } else if (date instanceof Date) {
-          parsedDate = DateTime.fromJSDate(date, { zone: "America/Bogota" });
-        }
-  
-        if (!parsedDate || !parsedDate.isValid) {
-          console.error("No se pudo parsear la fecha:", date, "Valor recibido:", typeof date, date);
-          return "Fecha inválida";
-        }
-  
-        return parsedDate.setLocale("es").toFormat("d 'de' MMMM 'de' yyyy HH:mm");
-      } catch (error) {
-        console.error("Error al formatear la fecha:", error, "Fecha original:", date);
+
+      if (!parsedDate || !parsedDate.isValid) {
+        console.error("No se pudo parsear la fecha:", date);
         return "Fecha inválida";
       }
-    };
+
+      return parsedDate.setLocale("es").toFormat("d 'de' MMMM 'de' yyyy HH:mm");
+    } catch (error) {
+      console.error("Error al formatear la fecha:", error);
+      return "Fecha inválida";
+    }
+  };
 
   const normalizeVouchers = (vouchers) => {
     if (Array.isArray(vouchers)) return vouchers;
@@ -119,7 +106,7 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
     const isImage = /\.(jpg|png|gif)$/i.test(url);
     const isPDF = url.endsWith(".pdf");
     return (
-      <div className="relative w-full h-40 bg-gray-50  border border-gray-200 overflow-hidden shadow-sm">
+      <div className="relative w-full h-40 bg-gray-50 border border-gray-200 overflow-hidden shadow-sm">
         {isImage ? <img src={url} alt="Comprobante" className="w-full h-full object-cover" /> : isPDF ? <iframe src={url} title="PDF" className="w-full h-full border-0" /> : null}
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 hover:bg-opacity-30 transition-all">
           <Button type="link" icon={<EyeOutlined />} onClick={() => { setCurrentImage(url); setIsImageModalOpen(true); }} className="text-white opacity-0 hover:opacity-100" />
@@ -132,11 +119,13 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-6" onClick={onClose}>
-      <Card className="w-[95%] max-w-[1400px] max-h-[85vh] bg-white shadow-xl  overflow-auto" bodyStyle={{ padding: 0 }} onClick={(e) => e.stopPropagation()}>
+      <Card className="w-[95%] max-w-[1400px] max-h-[85vh] bg-white shadow-xl overflow-auto" bodyStyle={{ padding: 0 }} onClick={(e) => e.stopPropagation()}>
         {/* Encabezado */}
         <div className="p-6 bg-gray-100 border-b border-gray-200 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-800" style={{ fontFamily: "SF Pro Display, sans-serif" }}>Egreso #{expenseData?.invoice_number || "N/A"}</h1>
+            <h1 className="text-2xl font-semibold text-gray-800" style={{ fontFamily: "SF Pro Display, sans-serif" }}>
+              Egreso #{expenseData?.invoice_number || expenseData?.provider_invoice_number || "N/A"}
+            </h1>
             <p className="text-sm text-gray-600">{renderDate(expenseData?.date)}</p>
           </div>
           <div className="flex space-x-3">
@@ -148,28 +137,31 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
 
         {/* Cuerpo */}
         {loading ? (
-          <div className="flex justify-center items-center h-64"><div className="animate-spin  h-12 w-12 border-t-2 border-blue-500"></div></div>
+          <div className="flex justify-center items-center h-64"><div className="animate-spin h-12 w-12 border-t-2 border-blue-500"></div></div>
         ) : expenseData ? (
           <div className="p-6 grid grid-cols-3 gap-6">
             {/* Detalles y tabla */}
             <div className="col-span-2">
               <div className="mb-6">
-                
                 <div className="grid grid-cols-2 gap-4 text-sm text-gray-700" style={{ fontFamily: "SF Pro Text, sans-serif" }}>
-                <div><span className="font-bold">Titulo:</span> {(expenseData.category)}</div>
-                <div><span className="font-bold">Categoria:</span> {(expenseData.description)}</div>
+           
+         
                   <div><span className="font-bold">Cuenta:</span> {getAccountName(expenseData.account_id)}</div>
-                  <div><span className="font-bold">Provedor:</span> {(expenseData.pro)}</div>
-                  
+                  <div><span className="font-bold">Tipo:</span> {expenseData.type}</div>
+                  <div><span className="font-bold">Descripción:</span> {expenseData.description}</div>
+                  <div><span className="font-bold">Estado:</span> {expenseData.estado ? "Activo" : "Inactivo"}</div>
+                  <div><span className="font-bold">Proveedor ID:</span> {expenseData.provider_id}</div>
+                  <div><span className="font-bold">Categoría:</span> {expenseData.category}</div>
                 </div>
               </div>
 
-              <table className="w-full text-sm border border-gray-200 ">
+              <table className="w-full text-sm border border-gray-200">
                 <thead>
                   <tr className="bg-gray-100 text-gray-700">
                     <th className="py-3 px-4 text-left font-semibold">Producto</th>
                     <th className="py-3 px-4 text-center font-semibold">Cantidad</th>
                     <th className="py-3 px-4 text-center font-semibold">Precio Unitario</th>
+                    <th className="py-3 px-4 text-center font-semibold">Descuento</th>
                     <th className="py-3 px-4 text-center font-semibold">Impuesto (%)</th>
                     <th className="py-3 px-4 text-center font-semibold">Retención (%)</th>
                     <th className="py-3 px-4 text-right font-semibold">Total</th>
@@ -178,9 +170,10 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
                 <tbody className="text-gray-800">
                   {expenseData.items.map((item) => (
                     <tr key={item.id} className="border-t">
-                      <td className="py-3 px-4"><div>{item.product_name}</div><div className="text-xs text-gray-500">{item.description}</div></td>
+                      <td className="py-3 px-4">{item.product_name}</td>
                       <td className="py-3 px-4 text-center">{item.quantity}</td>
                       <td className="py-3 px-4 text-center">{formatCurrency(item.unit_price)}</td>
+                      <td className="py-3 px-4 text-center">{formatCurrency(item.discount)}</td>
                       <td className="py-3 px-4 text-center">{item.tax_charge || 0}%</td>
                       <td className="py-3 px-4 text-center">{item.tax_withholding || 0}%</td>
                       <td className="py-3 px-4 text-right">{formatCurrency(item.total)}</td>
@@ -194,24 +187,20 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
             <div className="col-span-1">
               <div className="mb-6">
                 <h2 className="text-lg font-semibold text-gray-800 mb-3" style={{ fontFamily: "SF Pro Display, sans-serif" }}>Resumen</h2>
-                <div className="bg-gray-50 p-4  border border-gray-200 text-sm text-gray-700" style={{ fontFamily: "SF Pro Text, sans-serif" }}>
+                <div className="bg-gray-50 p-4 border border-gray-200 text-sm text-gray-700" style={{ fontFamily: "SF Pro Text, sans-serif" }}>
                   <div className="flex justify-between mb-2"><span>Total Bruto</span><span>{formatCurrency(expenseData.total_gross)}</span></div>
                   <div className="flex justify-between mb-2"><span>Descuentos</span><span className="text-green-600">-{formatCurrency(expenseData.discounts)}</span></div>
                   <div className="flex justify-between mb-2"><span>Subtotal</span><span>{formatCurrency(expenseData.subtotal)}</span></div>
-                  {expenseData.ret_vat !== "0.00" && (
-                    <div className="flex justify-between mb-2"><span>IVA ({expenseData.ret_vat_percentage}%)</span><span className="text-red-600">{formatCurrency(expenseData.ret_vat)}</span></div>
-                  )}
-                  {expenseData.ret_ica !== "0.00" && (
-                    <div className="flex justify-between mb-2"><span>Retención ({expenseData.ret_ica_percentage}%)</span><span className="text-green-600">-{formatCurrency(expenseData.ret_ica)}</span></div>
-                  )}
-                  <div className="flex justify-between mb-2"><span>Total Impuestos</span><span className={expenseData.total_impuestos >= 0 ? "text-red-600" : "text-green-600"}>{expenseData.total_impuestos >= 0 ? "" : "-"}{formatCurrency(Math.abs(expenseData.total_impuestos))}</span></div>
+                  <div className="flex justify-between mb-2"><span>IVA </span><span>{formatCurrency(expenseData.ret_vat)}</span></div>
+                  <div className="flex justify-between mb-2"><span>ICA </span><span>{formatCurrency(expenseData.ret_ica)}</span></div>
+                  <div className="flex justify-between mb-2"><span>Total Impuestos</span><span>{formatCurrency(expenseData.total_impuestos)}</span></div>
                   <div className="flex justify-between border-t pt-2 font-semibold"><span>Total Neto</span><span className="text-red-600">{formatCurrency(expenseData.total_net)}</span></div>
                 </div>
               </div>
 
               <div className="mb-6">
                 <h2 className="text-lg font-semibold text-gray-800 mb-3" style={{ fontFamily: "SF Pro Display, sans-serif" }}>Notas</h2>
-                <p className="text-sm text-gray-600 bg-gray-50 p-4  border border-gray-200">{expenseData.comments || "Sin notas"}</p>
+                <p className="text-sm text-gray-600 bg-gray-50 p-4 border border-gray-200">{expenseData.comments || "Sin notas"}</p>
               </div>
 
               <div>
