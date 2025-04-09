@@ -50,38 +50,17 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
 
   const formatCurrency = (amount) => new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(amount || 0);
 
+  const formatTableDiscount = (discount) => {
+    const value = parseFloat(discount);
+    if (isNaN(value)) return "0";
+    return value <= 100 ? `${value.toFixed(2)}%` : formatCurrency(value);
+  };
+
   const renderDate = (date) => {
-    if (!date) {
-      console.log("Fecha recibida es nula o indefinida:", date);
-      return "Sin fecha";
-    }
-
+    if (!date) return "Sin fecha";
     try {
-      let parsedDate;
-
-      if (typeof date === "string") {
-        const cleanDate = date.endsWith("Z") ? date.substring(0, date.length - 1) : date;
-        parsedDate = DateTime.fromISO(cleanDate, { zone: "America/Bogota" });
-        if (!parsedDate.isValid) {
-          parsedDate = DateTime.fromSQL(cleanDate, { zone: "America/Bogota" });
-        }
-        if (!parsedDate.isValid) {
-          const formats = ["yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd'T'HH:mm:ss", "dd/MM/yyyy HH:mm:ss", "yyyy-MM-dd"];
-          for (const format of formats) {
-            parsedDate = DateTime.fromFormat(cleanDate, format, { zone: "America/Bogota" });
-            if (parsedDate.isValid) break;
-          }
-        }
-      } else if (date instanceof Date) {
-        parsedDate = DateTime.fromJSDate(date, { zone: "America/Bogota" });
-      }
-
-      if (!parsedDate || !parsedDate.isValid) {
-        console.error("No se pudo parsear la fecha:", date);
-        return "Fecha inválida";
-      }
-
-      return parsedDate.setLocale("es").toFormat("d 'de' MMMM 'de' yyyy HH:mm");
+      const parsedDate = DateTime.fromISO(date, { zone: "America/Bogota" });
+      return parsedDate.isValid ? parsedDate.setLocale("es").toFormat("d 'de' MMMM 'de' yyyy HH:mm") : "Fecha inválida";
     } catch (error) {
       console.error("Error al formatear la fecha:", error);
       return "Fecha inválida";
@@ -145,7 +124,6 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
               <div className="mb-6">
                 <div className="grid grid-cols-2 gap-4 text-sm text-gray-700" style={{ fontFamily: "SF Pro Text, sans-serif" }}>
            
-         
                   <div><span className="font-bold">Cuenta:</span> {getAccountName(expenseData.account_id)}</div>
                   <div><span className="font-bold">Tipo:</span> {expenseData.type}</div>
                   <div><span className="font-bold">Descripción:</span> {expenseData.description}</div>
@@ -173,7 +151,7 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
                       <td className="py-3 px-4">{item.product_name}</td>
                       <td className="py-3 px-4 text-center">{item.quantity}</td>
                       <td className="py-3 px-4 text-center">{formatCurrency(item.unit_price)}</td>
-                      <td className="py-3 px-4 text-center">{formatCurrency(item.discount)}</td>
+                      <td className="py-3 px-4 text-center">{formatTableDiscount(item.discount)}</td>
                       <td className="py-3 px-4 text-center">{item.tax_charge || 0}%</td>
                       <td className="py-3 px-4 text-center">{item.tax_withholding || 0}%</td>
                       <td className="py-3 px-4 text-right">{formatCurrency(item.total)}</td>
@@ -191,8 +169,8 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
                   <div className="flex justify-between mb-2"><span>Total Bruto</span><span>{formatCurrency(expenseData.total_gross)}</span></div>
                   <div className="flex justify-between mb-2"><span>Descuentos</span><span className="text-green-600">-{formatCurrency(expenseData.discounts)}</span></div>
                   <div className="flex justify-between mb-2"><span>Subtotal</span><span>{formatCurrency(expenseData.subtotal)}</span></div>
-                  <div className="flex justify-between mb-2"><span>IVA </span><span>{formatCurrency(expenseData.ret_vat)}</span></div>
-                  <div className="flex justify-between mb-2"><span>ICA </span><span>{formatCurrency(expenseData.ret_ica)}</span></div>
+                  <div className="flex justify-between mb-2"><span>IVA ({expenseData.ret_vat_percentage}%)</span><span>{formatCurrency(expenseData.ret_vat)}</span></div>
+                  <div className="flex justify-between mb-2"><span>ICA ({expenseData.ret_ica_percentage}%)</span><span>{formatCurrency(expenseData.ret_ica)}</span></div>
                   <div className="flex justify-between mb-2"><span>Total Impuestos</span><span>{formatCurrency(expenseData.total_impuestos)}</span></div>
                   <div className="flex justify-between border-t pt-2 font-semibold"><span>Total Neto</span><span className="text-red-600">{formatCurrency(expenseData.total_net)}</span></div>
                 </div>
@@ -228,7 +206,7 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
         {/* Modal */}
         <Modal open={isImageModalOpen} onCancel={() => setIsImageModalOpen(false)} footer={null} width="90%" style={{ maxWidth: "1600px" }} bodyStyle={{ padding: 0, height: "80vh" }} centered>
           <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-            {currentImage?.endsWith(".pdf") ? <iframe src={currentImage} className="w-full h-full border-0" /> : <img src={currentImage} alt="Comprobante" className="max-w-full max-h-full object-contain" />}
+            {currentImage?.endsWith(".pdf") ? <iframe src={currentImage} className="w-full h-full bordering-0" /> : <img src={currentImage} alt="Comprobante" className="max-w-full max-h-full object-contain" />}
           </div>
         </Modal>
       </Card>
