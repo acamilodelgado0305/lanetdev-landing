@@ -3,7 +3,7 @@ import {
   Form, Input, Button, Typography, Select, Switch, Tooltip, DatePicker, Upload
 } from 'antd';
 import {
-  FileTextOutlined, UserOutlined, HomeOutlined, EnvironmentOutlined, PhoneOutlined, MailOutlined, BarcodeOutlined, CloseOutlined, ShareAltOutlined, EditOutlined
+  FileTextOutlined, UserOutlined, HomeOutlined, EnvironmentOutlined, BarcodeOutlined, CloseOutlined, ShareAltOutlined, EditOutlined
 } from '@ant-design/icons';
 import Swal from 'sweetalert2';
 import dayjs from 'dayjs';
@@ -28,8 +28,8 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
         ...providerToEdit,
         estado: providerToEdit.estado === 'activo',
         fechaVencimiento: providerToEdit.fechaVencimiento ? dayjs(providerToEdit.fechaVencimiento) : null,
-        telefono: providerToEdit.telefono || [],
-        correo: providerToEdit.correo || [],
+        telefono: providerToEdit.telefono || [], // Asignar como un array
+        correo: providerToEdit.correo || [], // Asignar como un array
         adjuntos: providerToEdit.adjuntos || [],
       });
     } else {
@@ -50,37 +50,23 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
   const handleSave = async () => {
     try {
       setLoading(true);
-      const values = await form.validateFields();
+      const values = await form.validateFields(); // Valida los campos
 
-      // Validar si 'nombre' es obligatorio solo cuando tipoIdentificacion es 'CC'
-      let nombre = '';
-      if (values.tipoIdentificacion === 'CC') {
-        nombre = values.nombre;
-        if (!nombre) {
-          Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'El campo nombre es obligatorio cuando el tipo de identificación es Cédula de Ciudadanía.',
-            confirmButtonColor: '#DE350B',
-          });
-          return; // Salir si falta el nombre cuando es CC
-        }
-      } else {
-        nombre = undefined; // Para NIT, no enviamos 'nombre'
-      }
-
-      // Construir el payload
+      // Construir el payload con 'nombre' solo si se proporciona
       const payload = {
         tipoIdentificacion: values.tipoIdentificacion,
         numeroIdentificacion: values.numeroIdentificacion,
         nombreComercial: values.tipoIdentificacion === 'NIT' ? values.nombreComercial : undefined, // Enviar nombreComercial solo si es NIT
-        nombre: nombre, // Solo incluir 'nombre' si es CC
+        nombre: values.nombre || undefined, // Si el nombre se proporciona, lo incluimos, si no, lo dejamos como undefined
         nombresContacto: values.nombresContacto || '',
         apellidosContacto: values.apellidosContacto || '',
         ciudad: values.ciudad,
         direccion: values.direccion,
         telefono: values.telefono || [], // Asegurarse de que teléfono sea un array
-        correo: values.correo || [], // Asegurarse de que correo sea un array
+        correo: values.correo.map(correo => ({
+          email: correo,  // Aquí, 'correo' es un string y lo enviamos dentro de un objeto
+          tipo: 'Contacto General',  // Aseguramos que cada correo tenga un tipo por defecto
+        })),
         adjuntos: values.adjuntos || [], // Si no se proporciona adjuntos, enviamos un array vacío
         departamento: values.departamento || 'No disponible',
         sitioweb: values.sitioweb || '',
@@ -126,6 +112,8 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
       setLoading(false);
     }
   };
+
+
 
   const handleTipoIdentificacionChange = (value) => {
     setTipoIdentificacion(value);
@@ -285,25 +273,38 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
                 <Form.Item
                   name="telefono"
                   label={<span className="text-gray-600 text-sm">Teléfonos</span>}
+                  rules={[{ required: true, message: 'Requerido' }]} // Aseguramos que el teléfono es obligatorio
                 >
                   <Input
                     placeholder="Ingrese teléfono"
                     className="rounded-md text-base"
-                    disabled={!editMode}
-                  // Map the array for multiple phones
+                    value={form.getFieldValue('telefono')?.[0]?.numero || ''} // Asegúrate de que siempre haya un campo 'numero'
+                    onChange={(e) => {
+                      // Asegurarse de que 'telefono' sea un array de objetos
+                      const phoneValue = { numero: e.target.value, tipo: 'Personal' }; // Asignar un tipo por defecto (puedes cambiarlo según sea necesario)
+                      form.setFieldsValue({ telefono: [phoneValue] }); // Guardamos el teléfono como un objeto dentro del array
+                    }}
                   />
                 </Form.Item>
+
                 <Form.Item
                   name="correo"
                   label={<span className="text-gray-600 text-sm">Correos</span>}
-                >
-                  <Input
-                    placeholder="Ingrese correo"
+                  rules={[{ required: true, message: 'Requerido' }]}>
+                  <Select
+                    mode="tags"  // Permitir múltiples entradas
+                    placeholder="Ingrese correos"
                     className="rounded-md text-base"
                     disabled={!editMode}
-                  // Map the array for multiple emails
+                    onChange={(value) => {
+                      form.setFieldsValue({ correo: value });  // Aquí asignamos un array de correos directamente
+                    }}
                   />
                 </Form.Item>
+
+
+
+
               </div>
             </div>
 
@@ -347,19 +348,38 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
                 label={<span className="text-gray-600 text-sm">Sitio Web</span>}
               >
                 <Input
+                  placeholder="Ingrese sitio web"
                   className="rounded-md text-base"
-                  disabled={!editMode}
+                  value={form.getFieldValue('sitioweb') || ''}
+                  onChange={(e) => {
+                    let value = e.target.value;
+
+                    // Asegurarse de que el valor tenga un protocolo HTTP
+                    if (value && !/^https?:\/\//i.test(value)) {
+                      value = `https://${value}`; // Agregar 'https://' si no tiene protocolo
+                    }
+
+                    form.setFieldsValue({ sitioweb: value }); // Establecer el valor en el formulario
+                  }}
                 />
               </Form.Item>
               <Form.Item
                 name="medioPago"
                 label={<span className="text-gray-600 text-sm">Medio de Pago</span>}
+                rules={[{ required: true, message: 'Requerido' }]} // Asegura que este campo no sea vacío
               >
-                <Input
+                <Select
+                  placeholder="Seleccione un medio de pago"
                   className="rounded-md text-base"
-                  disabled={!editMode}
-                />
+                  disabled={!editMode} // Solo se puede editar si el formulario está en modo edición
+                >
+                  <Option value="Banco">Banco</Option>
+                  <Option value="Nequi">Nequi</Option>
+                  <Option value="Cajero">Cajero</Option>
+                  <Option value="Otro">Otro</Option>
+                </Select>
               </Form.Item>
+
               <Form.Item
                 name="adjuntos"
                 label={<span className="text-gray-600 text-sm">Adjuntos</span>}
