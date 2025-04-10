@@ -11,7 +11,7 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const [accounts, setAccounts] = useState([]);
-  const [providers, setProviders] = useState([]); // Nuevo estado para proveedores
+  const [providers, setProviders] = useState([]);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [currentImage, setCurrentImage] = useState(null);
 
@@ -21,7 +21,7 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
 
   useEffect(() => {
     fetchAccounts();
-    fetchProviders(); // Llamada para obtener proveedores
+    fetchProviders();
   }, []);
 
   const fetchExpenseData = async (id) => {
@@ -154,9 +154,13 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
         <div className="p-6 bg-gray-100 border-b border-gray-200 flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-semibold text-gray-800" style={{ fontFamily: "SF Pro Display, sans-serif" }}>
-              Egreso #{expenseData?.invoice_number || expenseData?.provider_invoice_number || "N/A"}
+              Egreso {expenseData?.invoice_number || "N/A"}
             </h1>
-            <p className="text-sm text-gray-600">{renderDate(expenseData?.date)}</p>
+            <div className="text-sm text-gray-600" style={{ fontFamily: "SF Pro Text, sans-serif" }}>
+        
+              <p><span className="font-bold">No. Factura Proveedor:</span> {expenseData?.provider_invoice_prefix ? `${expenseData.provider_invoice_prefix}-${expenseData.provider_invoice_number}` : expenseData?.provider_invoice_number || "N/A"}</p>
+              <p>{renderDate(expenseData?.date)}</p>
+            </div>
           </div>
           <div className="flex space-x-3">
             <Button type="text" icon={<ShareAltOutlined />} className="text-gray-600 hover:text-blue-600" disabled />
