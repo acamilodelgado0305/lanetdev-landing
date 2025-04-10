@@ -4,6 +4,7 @@ import { getCategorias } from "../../../../../services/moneymanager/moneyService
 import {
   DeleteOutlined
 } from "@ant-design/icons";
+import AccountSelector from '../AccountSelector';
 
 const formatCurrency = (value) => {
   return new Intl.NumberFormat('es-CO', {
@@ -14,7 +15,15 @@ const formatCurrency = (value) => {
   }).format(value || 0); // Aseguramos que siempre haya un valor válido
 };
 
-const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsChange }) => {
+const ProductsTable = ({ 
+  items, 
+  onItemsChange, 
+  onHiddenDetailsChange, 
+  onTotalsChange,
+  accounts, // Add accounts prop
+  selectedAccount, // Add selectedAccount prop
+  onAccountSelect // Add onAccountSelect prop
+}) => {
   const [hasPercentageDiscount, setHasPercentageDiscount] = useState(true);
   const [hiddenDetails, setHiddenDetails] = useState(false);
   const [hiddenImpuestos, setHiddenImpuestos] = useState(false);
@@ -428,77 +437,96 @@ const ProductsTable = ({ items, onItemsChange, onHiddenDetailsChange, onTotalsCh
 
   const renderSummary = () => {
     return (
-      <div style={{ marginTop: '16px', width: '100%', maxWidth: '400px', marginLeft: 'auto' }}>
-        <div style={{ border: '1px solid #f0f0f0', padding: '16px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Total Bruto:</div>
-            <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.totalBruto)}</div>
-            <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Descuentos:</div>
-            <div style={{ textAlign: 'right', color: '#ff4d4f' }}>-{formatCurrency(totals.descuentos)}</div>
-            <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Subtotal:</div>
-            <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.subtotal)}</div>
-           
-            {/* Mostrar estos dos campos solo si hiddenImpuestos es false */}
-            {!hiddenImpuestos && (
-              <>
-                <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Retefuente:</div>
-                <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.retencion)}</div>
-                <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Iva:</div>
-                <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.iva)}</div>
-              </>
-            )}
+      <div style={{ 
+        marginTop: '16px', 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'flex-start',
+        width: '100%'
+      }}>
+        {/* Account Selector on the left */}
+        <div className='pt-2' style={{ width: '45%' }}>
+          <label className="text-xl font-semibold text-sm block mb-2">
+            ¿De dónde salió la plata?
+          </label>
+          <AccountSelector
+            selectedAccount={selectedAccount}
+            onAccountSelect={onAccountSelect}
+            accounts={accounts}
+          />
+        </div>
 
-            {/* Mostrar los select de IVA y Retención si hiddenImpuestos es true */}
-            {hiddenImpuestos && (
-              <>
-                <div style={{ textAlign: 'right', fontWeight: 500, color: '#666', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-                  <span style={{ marginRight: '8px' }}>IVA:</span>
-                  <Select
-                    value={totals.ivaPercentage}
-                    style={{ width: '120px' }}
-                    onChange={(value) => handleRetentionChange('iva', value)}
-                  >
-                    <Select.Option value="19">IVA 19%</Select.Option>
-                    <Select.Option value="5">IVA 5%</Select.Option>
-                    <Select.Option value="0">IVA 0%</Select.Option>
-                    <Select.Option value="8">Ipoconsumo 8%</Select.Option>
-                  </Select>
-                </div>
-                <div style={{ textAlign: 'right', color: '#ff4d4f' }}>{formatCurrency(totals.iva)}</div>
+        {/* Summary on the right */}
+        <div style={{ width: '45%', maxWidth: '400px' }}>
+          <div style={{ border: '1px solid #f0f0f0', padding: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Total Bruto:</div>
+              <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.totalBruto)}</div>
+              <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Descuentos:</div>
+              <div style={{ textAlign: 'right', color: '#ff4d4f' }}>-{formatCurrency(totals.descuentos)}</div>
+              <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Subtotal:</div>
+              <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.subtotal)}</div>
+              
+              {!hiddenImpuestos && (
+                <>
+                  <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Retefuente:</div>
+                  <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.retencion)}</div>
+                  <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Iva:</div>
+                  <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.iva)}</div>
+                </>
+              )}
 
-                <div style={{ textAlign: 'right', fontWeight: 500, color: '#666', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-                  <span style={{ marginRight: '8px' }}>Retención:</span>
-                  <Select
-                    value={totals.retencionPercentage}
-                    style={{ width: '120px' }}
-                    onChange={(value) => handleRetentionChange('retencion', value)}
-                  >
-                    <Select.Option value="11">Rete 11%</Select.Option>
-                    <Select.Option value="10">Rete 10%</Select.Option>
-                    <Select.Option value="7">Rete 7%</Select.Option>
-                    <Select.Option value="6">Rete 6%</Select.Option>
-                    <Select.Option value="4">Rete 4%</Select.Option>
-                    <Select.Option value="3.5">Rete 3.5%</Select.Option>
-                    <Select.Option value="2.5">Rete 2.5%</Select.Option>
-                    <Select.Option value="2">Rete 2%</Select.Option>
-                    <Select.Option value="1">Rete 1%</Select.Option>
-                    <Select.Option value="0">Rete 0%</Select.Option>
-                  </Select>
-                </div>
-                <div style={{ textAlign: 'right', color: '#ff4d4f' }}>-{formatCurrency(totals.retencion)}</div>
-              </>
-            )}
-          </div>
+              {hiddenImpuestos && (
+                <>
+                  <div style={{ textAlign: 'right', fontWeight: 500, color: '#666', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                    <span style={{ marginRight: '8px' }}>IVA:</span>
+                    <Select
+                      value={totals.ivaPercentage}
+                      style={{ width: '120px' }}
+                      onChange={(value) => handleRetentionChange('iva', value)}
+                    >
+                      <Select.Option value="19">IVA 19%</Select.Option>
+                      <Select.Option value="5">IVA 5%</Select.Option>
+                      <Select.Option value="0">IVA 0%</Select.Option>
+                      <Select.Option value="8">Ipoconsumo 8%</Select.Option>
+                    </Select>
+                  </div>
+                  <div style={{ textAlign: 'right', color: '#ff4d4f' }}>{formatCurrency(totals.iva)}</div>
 
-          <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '8px', marginTop: '8px' }}>
-            <div className="bg-[#0052CC] text-white rounded-md py-2 px-4 flex justify-between items-center">
-              <div style={{ textAlign: 'right', fontWeight: 'bold', fontSize: '16px' }}>Total:</div>
-              <div style={{ textAlign: 'right', fontWeight: 'bold', fontSize: '16px' }}>{formatCurrency(totals.totalNeto)}</div>
+                  <div style={{ textAlign: 'right', fontWeight: 500, color: '#666', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                    <span style={{ marginRight: '8px' }}>Retención:</span>
+                    <Select
+                      value={totals.retencionPercentage}
+                      style={{ width: '120px' }}
+                      onChange={(value) => handleRetentionChange('retencion', value)}
+                    >
+                      <Select.Option value="11">Rete 11%</Select.Option>
+                      <Select.Option value="10">Rete 10%</Select.Option>
+                      <Select.Option value="7">Rete 7%</Select.Option>
+                      <Select.Option value="6">Rete 6%</Select.Option>
+                      <Select.Option value="4">Rete 4%</Select.Option>
+                      <Select.Option value="3.5">Rete 3.5%</Select.Option>
+                      <Select.Option value="2.5">Rete 2.5%</Select.Option>
+                      <Select.Option value="2">Rete 2%</Select.Option>
+                      <Select.Option value="1">Rete 1%</Select.Option>
+                      <Select.Option value="0">Rete 0%</Select.Option>
+                    </Select>
+                  </div>
+                  <div style={{ textAlign: 'right', color: '#ff4d4f' }}>-{formatCurrency(totals.retencion)}</div>
+                </>
+              )}
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '8px' }}>
-              <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Total en Impuestos:</div>
-              <div style={{ textAlign: 'right', fontWeight: 500, color: totals.totalImpuestos >= 0 ? '#52c41a' : '#ff4d4f' }}>
-                {totals.totalImpuestos >= 0 ? '+' : ''}{formatCurrency(totals.totalImpuestos)}
+
+            <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '8px', marginTop: '8px' }}>
+              <div className="bg-[#0052CC] text-white rounded-md py-2 px-4 flex justify-between items-center">
+                <div style={{ textAlign: 'right', fontWeight: 'bold', fontSize: '16px' }}>Total:</div>
+                <div style={{ textAlign: 'right', fontWeight: 'bold', fontSize: '16px' }}>{formatCurrency(totals.totalNeto)}</div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '8px' }}>
+                <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Total en Impuestos:</div>
+                <div style={{ textAlign: 'right', fontWeight: 500, color: totals.totalImpuestos >= 0 ? '#52c41a' : '#ff4d4f' }}>
+                  {totals.totalImpuestos >= 0 ? '+' : ''}{formatCurrency(totals.totalImpuestos)}
+                </div>
               </div>
             </div>
           </div>
