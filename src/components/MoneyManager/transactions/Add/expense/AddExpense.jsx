@@ -186,9 +186,12 @@ const AddExpense = () => {
   const ObtenerCategorias = async () => {
     try {
       const data = await getCategorias();
-      setCategorias(data);
+      // Filtrar solo las categorías con type "expense"
+      const expenseCategories = data.filter((category) => category.type === "expense");
+      setCategorias(expenseCategories);
     } catch (err) {
       console.error("Error al cargar las categorías:", err);
+      setCategorias([]); // En caso de error, establecer un array vacío
     }
   };
 
