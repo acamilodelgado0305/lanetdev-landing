@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Form, Input, Button, Typography, Select, Switch, Tooltip
+  Form, Input, Button, Typography, Select, Switch, Tooltip, DatePicker, Upload
 } from 'antd';
 import {
   FileTextOutlined, UserOutlined, HomeOutlined, EnvironmentOutlined, PhoneOutlined, MailOutlined, BarcodeOutlined, CloseOutlined, ShareAltOutlined, EditOutlined
 } from '@ant-design/icons';
 import Swal from 'sweetalert2';
+import dayjs from 'dayjs';
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -25,7 +26,11 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
       setTipoIdentificacion(providerToEdit.tipoIdentificacion || 'NIT');
       form.setFieldsValue({
         ...providerToEdit,
-        estado: providerToEdit.estado === 'activo'
+        estado: providerToEdit.estado === 'activo',
+        fechaVencimiento: providerToEdit.fechaVencimiento ? dayjs(providerToEdit.fechaVencimiento) : null,
+        telefono: providerToEdit.telefono || [],
+        correo: providerToEdit.correo || [],
+        adjuntos: providerToEdit.adjuntos || [],
       });
     } else {
       setIsEditing(false);
@@ -46,32 +51,58 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
     try {
       setLoading(true);
       const values = await form.validateFields();
-      const method = isEditing ? 'PUT' : 'POST';
-      const endpoint = isEditing
-        ? `${apiUrl}/providers/${providerToEdit.id}`
-        : `${apiUrl}/providers`;
 
+      // Validar si 'nombre' es obligatorio solo cuando tipoIdentificacion es 'CC'
+      let nombre = '';
+      if (values.tipoIdentificacion === 'CC') {
+        nombre = values.nombre;
+        if (!nombre) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'El campo nombre es obligatorio cuando el tipo de identificación es Cédula de Ciudadanía.',
+            confirmButtonColor: '#DE350B',
+          });
+          return; // Salir si falta el nombre cuando es CC
+        }
+      } else {
+        nombre = undefined; // Para NIT, no enviamos 'nombre'
+      }
+
+      // Construir el payload
       const payload = {
         tipoIdentificacion: values.tipoIdentificacion,
         numeroIdentificacion: values.numeroIdentificacion,
-        nombreComercial: values.nombreComercial || '',
+        nombreComercial: values.tipoIdentificacion === 'NIT' ? values.nombreComercial : undefined, // Enviar nombreComercial solo si es NIT
+        nombre: nombre, // Solo incluir 'nombre' si es CC
         nombresContacto: values.nombresContacto || '',
         apellidosContacto: values.apellidosContacto || '',
         ciudad: values.ciudad,
         direccion: values.direccion,
-        correoContactoFacturacion: values.correoContactoFacturacion,
-        telefonoFacturacion: values.telefonoFacturacion,
+        telefono: values.telefono || [], // Asegurarse de que teléfono sea un array
+        correo: values.correo || [], // Asegurarse de que correo sea un array
+        adjuntos: values.adjuntos || [], // Si no se proporciona adjuntos, enviamos un array vacío
+        departamento: values.departamento || 'No disponible',
+        sitioweb: values.sitioweb || '',
+        medioPago: values.medioPago || 'Banco',
         estado: values.estado ? 'activo' : 'inactivo',
+        fechaVencimiento: values.fechaVencimiento ? values.fechaVencimiento.format('YYYY-MM-DD') : null,
       };
 
+      console.log("Payload que se enviará:", JSON.stringify(payload)); // Verifica que los datos estén correctos antes de enviarlos
+
+      const endpoint = isEditing
+        ? `${apiUrl}/providers/${providerToEdit.id}`  // Para editar proveedor
+        : `${apiUrl}/providers`; // Para crear un nuevo proveedor
+
       const response = await fetch(endpoint, {
-        method,
+        method: isEditing ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
       if (!response.ok) throw new Error(`Error: ${response.status}`);
-      await response.json();
+      const responseData = await response.json();
 
       Swal.fire({
         icon: 'success',
@@ -84,10 +115,11 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
         if (onProviderAdded) onProviderAdded();
       });
     } catch (error) {
+      console.error("Error al guardar proveedor:", error);
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: 'Hubo un error al guardar el proveedor.',
+        text: `Hubo un error al guardar el proveedor: ${error.message}`,
         confirmButtonColor: '#DE350B',
       });
     } finally {
@@ -109,7 +141,7 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-6"
-seven      onClick={onClose}
+      onClick={onClose}
     >
       <div
         className="w-full max-w-[800px] bg-white shadow-lg rounded-lg overflow-hidden"
@@ -251,73 +283,35 @@ seven      onClick={onClose}
                   />
                 </Form.Item>
                 <Form.Item
-                  name="telefonoFacturacion"
-                  label={<span className="text-gray-600 text-sm">Teléfono de Facturación</span>}
-                  rules={[{ required: true, message: 'Requerido' }]}
+                  name="telefono"
+                  label={<span className="text-gray-600 text-sm">Teléfonos</span>}
                 >
                   <Input
-                    prefix={<PhoneOutlined className="text-gray-400" />}
                     placeholder="Ingrese teléfono"
                     className="rounded-md text-base"
                     disabled={!editMode}
+                  // Map the array for multiple phones
                   />
                 </Form.Item>
                 <Form.Item
-                  name="correoContactoFacturacion"
-                  label={<span className="text-gray-600 text-sm">Correo de Facturación</span>}
-                  rules={[{ required: true, message: 'Requerido' }, { type: 'email', message: 'Email inválido' }]}
+                  name="correo"
+                  label={<span className="text-gray-600 text-sm">Correos</span>}
                 >
                   <Input
-                    prefix={<MailOutlined className="text-gray-400" />}
-                    placeholder="Ingrese email"
+                    placeholder="Ingrese correo"
                     className="rounded-md text-base"
                     disabled={!editMode}
+                  // Map the array for multiple emails
                   />
                 </Form.Item>
               </div>
             </div>
+
             <div className="mt-4">
               <Text strong className="text-base text-gray-700 mb-2 block">
                 <FileTextOutlined className="mr-2 text-gray-500" />
                 Detalles Adicionales
               </Text>
-              {tipoIdentificacion === 'NIT' && (
-                <>
-                  <Form.Item
-                    name="nombresContacto"
-                    label={<span className="text-gray-600 text-sm">Nombres Contacto (Opcional)</span>}
-                  >
-                    <Input
-                      prefix={<UserOutlined className="text-gray-400" />}
-                      placeholder="Ingrese nombres del contacto"
-                      className="rounded-md text-base"
-                      disabled={!editMode}
-                    />
-                  </Form.Item>
-                  <Form.Item
-                    name="apellidosContacto"
-                    label={<span className="text-gray-600 text-sm">Apellidos Contacto (Opcional)</span>}
-                  >
-                    <Input
-                      placeholder="Ingrese apellidos del contacto"
-                      className="rounded-md text-base"
-                      disabled={!editMode}
-                    />
-                  </Form.Item>
-                </>
-              )}
-              {tipoIdentificacion === 'CC' && (
-                <Form.Item
-                  name="nombreComercial"
-                  label={<span className="text-gray-600 text-sm">Nombre Comercial (Opcional)</span>}
-                >
-                  <Input
-                    placeholder="Ingrese nombre comercial"
-                    className="rounded-md text-base"
-                    disabled={!editMode}
-                  />
-                </Form.Item>
-              )}
               <Form.Item
                 name="estado"
                 label={<span className="text-gray-600 text-sm">Estado</span>}
@@ -329,9 +323,59 @@ seven      onClick={onClose}
                   disabled={!editMode}
                 />
               </Form.Item>
+              <Form.Item
+                name="fechaVencimiento"
+                label={<span className="text-gray-600 text-sm">Fecha de Vencimiento</span>}
+              >
+                <DatePicker
+                  className="w-full rounded-md text-base"
+                  disabled={!editMode}
+                  format="YYYY-MM-DD"
+                />
+              </Form.Item>
+              <Form.Item
+                name="departamento"
+                label={<span className="text-gray-600 text-sm">Departamento</span>}
+              >
+                <Input
+                  className="rounded-md text-base"
+                  disabled={!editMode}
+                />
+              </Form.Item>
+              <Form.Item
+                name="sitioweb"
+                label={<span className="text-gray-600 text-sm">Sitio Web</span>}
+              >
+                <Input
+                  className="rounded-md text-base"
+                  disabled={!editMode}
+                />
+              </Form.Item>
+              <Form.Item
+                name="medioPago"
+                label={<span className="text-gray-600 text-sm">Medio de Pago</span>}
+              >
+                <Input
+                  className="rounded-md text-base"
+                  disabled={!editMode}
+                />
+              </Form.Item>
+              <Form.Item
+                name="adjuntos"
+                label={<span className="text-gray-600 text-sm">Adjuntos</span>}
+              >
+                <Upload
+                  disabled={!editMode}
+                  beforeUpload={() => false} // Prevent automatic upload
+                  fileList={[]}
+                >
+                  <Button>Subir Archivos</Button>
+                </Upload>
+              </Form.Item>
             </div>
           </Form>
         </div>
+
         <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
           <Button
             onClick={onClose}

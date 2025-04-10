@@ -4,6 +4,7 @@ import { SearchOutlined } from "@ant-design/icons";
 import axios from "axios";
 import Swal from "sweetalert2";
 import AccionesTerceros from "../AccionesTerceros";
+import dayjs from 'dayjs';
 
 const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
 
@@ -23,30 +24,35 @@ const ProveedoresTable = ({ activeTab }) => {
     setEntriesLoading(true);
     try {
       const response = await axios.get(`${API_BASE_URL}/providers`);
-      const proveedoresArray = response.data || []; // Ajustado según la estructura que proporcionaste
-      
+      const proveedoresArray = response.data || [];
+
+      // Mapeamos los proveedores, asegurándonos de manejar los valores nulos o vacíos
       const mappedProveedores = proveedoresArray.map(proveedor => ({
         id: proveedor.id,
-        tipo_identificacion: proveedor.tipo_identificacion,
-        numero_identificacion: proveedor.numero_identificacion,
-        nombre_comercial: proveedor.nombre_comercial,
-        contacto: `${proveedor.nombres_contacto} ${proveedor.apellidos_contacto}`,
-        direccion: proveedor.direccion,
-        ciudad: proveedor.ciudad,
-        correo: proveedor.correo_contacto_facturacion,
-        telefono: proveedor.telefono_facturacion,
-        estado: proveedor.estado
+        tipo_identificacion: proveedor.tipo_identificacion || 'No disponible',
+        numero_identificacion: proveedor.numero_identificacion || 'No disponible',
+        nombre_comercial: proveedor.nombre_comercial || 'No disponible',
+        contacto: `${proveedor.nombres_contacto || 'No disponible'} ${proveedor.apellidos_contacto || 'No disponible'}`,
+        direccion: proveedor.direccion || 'No disponible',
+        ciudad: proveedor.ciudad || 'No disponible',
+        correo: proveedor.correo?.map(c => c.email).join(", ") || 'No disponible',
+        telefono: proveedor.telefono?.map(t => `${t.tipo}: ${t.numero}`).join(", ") || 'No disponible',
+        estado: proveedor.estado || 'No disponible',
+        departamento: proveedor.departamento?.trim() || 'No disponible',
+        sitioweb: proveedor.sitioweb || 'No disponible',
+        medio_pago: proveedor.medio_pago || 'No disponible',
+        fecha_vencimiento: proveedor.fecha_vencimiento || 'No disponible',
       }));
-      
+
       setFilteredEntries(mappedProveedores);
       setError(null);
     } catch (error) {
-      console.error('Error al obtener los proveedores:', error);
-      setError('No se pudieron cargar los proveedores');
+      console.error("Error al obtener los proveedores:", error);
+      setError("No se pudieron cargar los proveedores");
       Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'No se pudieron cargar los proveedores. Por favor, intente de nuevo.',
+        icon: "error",
+        title: "Error",
+        text: "No se pudieron cargar los proveedores. Por favor, intente de nuevo.",
       });
     } finally {
       setEntriesLoading(false);
@@ -88,31 +94,13 @@ const ProveedoresTable = ({ activeTab }) => {
       width: 200,
     },
     {
-      title: (
-        <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1 }}>
-          Tipo Identificación
-          <Input
-            prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
-            onChange={(e) => handleSearch(e.target.value, "tipo_identificacion")}
-            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
-          />
-        </div>
-      ),
+      title: "Tipo Identificación",
       dataIndex: "tipo_identificacion",
       key: "tipo_identificacion",
       width: 130,
     },
     {
-      title: (
-        <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1 }}>
-          Número Identificación
-          <Input
-            prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
-            onChange={(e) => handleSearch(e.target.value, "numero_identificacion")}
-            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12 }}
-          />
-        </div>
-      ),
+      title: "Número Identificación",
       dataIndex: "numero_identificacion",
       key: "numero_identificacion",
       width: 150,
@@ -142,7 +130,7 @@ const ProveedoresTable = ({ activeTab }) => {
       title: "Teléfono",
       dataIndex: "telefono",
       key: "telefono",
-      width: 130,
+      width: 180,
     },
     {
       title: "Estado",
@@ -150,11 +138,12 @@ const ProveedoresTable = ({ activeTab }) => {
       key: "estado",
       width: 100,
       render: (estado) => (
-        <Tag color={estado === "activo" || estado === "true" ? "green" : "red"}>
-          {estado === "true" ? "Activo" : estado}
+        <Tag color={estado === "activo" ? "green" : "red"}>
+          {estado === "activo" ? "Activo" : estado}
         </Tag>
       ),
     },
+    // Puedes agregar más columnas si lo deseas, como "departamento" o "sitioweb".
   ];
 
   const rowSelection = {
@@ -162,6 +151,60 @@ const ProveedoresTable = ({ activeTab }) => {
     onChange: setSelectedRowKeys,
     columnWidth: 48,
   };
+
+  // Expander para mostrar los detalles de los teléfonos y correos
+  const expandedRowRender = (record) => {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-1 mx-32">
+        {/* Departamento */}
+        <div className="flex items-center text-sm">
+          <p><strong>Departamento:</strong> {record.departamento}</p>
+        </div>
+
+        {/* Estado */}
+        <div className="flex items-center text-sm">
+          <p><strong>Estado:</strong> {record.estado}</p>
+        </div>
+
+        {/* Medio de pago */}
+        <div className="flex items-center text-sm">
+          <p><strong>Medio de pago:</strong> {record.medio_pago}</p>
+        </div>
+
+        {/* Fecha de Vencimiento */}
+        <div className="flex items-center text-sm">
+          <p><strong>Fecha de Vencimiento:</strong></p>
+          <p>{dayjs(record.fecha_vencimiento).isValid() ? dayjs(record.fecha_vencimiento).format("DD/MM/YYYY") : "Fecha inválida"}</p>
+        </div>
+
+        {/* Sitio Web */}
+        <div className="flex items-center text-sm">
+          <p><strong>Sitio Web:</strong> <a href={record.sitioweb} target="_blank" rel="noopener noreferrer" className="text-blue-500">{record.sitioweb}</a></p>
+        </div>
+
+        {/* Teléfonos */}
+        <div className="flex items-center text-sm">
+          <p><strong>Teléfonos:</strong></p>
+          <div className="flex flex-col gap-1">
+            {record.telefono.split(", ").map((tel, index) => (
+              <span key={index} className="bg-gray-200 text-xs px-1 py-0.5 rounded-md">{tel}</span>
+            ))}
+          </div>
+        </div>
+
+        {/* Correos */}
+        <div className="flex items-center text-sm">
+          <p><strong>Correos:</strong></p>
+          <div className="flex flex-col gap-1">
+            {record.correo.split(", ").map((mail, index) => (
+              <span key={index} className="bg-gray-200 text-xs px-1 py-0.5 rounded-md">{mail}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
 
   return (
     <>
@@ -197,6 +240,7 @@ const ProveedoresTable = ({ activeTab }) => {
           size="middle"
           loading={entriesLoading}
           scroll={{ x: 1300 }}
+          expandedRowRender={expandedRowRender}  // Activar el expander
         />
       </div>
 
