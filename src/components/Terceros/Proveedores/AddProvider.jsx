@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Form, Input, Button, Typography, Select, Switch, Tooltip, DatePicker, Upload
+  Form, Input, Button, Typography, Select, Switch, Tooltip, DatePicker, Upload, Row, Col
 } from 'antd';
 import {
   FileTextOutlined, UserOutlined, HomeOutlined, EnvironmentOutlined, BarcodeOutlined, CloseOutlined, ShareAltOutlined, EditOutlined
@@ -19,22 +19,31 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
   const [editMode, setEditMode] = useState(false);
   const [tipoIdentificacion, setTipoIdentificacion] = useState('NIT');
 
+  // Lista de departamentos de Colombia
+  const departamentos = [
+    'Amazonas', 'Antioquia', 'Arauca', 'Atlántico', 'Bolívar', 'Boyacá', 'Caldas', 'Caquetá', 'Casanare',
+    'Cauca', 'Cesar', 'Chocó', 'Córdoba', 'Cundinamarca', 'Guainía', 'Guaviare', 'Huila', 'La Guajira',
+    'Magdalena', 'Meta', 'Nariño', 'Norte de Santander', 'Putumayo', 'Quindío', 'Risaralda', 'San Andrés',
+    'Santander', 'Sucre', 'Tolima', 'Valle del Cauca', 'Vaupés', 'Vichada'
+  ];
+
   useEffect(() => {
     if (providerToEdit) {
       setIsEditing(true);
-      setEditMode(false); // Start in view-only mode
+      setEditMode(false); // Iniciar en modo solo lectura
       setTipoIdentificacion(providerToEdit.tipoIdentificacion || 'NIT');
       form.setFieldsValue({
         ...providerToEdit,
         estado: providerToEdit.estado === 'activo',
         fechaVencimiento: providerToEdit.fechaVencimiento ? dayjs(providerToEdit.fechaVencimiento) : null,
-        telefono: providerToEdit.telefono || [], // Asignar como un array
-        correo: providerToEdit.correo || [], // Asignar como un array
+        telefono: providerToEdit.telefono || [],
+        correo: providerToEdit.correo || [],
         adjuntos: providerToEdit.adjuntos || [],
+        nombreComercial: providerToEdit.nombre_comercial || '', // Asegúrate de que `nombreComercial` se inicialice aquí
       });
     } else {
       setIsEditing(false);
-      setEditMode(true); // New provider starts in edit mode
+      setEditMode(true); // Nuevo proveedor comienza en modo edición
       form.resetFields();
       setTipoIdentificacion('NIT');
       form.setFieldsValue({ estado: true });
@@ -52,22 +61,24 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
       setLoading(true);
       const values = await form.validateFields(); // Valida los campos
 
-      // Construir el payload con 'nombre' solo si se proporciona
       const payload = {
         tipoIdentificacion: values.tipoIdentificacion,
-        numeroIdentificacion: values.numeroIdentificacion,
-        nombreComercial: values.tipoIdentificacion === 'NIT' ? values.nombreComercial : undefined, // Enviar nombreComercial solo si es NIT
-        nombre: values.nombre || undefined, // Si el nombre se proporciona, lo incluimos, si no, lo dejamos como undefined
+        numeroIdentificacion: values.numeroIdentificacion || 'No disponible',
+        nombreComercial: values.tipoIdentificacion === 'NIT' && values.nombreComercial ? values.nombreComercial : '', // Asegúrate de que se envíe solo si tiene valor
+        nombre: values.nombre || undefined,
         nombresContacto: values.nombresContacto || '',
         apellidosContacto: values.apellidosContacto || '',
         ciudad: values.ciudad,
         direccion: values.direccion,
-        telefono: values.telefono || [], // Asegurarse de que teléfono sea un array
-        correo: values.correo.map(correo => ({
-          email: correo,  // Aquí, 'correo' es un string y lo enviamos dentro de un objeto
-          tipo: 'Contacto General',  // Aseguramos que cada correo tenga un tipo por defecto
+        telefono: values.telefono.map(telefono => ({
+          numero: telefono,
+          tipo: 'Personal',
         })),
-        adjuntos: values.adjuntos || [], // Si no se proporciona adjuntos, enviamos un array vacío
+        correo: values.correo.map(correo => ({
+          email: correo,
+          tipo: 'Contacto General',
+        })),
+        adjuntos: values.adjuntos || [],
         departamento: values.departamento || 'No disponible',
         sitioweb: values.sitioweb || '',
         medioPago: values.medioPago || 'Banco',
@@ -75,11 +86,9 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
         fechaVencimiento: values.fechaVencimiento ? values.fechaVencimiento.format('YYYY-MM-DD') : null,
       };
 
-      console.log("Payload que se enviará:", JSON.stringify(payload)); // Verifica que los datos estén correctos antes de enviarlos
-
       const endpoint = isEditing
-        ? `${apiUrl}/providers/${providerToEdit.id}`  // Para editar proveedor
-        : `${apiUrl}/providers`; // Para crear un nuevo proveedor
+        ? `${apiUrl}/providers/${providerToEdit.id}`
+        : `${apiUrl}/providers`;
 
       const response = await fetch(endpoint, {
         method: isEditing ? 'PUT' : 'POST',
@@ -100,6 +109,8 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
         onClose();
         if (onProviderAdded) onProviderAdded();
       });
+      console.log("Payload que se enviará:", JSON.stringify(payload)); // Verifica que nombreComercial esté incluido
+
     } catch (error) {
       console.error("Error al guardar proveedor:", error);
       Swal.fire({
@@ -112,8 +123,6 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
       setLoading(false);
     }
   };
-
-
 
   const handleTipoIdentificacionChange = (value) => {
     setTipoIdentificacion(value);
@@ -176,8 +185,7 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
                 <Form.Item
                   name="tipoIdentificacion"
                   label={<span className="text-gray-600 text-sm">Tipo de Identificación</span>}
-                  rules={[{ required: true, message: 'Requerido' }]}
-                >
+                  rules={[{ required: true, message: 'Requerido' }]}>
                   <Select
                     placeholder="Seleccione"
                     onChange={handleTipoIdentificacionChange}
@@ -191,8 +199,7 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
                 <Form.Item
                   name="numeroIdentificacion"
                   label={<span className="text-gray-600 text-sm">Número de Identificación</span>}
-                  rules={[{ required: true, message: 'Requerido' }]}
-                >
+                  rules={[{ required: true, message: 'Requerido' }]}>
                   <Input
                     prefix={<BarcodeOutlined className="text-gray-400" />}
                     placeholder="Ingrese número"
@@ -239,6 +246,7 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
                     </Form.Item>
                   </>
                 )}
+
               </div>
               <div className="col-span-1">
                 <Text strong className="text-base text-gray-700 mb-2 block">
@@ -248,8 +256,7 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
                 <Form.Item
                   name="direccion"
                   label={<span className="text-gray-600 text-sm">Dirección</span>}
-                  rules={[{ required: true, message: 'Requerido' }]}
-                >
+                  rules={[{ required: true, message: 'Requerido' }]}>
                   <Input.TextArea
                     prefix={<HomeOutlined className="text-gray-400" />}
                     placeholder="Ingrese dirección"
@@ -261,8 +268,7 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
                 <Form.Item
                   name="ciudad"
                   label={<span className="text-gray-600 text-sm">Ciudad</span>}
-                  rules={[{ required: true, message: 'Requerido' }]}
-                >
+                  rules={[{ required: true, message: 'Requerido' }]}>
                   <Input
                     prefix={<EnvironmentOutlined className="text-gray-400" />}
                     placeholder="Ingrese ciudad"
@@ -271,22 +277,33 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
                   />
                 </Form.Item>
                 <Form.Item
+                  name="departamento"
+                  label={<span className="text-gray-600 text-sm">Departamento</span>}>
+                  <Select
+                    className="rounded-md text-base"
+                    disabled={!editMode}
+                    placeholder="Seleccione un departamento">
+                    {departamentos.map(departamento => (
+                      <Option key={departamento} value={departamento}>
+                        {departamento}
+                      </Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+                <Form.Item
                   name="telefono"
                   label={<span className="text-gray-600 text-sm">Teléfonos</span>}
-                  rules={[{ required: true, message: 'Requerido' }]} // Aseguramos que el teléfono es obligatorio
-                >
-                  <Input
-                    placeholder="Ingrese teléfono"
+                  rules={[{ required: true, message: 'Requerido' }]}>
+                  <Select
+                    mode="tags"
+                    placeholder="Agregar teléfono"
                     className="rounded-md text-base"
-                    value={form.getFieldValue('telefono')?.[0]?.numero || ''} // Asegúrate de que siempre haya un campo 'numero'
-                    onChange={(e) => {
-                      // Asegurarse de que 'telefono' sea un array de objetos
-                      const phoneValue = { numero: e.target.value, tipo: 'Personal' }; // Asignar un tipo por defecto (puedes cambiarlo según sea necesario)
-                      form.setFieldsValue({ telefono: [phoneValue] }); // Guardamos el teléfono como un objeto dentro del array
+                    disabled={!editMode}
+                    onChange={(value) => {
+                      form.setFieldsValue({ telefono: value });  // Aquí asignamos un array de correos directamente
                     }}
                   />
                 </Form.Item>
-
                 <Form.Item
                   name="correo"
                   label={<span className="text-gray-600 text-sm">Correos</span>}
@@ -303,8 +320,6 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
                 </Form.Item>
 
 
-
-
               </div>
             </div>
 
@@ -313,86 +328,78 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
                 <FileTextOutlined className="mr-2 text-gray-500" />
                 Detalles Adicionales
               </Text>
-              <Form.Item
-                name="estado"
-                label={<span className="text-gray-600 text-sm">Estado</span>}
-                valuePropName="checked"
-              >
-                <Switch
-                  checkedChildren="Activo"
-                  unCheckedChildren="Inactivo"
-                  disabled={!editMode}
-                />
-              </Form.Item>
-              <Form.Item
-                name="fechaVencimiento"
-                label={<span className="text-gray-600 text-sm">Fecha de Vencimiento</span>}
-              >
-                <DatePicker
-                  className="w-full rounded-md text-base"
-                  disabled={!editMode}
-                  format="YYYY-MM-DD"
-                />
-              </Form.Item>
-              <Form.Item
-                name="departamento"
-                label={<span className="text-gray-600 text-sm">Departamento</span>}
-              >
-                <Input
-                  className="rounded-md text-base"
-                  disabled={!editMode}
-                />
-              </Form.Item>
-              <Form.Item
-                name="sitioweb"
-                label={<span className="text-gray-600 text-sm">Sitio Web</span>}
-              >
-                <Input
-                  placeholder="Ingrese sitio web"
-                  className="rounded-md text-base"
-                  value={form.getFieldValue('sitioweb') || ''}
-                  onChange={(e) => {
-                    let value = e.target.value;
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">  {/* Añadido grid con dos columnas */}
+                <div className="col-span-1">
+                  <Form.Item
+                    name="estado"
+                    label={<span className="text-gray-600 text-sm">Estado</span>}
+                    valuePropName="checked">
+                    <Switch
+                      checkedChildren="Activo"
+                      unCheckedChildren="Inactivo"
+                      disabled={!editMode}
+                    />
+                  </Form.Item>
+                </div>
+                <div className="col-span-1">
+                  <Form.Item
+                    name="fechaVencimiento"
+                    label={<span className="text-gray-600 text-sm">Fecha de Vencimiento</span>}>
+                    <DatePicker
+                      className="w-full rounded-md text-base"
+                      disabled={!editMode}
+                      format="YYYY-MM-DD"
+                    />
+                  </Form.Item>
+                </div>
 
-                    // Asegurarse de que el valor tenga un protocolo HTTP
-                    if (value && !/^https?:\/\//i.test(value)) {
-                      value = `https://${value}`; // Agregar 'https://' si no tiene protocolo
-                    }
+                <div className="col-span-1">
+                  <Form.Item
+                    name="sitioweb"
+                    label={<span className="text-gray-600 text-sm">Sitio Web</span>}>
+                    <Input
+                      placeholder="Ingrese sitio web"
+                      className="rounded-md text-base"
+                      value={form.getFieldValue('sitioweb') || ''}
+                      onChange={(e) => {
+                        let value = e.target.value;
+                        if (value && !/^https?:\/\//i.test(value)) {
+                          value = `https://${value}`; // Agregar 'https://' si no tiene protocolo
+                        }
+                        form.setFieldsValue({ sitioweb: value });
+                      }}
+                    />
+                  </Form.Item>
+                </div>
 
-                    form.setFieldsValue({ sitioweb: value }); // Establecer el valor en el formulario
-                  }}
-                />
-              </Form.Item>
-              <Form.Item
-                name="medioPago"
-                label={<span className="text-gray-600 text-sm">Medio de Pago</span>}
-                rules={[{ required: true, message: 'Requerido' }]} // Asegura que este campo no sea vacío
-              >
-                <Select
-                  placeholder="Seleccione un medio de pago"
-                  className="rounded-md text-base"
-                  disabled={!editMode} // Solo se puede editar si el formulario está en modo edición
-                >
-                  <Option value="Banco">Banco</Option>
-                  <Option value="Nequi">Nequi</Option>
-                  <Option value="Cajero">Cajero</Option>
-                  <Option value="Otro">Otro</Option>
-                </Select>
-              </Form.Item>
+                <div className="col-span-1">
+                  <Form.Item
+                    name="medioPago"
+                    label={<span className="text-gray-600 text-sm">Medio de Pago</span>}
+                    rules={[{ required: true, message: 'Requerido' }]}>
+                    <Input
+                      placeholder="Ingrese método de pago"
+                      className="rounded-md text-base"
+                      disabled={!editMode}
+                    />
+                  </Form.Item>
+                </div>
 
-              <Form.Item
-                name="adjuntos"
-                label={<span className="text-gray-600 text-sm">Adjuntos</span>}
-              >
-                <Upload
-                  disabled={!editMode}
-                  beforeUpload={() => false} // Prevent automatic upload
-                  fileList={[]}
-                >
-                  <Button>Subir Archivos</Button>
-                </Upload>
-              </Form.Item>
+                <div className="col-span-1">
+                  <Form.Item
+                    name="adjuntos"
+                    label={<span className="text-gray-600 text-sm">Adjuntos</span>}>
+                    <Upload
+                      disabled={!editMode}
+                      beforeUpload={() => false} // Prevent automatic upload
+                      fileList={[]}>
+                      <Button>Subir Archivos</Button>
+                    </Upload>
+                  </Form.Item>
+                </div>
+              </div>  {/* Cierre de grid */}
             </div>
+
           </Form>
         </div>
 
@@ -400,8 +407,7 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
           <Button
             onClick={onClose}
             className="rounded-md border-gray-300 text-gray-700 hover:text-gray-900 hover:border-gray-400 transition-all"
-            style={{ height: 40, fontSize: '16px', padding: '0 20px' }}
-          >
+            style={{ height: 40, fontSize: '16px', padding: '0 20px' }}>
             Cancelar
           </Button>
           {editMode && (
@@ -410,8 +416,7 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
               onClick={handleSave}
               loading={loading}
               className="rounded-md bg-[#0052CC] hover:bg-[#003BB3] border-none transition-all"
-              style={{ height: 40, fontSize: '16px', padding: '0 20px' }}
-            >
+              style={{ height: 40, fontSize: '16px', padding: '0 20px' }}>
               {isEditing ? 'Actualizar' : 'Guardar'}
             </Button>
           )}
