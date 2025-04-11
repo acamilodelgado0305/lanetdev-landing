@@ -24,9 +24,14 @@ const ProveedoresTable = ({ activeTab }) => {
     setEntriesLoading(true);
     try {
       const response = await axios.get(`${API_BASE_URL}/providers`);
-      const proveedoresArray = response.data || [];
+      let proveedoresArray = response.data || [];
 
-      // Mapeamos los proveedores, asegurándonos de manejar los valores nulos o vacíos
+      // Validar que la respuesta es un array
+      if (!Array.isArray(proveedoresArray)) {
+        proveedoresArray = []; // Si no es un array, asigna un array vacío
+      }
+
+      // Mapear los proveedores
       const mappedProveedores = proveedoresArray.map(proveedor => ({
         id: proveedor.id,
         tipo_identificacion: proveedor.tipo_identificacion || 'No disponible',
