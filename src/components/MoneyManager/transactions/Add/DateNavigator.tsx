@@ -65,7 +65,14 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange, formatCurr
         } else {
             fetchMonthlyData(currentMonth); // Llamar a la API con el mes actual
         }
-    }, [currentMonth]); // Dependiendo de currentMonth
+    }, [currentMonth]);
+
+    // Función para actualizar los balances manualmente
+    const handleRefreshBalances = () => {
+        if (currentMonth) {
+            fetchMonthlyData(currentMonth);
+        }
+    };
 
     const handleQuickSelect = (value: string) => {
         let start: dayjs.Dayjs;
@@ -110,13 +117,13 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange, formatCurr
         setRange([start, end]);
         onMonthChange([start.toDate(), end.toDate()]);
         const monthYear = `${start.year()}-${(start.month() + 1).toString().padStart(2, "0")}`;
-        setCurrentMonth(monthYear); // Actualizar el mes seleccionado
+        setCurrentMonth(monthYear);
     };
 
     const handleMonthChange = (date: dayjs.Dayjs | null) => {
         if (date) {
             const monthYear = `${date.year()}-${(date.month() + 1).toString().padStart(2, "0")}`;
-            setCurrentMonth(monthYear); // Actualizar el mes seleccionado
+            setCurrentMonth(monthYear);
             setRange([date.startOf("month"), date.endOf("month")]);
             onMonthChange([date.startOf("month").toDate(), date.endOf("month").toDate()]);
         }
@@ -134,7 +141,7 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange, formatCurr
         const newMonth = range ? range[0].subtract(1, "month") : dayjs().subtract(1, "month");
         setRange([newMonth.startOf("month"), newMonth.endOf("month")]);
         const monthYear = `${newMonth.year()}-${(newMonth.month() + 1).toString().padStart(2, "0")}`;
-        setCurrentMonth(monthYear); // Actualizar el mes seleccionado
+        setCurrentMonth(monthYear);
         onMonthChange([newMonth.startOf("month").toDate(), newMonth.endOf("month").toDate()]);
     };
 
@@ -142,7 +149,7 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange, formatCurr
         const newMonth = range ? range[0].add(1, "month") : dayjs().add(1, "month");
         setRange([newMonth.startOf("month"), newMonth.endOf("month")]);
         const monthYear = `${newMonth.year()}-${(newMonth.month() + 1).toString().padStart(2, "0")}`;
-        setCurrentMonth(monthYear); // Actualizar el mes seleccionado
+        setCurrentMonth(monthYear);
         onMonthChange([newMonth.startOf("month").toDate(), newMonth.endOf("month").toDate()]);
     };
 
@@ -157,7 +164,7 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange, formatCurr
             setRange(dates);
             onMonthChange([dates[0].toDate(), dates[1].toDate()]);
             const monthYear = `${dates[0].year()}-${(dates[0].month() + 1).toString().padStart(2, "0")}`;
-            setCurrentMonth(monthYear); // Actualizar el mes seleccionado
+            setCurrentMonth(monthYear);
         }
         setIsRangePickerVisible(false);
     };
@@ -165,16 +172,31 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange, formatCurr
     const handleReset = () => {
         setRange(null);
         const monthYear = `${dayjs().year()}-${(dayjs().month() + 1).toString().padStart(2, "0")}`;
-        setCurrentMonth(monthYear); // Actualizar el mes seleccionado
+        setCurrentMonth(monthYear);
         onMonthChange([dayjs().startOf("month").toDate(), dayjs().endOf("month").toDate()]);
     };
 
     return (
         <div>
-
-
-            {/* Controles del calendario */}
+           
             <Row gutter={16} justify="start" align="middle">
+            <Tooltip title="Actualizar balances">
+                        <Button
+                            type="default"
+                            icon={<ReloadOutlined />}
+                            onClick={handleRefreshBalances}
+                            loading={loadingMonthlyData}
+                            style={{
+                                borderColor: "black",
+                                color: "black",
+                                backgroundColor: "transparent",
+                                padding: "5px 10px",
+                                fontWeight: "bold",
+                            }}
+                        >
+                        
+                        </Button>
+                    </Tooltip>
                 <Col>
                     {/* Mostrar Ingresos, Egresos y Balance */}
                     <div className="mr-3">
@@ -198,8 +220,12 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange, formatCurr
                                 </p>
                             </div>
                         </div>
+
+                        
                     </div>
+                    
                 </Col>
+               
                 <Col>
                     <Tooltip title="Mes anterior">
                         <Button icon={<LeftOutlined />} onClick={goToPreviousMonth} style={{ width: 40 }} />
@@ -245,6 +271,7 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ onMonthChange, formatCurr
                         Restablecer
                     </Button>
                 </Col>
+                
             </Row>
 
             {/* Modal de rango de fecha */}

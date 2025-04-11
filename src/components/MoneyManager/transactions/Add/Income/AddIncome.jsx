@@ -18,6 +18,8 @@ import { format as formatDate } from "date-fns";
 import { es } from "date-fns/locale";
 import ArqueoInputs from "./ArqueoInputs";
 
+import VentaInputs from "./VentaInputs"; // Add this import
+
 const apiUrl = import.meta.env.VITE_API_FINANZAS;
 const { Title, Text } = Typography;
 
@@ -35,7 +37,7 @@ const AddIncome = ({ onTransactionAdded }) => {
   const [voucher, setVoucher] = useState("");
   const [description, setDescription] = useState("");
   const [comentarios, setComentarios] = useState("");
-  const [categories, setCategories] = useState([]);
+  const [categorias, setCategorias] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [date, setDate] = useState(dayjs());
   const [ventaCategoryId, setVentaCategoryId] = useState(null);
@@ -54,6 +56,7 @@ const AddIncome = ({ onTransactionAdded }) => {
   const [cashierid, setCashierid] = useState(null);
   const [customAmounts, setCustomAmounts] = useState([]);
   const [customAmountsTotal, setCustomAmountsTotal] = useState(0);
+  const [categoria, setCategoria] = useState(null);
 
   const handleCancel = () => {
     navigate("/index/moneymanager/transactions", { state: { activeTab: returnTab } });
@@ -78,7 +81,7 @@ const AddIncome = ({ onTransactionAdded }) => {
         (category) =>
           category.type?.toLowerCase() === "income" || category.type?.toLowerCase() === "ingreso"
       );
-      setCategories(incomeCategories);
+      setCategorias(incomeCategories);
 
       const arqueoCategory = incomeCategories.find((cat) => cat.name === "Arqueo");
       const ventaCategory = incomeCategories.find((cat) => cat.name === "Venta");
@@ -446,26 +449,19 @@ const AddIncome = ({ onTransactionAdded }) => {
   };
 
   const renderVentaInputs = () => {
-    if (isVentaChecked) {
-      return (
-        <div>
-          <div>Importe*</div>
-          <Input
-            onChange={(e) => handleAmountChange(e, "venta")}
-            prefix="$"
-            size="large"
-            className="text-lg"
-            placeholder="Ingrese el importe de la venta"
-          />
-          <CategorySelector
-            selectedCategory={category}
-            onCategorySelect={(value) => setCategory(value)}
-            categories={categories}
-          />
-        </div>
-      );
-    }
-    return null;
+    return (
+      <VentaInputs
+        isVentaChecked={isVentaChecked}
+        handleAmountChange={handleAmountChange}
+        categoria={categoria}
+        setCategoria={setCategoria}
+        categorias={categorias}
+        account={account}
+        setAccount={setAccount}
+        accounts={accounts}
+        date={date}
+      />
+    );
   };
 
   const handleCheckboxChange = (checkedValues) => {
@@ -477,18 +473,18 @@ const AddIncome = ({ onTransactionAdded }) => {
   };
 
   return (
-    <div className=" max-w-[1300px] mx-auto bg-white shadow-lg rounded-lg">
+    <div className=" max-w-[1300px] mx-auto bg-white shadow-lg rounded-lg py-2">
       {/* Encabezado fijo */}
       <div className="sticky top-0 z-10 bg-white px-4 pt-4 border-b border-gray-200 flex justify-between items-center">
 
-          <div className="flex px-2 rounded-md justify-between items-center mb-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800">COMPROBANTE DE INGRESO</h1>
-              <p className="text-sm text-gray-500">Documento de control interno</p>
-            </div>
-
+        <div className="flex px-2 rounded-md justify-between items-center mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800">COMPROBANTE DE INGRESO</h1>
+            <p className="text-sm text-gray-500">Documento de control interno</p>
           </div>
-  
+
+        </div>
+
         <Space size="middle">
           <div>
             <input
@@ -528,15 +524,32 @@ const AddIncome = ({ onTransactionAdded }) => {
       </div>
 
       {/* Contenido principal */}
-      <div className="mt-2 p-4">
-        <Radio.Group
-          value={isArqueoChecked ? "arqueo" : isVentaChecked ? "venta" : null}
-          onChange={(e) => handleCheckboxChange([e.target.value])}
-          className="mb-6"
-        >
-          <Radio value="arqueo">Arqueo</Radio>
-          <Radio value="venta">Venta</Radio>
-        </Radio.Group>
+      <div className=" px-4">
+
+
+        <div className="flex justify-between items-end">
+          <Tabs
+            activeKey={isArqueoChecked ? "arqueo" : isVentaChecked ? "venta" : "arqueo"}
+            onChange={(key) => handleCheckboxChange([key])}
+            className=""
+            items={[
+              {
+                key: "arqueo",
+                label: "Arqueo",
+              },
+              {
+                key: "venta",
+                label: "Venta",
+              },
+            ]}
+
+          />
+          <div className="text-right space-y-2 pr-4">
+            <p className="text-gray-600">
+              <span className="font-semibold">Fecha:</span> {date?.format("DD/MM/YYYY")}
+            </p>
+          </div>
+        </div>
 
         <div className="space-y-6">
           <ArqueoInputs

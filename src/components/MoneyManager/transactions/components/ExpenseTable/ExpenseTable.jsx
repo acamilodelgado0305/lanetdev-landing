@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Table, Input, Drawer, Button, Checkbox, Typography, Tag, Space } from "antd";
+import { Table, Input, Drawer, Button, Tooltip,Checkbox, Typography, Tag, Space } from "antd";
 import { format as formatDate, isWithinInterval, isValid } from "date-fns";
 import { es } from "date-fns/locale";
 import { DateTime } from "luxon";
@@ -11,6 +11,7 @@ import {
   SearchOutlined,
   EditOutlined,
   DeleteOutlined,
+  CloseCircleOutlined,CheckCircleOutlined
 } from "@ant-design/icons";
 import ViewExpense from "../../Add/expense/ViewExpense";
 import jsPDF from "jspdf";
@@ -193,11 +194,11 @@ const ExpenseTable = ({
 
   const handleEditSelected = () => {
     if (selectedRowKeys.length === 1) {
-        navigate(`/index/moneymanager/egresos/edit/${selectedRowKeys[0]}`, {
-            state: { returnTab: activeTab }, // Pasar activeTab como returnTab
-        });
+      navigate(`/index/moneymanager/egresos/edit/${selectedRowKeys[0]}`, {
+        state: { returnTab: activeTab }, // Pasar activeTab como returnTab
+      });
     }
-};
+  };
 
   const handleDeleteSelected = async () => {
     if (selectedRowKeys.length === 0) {
@@ -270,147 +271,147 @@ const ExpenseTable = ({
   // Pasar la función al padre si existe la prop
 
 
- 
+
 
   const generateExpensePDF = (items) => {
     Swal.fire({
-        title: "Generando PDF",
-        text: "Por favor espere...",
-        allowOutsideClick: false,
-        didOpen: () => {
-            Swal.showLoading();
-        },
+      title: "Generando PDF",
+      text: "Por favor espere...",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
     });
 
     try {
-        const doc = new jsPDF();
+      const doc = new jsPDF();
 
-        // Header
-        doc.setFontSize(18);
-        doc.setFont("helvetica", "bold");
-        doc.text("FACTURA DE EGRESOS", 105, 20, { align: "center" });
+      // Header
+      doc.setFontSize(18);
+      doc.setFont("helvetica", "bold");
+      doc.text("FACTURA DE EGRESOS", 105, 20, { align: "center" });
 
-        // Company Info (customize as needed)
-        doc.setFontSize(12);
-        doc.setFont("helvetica", "normal");
-        doc.text("Nombre de la Empresa", 14, 30);
-        doc.text("NIT: 123456789-0", 14, 36);
-        doc.text("Dirección: Calle 123 #45-67, Bogotá, Colombia", 14, 42);
-        doc.text("Teléfono: +57 123 456 7890", 14, 48);
+      // Company Info (customize as needed)
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "normal");
+      doc.text("Nombre de la Empresa", 14, 30);
+      doc.text("NIT: 123456789-0", 14, 36);
+      doc.text("Dirección: Calle 123 #45-67, Bogotá, Colombia", 14, 42);
+      doc.text("Teléfono: +57 123 456 7890", 14, 48);
 
-        // Invoice Info
-        doc.text(`Fecha: ${formatDate(new Date(), "d MMMM yyyy", { locale: es })}`, 140, 30);
-        doc.text(`Factura N°: ${Math.floor(Math.random() * 1000000)}`, 140, 36);
+      // Invoice Info
+      doc.text(`Fecha: ${formatDate(new Date(), "d MMMM yyyy", { locale: es })}`, 140, 30);
+      doc.text(`Factura N°: ${Math.floor(Math.random() * 1000000)}`, 140, 36);
 
-        // Table of Expenses
-        const tableData = items.map(item => [
-            item.invoice_number || "N/A",
-            item.description || "Sin descripción",
-            item.category || "Sin Sin Categoria",
-            renderDate(item.date),
-            getAccountName(item.account_id),
-            getProviderName(item.provider_id),
-            formatCurrency(item.total_gross || 0),
-            formatCurrency(item.discounts || 0),
-            formatCurrency(item.total_net || 0),
-        ]);
+      // Table of Expenses
+      const tableData = items.map(item => [
+        item.invoice_number || "N/A",
+        item.description || "Sin descripción",
+        item.category || "Sin Sin Categoria",
+        renderDate(item.date),
+        getAccountName(item.account_id),
+        getProviderName(item.provider_id),
+        formatCurrency(item.total_gross || 0),
+        formatCurrency(item.discounts || 0),
+        formatCurrency(item.total_net || 0),
+      ]);
 
-        autoTable(doc, {
-            startY: 60,
-            head: [["N° Egreso", "Descripción", "Fecha", "Cuenta", "Proveedor", "Base", "Impuestos", "Total Neto"]],
-            body: tableData,
-            theme: "grid",
-            styles: { fontSize: 10, cellPadding: 2 },
-            headStyles: { fillColor: [22, 160, 133], textColor: [255, 255, 255] },
-            columnStyles: {
-                0: { cellWidth: 20 },
-                1: { cellWidth: 40 },
-                2: { cellWidth: 20 },
-                3: { cellWidth: 20 },
-                4: { cellWidth: 20 },
-                5: { cellWidth: 20 },
-                6: { cellWidth: 20 },
-                7: { cellWidth: 20 },
-            },
-        });
+      autoTable(doc, {
+        startY: 60,
+        head: [["N° Egreso", "Descripción", "Fecha", "Cuenta", "Proveedor", "Base", "Impuestos", "Total Neto"]],
+        body: tableData,
+        theme: "grid",
+        styles: { fontSize: 10, cellPadding: 2 },
+        headStyles: { fillColor: [22, 160, 133], textColor: [255, 255, 255] },
+        columnStyles: {
+          0: { cellWidth: 20 },
+          1: { cellWidth: 40 },
+          2: { cellWidth: 20 },
+          3: { cellWidth: 20 },
+          4: { cellWidth: 20 },
+          5: { cellWidth: 20 },
+          6: { cellWidth: 20 },
+          7: { cellWidth: 20 },
+        },
+      });
 
-        // Total
-        const totalNet = items.reduce((sum, item) => sum + (item.total_net || 0), 0);
-        doc.setFontSize(12);
-        doc.text(`Total Neto: ${formatCurrency(totalNet)}`, 140, doc.lastAutoTable.finalY + 10);
+      // Total
+      const totalNet = items.reduce((sum, item) => sum + (item.total_net || 0), 0);
+      doc.setFontSize(12);
+      doc.text(`Total Neto: ${formatCurrency(totalNet)}`, 140, doc.lastAutoTable.finalY + 10);
 
-        // Footer
-        doc.setFontSize(10);
-        doc.text("Gracias por su negocio", 105, 280, { align: "center" });
-        doc.text("Este documento no tiene validez fiscal", 105, 286, { align: "center" });
+      // Footer
+      doc.setFontSize(10);
+      doc.text("Gracias por su negocio", 105, 280, { align: "center" });
+      doc.text("Este documento no tiene validez fiscal", 105, 286, { align: "center" });
 
-        // Save the PDF
-        doc.save(`Factura_Egresos_${formatDate(new Date(), "yyyy-MM-dd")}.pdf`);
+      // Save the PDF
+      doc.save(`Factura_Egresos_${formatDate(new Date(), "yyyy-MM-dd")}.pdf`);
 
-        Swal.fire({
-            icon: "success",
-            title: "PDF Generado",
-            text: "El comprobante se ha descargado correctamente",
-        });
+      Swal.fire({
+        icon: "success",
+        title: "PDF Generado",
+        text: "El comprobante se ha descargado correctamente",
+      });
     } catch (error) {
-        console.error("Error al generar PDF:", error);
-        Swal.fire({
-            icon: "error",
-            title: "Error",
-            text: `No se pudo generar el PDF: ${error.message}`,
-        });
+      console.error("Error al generar PDF:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: `No se pudo generar el PDF: ${error.message}`,
+      });
     }
-};
+  };
 
-const handleBatchOperation = (operation) => {
+  const handleBatchOperation = (operation) => {
     if (selectedRowKeys.length === 0) {
-        Swal.fire({
-            title: 'Selección vacía',
-            text: 'Por favor, seleccione al menos un registro',
-            icon: 'warning',
-            confirmButtonColor: '#3085d6',
-            confirmButtonText: 'Entendido'
-        });
-        return;
+      Swal.fire({
+        title: 'Selección vacía',
+        text: 'Por favor, seleccione al menos un registro',
+        icon: 'warning',
+        confirmButtonColor: '#3085d6',
+        confirmButtonText: 'Entendido'
+      });
+      return;
     }
 
     const selectedItems = entries.filter(item => selectedRowKeys.includes(item.id));
 
     switch (operation) {
-        case 'delete':
-            Swal.fire({
-                title: '¿Está seguro?',
-                text: `¿Desea eliminar ${selectedRowKeys.length} registro(s) seleccionado(s)?`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Sí, eliminar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    const deletePromises = selectedRowKeys.map(id => handleDeleteItem(id));
-                    Promise.all(deletePromises)
-                        .then(() => {
-                            Swal.fire('¡Eliminado!', 'Los registros han sido eliminados.', 'success');
-                            setSelectedRowKeys([]);
-                            fetchData();
-                        })
-                        .catch(error => {
-                            console.error("Error eliminando registros:", error);
-                            Swal.fire('Error', 'Hubo un problema al eliminar los registros.', 'error');
-                        });
-                }
-            });
-            break;
-        case 'export':
-            console.log("Exportar seleccionados:", selectedItems);
-            // Add your export logic here
-            break;
-        default:
-            break;
+      case 'delete':
+        Swal.fire({
+          title: '¿Está seguro?',
+          text: `¿Desea eliminar ${selectedRowKeys.length} registro(s) seleccionado(s)?`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#d33',
+          cancelButtonColor: '#3085d6',
+          confirmButtonText: 'Sí, eliminar',
+          cancelButtonText: 'Cancelar'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            const deletePromises = selectedRowKeys.map(id => handleDeleteItem(id));
+            Promise.all(deletePromises)
+              .then(() => {
+                Swal.fire('¡Eliminado!', 'Los registros han sido eliminados.', 'success');
+                setSelectedRowKeys([]);
+                fetchData();
+              })
+              .catch(error => {
+                console.error("Error eliminando registros:", error);
+                Swal.fire('Error', 'Hubo un problema al eliminar los registros.', 'error');
+              });
+          }
+        });
+        break;
+      case 'export':
+        console.log("Exportar seleccionados:", selectedItems);
+        // Add your export logic here
+        break;
+      default:
+        break;
     }
-};
+  };
   const openDrawer = (images) => {
     setSelectedImages(images);
     setIsDrawerOpen(true);
@@ -587,7 +588,7 @@ const handleBatchOperation = (operation) => {
     {
       title: (
         <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
-          <Text strong>Impuestos</Text>
+          <Text strong>Descuentos</Text>
           <Input
             prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
             onChange={(e) => handleSearch(e.target.value, "discounts")}
@@ -597,6 +598,24 @@ const handleBatchOperation = (operation) => {
       ),
       dataIndex: "discounts",
       key: "discounts",
+      render: (discounts) => <span className="font-semibold text-gray-700">{formatCurrency(discounts)}</span>,
+      sorter: (a, b) => a.discounts - b.discounts,
+      sortDirections: ["descend", "ascend"],
+      width: 120,
+    },
+    {
+      title: (
+        <div className="flex flex-col" style={{ margin: "-4px 0", gap: 1, lineHeight: 1 }}>
+          <Text strong>Total Impuestos</Text>
+          <Input
+            prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
+            onChange={(e) => handleSearch(e.target.value, "total_impuestos")}
+            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, borderRadius: 4, outline: "none" }}
+          />
+        </div>
+      ),
+      dataIndex: "total_impuestos",
+      key: "total_impuestos",
       render: (discounts) => <span className="font-semibold text-gray-700">{formatCurrency(discounts)}</span>,
       sorter: (a, b) => a.discounts - b.discounts,
       sortDirections: ["descend", "ascend"],
@@ -621,28 +640,33 @@ const handleBatchOperation = (operation) => {
       width: 120,
     },
     {
-      title: "Acciones",
-      key: "actions",
-      render: (_, record) => (
-        <Space size="middle">
-          <Button
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() => onEdit(record)}
-          >
-            Editar
-          </Button>
-          <Button
-            type="link"
-            icon={<DeleteOutlined />}
-            danger
-            onClick={() => handleDelete(record.id)}
-          >
-            Eliminar
-          </Button>
-        </Space>
+      title: "Comprobante",
+      dataIndex: "voucher",
+      key: "voucher",
+      render: (vouchers) => (
+        Array.isArray(vouchers) && vouchers.length > 0 ? (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <Tooltip title="Comprobantes disponibles">
+              <CheckCircleOutlined style={{ color: 'green', fontSize: 24 }} />
+            </Tooltip>
+            <Button
+              type="link"
+              onClick={(e) => {
+                e.stopPropagation();
+                openDrawer(vouchers);
+              }}
+              style={{ padding: 0, height: 'auto' }}
+            />
+          </div>
+        ) : (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <Tooltip title="Sin comprobantes">
+              <CloseCircleOutlined style={{ color: 'red', fontSize: 24 }} />
+            </Tooltip>
+          </div>
+        )
       ),
-      width: 150,
+      width: 130,
     },
   ];
 
