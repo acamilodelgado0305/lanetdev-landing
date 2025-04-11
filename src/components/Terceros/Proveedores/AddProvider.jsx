@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Form, Input, Button, Typography, Select, Switch, Tooltip
+  Form, Input, Button, Typography, Select, Switch, Tooltip, DatePicker, Upload, Row, Col
 } from 'antd';
 import {
-  FileTextOutlined, UserOutlined, HomeOutlined, EnvironmentOutlined, PhoneOutlined, MailOutlined, BarcodeOutlined, CloseOutlined, ShareAltOutlined, EditOutlined
+  FileTextOutlined, UserOutlined, HomeOutlined, EnvironmentOutlined, BarcodeOutlined, CloseOutlined, ShareAltOutlined, EditOutlined
 } from '@ant-design/icons';
 import Swal from 'sweetalert2';
+import dayjs from 'dayjs';
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -18,18 +19,31 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
   const [editMode, setEditMode] = useState(false);
   const [tipoIdentificacion, setTipoIdentificacion] = useState('NIT');
 
+  // Lista de departamentos de Colombia
+  const departamentos = [
+    'Amazonas', 'Antioquia', 'Arauca', 'Atlántico', 'Bolívar', 'Boyacá', 'Caldas', 'Caquetá', 'Casanare',
+    'Cauca', 'Cesar', 'Chocó', 'Córdoba', 'Cundinamarca', 'Guainía', 'Guaviare', 'Huila', 'La Guajira',
+    'Magdalena', 'Meta', 'Nariño', 'Norte de Santander', 'Putumayo', 'Quindío', 'Risaralda', 'San Andrés',
+    'Santander', 'Sucre', 'Tolima', 'Valle del Cauca', 'Vaupés', 'Vichada'
+  ];
+
   useEffect(() => {
     if (providerToEdit) {
       setIsEditing(true);
-      setEditMode(false); // Start in view-only mode
+      setEditMode(false); // Iniciar en modo solo lectura
       setTipoIdentificacion(providerToEdit.tipoIdentificacion || 'NIT');
       form.setFieldsValue({
         ...providerToEdit,
-        estado: providerToEdit.estado === 'activo'
+        estado: providerToEdit.estado === 'activo',
+        fechaVencimiento: providerToEdit.fechaVencimiento ? dayjs(providerToEdit.fechaVencimiento) : null,
+        telefono: providerToEdit.telefono || [],
+        correo: providerToEdit.correo || [],
+        adjuntos: providerToEdit.adjuntos || [],
+        nombreComercial: providerToEdit.nombre_comercial || '', // Asegúrate de que `nombreComercial` se inicialice aquí
       });
     } else {
       setIsEditing(false);
-      setEditMode(true); // New provider starts in edit mode
+      setEditMode(true); // Nuevo proveedor comienza en modo edición
       form.resetFields();
       setTipoIdentificacion('NIT');
       form.setFieldsValue({ estado: true });
@@ -45,33 +59,45 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
   const handleSave = async () => {
     try {
       setLoading(true);
-      const values = await form.validateFields();
-      const method = isEditing ? 'PUT' : 'POST';
-      const endpoint = isEditing
-        ? `${apiUrl}/providers/${providerToEdit.id}`
-        : `${apiUrl}/providers`;
+      const values = await form.validateFields(); // Valida los campos
 
       const payload = {
         tipoIdentificacion: values.tipoIdentificacion,
-        numeroIdentificacion: values.numeroIdentificacion,
-        nombreComercial: values.nombreComercial || '',
+        numeroIdentificacion: values.numeroIdentificacion || 'No disponible',
+        nombreComercial: values.tipoIdentificacion === 'NIT' && values.nombreComercial ? values.nombreComercial : '', // Asegúrate de que se envíe solo si tiene valor
+        nombre: values.nombre || undefined,
         nombresContacto: values.nombresContacto || '',
         apellidosContacto: values.apellidosContacto || '',
         ciudad: values.ciudad,
         direccion: values.direccion,
-        correoContactoFacturacion: values.correoContactoFacturacion,
-        telefonoFacturacion: values.telefonoFacturacion,
+        telefono: values.telefono.map(telefono => ({
+          numero: telefono,
+          tipo: 'Personal',
+        })),
+        correo: values.correo.map(correo => ({
+          email: correo,
+          tipo: 'Contacto General',
+        })),
+        adjuntos: values.adjuntos || [],
+        departamento: values.departamento || 'No disponible',
+        sitioweb: values.sitioweb || '',
+        medioPago: values.medioPago || 'Banco',
         estado: values.estado ? 'activo' : 'inactivo',
+        fechaVencimiento: values.fechaVencimiento ? values.fechaVencimiento.format('YYYY-MM-DD') : null,
       };
 
+      const endpoint = isEditing
+        ? `${apiUrl}/providers/${providerToEdit.id}`
+        : `${apiUrl}/providers`;
+
       const response = await fetch(endpoint, {
-        method,
+        method: isEditing ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
       if (!response.ok) throw new Error(`Error: ${response.status}`);
-      await response.json();
+      const responseData = await response.json();
 
       Swal.fire({
         icon: 'success',
@@ -83,11 +109,14 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
         onClose();
         if (onProviderAdded) onProviderAdded();
       });
+      console.log("Payload que se enviará:", JSON.stringify(payload)); // Verifica que nombreComercial esté incluido
+
     } catch (error) {
+      console.error("Error al guardar proveedor:", error);
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: 'Hubo un error al guardar el proveedor.',
+        text: `Hubo un error al guardar el proveedor: ${error.message}`,
         confirmButtonColor: '#DE350B',
       });
     } finally {
@@ -109,7 +138,7 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-6"
-seven      onClick={onClose}
+      onClick={onClose}
     >
       <div
         className="w-full max-w-[800px] bg-white shadow-lg rounded-lg overflow-hidden"
@@ -156,8 +185,7 @@ seven      onClick={onClose}
                 <Form.Item
                   name="tipoIdentificacion"
                   label={<span className="text-gray-600 text-sm">Tipo de Identificación</span>}
-                  rules={[{ required: true, message: 'Requerido' }]}
-                >
+                  rules={[{ required: true, message: 'Requerido' }]}>
                   <Select
                     placeholder="Seleccione"
                     onChange={handleTipoIdentificacionChange}
@@ -171,8 +199,7 @@ seven      onClick={onClose}
                 <Form.Item
                   name="numeroIdentificacion"
                   label={<span className="text-gray-600 text-sm">Número de Identificación</span>}
-                  rules={[{ required: true, message: 'Requerido' }]}
-                >
+                  rules={[{ required: true, message: 'Requerido' }]}>
                   <Input
                     prefix={<BarcodeOutlined className="text-gray-400" />}
                     placeholder="Ingrese número"
@@ -219,6 +246,7 @@ seven      onClick={onClose}
                     </Form.Item>
                   </>
                 )}
+
               </div>
               <div className="col-span-1">
                 <Text strong className="text-base text-gray-700 mb-2 block">
@@ -228,8 +256,7 @@ seven      onClick={onClose}
                 <Form.Item
                   name="direccion"
                   label={<span className="text-gray-600 text-sm">Dirección</span>}
-                  rules={[{ required: true, message: 'Requerido' }]}
-                >
+                  rules={[{ required: true, message: 'Requerido' }]}>
                   <Input.TextArea
                     prefix={<HomeOutlined className="text-gray-400" />}
                     placeholder="Ingrese dirección"
@@ -241,8 +268,7 @@ seven      onClick={onClose}
                 <Form.Item
                   name="ciudad"
                   label={<span className="text-gray-600 text-sm">Ciudad</span>}
-                  rules={[{ required: true, message: 'Requerido' }]}
-                >
+                  rules={[{ required: true, message: 'Requerido' }]}>
                   <Input
                     prefix={<EnvironmentOutlined className="text-gray-400" />}
                     placeholder="Ingrese ciudad"
@@ -251,93 +277,137 @@ seven      onClick={onClose}
                   />
                 </Form.Item>
                 <Form.Item
-                  name="telefonoFacturacion"
-                  label={<span className="text-gray-600 text-sm">Teléfono de Facturación</span>}
-                  rules={[{ required: true, message: 'Requerido' }]}
-                >
-                  <Input
-                    prefix={<PhoneOutlined className="text-gray-400" />}
-                    placeholder="Ingrese teléfono"
+                  name="departamento"
+                  label={<span className="text-gray-600 text-sm">Departamento</span>}>
+                  <Select
                     className="rounded-md text-base"
                     disabled={!editMode}
+                    placeholder="Seleccione un departamento">
+                    {departamentos.map(departamento => (
+                      <Option key={departamento} value={departamento}>
+                        {departamento}
+                      </Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+                <Form.Item
+                  name="telefono"
+                  label={<span className="text-gray-600 text-sm">Teléfonos</span>}
+                  rules={[{ required: true, message: 'Requerido' }]}>
+                  <Select
+                    mode="tags"
+                    placeholder="Agregar teléfono"
+                    className="rounded-md text-base"
+                    disabled={!editMode}
+                    onChange={(value) => {
+                      form.setFieldsValue({ telefono: value });  // Aquí asignamos un array de correos directamente
+                    }}
                   />
                 </Form.Item>
                 <Form.Item
-                  name="correoContactoFacturacion"
-                  label={<span className="text-gray-600 text-sm">Correo de Facturación</span>}
-                  rules={[{ required: true, message: 'Requerido' }, { type: 'email', message: 'Email inválido' }]}
-                >
-                  <Input
-                    prefix={<MailOutlined className="text-gray-400" />}
-                    placeholder="Ingrese email"
+                  name="correo"
+                  label={<span className="text-gray-600 text-sm">Correos</span>}
+                  rules={[{ required: true, message: 'Requerido' }]}>
+                  <Select
+                    mode="tags"  // Permitir múltiples entradas
+                    placeholder="Ingrese correos"
                     className="rounded-md text-base"
                     disabled={!editMode}
+                    onChange={(value) => {
+                      form.setFieldsValue({ correo: value });  // Aquí asignamos un array de correos directamente
+                    }}
                   />
                 </Form.Item>
+
+
               </div>
             </div>
+
             <div className="mt-4">
               <Text strong className="text-base text-gray-700 mb-2 block">
                 <FileTextOutlined className="mr-2 text-gray-500" />
                 Detalles Adicionales
               </Text>
-              {tipoIdentificacion === 'NIT' && (
-                <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">  {/* Añadido grid con dos columnas */}
+                <div className="col-span-1">
                   <Form.Item
-                    name="nombresContacto"
-                    label={<span className="text-gray-600 text-sm">Nombres Contacto (Opcional)</span>}
-                  >
+                    name="estado"
+                    label={<span className="text-gray-600 text-sm">Estado</span>}
+                    valuePropName="checked">
+                    <Switch
+                      checkedChildren="Activo"
+                      unCheckedChildren="Inactivo"
+                      disabled={!editMode}
+                    />
+                  </Form.Item>
+                </div>
+                <div className="col-span-1">
+                  <Form.Item
+                    name="fechaVencimiento"
+                    label={<span className="text-gray-600 text-sm">Fecha de Vencimiento</span>}>
+                    <DatePicker
+                      className="w-full rounded-md text-base"
+                      disabled={!editMode}
+                      format="YYYY-MM-DD"
+                    />
+                  </Form.Item>
+                </div>
+
+                <div className="col-span-1">
+                  <Form.Item
+                    name="sitioweb"
+                    label={<span className="text-gray-600 text-sm">Sitio Web</span>}>
                     <Input
-                      prefix={<UserOutlined className="text-gray-400" />}
-                      placeholder="Ingrese nombres del contacto"
+                      placeholder="Ingrese sitio web"
+                      className="rounded-md text-base"
+                      value={form.getFieldValue('sitioweb') || ''}
+                      onChange={(e) => {
+                        let value = e.target.value;
+                        if (value && !/^https?:\/\//i.test(value)) {
+                          value = `https://${value}`; // Agregar 'https://' si no tiene protocolo
+                        }
+                        form.setFieldsValue({ sitioweb: value });
+                      }}
+                    />
+                  </Form.Item>
+                </div>
+
+                <div className="col-span-1">
+                  <Form.Item
+                    name="medioPago"
+                    label={<span className="text-gray-600 text-sm">Medio de Pago</span>}
+                    rules={[{ required: true, message: 'Requerido' }]}>
+                    <Input
+                      placeholder="Ingrese método de pago"
                       className="rounded-md text-base"
                       disabled={!editMode}
                     />
                   </Form.Item>
+                </div>
+
+                <div className="col-span-1">
                   <Form.Item
-                    name="apellidosContacto"
-                    label={<span className="text-gray-600 text-sm">Apellidos Contacto (Opcional)</span>}
-                  >
-                    <Input
-                      placeholder="Ingrese apellidos del contacto"
-                      className="rounded-md text-base"
+                    name="adjuntos"
+                    label={<span className="text-gray-600 text-sm">Adjuntos</span>}>
+                    <Upload
                       disabled={!editMode}
-                    />
+                      beforeUpload={() => false} // Prevent automatic upload
+                      fileList={[]}>
+                      <Button>Subir Archivos</Button>
+                    </Upload>
                   </Form.Item>
-                </>
-              )}
-              {tipoIdentificacion === 'CC' && (
-                <Form.Item
-                  name="nombreComercial"
-                  label={<span className="text-gray-600 text-sm">Nombre Comercial (Opcional)</span>}
-                >
-                  <Input
-                    placeholder="Ingrese nombre comercial"
-                    className="rounded-md text-base"
-                    disabled={!editMode}
-                  />
-                </Form.Item>
-              )}
-              <Form.Item
-                name="estado"
-                label={<span className="text-gray-600 text-sm">Estado</span>}
-                valuePropName="checked"
-              >
-                <Switch
-                  checkedChildren="Activo"
-                  unCheckedChildren="Inactivo"
-                  disabled={!editMode}
-                />
-              </Form.Item>
+                </div>
+              </div>  {/* Cierre de grid */}
             </div>
+
           </Form>
         </div>
+
         <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
           <Button
             onClick={onClose}
             className="rounded-md border-gray-300 text-gray-700 hover:text-gray-900 hover:border-gray-400 transition-all"
-            style={{ height: 40, fontSize: '16px', padding: '0 20px' }}
-          >
+            style={{ height: 40, fontSize: '16px', padding: '0 20px' }}>
             Cancelar
           </Button>
           {editMode && (
@@ -346,8 +416,7 @@ seven      onClick={onClose}
               onClick={handleSave}
               loading={loading}
               className="rounded-md bg-[#0052CC] hover:bg-[#003BB3] border-none transition-all"
-              style={{ height: 40, fontSize: '16px', padding: '0 20px' }}
-            >
+              style={{ height: 40, fontSize: '16px', padding: '0 20px' }}>
               {isEditing ? 'Actualizar' : 'Guardar'}
             </Button>
           )}
