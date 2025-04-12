@@ -345,7 +345,7 @@ const ProveedoresTable = ({ activeTab }) => {
                               </div>
                               <div className="flex items-center text-sm text-gray-800">
                                 <p>
-                                  <strong>Departamento:</strong> {proveedor.pais}
+                                  <strong>Pais:</strong> {proveedor.pais}
                                 </p>
                               </div>
                               <div className="flex items-center text-sm text-gray-800">
@@ -360,7 +360,7 @@ const ProveedoresTable = ({ activeTab }) => {
                               </div>
                               <div className="flex items-center text-sm text-gray-800">
                                 <p>
-                                  <strong>Medio de pago:</strong> {proveedor.prefijo}
+                                  <strong>Prefijo:</strong> {proveedor.prefijo}
                                 </p>
                               </div>
                               <div className="flex items-center text-sm text-gray-800">
