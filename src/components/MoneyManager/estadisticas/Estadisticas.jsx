@@ -37,7 +37,7 @@ const Dashboard = () => {
         const [accountsData, categoriesData, transactionsData, transfersData, balanceData] = await Promise.all([
           getAccounts(),
           getCategorias(),
-          getTransactions(),
+          /* getTransactions(), */
           getTransfers(),
           axios.get(`${VITE_API_FINANZAS}/balance/general`),
         ]);

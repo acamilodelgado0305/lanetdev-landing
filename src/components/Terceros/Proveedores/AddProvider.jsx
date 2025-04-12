@@ -309,6 +309,20 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
                   />
                 </Form.Item>
                 <Form.Item
+                  name="departamento"
+                  label={<span className="text-gray-600 text-sm">Departamento</span>}>
+                  <Select
+                    className="rounded-md text-base"
+                    disabled={!editMode}
+                    placeholder="Seleccione un departamento">
+                    {departamentos.map(departamento => (
+                      <Option key={departamento} value={departamento}>
+                        {departamento}
+                      </Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+                <Form.Item
                   name="ciudad"
                   label={<span className="text-gray-600 text-sm">Ciudad</span>}
                   rules={[{ required: true, message: 'Requerido' }]}>
@@ -323,20 +337,7 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
                     ))}
                   </Select>
                 </Form.Item>
-                <Form.Item
-                  name="departamento"
-                  label={<span className="text-gray-600 text-sm">Departamento</span>}>
-                  <Select
-                    className="rounded-md text-base"
-                    disabled={!editMode}
-                    placeholder="Seleccione un departamento">
-                    {departamentos.map(departamento => (
-                      <Option key={departamento} value={departamento}>
-                        {departamento}
-                      </Option>
-                    ))}
-                  </Select>
-                </Form.Item>
+
                 <Form.Item
                   name="telefono"
                   label={<span className="text-gray-600 text-sm">Teléfonos</span>}
@@ -391,7 +392,7 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
                 <div className="col-span-1">
                   <Form.Item
                     name="fechaVencimiento"
-                    label={<span className="text-gray-600 text-sm">Fecha de Vencimiento</span>}>
+                    label={<span className="text-gray-600 text-sm">Fecha de Creación</span>}>
                     <DatePicker
                       className="w-full rounded-md text-base"
                       disabled={!editMode}

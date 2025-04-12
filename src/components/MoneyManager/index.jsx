@@ -17,11 +17,11 @@ const IndexMoneyManager = () => {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
+  /* useEffect(() => {
     fetchTransactions();
-  }, []);
+  }, []); */
 
-  const fetchTransactions = async () => {
+  /* const fetchTransactions = async () => {
     try {
       const transactions = await getTransactions();
       const processedEvents = processRecurringTransactions(transactions);
@@ -31,7 +31,7 @@ const IndexMoneyManager = () => {
       console.error("Error fetching transactions:", error);
       setLoading(false);
     }
-  };
+  }; */
 
   const processRecurringTransactions = (transactions) => {
     const processedEvents = {};
@@ -107,7 +107,7 @@ const IndexMoneyManager = () => {
 
   const handleEntryAdded = (newTransaction) => {
     console.log("Transacción añadida:", newTransaction);
-    fetchTransactions();
+    /* fetchTransactions(); */
   };
 
   return (

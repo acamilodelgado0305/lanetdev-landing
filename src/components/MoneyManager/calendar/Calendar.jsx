@@ -20,7 +20,7 @@ const FullScreenCalendar = () => {
     const fetchTransactions = async () => {
         try {
             const [transactions, pendingTransactions] = await Promise.all([
-                getTransactions(),
+                /* getTransactions(), */
                 getPendingTransactions()
             ]);
 
