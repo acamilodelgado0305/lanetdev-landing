@@ -32,7 +32,6 @@ const ProveedoresTable = ({ activeTab }) => {
 
       let proveedoresArray = response.data || [];
 
-<<<<<<< HEAD
       // Ensure proveedoresArray is an array
       if (!Array.isArray(proveedoresArray)) {
         console.warn("proveedoresArray is not an array:", proveedoresArray);
@@ -72,29 +71,6 @@ const ProveedoresTable = ({ activeTab }) => {
 
       console.log("Mapped Proveedores:", mappedProveedores); // Debug: Log final mapped data
 
-=======
-      if (!Array.isArray(proveedoresArray)) {
-        proveedoresArray = [];
-      }
-
-      const mappedProveedores = proveedoresArray.map((proveedor) => ({
-        id: proveedor.id,
-        tipo_identificacion: proveedor.tipo_identificacion || "No disponible",
-        numero_identificacion: proveedor.numero_identificacion || "No disponible",
-        nombre_comercial: proveedor.nombre_comercial || "No disponible",
-        contacto: `${proveedor.nombres_contacto || "No disponible"} ${proveedor.apellidos_contacto || "No disponible"}`,
-        direccion: proveedor.direccion || "No disponible",
-        ciudad: proveedor.ciudad || "No disponible",
-        correo: proveedor.correo?.map((c) => c.email).join(", ") || "No disponible",
-        telefono: proveedor.telefono?.map((t) => `${t.tipo}: ${t.numero}`).join(", ") || "No disponible",
-        estado: proveedor.estado || "No disponible",
-        departamento: proveedor.departamento?.trim() || "No disponible",
-        sitioweb: proveedor.sitioweb || "No disponible",
-        medio_pago: proveedor.medio_pago || "No disponible",
-        fecha_vencimiento: proveedor.fecha_vencimiento || "No disponible",
-      }));
-
->>>>>>> e346b6fe2eda3cc3ec2b5e717d20b02435dcaf82
       setEntries(mappedProveedores);
       setFilteredEntries(mappedProveedores);
       setError(null);
@@ -292,11 +268,7 @@ const ProveedoresTable = ({ activeTab }) => {
                             type="checkbox"
                             checked={selectedRowKeys.includes(proveedor.id)}
                             onChange={() => handleSelectRow(proveedor.id)}
-<<<<<<< HEAD
                             onClick={(e) => e.stopPropagation()}
-=======
-                            onClick={(e) => e.stopPropagation()} // Prevent row expansion on checkbox click
->>>>>>> e346b6fe2eda3cc3ec2b5e717d20b02435dcaf82
                             className="h-4 w-4 text-blue-600 rounded"
                           />
                         </td>
