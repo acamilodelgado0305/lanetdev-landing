@@ -26,6 +26,22 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
     'Magdalena', 'Meta', 'Nariño', 'Norte de Santander', 'Putumayo', 'Quindío', 'Risaralda', 'San Andrés',
     'Santander', 'Sucre', 'Tolima', 'Valle del Cauca', 'Vaupés', 'Vichada'
   ];
+  const ciudadesColombia = [
+    'Leticia', 'Medellín', 'Envigado', 'Rionegro', 'Itagüí', 'Bello',
+    'Arauca', 'Tame', 'Arauquita', 'Barranquilla', 'Soledad', 'Malambo',
+    'Cartagena', 'Magangué', 'Turbaná', 'Tunja', 'Duitama', 'Sogamoso', 'Chiquinquirá',
+    'Manizales', 'Villamaría', 'La Dorada', 'Florencia', 'San Vicente del Caguán', 'Puerto Rico',
+    'Yopal', 'Villanueva', 'Hato Corozal', 'Popayán', 'Santander de Quilichao', 'Cajibío',
+    'Valledupar', 'Aguachica', 'Codazzi', 'Quibdó', 'Riosucio', 'Condoto',
+    'Montería', 'Lorica', 'Cereté', 'Bogotá', 'Soacha', 'Fusagasugá',
+    'Inírida', 'San José del Guaviare', 'Neiva', 'Pitalito', 'La Plata',
+    'Riohacha', 'Maicao', 'Fonseca', 'Santa Marta', 'Ciénaga', 'El Rodadero',
+    'Villavicencio', 'Acacías', 'Puerto López', 'Pasto', 'Tumaco', 'Ipiales',
+    'Cúcuta', 'Villa del Rosario', 'Los Patios', 'Mocoa', 'Puerto Asís', 'La Hormiga',
+    'Armenia', 'Montenegro', 'Circasia', 'Pereira', 'Dosquebradas', 'La Virginia',
+    'San Andrés', 'Bucaramanga', 'Barrancabermeja', 'Girón', 'Sincelejo', 'Corozal', 'Sampués',
+    'Ibagué', 'Espinal', 'Honda', 'Cali', 'Buenaventura', 'Palmira', 'Mitú', 'Puerto Carreño'
+  ];
 
   useEffect(() => {
     if (providerToEdit) {
@@ -60,14 +76,20 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
     try {
       setLoading(true);
       const values = await form.validateFields(); // Valida los campos
+      // Si el tipoIdentificacion es 'CC' y nombreComercial está vacío, eliminamos nombreComercial
+      if (values.tipoIdentificacion === 'CC' && !values.nombreComercial) {
+        delete values.nombreComercial; // Eliminar el campo nombreComercial si es una cédula
+      }
 
       const payload = {
         tipoIdentificacion: values.tipoIdentificacion,
         numeroIdentificacion: values.numeroIdentificacion || 'No disponible',
-        nombreComercial: values.tipoIdentificacion === 'NIT' && values.nombreComercial ? values.nombreComercial : '', // Asegúrate de que se envíe solo si tiene valor
+        nombreComercial: values.nombreComercial || '',
         nombre: values.nombre || undefined,
         nombresContacto: values.nombresContacto || '',
         apellidosContacto: values.apellidosContacto || '',
+        prefijo: values.prefijo || 'No disponible',
+        pais: values.pais || 'Colombia',
         ciudad: values.ciudad,
         direccion: values.direccion,
         telefono: values.telefono.map(telefono => ({
@@ -211,7 +233,6 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
                   <Form.Item
                     name="nombreComercial"
                     label={<span className="text-gray-600 text-sm">Nombre Comercial</span>}
-                    rules={[{ required: true, message: 'Requerido para NIT' }]}
                   >
                     <Input
                       placeholder="Ingrese nombre comercial"
@@ -245,8 +266,19 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
                       />
                     </Form.Item>
                   </>
-                )}
 
+                )}
+                <Form.Item
+                  name="prefijo"
+                  label={<span className="text-gray-600 text-sm">Prefijo</span>}
+                  rules={[{ required: true, message: 'Requerido' }]}
+                >
+                  <Input
+                    placeholder="Ingrese Prefijo"
+                    className="rounded-md text-base"
+                    disabled={!editMode}
+                  />
+                </Form.Item>
               </div>
               <div className="col-span-1">
                 <Text strong className="text-base text-gray-700 mb-2 block">
@@ -266,12 +298,12 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
                   />
                 </Form.Item>
                 <Form.Item
-                  name="ciudad"
-                  label={<span className="text-gray-600 text-sm">Ciudad</span>}
-                  rules={[{ required: true, message: 'Requerido' }]}>
+                  name="pais"
+                  label={<span className="text-gray-600 text-sm">Pais</span>}
+                  rules={[{ required: true, message: 'Requerido' }]}
+                >
                   <Input
-                    prefix={<EnvironmentOutlined className="text-gray-400" />}
-                    placeholder="Ingrese ciudad"
+                    placeholder="Ingrese su país"
                     className="rounded-md text-base"
                     disabled={!editMode}
                   />
@@ -290,6 +322,22 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
                     ))}
                   </Select>
                 </Form.Item>
+                <Form.Item
+                  name="ciudad"
+                  label={<span className="text-gray-600 text-sm">Ciudad</span>}
+                  rules={[{ required: true, message: 'Requerido' }]}>
+                  <Select
+                    className="rounded-md text-base"
+                    disabled={!editMode}
+                    placeholder="Seleccione una ciudad">
+                    {ciudadesColombia.map(ciudadesColombia => (
+                      <Option key={ciudadesColombia} value={ciudadesColombia}>
+                        {ciudadesColombia}
+                      </Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+
                 <Form.Item
                   name="telefono"
                   label={<span className="text-gray-600 text-sm">Teléfonos</span>}
@@ -344,7 +392,7 @@ const AddProvider = ({ onProviderAdded, providerToEdit, visible, onClose }) => {
                 <div className="col-span-1">
                   <Form.Item
                     name="fechaVencimiento"
-                    label={<span className="text-gray-600 text-sm">Fecha de Vencimiento</span>}>
+                    label={<span className="text-gray-600 text-sm">Fecha de Creación</span>}>
                     <DatePicker
                       className="w-full rounded-md text-base"
                       disabled={!editMode}

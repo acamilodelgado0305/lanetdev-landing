@@ -38,6 +38,7 @@ import PaginaProveedores from "./components/MoneyManager/proveedores/ProvidersPa
 import IncomeView from "./components/MoneyManager/transactions/Add/Income/ViewIncome.jsx";
 import Administracion from "./components/Administracion/Administracion.jsx";
 import InicioTerceros from "./components/Terceros/InicioTerceros.jsx";
+import AddProvider from "./components/Terceros/AddProvider.jsx";
 import AddTransfer from "./components/MoneyManager/transactions/Add/transferencia/AddTransfer.jsx";
 import 'antd/dist/reset.css';
 
@@ -81,12 +82,16 @@ const router = createBrowserRouter([
             path: "cajeros",
             element: <InicioTerceros />,
           },
-          
+
           {
-          
             path: "proveedores",
             element: <InicioTerceros />,
           },
+          {
+            path: "nuevoproveedores",
+            element: <AddProvider />,
+          },
+
 
         ],
       },
@@ -147,7 +152,7 @@ const router = createBrowserRouter([
             path: "calendario",
             element: <Calendario />,
           },
-          
+
           {
             path: "Pagos-Pendientes",
             element: <RenderPaymentsList />,

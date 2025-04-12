@@ -76,7 +76,7 @@ const InicioTerceros = () => {
     {
       key: "proveedor",
       label: "Crear Nuevo Proveedor",
-      onClick: () => setIsAddProviderOpen(true), // Cambiado para abrir el modal
+      onClick: () => navigate("/index/terceros/nuevoproveedores"), // Cambiado para abrir el modal
       style: { padding: "8px 16px", fontSize: "14px" },
     },
   ];
@@ -130,21 +130,19 @@ const InicioTerceros = () => {
           <div className="mt-[-1em] border-b-4 border-gray-300">
             <div className="flex overflow-x-auto">
               <div
-                className={`py-2 px-4 cursor-pointer border-b-4 transition-colors duration-200 ${
-                  activeTab === "cajeros"
-                    ? "border-blue-500 text-blue-500 font-semibold"
-                    : "border-transparent text-gray-800 hover:border-blue-300 hover:text-blue-400"
-                }`}
+                className={`py-2 px-4 cursor-pointer border-b-4 transition-colors duration-200 ${activeTab === "cajeros"
+                  ? "border-blue-500 text-blue-500 font-semibold"
+                  : "border-transparent text-gray-800 hover:border-blue-300 hover:text-blue-400"
+                  }`}
                 onClick={() => handleTabChange("cajeros")}
               >
                 Cajeros
               </div>
               <div
-                className={`py-2 px-4 cursor-pointer border-b-4 transition-colors duration-200 ${
-                  activeTab === "proveedores"
-                    ? "border-blue-500 text-blue-500 font-semibold"
-                    : "border-transparent text-gray-800 hover:border-blue-300 hover:text-blue-400"
-                }`}
+                className={`py-2 px-4 cursor-pointer border-b-4 transition-colors duration-200 ${activeTab === "proveedores"
+                  ? "border-blue-500 text-blue-500 font-semibold"
+                  : "border-transparent text-gray-800 hover:border-blue-300 hover:text-blue-400"
+                  }`}
                 onClick={() => handleTabChange("proveedores")}
               >
                 Proveedores
