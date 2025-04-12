@@ -196,6 +196,46 @@ const ProveedoresTable = ({ activeTab }) => {
               </div>
             </div>
 
+
+            <div className="flex justify-between items-center mb-2">
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className={`px-3 py-1 rounded ${currentPage === 1
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : "bg-blue-500 text-white hover:bg-blue-600"
+                    }`}
+                >
+                  Anterior
+                </button>
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className={`px-3 py-1 rounded ${currentPage === totalPages
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : "bg-blue-500 text-white hover:bg-blue-600"
+                    }`}
+                >
+                  Siguiente
+                </button>
+              </div>
+        
+              <select
+                value={pageSize}
+                onChange={handlePageSizeChange}
+                className="p-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+
+               
+                {[10, 20, 30, 40, 50].map((size) => (
+                  <option key={size} value={size}>
+                    Mostrar {size}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {/* Table */}
             <div className="overflow-x-auto">
               <table className="min-w-full border border-gray-200">
@@ -285,9 +325,8 @@ const ProveedoresTable = ({ activeTab }) => {
                         <td className="py-3 px-4 text-sm text-gray-800">{proveedor.telefono}</td>
                         <td className="py-3 px-4 text-sm text-gray-800">
                           <span
-                            className={`inline-block px-2 py-1 text-xs font-semibold rounded ${
-                              proveedor.estado === "activo" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                            }`}
+                            className={`inline-block px-2 py-1 text-xs font-semibold rounded ${proveedor.estado === "activo" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                              }`}
                           >
                             {proveedor.estado === "activo" ? "Activo" : proveedor.estado}
                           </span>
@@ -373,47 +412,12 @@ const ProveedoresTable = ({ activeTab }) => {
               </table>
             </div>
 
+            <div className="text-sm text-gray-700">
+                  Página <strong>{currentPage}</strong> de <strong>{totalPages}</strong>
+                </div>
+
             {/* Pagination */}
-            <div className="flex justify-between items-center mt-4">
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className={`px-3 py-1 rounded ${
-                    currentPage === 1
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-blue-500 text-white hover:bg-blue-600"
-                  }`}
-                >
-                  Anterior
-                </button>
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className={`px-3 py-1 rounded ${
-                    currentPage === totalPages
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-blue-500 text-white hover:bg-blue-600"
-                  }`}
-                >
-                  Siguiente
-                </button>
-              </div>
-              <div className="text-sm text-gray-700">
-                Página <strong>{currentPage}</strong> de <strong>{totalPages}</strong>
-              </div>
-              <select
-                value={pageSize}
-                onChange={handlePageSizeChange}
-                className="p-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {[10, 20, 30, 40, 50].map((size) => (
-                  <option key={size} value={size}>
-                    Mostrar {size}
-                  </option>
-                ))}
-              </select>
-            </div>
+
           </>
         )}
       </div>
