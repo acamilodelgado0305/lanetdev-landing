@@ -6,7 +6,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import {
   AlertCircle,
 } from "lucide-react";
-import { PlusOutlined, EditOutlined, SwapOutlined, ReloadOutlined , ArrowDownOutlined, DeleteOutlined, DownloadOutlined, CloseOutlined } from "@ant-design/icons";
+import { PlusOutlined, EditOutlined, SwapOutlined, ReloadOutlined, ArrowDownOutlined, DeleteOutlined, DownloadOutlined, CloseOutlined } from "@ant-design/icons";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -90,7 +90,7 @@ const TransactionsDashboard = () => {
   const tabToEndpoint = {
     incomes: "/incomes",
     expenses: "/expenses",
-    transfers: "/transfers",
+    /* transfers: "/transfers", */
   };
 
   const openContentModal = (voucherContent) => {
@@ -152,8 +152,8 @@ const TransactionsDashboard = () => {
       setFilteredEntries(sortedEntries);
       setError(null);
     } catch (error) {
-  
-      setError("Error al cargar los datos");
+
+      /* setError("Error al cargar los datos"); */
     } finally {
       setIsLoading(false); // Desactivar estado de carga
     }
@@ -330,15 +330,15 @@ const TransactionsDashboard = () => {
             </Tooltip>
 
             <Tooltip title="Actualizar balances">
-            <Button
-              icon={<ReloadOutlined />}
-              onClick={handleRefreshBalances}
-              loading={isRefreshing}
-              style={{ backgroundColor: "#1890ff", borderColor: "#1890ff", color: "white" }}
-            >
-              {isRefreshing ? "Actualizando..." : "Actualizar"}
-            </Button>
-          </Tooltip>
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={handleRefreshBalances}
+                loading={isRefreshing}
+                style={{ backgroundColor: "#1890ff", borderColor: "#1890ff", color: "white" }}
+              >
+                {isRefreshing ? "Actualizando..." : "Actualizar"}
+              </Button>
+            </Tooltip>
           </Space>
         </div>
         <div className="flex justify-between items-start flex-wrap gap-4">

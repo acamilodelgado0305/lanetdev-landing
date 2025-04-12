@@ -61,8 +61,10 @@ const ProveedoresTable = ({ activeTab }) => {
           ciudad: proveedor.ciudad || "No disponible",
           correo,
           telefono,
+          prefijo: proveedor.prefijo || "No disponible",
           estado: proveedor.estado || "No disponible",
           departamento: proveedor.departamento?.trim() || "No disponible",
+          pais: proveedor.pais || "No disponible",
           sitioweb: proveedor.sitioweb || "No disponible",
           medio_pago: proveedor.medio_pago || "No disponible",
           fecha_vencimiento: proveedor.fecha_vencimiento || "No disponible",
@@ -203,8 +205,8 @@ const ProveedoresTable = ({ activeTab }) => {
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
                   className={`px-3 py-1 rounded ${currentPage === 1
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-blue-500 text-white hover:bg-blue-600"
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-blue-500 text-white hover:bg-blue-600"
                     }`}
                 >
                   Anterior
@@ -213,21 +215,21 @@ const ProveedoresTable = ({ activeTab }) => {
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
                   className={`px-3 py-1 rounded ${currentPage === totalPages
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-blue-500 text-white hover:bg-blue-600"
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-blue-500 text-white hover:bg-blue-600"
                     }`}
                 >
                   Siguiente
                 </button>
               </div>
-        
+
               <select
                 value={pageSize}
                 onChange={handlePageSizeChange}
                 className="p-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
 
-               
+
                 {[10, 20, 30, 40, 50].map((size) => (
                   <option key={size} value={size}>
                     Mostrar {size}
@@ -343,12 +345,22 @@ const ProveedoresTable = ({ activeTab }) => {
                               </div>
                               <div className="flex items-center text-sm text-gray-800">
                                 <p>
+                                  <strong>Pais:</strong> {proveedor.pais}
+                                </p>
+                              </div>
+                              <div className="flex items-center text-sm text-gray-800">
+                                <p>
                                   <strong>Estado:</strong> {proveedor.estado}
                                 </p>
                               </div>
                               <div className="flex items-center text-sm text-gray-800">
                                 <p>
                                   <strong>Medio de pago:</strong> {proveedor.medio_pago}
+                                </p>
+                              </div>
+                              <div className="flex items-center text-sm text-gray-800">
+                                <p>
+                                  <strong>Prefijo:</strong> {proveedor.prefijo}
                                 </p>
                               </div>
                               <div className="flex items-center text-sm text-gray-800">
@@ -413,8 +425,8 @@ const ProveedoresTable = ({ activeTab }) => {
             </div>
 
             <div className="text-sm text-gray-700">
-                  Página <strong>{currentPage}</strong> de <strong>{totalPages}</strong>
-                </div>
+              Página <strong>{currentPage}</strong> de <strong>{totalPages}</strong>
+            </div>
 
             {/* Pagination */}
 
