@@ -278,8 +278,8 @@ const CajerosTable = ({ activeTab, cajeros, onUpdate, onEditCashier }) => {
         filteredEntries={filteredEntries}
         setSelectedRowKeys={setSelectedRowKeys}
         providers={[]}
-        setProviderFilter={() => {}}
-        setTypeFilter={() => {}}
+        setProviderFilter={() => { }}
+        setTypeFilter={() => { }}
       />
 
       <div className="px-5 py-2 bg-white">
@@ -304,7 +304,7 @@ const CajerosTable = ({ activeTab, cajeros, onUpdate, onEditCashier }) => {
             },
           })}
           rowClassName="hover:bg-gray-50 transition-colors"
-          scroll={{ x: "max-content" }}
+          scroll={{ x: "max-content", y: 700 }}
         />
       </div>
 

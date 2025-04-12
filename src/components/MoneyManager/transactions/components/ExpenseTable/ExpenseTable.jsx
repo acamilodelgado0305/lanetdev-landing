@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Table, Input, Drawer, Button, Tooltip,Checkbox, Typography, Tag, Space } from "antd";
+import { Table, Input, Drawer, Button, Tooltip, Checkbox, Typography, Tag, Space } from "antd";
 import { format as formatDate, isWithinInterval, isValid } from "date-fns";
 import { es } from "date-fns/locale";
 import { DateTime } from "luxon";
@@ -11,7 +11,7 @@ import {
   SearchOutlined,
   EditOutlined,
   DeleteOutlined,
-  CloseCircleOutlined,CheckCircleOutlined
+  CloseCircleOutlined, CheckCircleOutlined
 } from "@ant-design/icons";
 import ViewExpense from "../../Add/expense/ViewExpense";
 import jsPDF from "jspdf";
@@ -710,9 +710,8 @@ const ExpenseTable = ({
           },
         })}
         rowClassName="hover:bg-gray-50 transition-colors"
-        scroll={{ x: "max-content" }}
+        scroll={{ x: "max-content", y: 700 }} // Agrega altura fija para desplazamiento vertical
       />
-
 
       <FloatingActionMenu
         selectedCount={selectedRowKeys.length}
