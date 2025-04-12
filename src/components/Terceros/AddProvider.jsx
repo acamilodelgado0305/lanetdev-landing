@@ -316,17 +316,7 @@ const AddProvider = ({ onProviderAdded, providerToEdit, onClose }) => {
                 </>
 
               )}
-              <Form.Item
-                name="prefijo"
-                label={<span className="text-gray-600 text-sm">Prefijo</span>}
-                rules={[{ required: true, message: 'Requerido' }]}
-              >
-                <Input
-                  placeholder="Ingrese Prefijo"
-                  className="rounded-md text-base"
-                  disabled={!editMode}
-                />
-              </Form.Item>
+
             </div>
             <div className="col-span-2 ">
               <Text strong className="text-base text-gray-700 mb-2 block">
@@ -422,13 +412,13 @@ const AddProvider = ({ onProviderAdded, providerToEdit, onClose }) => {
             </div>
           </div>
 
-          <div className="mt-4">
+          <div className="mt-8">
             <Text strong className="text-base text-gray-700 mb-2 block">
-              <FileTextOutlined className="mr-2 text-gray-500" />
+              <FileTextOutlined className="mr-2 text-gray-500 mt-8" />
               Detalles Adicionales
             </Text>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">  {/* Añadido grid con dos columnas */}
-              <div className="col-span-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">  {/* Añadido grid con dos columnas */}
+              <div className="col-span-1 ">
                 <Form.Item
                   name="sitioweb"
                   label={<span className="text-gray-600 text-sm">Sitio Web</span>}>
