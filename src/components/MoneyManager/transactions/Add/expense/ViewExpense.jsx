@@ -260,8 +260,8 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
                   <div className="flex justify-between mb-2"><span>Total Bruto</span><span>{formatCurrency(expenseData.total_gross)}</span></div>
                   <div className="flex justify-between mb-2"><span>Descuentos</span><span className="text-green-600">-{formatCurrency(expenseData.discounts)}</span></div>
                   <div className="flex justify-between mb-2"><span>Subtotal</span><span>{formatCurrency(expenseData.subtotal)}</span></div>
+                  <div className="flex justify-between mb-2"><span>Retefuente </span><span>{formatCurrency(expenseData.ret_ica)}</span></div>
                   <div className="flex justify-between mb-2"><span>IVA </span><span>{formatCurrency(expenseData.ret_vat)}</span></div>
-                  <div className="flex justify-between mb-2"><span>Impuesto Retención </span><span>{formatCurrency(expenseData.ret_ica)}</span></div>
                   <div className="flex justify-between mb-2"><span>Total Impuestos</span><span>{formatCurrency(expenseData.total_impuestos)}</span></div>
                   <div className="flex justify-between border-t pt-2 font-semibold"><span>Total Neto</span><span className="text-red-600">{formatCurrency(expenseData.total_net)}</span></div>
                 </div>
