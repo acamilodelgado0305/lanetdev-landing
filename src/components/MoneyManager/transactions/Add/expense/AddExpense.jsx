@@ -44,6 +44,7 @@ const AddExpense = () => {
   const [facturaProvNumber, setFacturaProvNumber] = useState("");
   const [facturaProvPrefix, setFacturaProvPrefix] = useState("");
   const [isExpenseSaved, setIsExpenseSaved] = useState(false);
+  const [etiqueta, setEtiqueta] = useState("");
   const [isHiddenDetails, setIsHiddenDetails] = useState(false);
   const [expenseTableData, setExpenseTableData] = useState({
     items: [],
@@ -94,7 +95,8 @@ const AddExpense = () => {
       setFacturaProvNumber(data.provider_invoice_number || "");
       setFacturaProvPrefix(data.provider_invoice_prefix || "");
       setTipo(data.type || "");
-      setIsHiddenDetails(false); // Puedes ajustar esto según la lógica de tu aplicación
+      setEtiqueta(data.etiqueta || ""); // Añadir mapeo de etiqueta
+      setIsHiddenDetails(false);
 
       // Mapear los ítems del gasto (expense_items) a expenseTableData.items
       const mappedItems = (data.items || []).map((item) => ({
@@ -246,13 +248,14 @@ const AddExpense = () => {
         proveedor: proveedor,
         categoria: categoria,
         facturaNumber: facturaNumber,
-        facturaProvNumber: facturaProvNumber, // Número de factura del proveedor
-        facturaProvPrefix: facturaProvPrefix, // Prefijo como campo separado
+        facturaProvNumber: facturaProvNumber,
+        facturaProvPrefix: facturaProvPrefix,
         account_id: account,
         voucher: voucher,
         description: description,
         comentarios: comentarios,
         estado: true,
+        etiqueta: etiqueta || null, // Incluir el nombre de la etiqueta
       };
 
       const requestBody = {
@@ -491,7 +494,7 @@ const AddExpense = () => {
   const renderCompraInputs = () => {
     return (
       <div className="p-4">
-        <ComprobanteEgresoHeader
+       <ComprobanteEgresoHeader
           facturaNumber={facturaNumber}
           setFacturaNumber={setFacturaNumber}
           facturaProvNumber={facturaProvNumber}
@@ -512,6 +515,8 @@ const AddExpense = () => {
           setCategoria={setCategoria}
           categorias={categorias}
           isHiddenDetails={isHiddenDetails}
+          onEtiquetaChange={setEtiqueta}
+          etiqueta={etiqueta} // Pasar etiqueta explícitamente
         />
     
         <ProductsTable
