@@ -8,7 +8,7 @@ import {
 import Swal from 'sweetalert2';
 import dayjs from 'dayjs';
 import { useNavigate } from "react-router-dom";
-
+import axios from 'axios';
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -22,10 +22,22 @@ const AddProvider = ({ onProviderAdded, providerToEdit, onClose }) => {
   const [tipoIdentificacion, setTipoIdentificacion] = useState('NIT');
   const navigate = useNavigate();
 
+
+  const [paises, setPaises] = useState([]);
+
+  const [ciudades, setCiudades] = useState([]);
+  const [selectedPais, setSelectedPais] = useState(null);
+  const [selectedDepartamento, setSelectedDepartamento] = useState(null);
+
   const handleCancel = () => {
     navigate("/index/terceros/cajeros");
   };
 
+  const handlePaisChange = (pais) => {
+    setSelectedPais(pais);
+    setSelectedDepartamento(null);  // Reset departamento
+    setCiudades([]);  // Reset ciudades
+  };
   // Lista de departamentos de Colombia
   const departamentos = [
     'Amazonas', 'Antioquia', 'Arauca', 'Atlántico', 'Bolívar', 'Boyacá', 'Caldas', 'Caquetá', 'Casanare',
@@ -33,6 +45,7 @@ const AddProvider = ({ onProviderAdded, providerToEdit, onClose }) => {
     'Magdalena', 'Meta', 'Nariño', 'Norte de Santander', 'Putumayo', 'Quindío', 'Risaralda', 'San Andrés',
     'Santander', 'Sucre', 'Tolima', 'Valle del Cauca', 'Vaupés', 'Vichada'
   ];
+
   const ciudadesColombia = [
     'Leticia', 'Medellín', 'Envigado', 'Rionegro', 'Itagüí', 'Bello',
     'Arauca', 'Tame', 'Arauquita', 'Barranquilla', 'Soledad', 'Malambo',
@@ -49,6 +62,19 @@ const AddProvider = ({ onProviderAdded, providerToEdit, onClose }) => {
     'San Andrés', 'Bucaramanga', 'Barrancabermeja', 'Girón', 'Sincelejo', 'Corozal', 'Sampués',
     'Ibagué', 'Espinal', 'Honda', 'Cali', 'Buenaventura', 'Palmira', 'Mitú', 'Puerto Carreño'
   ];
+
+  useEffect(() => {
+    const fetchPaises = async () => {
+      try {
+        const response = await axios.get('https://restcountries.com/v3.1/all');
+        setPaises(response.data);
+      } catch (error) {
+        console.error('Error al cargar países:', error);
+      }
+    };
+    fetchPaises();
+  }, []);
+
 
   useEffect(() => {
     if (providerToEdit) {
@@ -112,7 +138,6 @@ const AddProvider = ({ onProviderAdded, providerToEdit, onClose }) => {
         sitioweb: values.sitioweb || '',
         medioPago: values.medioPago || 'Banco',
         estado: values.estado ? 'activo' : 'inactivo',
-        fechaVencimiento: values.fechaVencimiento ? values.fechaVencimiento.format('YYYY-MM-DD') : null,
       };
 
       const endpoint = isEditing
@@ -331,11 +356,13 @@ const AddProvider = ({ onProviderAdded, providerToEdit, onClose }) => {
                   label={<span className="text-gray-600 text-sm">Pais</span>}
                   rules={[{ required: true, message: 'Requerido' }]}
                 >
-                  <Input
-                    placeholder="Ingrese su país"
-                    className="rounded-md text-base"
-                    disabled={!editMode}
-                  />
+                  <Select onChange={handlePaisChange} placeholder="Seleccione un país">
+                    {paises.map((pais) => (
+                      <Option key={pais.cca3} value={pais.cca3}>
+                        {pais.name.common}
+                      </Option>
+                    ))}
+                  </Select>
                 </Form.Item>
                 <Form.Item
                   name="departamento"
