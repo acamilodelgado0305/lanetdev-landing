@@ -471,7 +471,7 @@ const ProductsTable = ({
                 <>
                   <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Retefuente:</div>
                   <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.retencion)}</div>
-                  <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>Iva:</div>
+                  <div style={{ textAlign: 'right', fontWeight: 500, color: '#666' }}>IVA:</div>
                   <div style={{ textAlign: 'right', fontWeight: 500 }}>{formatCurrency(totals.iva)}</div>
                 </>
               )}
