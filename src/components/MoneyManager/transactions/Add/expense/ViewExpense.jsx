@@ -157,7 +157,6 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
               Egreso {expenseData?.invoice_number || "N/A"}
             </h1>
             <div className="text-sm text-gray-600" style={{ fontFamily: "SF Pro Text, sans-serif" }}>
-        
               <p><span className="font-bold">No. Factura Proveedor:</span> {expenseData?.provider_invoice_prefix ? `${expenseData.provider_invoice_prefix}-${expenseData.provider_invoice_number}` : expenseData?.provider_invoice_number || "N/A"}</p>
               <p>{renderDate(expenseData?.date)}</p>
             </div>
@@ -178,12 +177,30 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
             <div className="col-span-2">
               <div className="mb-6">
                 <div className="grid grid-cols-2 gap-4 text-sm text-gray-700" style={{ fontFamily: "SF Pro Text, sans-serif" }}>
-                  <div><span className="font-bold">Cuenta:</span> {getAccountName(expenseData.account_id)}</div>
-                  <div><span className="font-bold">Tipo:</span> {expenseData.type}</div>
-                  <div><span className="font-bold">Descripción:</span> {expenseData.description}</div>
-                  <div><span className="font-bold">Estado:</span> {expenseData.estado ? "Activo" : "Inactivo"}</div>
-                  <div><span className="font-bold">Proveedor:</span> {getProviderName(expenseData.provider_id)}</div>
-                  <div><span className="font-bold">Categoría:</span> {expenseData.category}</div>
+                  <div>
+                    <span className="font-bold">Cuenta:</span>{" "}
+                    <span style={{ color: "#f97316" }}>{getAccountName(expenseData.account_id)}</span>
+                  </div>
+                  <div>
+                    <span className="font-bold">Tipo:</span> {expenseData.type}
+                  </div>
+                  <div>
+                    <span className="font-bold">Descripción:</span> {expenseData.description}
+                  </div>
+                  <div>
+                    <span className="font-bold">Estado:</span> {expenseData.estado ? "Activo" : "Inactivo"}
+                  </div>
+                  <div>
+                    <span className="font-bold">Proveedor:</span> {getProviderName(expenseData.provider_id)}
+                  </div>
+                  <div>
+                    <span className="font-bold">Categoría:</span>{" "}
+                    <span style={{ color: "#a855f7" }}>{expenseData.category || "N/A"}</span>
+                  </div>
+                  <div>
+                    <span className="font-bold">Etiqueta:</span>{" "}
+                    <span style={{ color: "#22c55e" }}>{expenseData.etiqueta || "N/A"}</span>
+                  </div>
                 </div>
               </div>
 

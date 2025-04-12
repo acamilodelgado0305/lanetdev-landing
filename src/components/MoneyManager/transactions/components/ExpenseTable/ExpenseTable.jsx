@@ -504,6 +504,24 @@ const ExpenseTable = ({
     {
       title: (
         <div className="flex flex-col" style={{ margin: "2px 0", gap: 1, lineHeight: 1 }}>
+          <Text strong>Etiqueta</Text>
+          <Input
+            prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
+            onChange={(e) => handleSearch(e.target.value, "etiqueta")}
+            style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, borderRadius: 4, outline: "none", width: 180 }}
+          />
+        </div>
+      ),
+      dataIndex: "etiqueta",
+      key: "etiqueta",
+      render: (category) => <Tag color="green">{category}</Tag>,
+      sortDirections: ["ascend", "descend"],
+      ellipsis: true,
+      width: 150,
+    },
+    {
+      title: (
+        <div className="flex flex-col" style={{ margin: "2px 0", gap: 1, lineHeight: 1 }}>
           <Text strong>Título</Text>
           <Input
             prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
