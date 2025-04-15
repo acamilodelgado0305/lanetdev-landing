@@ -47,7 +47,8 @@ const ComprobanteEgresoHeader = ({
   const categoriasSeguimiento = [
     'Flota de Vehículos',
     'Proyectos',
-   
+    'Recursos Humanos',
+    'Prestamos'
   ];
 
   // Sincronizar etiquetaSeguimientoNombre con la prop etiqueta

@@ -10,7 +10,7 @@ import { UploadOutlined, DownloadOutlined, FileTextOutlined } from "@ant-design/
 import axios from "axios";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import VoucherSection from "../../components/VoucherSection";
-import ProductsTable from "./ProductsTable";
+import ProductsTable, { parseColombianNumber } from "./ProductsTable"; // Importar parseColombianNumber
 import { getCategorias } from "../../../../../services/moneymanager/moneyService";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -255,7 +255,7 @@ const AddExpense = () => {
         description: description,
         comentarios: comentarios,
         estado: true,
-        etiqueta: etiqueta || null, // Incluir el nombre de la etiqueta
+        etiqueta: etiqueta || null,
       };
 
       const requestBody = {
@@ -271,23 +271,23 @@ const AddExpense = () => {
             id: item.id,
             categoria: item.categoria,
             product: item.product,
-            quantity: parseFloat(item.quantity),
-            unit_price: parseFloat(item.unitPrice),
+            quantity: parseFloat(item.quantity) || 0,
+            unit_price: parseColombianNumber(item.unitPrice), // Usar parseColombianNumber
             discount: parseFloat(item.discount || 0),
             tax_charge: parseFloat(item.taxCharge || 0),
             tax_withholding: parseFloat(item.taxWithholding || 0),
-            total: parseFloat(item.total),
+            total: parseFloat(item.total) || 0,
           })),
         expense_totals: {
-          total_bruto: parseFloat(expenseTableData.totals.totalBruto),
-          descuentos: parseFloat(expenseTableData.totals.descuentos),
-          subtotal: parseFloat(expenseTableData.totals.subtotal),
-          iva: parseFloat(expenseTableData.totals.iva),
-          retencion: parseFloat(expenseTableData.totals.retencion),
-          total_neto: parseFloat(expenseTableData.totals.totalNeto),
-          iva_percentage: parseFloat(expenseTableData.totals.ivaPercentage),
-          retencion_percentage: parseFloat(expenseTableData.totals.retencionPercentage),
-          total_impuestos: parseFloat(expenseTableData.totals.totalImpuestos),
+          total_bruto: parseFloat(expenseTableData.totals.totalBruto) || 0,
+          descuentos: parseFloat(expenseTableData.totals.descuentos) || 0,
+          subtotal: parseFloat(expenseTableData.totals.subtotal) || 0,
+          iva: parseFloat(expenseTableData.totals.iva) || 0,
+          retencion: parseFloat(expenseTableData.totals.retencion) || 0,
+          total_neto: parseFloat(expenseTableData.totals.totalNeto) || 0,
+          iva_percentage: parseFloat(expenseTableData.totals.ivaPercentage) || 0,
+          retencion_percentage: parseFloat(expenseTableData.totals.retencionPercentage) || 0,
+          total_impuestos: parseFloat(expenseTableData.totals.totalImpuestos) || 0,
         },
       };
 

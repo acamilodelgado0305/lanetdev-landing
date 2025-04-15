@@ -90,7 +90,7 @@ const TransactionsDashboard = () => {
   const tabToEndpoint = {
     incomes: "/incomes",
     expenses: "/expenses",
-    /* transfers: "/transfers", */
+    transfers: "/transfers",
   };
 
   const openContentModal = (voucherContent) => {
@@ -258,7 +258,9 @@ const TransactionsDashboard = () => {
 
   const handleTabChange = (key) => {
     setActiveTab(key);
-    setSelectedRowKeys([]); // Limpiar selección al cambiar de pestaña
+    setSelectedRowKeys([]);
+    setSearchTerm("");
+    setFilterType("all");
   };
 
   return (

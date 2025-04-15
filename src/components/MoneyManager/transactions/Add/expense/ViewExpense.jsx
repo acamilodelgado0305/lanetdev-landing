@@ -4,13 +4,11 @@ import axios from "axios";
 import { Button, Card, Tooltip, Modal } from "antd";
 import { CloseOutlined, EditOutlined, ShareAltOutlined, EyeOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import { getAccounts } from "../../../../../services/moneymanager/moneyService";
 
 function ViewExpense({ entry, visible, onClose, activeTab }) {
   const [expenseData, setExpenseData] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const [accounts, setAccounts] = useState([]);
   const [providers, setProviders] = useState([]);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [currentImage, setCurrentImage] = useState(null);
@@ -23,12 +21,10 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
       }
     };
 
-    // Añadir el listener cuando el modal está visible
     if (visible) {
       document.addEventListener("keydown", handleKeyDown);
     }
 
-    // Limpiar el listener al desmontar o cuando el modal se cierra
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
@@ -39,7 +35,6 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
   }, [visible, entry]);
 
   useEffect(() => {
-    fetchAccounts();
     fetchProviders();
   }, []);
 
@@ -51,17 +46,9 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
       setExpenseData(response.data);
     } catch (error) {
       console.error("Error fetching expense data:", error);
+      setExpenseData(null);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchAccounts = async () => {
-    try {
-      const data = await getAccounts();
-      setAccounts(data);
-    } catch (error) {
-      console.error("Error al obtener las cuentas:", error);
     }
   };
 
@@ -81,8 +68,6 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
     }
   };
 
-  const getAccountName = (accountId) => accounts.find((acc) => acc.id === accountId)?.name || "No asignada";
-
   const getProviderName = (providerId) => {
     if (!providerId) return "Proveedor no especificado";
     const provider = providers.find((provider) => provider.id === providerId);
@@ -91,12 +76,28 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
 
   const handleEditSelected = () => navigate(`/index/moneymanager/egresos/edit/${entry.id}`, { state: { returnTab: activeTab } });
 
-  const formatCurrency = (amount) => new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(amount || 0);
+  const formatCurrency = (amount) => {
+    if (amount === null || amount === undefined || isNaN(parseFloat(amount))) {
+      return '$0,00';
+    }
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(parseFloat(amount));
+  };
 
   const formatTableDiscount = (discount) => {
     const value = parseFloat(discount);
     if (isNaN(value)) return "0";
     return value <= 100 ? `${value.toFixed(2)}%` : formatCurrency(value);
+  };
+
+  const formatPercentage = (value) => {
+    const num = parseFloat(value);
+    if (isNaN(num)) return "0.00%";
+    return `${num.toFixed(2)}%`;
   };
 
   const renderDate = (date) => {
@@ -189,7 +190,15 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
 
         {/* Cuerpo */}
         {loading ? (
-          <div className="flex justify-center items-center h-64"><div className="animate-spin h-12 w-12 border-t-2 border-blue-500"></div></div>
+          <div className="flex flex-col items-center justify-center h-64">
+            <div className="relative flex items-center justify-center">
+              <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              <div className="absolute w-12 h-12 border-4 border-blue-300 border-t-transparent rounded-full animate-spin-slow"></div>
+            </div>
+            <p className="mt-4 text-gray-600 text-lg font-medium" style={{ fontFamily: "SF Pro Text, sans-serif" }}>
+              Cargando detalles del egreso...
+            </p>
+          </div>
         ) : expenseData ? (
           <div className="p-6 grid grid-cols-3 gap-6">
             {/* Detalles y tabla */}
@@ -198,17 +207,16 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
                 <div className="grid grid-cols-2 gap-4 text-sm text-gray-700" style={{ fontFamily: "SF Pro Text, sans-serif" }}>
                   <div>
                     <span className="font-bold">Cuenta:</span>{" "}
-                    <span style={{ color: "#f97316" }}>{getAccountName(expenseData.account_id)}</span>
+                    <span style={{ color: "#f97316" }}>{expenseData.account || "No asignada"}</span>
                   </div>
                   <div>
-                    <span className="font-bold">Tipo:</span> {expenseData.type}
+                    <span className="font-bold">Tipo:</span> {expenseData.type || "N/A"}
                   </div>
                   <div>
-                    <span className="font-bold">Descripción:</span> {expenseData.description}
+                    <span className="font-bold">Descripción:</span> {expenseData.description || "Sin descripción"}
                   </div>
                   <div>
-                    
-                    <span className="font-bold">Estado : {expenseData.estado ? "Activo" : "Inactivo"}</span>
+                    <span className="font-bold">Estado:</span> {expenseData.estado ? "Activo" : "Inactivo"}
                   </div>
                   <div>
                     <span className="font-bold">Proveedor:</span> {getProviderName(expenseData.provider_id)}
@@ -237,17 +245,25 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
                   </tr>
                 </thead>
                 <tbody className="text-gray-800">
-                  {expenseData.items.map((item) => (
-                    <tr key={item.id} className="border-t">
-                      <td className="py-3 px-4">{item.product_name}</td>
-                      <td className="py-3 px-4 text-center">{item.quantity}</td>
-                      <td className="py-3 px-4 text-center">{formatCurrency(item.unit_price)}</td>
-                      <td className="py-3 px-4 text-center">{formatTableDiscount(item.discount)}</td>
-                      <td className="py-3 px-4 text-center">{item.tax_charge || 0}%</td>
-                      <td className="py-3 px-4 text-center">{item.tax_withholding || 0}%</td>
-                      <td className="py-3 px-4 text-right">{formatCurrency(item.total)}</td>
+                  {expenseData.items && expenseData.items.length > 0 ? (
+                    expenseData.items.map((item) => (
+                      <tr key={item.id} className="border-t">
+                        <td className="py-3 px-4">{item.product_name || "N/A"}</td>
+                        <td className="py-3 px-4 text-center">{item.quantity || 0}</td>
+                        <td className="py-3 px-4 text-center">{formatCurrency(item.unit_price)}</td>
+                        <td className="py-3 px-4 text-center">{formatTableDiscount(item.discount)}</td>
+                        <td className="py-3 px-4 text-center">{formatPercentage(item.tax_charge)}</td>
+                        <td className="py-3 px-4 text-center">{formatPercentage(item.tax_withholding)}</td>
+                        <td className="py-3 px-4 text-right">{formatCurrency(item.total)}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="7" className="py-3 px-4 text-center text-gray-500">
+                        No hay ítems asociados a este egreso.
+                      </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
@@ -260,8 +276,8 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
                   <div className="flex justify-between mb-2"><span>Total Bruto</span><span>{formatCurrency(expenseData.total_gross)}</span></div>
                   <div className="flex justify-between mb-2"><span>Descuentos</span><span className="text-green-600">-{formatCurrency(expenseData.discounts)}</span></div>
                   <div className="flex justify-between mb-2"><span>Subtotal</span><span>{formatCurrency(expenseData.subtotal)}</span></div>
-                  <div className="flex justify-between mb-2"><span>Retefuente </span><span>{formatCurrency(expenseData.ret_ica)}</span></div>
-                  <div className="flex justify-between mb-2"><span>IVA </span><span>{formatCurrency(expenseData.ret_vat)}</span></div>
+                  <div className="flex justify-between mb-2"><span>Retefuente</span><span>{formatCurrency(expenseData.ret_ica)}</span></div>
+                  <div className="flex justify-between mb-2"><span>IVA</span><span>{formatCurrency(expenseData.ret_vat)}</span></div>
                   <div className="flex justify-between mb-2"><span>Total Impuestos</span><span>{formatCurrency(expenseData.total_impuestos)}</span></div>
                   <div className="flex justify-between border-t pt-2 font-semibold"><span>Total Neto</span><span className="text-red-600">{formatCurrency(expenseData.total_net)}</span></div>
                 </div>
@@ -313,6 +329,24 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
           </div>
         </Modal>
       </Card>
+
+      {/* Estilos personalizados para el loading */}
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        @keyframes spin-slow {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(-360deg); }
+        }
+        .animate-spin {
+          animation: spin 1s linear infinite;
+        }
+        .animate-spin-slow {
+          animation: spin-slow 1.5s linear infinite;
+        }
+      `}</style>
     </div>
   );
 }

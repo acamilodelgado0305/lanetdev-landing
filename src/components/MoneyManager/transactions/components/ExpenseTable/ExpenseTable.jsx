@@ -11,14 +11,13 @@ import {
   SearchOutlined,
   EditOutlined,
   DeleteOutlined,
-  CloseCircleOutlined, CheckCircleOutlined
+  CloseCircleOutlined,
+  CheckCircleOutlined,
 } from "@ant-design/icons";
 import ViewExpense from "../../Add/expense/ViewExpense";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import FloatingActionMenu from "../../FloatingActionMenu";
-
-// FloatingActionMenu Component (same as used in IncomeTable)
 
 const { Text } = Typography;
 
@@ -31,7 +30,6 @@ const ExpenseTable = ({
   onOpenContentModal,
   activeTab,
   dateRange,
-
 }) => {
   const navigate = useNavigate();
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
@@ -76,11 +74,17 @@ const ExpenseTable = ({
     filtered = filtered.filter((entry) =>
       Object.keys(searchText).every((key) => {
         if (!searchText[key]) return true;
-        if (key === "account_id") {
-          return getAccountName(entry[key])?.toLowerCase().includes(searchText[key].toLowerCase());
+        if (key === "account") {
+          return entry[key]?.toLowerCase().includes(searchText[key].toLowerCase());
         }
         if (key === "provider_id") {
           return getProviderName(entry[key])?.toLowerCase().includes(searchText[key].toLowerCase());
+        }
+        // Para campos numéricos, comparar el valor sin formato
+        if (["total_gross", "discounts", "total_impuestos", "total_net"].includes(key)) {
+          const numericValue = parseFloat(entry[key]) || 0;
+          const searchValue = parseFloat(searchText[key].replace(/[^0-9,.]/g, "").replace(",", ".")) || 0;
+          return numericValue.toString().includes(searchValue.toString());
         }
         return entry[key]?.toString().toLowerCase().includes(searchText[key].toLowerCase()) || true;
       })
@@ -184,18 +188,21 @@ const ExpenseTable = ({
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("es-CO", {
-      style: "currency",
-      currency: "COP",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+    if (amount === null || amount === undefined || isNaN(parseFloat(amount))) {
+      return '$0,00';
+    }
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(amount);
   };
 
   const handleEditSelected = () => {
     if (selectedRowKeys.length === 1) {
       navigate(`/index/moneymanager/egresos/edit/${selectedRowKeys[0]}`, {
-        state: { returnTab: activeTab }, // Pasar activeTab como returnTab
+        state: { returnTab: activeTab },
       });
     }
   };
@@ -230,13 +237,11 @@ const ExpenseTable = ({
           );
           await Promise.all(deletePromises);
 
-          // Actualizar el estado local eliminando las entradas borradas
           const updatedEntries = filteredEntries.filter(
             (entry) => !selectedRowKeys.includes(entry.id)
           );
           setFilteredEntries(updatedEntries);
 
-          // Notificar al componente padre para actualizar las entradas globales
           if (onDelete) {
             const entriesToDelete = filteredEntries.filter((entry) =>
               selectedRowKeys.includes(entry.id)
@@ -246,7 +251,6 @@ const ExpenseTable = ({
             );
           }
 
-          // Limpiar selección
           setSelectedRowKeys([]);
 
           Swal.fire({
@@ -268,11 +272,6 @@ const ExpenseTable = ({
     });
   };
 
-  // Pasar la función al padre si existe la prop
-
-
-
-
   const generateExpensePDF = (items) => {
     Swal.fire({
       title: "Generando PDF",
@@ -286,12 +285,10 @@ const ExpenseTable = ({
     try {
       const doc = new jsPDF();
 
-      // Header
       doc.setFontSize(18);
       doc.setFont("helvetica", "bold");
       doc.text("FACTURA DE EGRESOS", 105, 20, { align: "center" });
 
-      // Company Info (customize as needed)
       doc.setFontSize(12);
       doc.setFont("helvetica", "normal");
       doc.text("Nombre de la Empresa", 14, 30);
@@ -299,17 +296,15 @@ const ExpenseTable = ({
       doc.text("Dirección: Calle 123 #45-67, Bogotá, Colombia", 14, 42);
       doc.text("Teléfono: +57 123 456 7890", 14, 48);
 
-      // Invoice Info
       doc.text(`Fecha: ${formatDate(new Date(), "d MMMM yyyy", { locale: es })}`, 140, 30);
       doc.text(`Factura N°: ${Math.floor(Math.random() * 1000000)}`, 140, 36);
 
-      // Table of Expenses
       const tableData = items.map(item => [
         item.invoice_number || "N/A",
         item.description || "Sin descripción",
-        item.category || "Sin Sin Categoria",
+        item.category || "Sin Categoria",
         renderDate(item.date),
-        getAccountName(item.account_id),
+        item.account || "Sin cuenta",
         getProviderName(item.provider_id),
         formatCurrency(item.total_gross || 0),
         formatCurrency(item.discounts || 0),
@@ -318,7 +313,7 @@ const ExpenseTable = ({
 
       autoTable(doc, {
         startY: 60,
-        head: [["N° Egreso", "Descripción", "Fecha", "Cuenta", "Proveedor", "Base", "Impuestos", "Total Neto"]],
+        head: [["N° Egreso", "Descripción", "Categoría", "Fecha", "Cuenta", "Proveedor", "Base", "Descuentos", "Total Neto"]],
         body: tableData,
         theme: "grid",
         styles: { fontSize: 10, cellPadding: 2 },
@@ -332,20 +327,14 @@ const ExpenseTable = ({
           5: { cellWidth: 20 },
           6: { cellWidth: 20 },
           7: { cellWidth: 20 },
+          8: { cellWidth: 20 },
         },
       });
 
-      // Total
-      const totalNet = items.reduce((sum, item) => sum + (item.total_net || 0), 0);
+      const totalNet = items.reduce((sum, item) => sum + (parseFloat(item.total_net) || 0), 0);
       doc.setFontSize(12);
       doc.text(`Total Neto: ${formatCurrency(totalNet)}`, 140, doc.lastAutoTable.finalY + 10);
 
-      // Footer
-      doc.setFontSize(10);
-      doc.text("Gracias por su negocio", 105, 280, { align: "center" });
-      doc.text("Este documento no tiene validez fiscal", 105, 286, { align: "center" });
-
-      // Save the PDF
       doc.save(`Factura_Egresos_${formatDate(new Date(), "yyyy-MM-dd")}.pdf`);
 
       Swal.fire({
@@ -379,39 +368,16 @@ const ExpenseTable = ({
 
     switch (operation) {
       case 'delete':
-        Swal.fire({
-          title: '¿Está seguro?',
-          text: `¿Desea eliminar ${selectedRowKeys.length} registro(s) seleccionado(s)?`,
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#d33',
-          cancelButtonColor: '#3085d6',
-          confirmButtonText: 'Sí, eliminar',
-          cancelButtonText: 'Cancelar'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            const deletePromises = selectedRowKeys.map(id => handleDeleteItem(id));
-            Promise.all(deletePromises)
-              .then(() => {
-                Swal.fire('¡Eliminado!', 'Los registros han sido eliminados.', 'success');
-                setSelectedRowKeys([]);
-                fetchData();
-              })
-              .catch(error => {
-                console.error("Error eliminando registros:", error);
-                Swal.fire('Error', 'Hubo un problema al eliminar los registros.', 'error');
-              });
-          }
-        });
+        handleDeleteSelected();
         break;
       case 'export':
-        console.log("Exportar seleccionados:", selectedItems);
-        // Add your export logic here
+        generateExpensePDF(selectedItems);
         break;
       default:
         break;
     }
   };
+
   const openDrawer = (images) => {
     setSelectedImages(images);
     setIsDrawerOpen(true);
@@ -461,7 +427,7 @@ const ExpenseTable = ({
       ),
       dataIndex: "invoice_number",
       key: "invoice_number",
-      sorter: (a, b) => a.invoice_number - b.invoice_number,
+      sorter: (a, b) => (a.invoice_number || 0) - (b.invoice_number || 0),
       render: (text) => <a>{text || "No disponible"}</a>,
       width: 100,
     },
@@ -496,7 +462,7 @@ const ExpenseTable = ({
       ),
       dataIndex: "category",
       key: "category",
-      render: (category) => <Tag color="purple">{category}</Tag>,
+      render: (category) => <Tag color="purple">{category || "Sin categoría"}</Tag>,
       sortDirections: ["ascend", "descend"],
       ellipsis: true,
       width: 150,
@@ -514,7 +480,7 @@ const ExpenseTable = ({
       ),
       dataIndex: "etiqueta",
       key: "etiqueta",
-      render: (category) => <Tag color="green">{category}</Tag>,
+      render: (etiqueta) => <Tag color="green">{etiqueta || "Sin etiqueta"}</Tag>,
       sortDirections: ["ascend", "descend"],
       ellipsis: true,
       width: 150,
@@ -532,7 +498,7 @@ const ExpenseTable = ({
       ),
       dataIndex: "description",
       key: "description",
-      sorter: (a, b) => a.description.localeCompare(b.description),
+      sorter: (a, b) => (a.description || "").localeCompare(b.description || ""),
       sortDirections: ["ascend", "descend"],
       width: 200,
       ellipsis: true,
@@ -555,15 +521,15 @@ const ExpenseTable = ({
           <Text strong>Cuenta</Text>
           <Input
             prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
-            onChange={(e) => handleSearch(e.target.value, "account_id")}
+            onChange={(e) => handleSearch(e.target.value, "account")}
             style={{ marginTop: 2, padding: 4, height: 28, fontSize: 12, borderRadius: 4, outline: "none", width: 180 }}
           />
         </div>
       ),
-      dataIndex: "account_id",
-      key: "account_id",
-      render: (id) => <Tag color="blue">{getAccountName(id)}</Tag>,
-      sorter: (a, b) => getAccountName(a.account_id).localeCompare(getAccountName(b.account_id)),
+      dataIndex: "account",
+      key: "account",
+      render: (name) => <Tag color="orange">{name || "Sin cuenta"}</Tag>,
+      sorter: (a, b) => (a.account || "").localeCompare(b.account || ""),
       sortDirections: ["ascend", "descend"],
       width: 150,
     },
@@ -580,7 +546,7 @@ const ExpenseTable = ({
       ),
       dataIndex: "provider_id",
       key: "provider_id",
-      render: (providerId) => <Tag color="orange">{getProviderName(providerId)}</Tag>,
+      render: (providerId) => <Tag color="red">{getProviderName(providerId)}</Tag>,
       sorter: (a, b) => getProviderName(a.provider_id).localeCompare(getProviderName(b.provider_id)),
       sortDirections: ["ascend", "descend"],
       width: 150,
@@ -599,7 +565,7 @@ const ExpenseTable = ({
       dataIndex: "total_gross",
       key: "total_gross",
       render: (total_gross) => <span className="font-semibold text-gray-700">{formatCurrency(total_gross)}</span>,
-      sorter: (a, b) => a.total_gross - b.total_gross,
+      sorter: (a, b) => (parseFloat(a.total_gross) || 0) - (parseFloat(b.total_gross) || 0),
       sortDirections: ["descend", "ascend"],
       width: 120,
     },
@@ -617,7 +583,7 @@ const ExpenseTable = ({
       dataIndex: "discounts",
       key: "discounts",
       render: (discounts) => <span className="font-semibold text-gray-700">{formatCurrency(discounts)}</span>,
-      sorter: (a, b) => a.discounts - b.discounts,
+      sorter: (a, b) => (parseFloat(a.discounts) || 0) - (parseFloat(b.discounts) || 0),
       sortDirections: ["descend", "ascend"],
       width: 120,
     },
@@ -634,8 +600,8 @@ const ExpenseTable = ({
       ),
       dataIndex: "total_impuestos",
       key: "total_impuestos",
-      render: (discounts) => <span className="font-semibold text-gray-700">{formatCurrency(discounts)}</span>,
-      sorter: (a, b) => a.discounts - b.discounts,
+      render: (total_impuestos) => <span className="font-semibold text-gray-700">{formatCurrency(total_impuestos)}</span>,
+      sorter: (a, b) => (parseFloat(a.total_impuestos) || 0) - (parseFloat(b.total_impuestos) || 0),
       sortDirections: ["descend", "ascend"],
       width: 120,
     },
@@ -653,7 +619,7 @@ const ExpenseTable = ({
       dataIndex: "total_net",
       key: "total_net",
       render: (total_net) => <span className="font-semibold text-gray-700">{formatCurrency(total_net)}</span>,
-      sorter: (a, b) => a.total_net - b.total_net,
+      sorter: (a, b) => (parseFloat(a.total_net) || 0) - (parseFloat(b.total_net) || 0),
       sortDirections: ["descend", "ascend"],
       width: 120,
     },
@@ -710,7 +676,7 @@ const ExpenseTable = ({
           },
         })}
         rowClassName="hover:bg-gray-50 transition-colors"
-        scroll={{ x: "max-content", y: 700 }} // Agrega altura fija para desplazamiento vertical
+        scroll={{ x: "max-content", y: 700 }}
       />
 
       <FloatingActionMenu
@@ -718,6 +684,7 @@ const ExpenseTable = ({
         onEdit={handleEditSelected}
         onDelete={handleDeleteSelected}
         visible={selectedRowKeys.length > 0}
+        onExport={() => handleBatchOperation('export')}
       />
 
       <ViewExpense
