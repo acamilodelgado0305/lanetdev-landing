@@ -483,30 +483,30 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
         setSelectedImages([]);
     };
 
- const renderDate = (date) => {
-         console.log("Fecha recibida:", date);
- 
-         try {
- 
-             const isoDate = date.replace(' ', 'T') + '.000Z';
- 
-             const parsedDate = DateTime.fromISO(isoDate, { zone: 'utc' });
- 
-             console.log("Fecha parseada:", parsedDate);
- 
-             if (parsedDate.isValid) {
- 
-                 const formattedDate = parsedDate.toFormat("yyyy-MM-dd HH:mm:ss");
-                 return formattedDate;
-             } else {
-                 console.error("Fecha inválida:", date);
-                 return "Fecha inválida";
-             }
-         } catch (error) {
-             console.error("Error al formatear la fecha:", error);
-             return "Fecha inválida";
-         }
-     };
+    const renderDate = (date) => {
+        console.log("Fecha recibida:", date);
+
+        try {
+
+            const isoDate = date.replace(' ', 'T') + '.000Z';
+
+            const parsedDate = DateTime.fromISO(isoDate, { zone: 'utc' });
+
+            console.log("Fecha parseada:", parsedDate);
+
+            if (parsedDate.isValid) {
+
+                const formattedDate = parsedDate.toFormat("yyyy-MM-dd HH:mm:ss");
+                return formattedDate;
+            } else {
+                console.error("Fecha inválida:", date);
+                return "Fecha inválida";
+            }
+        } catch (error) {
+            console.error("Error al formatear la fecha:", error);
+            return "Fecha inválida";
+        }
+    };
 
     const columns = [
         {
@@ -688,7 +688,7 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
 
     return (
         <>
-          
+
 
             {/* Error message if data loading fails */}
             {error && (
@@ -725,7 +725,7 @@ const TransactionTable = ({ categories = [], accounts = [] }) => {
                     },
                 })}
                 rowClassName="hover:bg-gray-50 transition-colors"
-                scroll={{ x: 'max-content' }}
+                scroll={{ x: "max-content", y: 700 }}
                 summary={pageData => {
                     if (pageData.length === 0) return null;
 

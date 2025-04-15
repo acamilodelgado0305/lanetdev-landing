@@ -15,6 +15,25 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [currentImage, setCurrentImage] = useState(null);
 
+  // Agregar manejador para la tecla Esc
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape" && visible) {
+        onClose();
+      }
+    };
+
+    // Añadir el listener cuando el modal está visible
+    if (visible) {
+      document.addEventListener("keydown", handleKeyDown);
+    }
+
+    // Limpiar el listener al desmontar o cuando el modal se cierra
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [visible, onClose]);
+
   useEffect(() => {
     if (visible && entry?.id) fetchExpenseData(entry.id);
   }, [visible, entry]);
@@ -188,7 +207,8 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
                     <span className="font-bold">Descripción:</span> {expenseData.description}
                   </div>
                   <div>
-                    <span className="font-bold">Estado:</span> {expenseData.estado ? "Activo" : "Inactivo"}
+                    
+                    <span className="font-bold">Estado : {expenseData.estado ? "Activo" : "Inactivo"}</span>
                   </div>
                   <div>
                     <span className="font-bold">Proveedor:</span> {getProviderName(expenseData.provider_id)}
@@ -240,8 +260,8 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
                   <div className="flex justify-between mb-2"><span>Total Bruto</span><span>{formatCurrency(expenseData.total_gross)}</span></div>
                   <div className="flex justify-between mb-2"><span>Descuentos</span><span className="text-green-600">-{formatCurrency(expenseData.discounts)}</span></div>
                   <div className="flex justify-between mb-2"><span>Subtotal</span><span>{formatCurrency(expenseData.subtotal)}</span></div>
+                  <div className="flex justify-between mb-2"><span>Retefuente </span><span>{formatCurrency(expenseData.ret_ica)}</span></div>
                   <div className="flex justify-between mb-2"><span>IVA </span><span>{formatCurrency(expenseData.ret_vat)}</span></div>
-                  <div className="flex justify-between mb-2"><span>ICA </span><span>{formatCurrency(expenseData.ret_ica)}</span></div>
                   <div className="flex justify-between mb-2"><span>Total Impuestos</span><span>{formatCurrency(expenseData.total_impuestos)}</span></div>
                   <div className="flex justify-between border-t pt-2 font-semibold"><span>Total Neto</span><span className="text-red-600">{formatCurrency(expenseData.total_net)}</span></div>
                 </div>
@@ -275,9 +295,21 @@ function ViewExpense({ entry, visible, onClose, activeTab }) {
         </div>
 
         {/* Modal */}
-        <Modal open={isImageModalOpen} onCancel={() => setIsImageModalOpen(false)} footer={null} width="90%" style={{ maxWidth: "1600px" }} bodyStyle={{ padding: 0, height: "80vh" }} centered>
+        <Modal
+          open={isImageModalOpen}
+          onCancel={() => setIsImageModalOpen(false)}
+          footer={null}
+          width="90%"
+          style={{ maxWidth: "1600px" }}
+          bodyStyle={{ padding: 0, height: "80vh" }}
+          centered
+        >
           <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-            {currentImage?.endsWith(".pdf") ? <iframe src={currentImage} className="w-full h-full border-0" /> : <img src={currentImage} alt="Comprobante" className="max-w-full max-h-full object-contain" />}
+            {currentImage?.endsWith(".pdf") ? (
+              <iframe src={currentImage} className="w-full h-full border-0" />
+            ) : (
+              <img src={currentImage} alt="Comprobante" className="max-w-full max-h-full object-contain" />
+            )}
           </div>
         </Modal>
       </Card>

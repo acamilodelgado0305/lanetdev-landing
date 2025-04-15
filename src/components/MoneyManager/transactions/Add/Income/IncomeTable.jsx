@@ -686,7 +686,7 @@ const IncomeTable = ({
           },
         })}
         rowClassName="hover:bg-gray-50 transition-colors"
-        scroll={{ x: "max-content" }}
+        scroll={{ x: "max-content", y: 700 }} // Ajusta 'y' según tus necesidades
       />
 
       {/* Add the FloatingActionMenu here */}

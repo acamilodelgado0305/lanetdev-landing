@@ -17,6 +17,25 @@ function ViewIncome({ entry, visible, onClose, activeTab }) {
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [currentImage, setCurrentImage] = useState(null);
 
+  // Agregar manejador para la tecla Esc
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape" && visible) {
+        onClose();
+      }
+    };
+
+    // Añadir el listener cuando el modal está visible
+    if (visible) {
+      document.addEventListener("keydown", handleKeyDown);
+    }
+
+    // Limpiar el listener al desmontar o cuando el modal se cierra
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [visible, onClose]);
+
   useEffect(() => {
     if (visible && entry?.id) fetchIncomeData(entry.id);
   }, [visible, entry]);
@@ -283,9 +302,21 @@ function ViewIncome({ entry, visible, onClose, activeTab }) {
         </div>
 
         {/* Modal */}
-        <Modal open={isImageModalOpen} onCancel={() => setIsImageModalOpen(false)} footer={null} width="90%" style={{ maxWidth: "1600px" }} bodyStyle={{ padding: 0, height: "80vh" }} centered>
+        <Modal
+          open={isImageModalOpen}
+          onCancel={() => setIsImageModalOpen(false)}
+          footer={null}
+          width="90%"
+          style={{ maxWidth: "1600px" }}
+          bodyStyle={{ padding: 0, height: "80vh" }}
+          centered
+        >
           <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-            {currentImage?.endsWith(".pdf") ? <iframe src={currentImage} className="w-full h-full border-0" /> : <img src={currentImage} alt="Comprobante" className="max-w-full max-h-full object-contain" />}
+            {currentImage?.endsWith(".pdf") ? (
+              <iframe src={currentImage} className="w-full h-full border-0" />
+            ) : (
+              <img src={currentImage} alt="Comprobante" className="max-w-full max-h-full object-contain" />
+            )}
           </div>
         </Modal>
       </Card>
