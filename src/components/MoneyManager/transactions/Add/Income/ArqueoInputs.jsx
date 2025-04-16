@@ -155,7 +155,7 @@ const ArqueoInputs = ({
           {/* Sección Cuenta */}
           <div className="space-y-2 ">
             <label className="text-gray-700 font-semibold text-sm  tracking-wide">
-             ¿Donde ingreso el diner?
+             ¿Donde ingreso el dinero?
             </label>
             <AccountSelector
               selectedAccount={account}

@@ -78,7 +78,7 @@ const AddTransfer = ({ onTransactionAdded }) => {
         throw new Error("No se pudo cargar la transferencia");
       }
       const transferData = await response.json();
-      
+
       setIsEditing(true);
       setVouchers(transferData.vouchers || null);
       setImageUrls(
@@ -89,7 +89,7 @@ const AddTransfer = ({ onTransactionAdded }) => {
       setAmount(transferAmount);
       setFromAccount(transferData.fromAccount?.toString() || "");
       setToAccount(transferData.toAccount?.toString() || "");
-      
+
       form.setFieldsValue({
         fromAccount: transferData.fromAccount || undefined,
         toAccount: transferData.toAccount || undefined,
@@ -191,17 +191,13 @@ const AddTransfer = ({ onTransactionAdded }) => {
   return (
     <div className="max-w-[1300px] mx-auto bg-white shadow-lg rounded-lg">
       {/* Encabezado fijo */}
-      <div className="sticky top-0 z-10 bg-white p-4 border-b border-gray-200 flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <div className="bg-[#0052CC] p-2 rounded">
-            <SwapOutlined className="text-white text-lg" />
-          </div>
+      <div className="sticky top-0 z-10 bg-white pt-4 px-4 border-b border-gray-200 flex justify-between items-center">
+        <div className="flex px-2 rounded-md justify-between items-center">
           <div>
-            <span className="text-[#0052CC] text-sm">Transferencias /</span>
-            <Title level={3} className="m-0">
-              {isEditing ? "Editar Transferencia" : "Nueva Transferencia"}
-            </Title>
+            <h1 className="text-3xl font-bold text-gray-800">COMPROBANTE DE TRANSFERENCIA</h1>
+            <p className="text-sm text-gray-500">Documento de control interno</p>
           </div>
+
         </div>
         <Space size="middle">
           <Button
@@ -223,152 +219,166 @@ const AddTransfer = ({ onTransactionAdded }) => {
         </Space>
       </div>
 
+
+
+
       {/* Contenido principal */}
-      <div className="p-6">
+      <div className="p-4">
         <Form
           form={form}
           layout="vertical"
           initialValues={{ date: dayjs() }}
           style={{ width: "100%" }}
         >
-          {/* Sección de Detalles */}
-          <div
-            style={{
-              background: "#FFFFFF",
-              padding: "16px",
-              marginBottom: "20px",
-              borderRadius: "4px",
-              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-            }}
-          >
-            <Text
-              strong
-              style={{
-                fontSize: "14px",
-                color: "#172B4D",
-                textTransform: "uppercase",
-                marginBottom: "16px",
-                display: "block",
-              }}
-            >
-              <InfoCircleOutlined style={{ marginRight: "8px", color: "#0052CC" }} />
-              Detalles de la Transferencia
-            </Text>
-            <Form.Item
-              name="date"
-              label="Fecha"
-              rules={[{ required: true, message: "Seleccione la fecha de la transferencia" }]}
-            >
-              <DatePicker
-                format="YYYY-MM-DD"
-                style={{ width: "100%", borderRadius: "4px" }}
-                prefix={<CalendarOutlined />}
-                placeholder="Seleccione fecha"
-              />
-            </Form.Item>
 
-            <Form.Item name="description" label="Titúlo">
-              <TextArea
-                placeholder="Ingrese una descripción (ej. Transferencia por pago de factura #123)"
-                autoSize={{ minRows: 2, maxRows: 5 }}
-                style={{ borderRadius: "4px" }}
-              />
-            </Form.Item>
-            <div className="mb-4">
-              <div className="flex justify-between mb-2">
-                <span>Importe:</span>
-                <Input
-                  value={formatCurrency(amount)}
-                  onChange={handleAmountChange}
-                  className="w-40"
+          <div className="flex flex-col md:flex-row gap-6">
+            {/* Columna Izquierda - Información de Cajero y Cuenta */}
+            <div className="w-full  w-[40em]">
+
+              {/* Sección de Detalles */}
+              <div
+                style={{
+                  background: "#FFFFFF",
+                  padding: "16px",
+                  marginBottom: "20px",
+                  borderRadius: "4px",
+                  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                }}
+              >
+                <Text
+                  strong
+                  style={{
+                    fontSize: "14px",
+                    color: "#172B4D",
+                    textTransform: "uppercase",
+                    marginBottom: "16px",
+                    display: "block",
+                  }}
+                >
+                  <InfoCircleOutlined style={{ marginRight: "8px", color: "#0052CC" }} />
+                  Detalles de la Transferencia
+                </Text>
+                <Form.Item
+                  name="date"
+                  label="Fecha"
+                  rules={[{ required: true, message: "Seleccione la fecha de la transferencia" }]}
+                >
+                  <DatePicker
+                    format="YYYY-MM-DD"
+                    style={{ width: "100%", borderRadius: "4px" }}
+                    prefix={<CalendarOutlined />}
+                    placeholder="Seleccione fecha"
+                  />
+                </Form.Item>
+
+                <Form.Item name="description" label="Titúlo">
+                  <TextArea
+                    placeholder="Ingrese una descripción (ej. Transferencia por pago de factura #123)"
+                    autoSize={{ minRows: 2, maxRows: 5 }}
+                    style={{ borderRadius: "4px" }}
+                  />
+                </Form.Item>
+                <div className="mb-4">
+                  <div className="flex items-center mb-2">
+                    {/* Texto con tamaño más grande */}
+                    <span className="text-2xl font-semibold">¿Cuánto?</span>
+                    {/* Línea punteada */}
+                    <div className="pt-3 flex-grow border-b border-dashed border-gray-400 mx-2"></div>
+                    {/* Input con texto más grande, azul oscuro, alineado a la derecha y borde */}
+                    <input
+                      value={formatCurrency(amount)}
+                      onChange={handleAmountChange}
+                      className="w-50 text-right text-xl text border border-gray-200 rounded-md p-2"
+                    />
+                  </div>
+                </div>
+
+              </div>
+
+              <div
+                style={{
+                  background: "#FFFFFF",
+                  padding: "16px",
+                  borderRadius: "4px",
+                  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                }}
+              >
+                <Text
+                  strong
+                  style={{
+                    fontSize: "14px",
+                    color: "#172B4D",
+                    textTransform: "uppercase",
+                    marginBottom: "16px",
+                    display: "block",
+                  }}
+                >
+                  <FileImageOutlined style={{ marginRight: "8px", color: "#0052CC" }} />
+                  Comprobantes
+                </Text>
+                <ImageUploader
+                  imageUrls={imageUrls}
+                  setImageUrls={setImageUrls}
+                  voucher={vouchers}
+                  setVoucher={setVouchers}
                 />
               </div>
-            </div>
-            
-          </div>
 
-          {/* Sección de Cuentas */}
-          <div
-            style={{
-              background: "#FFFFFF",
-              padding: "16px",
-              marginBottom: "20px",
-              borderRadius: "4px",
-              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-            }}
-          >
-            <Text
-              strong
-              style={{
-                fontSize: "14px",
-                color: "#172B4D",
-                textTransform: "uppercase",
-                marginBottom: "16px",
-                display: "block",
-              }}
-            >
-              <SwapOutlined style={{ marginRight: "8px", color: "#0052CC" }} />
-              Movimiento entre Cuentas
-            </Text>
-            <div className="mb-4">
-              <div className="mb-2 font-medium">Origen</div>
-              <AccountSelector
-                selectedAccount={fromAccount}
-                onAccountSelect={(value) => setFromAccount(value)}
-                accounts={accounts}
-              />
+
+
+
             </div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                margin: "16px 0",
-              }}
-            >
-              <Divider style={{ borderColor: "#DFE1E6" }}>
-                <SwapOutlined style={{ color: "#0052CC", fontSize: "18px" }} />
-              </Divider>
-            </div>
-            <div className="mb-4">
-              <div className="mb-2 font-medium">Destino</div>
-              <AccountSelector
-                selectedAccount={toAccount}
-                onAccountSelect={(value) => setToAccount(value)}
-                accounts={accounts}
-              />
+
+
+
+
+            {/* Columna Derecha - Detalles de la Factura */}
+            <div className="w-full md:w-1/2">
+              <div
+                style={{
+                  background: "#FFFFFF",
+                  padding: "16px",
+                  marginBottom: "20px",
+                  borderRadius: "4px",
+                  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                }}
+              >
+
+
+                <div className="mb-2">
+                  <div className="mb-2 font-medium">Origen</div>
+                  <AccountSelector
+                    selectedAccount={fromAccount}
+                    onAccountSelect={(value) => setFromAccount(value)}
+                    accounts={accounts}
+                  />
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    margin: " 0",
+                  }}
+                >
+                  <Divider style={{ borderColor: "#DFE1E6" }}>
+                    <SwapOutlined style={{ color: "#0052CC", fontSize: "18px" }} />
+                  </Divider>
+                </div>
+                <div className="mb-2">
+                  <div className="mb-2 font-medium">Destino</div>
+                  <AccountSelector
+                    selectedAccount={toAccount}
+                    onAccountSelect={(value) => setToAccount(value)}
+                    accounts={accounts}
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Sección de Comprobantes */}
-          <div
-            style={{
-              background: "#FFFFFF",
-              padding: "16px",
-              borderRadius: "4px",
-              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-            }}
-          >
-            <Text
-              strong
-              style={{
-                fontSize: "14px",
-                color: "#172B4D",
-                textTransform: "uppercase",
-                marginBottom: "16px",
-                display: "block",
-              }}
-            >
-              <FileImageOutlined style={{ marginRight: "8px", color: "#0052CC" }} />
-              Comprobantes
-            </Text>
-            <ImageUploader
-              imageUrls={imageUrls}
-              setImageUrls={setImageUrls}
-              voucher={vouchers}
-              setVoucher={setVouchers}
-            />
-          </div>
+
         </Form>
       </div>
     </div>

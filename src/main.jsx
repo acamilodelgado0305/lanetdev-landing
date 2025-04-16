@@ -140,6 +140,11 @@ const router = createBrowserRouter([
             path: "transactions/nuevatransferencia",
             element: <AddTransfer />,
           },
+
+          {
+            path: "transfer/edit/:id",
+            element: <AddTransfer />,
+          },
           {
             path: "categorias",
             element: <Categories />,
