@@ -8,7 +8,8 @@ import Swal from 'sweetalert2';
 import dayjs from 'dayjs';
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
-
+import departamentos from './departamentos';
+import ciudades from './ciudades';
 const { Text } = Typography;
 const { Option } = Select;
 const apiUrl = import.meta.env.VITE_API_FINANZAS;
@@ -26,7 +27,6 @@ const AddProvider = ({ onProviderAdded, providerToEdit, onClose }) => {
 
   const [paises, setPaises] = useState([]);
 
-  const [ciudades, setCiudades] = useState([]);
   const [selectedPais, setSelectedPais] = useState(null);
   const [selectedDepartamento, setSelectedDepartamento] = useState(null);
 
@@ -37,32 +37,10 @@ const AddProvider = ({ onProviderAdded, providerToEdit, onClose }) => {
   const handlePaisChange = (pais) => {
     setSelectedPais(pais);
     setSelectedDepartamento(null);  // Reset departamento
-    setCiudades([]);  // Reset ciudades
+
   };
   // Lista de departamentos de Colombia
-  const departamentos = [
-    'Amazonas', 'Antioquia', 'Arauca', 'Atlántico', 'Bolívar', 'Boyacá', 'Caldas', 'Caquetá', 'Casanare',
-    'Cauca', 'Cesar', 'Chocó', 'Córdoba', 'Cundinamarca', 'Guainía', 'Guaviare', 'Huila', 'La Guajira',
-    'Magdalena', 'Meta', 'Nariño', 'Norte de Santander', 'Putumayo', 'Quindío', 'Risaralda', 'San Andrés',
-    'Santander', 'Sucre', 'Tolima', 'Valle del Cauca', 'Vaupés', 'Vichada'
-  ];
 
-  const ciudadesColombia = [
-    'Leticia', 'Medellín', 'Envigado', 'Rionegro', 'Itagüí', 'Bello',
-    'Arauca', 'Tame', 'Arauquita', 'Barranquilla', 'Soledad', 'Malambo',
-    'Cartagena', 'Magangué', 'Turbaná', 'Tunja', 'Duitama', 'Sogamoso', 'Chiquinquirá',
-    'Manizales', 'Villamaría', 'La Dorada', 'Florencia', 'San Vicente del Caguán', 'Puerto Rico',
-    'Yopal', 'Villanueva', 'Hato Corozal', 'Popayán', 'Santander de Quilichao', 'Cajibío',
-    'Valledupar', 'Aguachica', 'Codazzi', 'Quibdó', 'Riosucio', 'Condoto',
-    'Montería', 'Lorica', 'Cereté', 'Bogotá', 'Soacha', 'Fusagasugá',
-    'Inírida', 'San José del Guaviare', 'Neiva', 'Pitalito', 'La Plata',
-    'Riohacha', 'Maicao', 'Fonseca', 'Santa Marta', 'Ciénaga', 'El Rodadero',
-    'Villavicencio', 'Acacías', 'Puerto López', 'Pasto', 'Tumaco', 'Ipiales',
-    'Cúcuta', 'Villa del Rosario', 'Los Patios', 'Mocoa', 'Puerto Asís', 'La Hormiga',
-    'Armenia', 'Montenegro', 'Circasia', 'Pereira', 'Dosquebradas', 'La Virginia',
-    'San Andrés', 'Bucaramanga', 'Barrancabermeja', 'Girón', 'Sincelejo', 'Corozal', 'Sampués',
-    'Ibagué', 'Espinal', 'Honda', 'Cali', 'Buenaventura', 'Palmira', 'Mitú', 'Puerto Carreño'
-  ];
 
   useEffect(() => {
     const fetchPaises = async () => {
@@ -497,7 +475,7 @@ const AddProvider = ({ onProviderAdded, providerToEdit, onClose }) => {
                     {/* Departamento */}
                     <Form.Item
                       name="departamento"
-                      label={<span className="text-gray-600 text-sm">Departamento</span>}>
+                      label={<span className="text-gray-600 text-sm">Departamento / Estados</span>}>
                       <Select
                         className="rounded-md text-base border border-gray-300 focus:ring-2 focus:ring-blue-500"
                         disabled={!editMode}
@@ -521,7 +499,7 @@ const AddProvider = ({ onProviderAdded, providerToEdit, onClose }) => {
                         className="rounded-md text-base border border-gray-300 focus:ring-2 focus:ring-blue-500"
                         disabled={!editMode}
                         placeholder="Seleccione una ciudad">
-                        {ciudadesColombia.map((ciudad) => (
+                        {ciudades.map((ciudad) => (
                           <Option key={ciudad} value={ciudad}>
                             {ciudad}
                           </Option>
