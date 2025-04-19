@@ -4,6 +4,7 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import AccionesTerceros from "../AccionesTerceros";
 import dayjs from "dayjs";
+import FloatingActionMenu from "../../../components/MoneyManager/transactions/FloatingActionMenu";
 
 const API_BASE_URL = import.meta.env.VITE_API_FINANZAS;
 
@@ -124,6 +125,98 @@ const ProveedoresTable = ({ activeTab }) => {
       prev.includes(id) ? prev.filter((key) => key !== id) : [...prev, id]
     );
   };
+  const handleEditSelected = () => {
+    if (selectedRowKeys.length === 1) {
+      navigate(`/index/moneymanager/ingresos/edit/${selectedRowKeys[0]}`, {
+        state: { returnTab: activeTab }, // Pasar activeTab como returnTab
+      });
+    }
+  };
+  const handleDeleteSelected = async () => {
+    if (selectedRowKeys.length === 0) {
+      Swal.fire({
+        title: "Selección vacía",
+        text: "Por favor, seleccione al menos un registro para eliminar.",
+        icon: "warning",
+        confirmButtonColor: "#3085d6",
+        confirmButtonText: "Entendido",
+      });
+      return;
+    }
+
+    Swal.fire({
+      title: "¿Está seguro?",
+      text: `¿Desea eliminar ${selectedRowKeys.length} registro(s) seleccionado(s)?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const API_BASE_URL = import.meta.env.VITE_API_FINANZAS || "/api";
+          const deletePromises = selectedRowKeys.map((id) =>
+            axios.delete(`${API_BASE_URL}/providers/${id}`)
+          );
+          await Promise.all(deletePromises);
+
+          // Actualizar el estado local eliminando las entradas borradas
+          const updatedEntries = filteredEntries.filter(
+            (entry) => !selectedRowKeys.includes(entry.id)
+          );
+          setFilteredEntries(updatedEntries);
+
+          // Limpiar selección
+          setSelectedRowKeys([]);
+
+          // Mostrar mensaje de éxito
+          Swal.fire({
+            icon: "success",
+            title: "Eliminado",
+            text: "Los Proveedores seleccionados han sido eliminados exitosamente.",
+            confirmButtonColor: "#3085d6",
+          });
+        } catch (error) {
+          console.error("Error al eliminar los Proveedores:", error);
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "No se pudieron eliminar los Proveedores. Por favor, intente de nuevo.",
+            confirmButtonColor: "#3085d6",
+          });
+        }
+      }
+    });
+  };
+
+  const handleCopySelected = () => {
+    const selectedItems = filteredEntries.filter((item) => selectedRowKeys.includes(item.id));
+    const textToCopy = selectedItems
+      .map((item) => {
+        return `N° Arqueo: ${item.arqueo_number || "N/A"}, Descripción: ${item.description}, Fecha: ${renderDate(item.date)}, Cuenta: ${getAccountName(item.account_id)}, Cajero: ${getCashierName(item.cashier_id)}, Monto: ${formatCurrency(item.amount)}, Desde: ${renderDate(item.start_period)}, Hasta: ${renderDate(item.end_period)}`;
+      })
+      .join("\n");
+
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      Swal.fire({
+        icon: "success",
+        title: "Copiado",
+        text: "Los elementos seleccionados han sido copiados al portapapeles.",
+        confirmButtonColor: "#3085d6",
+      });
+    }).catch((error) => {
+      console.error("Error al copiar al portapapeles:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo copiar al portapapeles. Por favor, intente de nuevo.",
+        confirmButtonColor: "#3085d6",
+      });
+    });
+  };
+
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
@@ -432,6 +525,13 @@ const ProveedoresTable = ({ activeTab }) => {
 
           </>
         )}
+        <FloatingActionMenu
+          selectedCount={selectedRowKeys.length}
+          onEdit={handleEditSelected}
+          onCopy={handleCopySelected}
+          onDelete={handleDeleteSelected}
+          visible={selectedRowKeys.length > 0}
+        />
       </div>
     </div>
   );
